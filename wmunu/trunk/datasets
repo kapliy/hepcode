@@ -1,0 +1,14 @@
+AMI datasets
+
+From Eric's talk:
+Integrated luminosity with stable beams in each run:
+. 152166: 6.8 .b-1
+. 152214: 3.4 .b-1
+. 152221: 19.4 .b-1
+. 152345: 16.4 .b-1
+. 152409: 73.5 .b-1
+. Total: 119.5 .b-1 (out of ~250 .b-1 taken to date,
+much in last few days)
+ (amiStatus='VALID' AND (( logicalDatasetName like 'data10_7TeV%muon%AOD%')) ) AND dataset.runNumber LIKE '%152409%' 
+
+data10_7TeV.00152409.physics_MuonswBeam.merge.AOD.f238_m427
