@@ -1,0 +1,39 @@
+Check that event info etc are actually correct in MC!
+
+How to apply these without ESD?
+(n90<=5 && fHEC>0.8) || fabs(jetTime)<50 || (fabs(JetQuality)>0.8 && emf>0.95)
+
+Mel:
+assymmetry + 1 stuff jet - gluons contribution rather than jet.
+* electron: very old, sophisticated, PDFs info extraction, many people. oxford - student to student
+* muon: many fewer ppl - us and harvard. neither gotten far. focus on early data, get it out into a paper strategy.
+  (rather than long term systematics dominated analysis)
+  Mel: 10pb start worrying about systematics. Further on, even more focus on statistics, extracting some PDF distributions.
+    how are things near term vs middle term?
+ Peter: beginning = two bins in eta; later - additional bins
+ 200 pb, 10 fb paper sequences. but first one may bleed into the second one if 200pb is delayed.
+Peter: Z's deficiency prevents development of tools. we really need Zs early on.
+
+* Isolation requirements: use of track isolation for muons. We can work on it.
+* Missing ET - recompute with consistent muon; Z rejection; normalization of QCD.
+
+Idea: come up with things to do and share responsibility with Harvard group.
+We can focus on calo and ID issues (including isolation)
+Need to discuss end product: what are the thesis? Need to be slightly different.
+
+PETER PROPOSAL:
+Harvard: short term, stat dominated. Verena is ending 5th year.
+Us: long term, tag and probe with Z to understand efficiencies etc
+Mel talks to Joal, makes list of priorities.
+
+FIND interesting event with a 35 GeV muon. Set up event display: other tracks with the same z0?
+
+
+Verena's talk - slide 20
+http://indico.cern.ch/getFile.py/access?contribId=7&resId=0&materialId=slides&confId=77092
+
+15.6.6.3.1 - W/Z release
+
+mc09_7TeV.106044.PythiaWmunu_no_filter.recon.AOD.e468_s624_s633_r1085
+verion=15.6.3.6
+mc09%Wmunu%AOD.e468_s624_s633_r1085%'

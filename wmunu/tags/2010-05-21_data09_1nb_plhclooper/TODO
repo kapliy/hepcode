@@ -1,0 +1,14 @@
+http://indico.cern.ch/getFile.py/access?contribId=7&resId=1&materialId=slides&confId=92304
+Make reco efficiency wrt triggered muons plots!
+Add phi plots, too!
+
+Switch to MET_Topo!
+
+* Plot zmumu peak (even when running on Ws)
+ * Plot number of muons/Ws etc per event
+
+* charge misidentification (compare to truth!) - versus eta,pt
+ * from Z->mumu (data-driven). Also used to measure efficiency.
+
+* Z->mumu background: small but may be asymmetric for mu+ and mu- !
+  * see effect of explicit Z cut!
