@@ -49,10 +49,7 @@ def findBin(bins,val):
     return i
 
 h = {}
-_plotdir='./plots'
 _ext = 'png'
-if not os.path.isdir(_plotdir):
-    os.makedirs(_plotdir)
 
 # a few PDG ids
 DOWN=1
@@ -258,8 +255,10 @@ def makeCanvas(label):
     #ROOT.gPad.SetGridx();  ROOT.gPad.SetGridy();
     return c
 
-def PlotOverlayHistos(h1in,h2in,label,fname,norm=None):
+def PlotOverlayHistos(h1in,h2in,label,fname,norm=None,plotdir='plots'):
     """ Plots two histograms on top of each other (option=normalized)"""
+    if not os.path.isdir(plotdir):
+        os.makedirs(plotdir)
     h1=h1in.Clone(h1in.GetName()+"ol")
     h2=h2in.Clone(h2in.GetName()+"ol")
     h1.df,h2.df=h1.Draw,h2.Draw
@@ -269,9 +268,11 @@ def PlotOverlayHistos(h1in,h2in,label,fname,norm=None):
     h1.df("H")
     h2.df("HSAME")
     h1.GetYaxis().SetRangeUser(0.0,h1.GetMaximum()*1.2);
-    c.SaveAs('%s/%s.%s'%(_plotdir,fname,_ext))
+    c.SaveAs('%s/%s.%s'%(plotdir,fname,_ext))
 
-def savePlot(o):
+def savePlot(o,plotdir='plots'):
+    if not os.path.isdir(plotdir):
+        os.makedirs(plotdir)
     if o.GetEntries()==0:
         return
     title = o.GetTitle()
@@ -282,4 +283,4 @@ def savePlot(o):
         o.Draw()
     if re.match("TH1",o.ClassName()):
         o.GetYaxis().SetRangeUser(0.0,o.GetMaximum()*1.2);
-    c.SaveAs('%s/%s.%s'%(_plotdir,title,_ext))
+    c.SaveAs('%s/%s.%s'%(plotdir,title,_ext))

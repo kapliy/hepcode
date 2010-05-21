@@ -1,32 +1,30 @@
 #!/usr/bin/env python
-
-_GOODLIST = ( 21677784,22180828,29555751,29874999 )
-#_GOODEVTS = ( 255497,261005,344577,347861 )
-_BCIDs = (1,1786)
-_DATA = False
-
-_INPUTS = '/scratch/antonk/zmumu.root'
-_INPUTS = '/scratch/antonk/wmunu.root'
-_INPUTS = 'dcache:///pnfs/uct3/data/users/antonk/ANALYSIS/PLHC/153565/*root*'
-_INPUTS = 'dcache:///pnfs/uct3/data/users/antonk/ANALYSIS/PLHC_MC/user10.AntonKapliy.mc09_7TeV.106044.PythiaWmunu_no_filter.merge.AOD.e468_s765_s767_r1207_r1210.ntuple.v1_7/user10.AntonKapliy.mc09_7TeV.106044.PythiaWmunu_no_filter.merge.AOD.e468_s765_s767_r1207_r1210.ntuple.v1_7.flatntuple._00001.root'
-#_LOAD_EFF = './efficiencies.root'
-
 try:
     import psyco
     psyco.full()
     print 'Using psyco'
 except:
     pass
-
-from helpers import *
 import math,sys,glob,re
 import ROOT
 ROOT.gROOT.SetBatch(1) #uncomment for interactive usage
 
+#_GOODLIST = ( 21677784,22180828,29555751,29874999 )
+#_GOODEVTS = ( 255497,261005,344577,347861 )
+#INPUTS = 'dcache:///pnfs/uct3/data/users/antonk/ANALYSIS/PLHC/153565/*root*'
+
+_BCIDs = (1,1786)
+_DATA = False
+
+_INPUTS = '/scratch/antonk/zmumu.root'
+_INPUTS = '/scratch/antonk/wmunu.root'
+_INPUTS = 'dcache:///pnfs/uct3/data/users/antonk/ANALYSIS/PLHC_MC/user10.AntonKapliy.mc09_7TeV.106044.PythiaWmunu_no_filter.merge.AOD.e468_s765_s767_r1207_r1210.ntuple.v1_7/user10.AntonKapliy.mc09_7TeV.106044.PythiaWmunu_no_filter.merge.AOD.e468_s765_s767_r1207_r1210.ntuple.v1_7.flatntuple._00001.root'
+#_LOAD_EFF = './efficiencies.root'
+
 from optparse import OptionParser
 parser = OptionParser()
 parser.add_option("-n", "--nevents",dest="nevents",
-                  type="int", default=1000000,
+                  type="int", default=100000000,
                   help="Maximum number of events to process")
 parser.add_option("-s", "--nskip",dest="nskip",
                   type="int", default=0,
@@ -34,23 +32,43 @@ parser.add_option("-s", "--nskip",dest="nskip",
 parser.add_option("-i", "--input",dest="input",
                   type="string", default=_INPUTS,
                   help="Full path to ntuple to process")
+parser.add_option("-o", "--output",dest="output",
+                  type="string", default="output",
+                  help="Name of output dir for plots and cutflow")
 parser.add_option("-u", "--no-save",
                   action="store_true",dest="nosave",
                   help="Don't save any output on disk")
 parser.add_option("-t", "--no-trigger",
                   action="store_true",dest="notrig",
                   help="Don't require trigger selection disk")
+parser.add_option("-g", "--grl",dest="grl",
+                  type="int", default=None,
+                  help="Run number of MC or DATA dataset from GRL.py")
 
 (opts, args) = parser.parse_args()
+from GRL import mc09,plhc
+if opts.grl!=None:
+    rc = [r for r in mc09.runs if r.rnum==opts.grl]
+    rc += [r for r in plhc.runs if r.rnum==opts.grl]
+    if len(rc)==1:
+        r = rc[0]
+        opts.output = str(r.rnum)
+        opts.input = r.path()
+        print 'Expecting',r.nevents,'events'
+    else:
+        print "Couldn't find run",opts.grl
+        sys.exit(0)
+from helpers import *
 
-# PLHC plots
+plotdir=opts.output
+# preselection
 Histo("PRESEL_mu_pt",ptbins)
 Histo("PRESEL_mu_eta",etabins)
 Histo("PRESEL_mu_phi",phibins)
 Histo("PRESEL_mu_ptiso",ptisobins)
 Histo("PRESEL_met",metbins)
 Histo("PRESEL_mu_pt_vs_met",ptbins,metbins)
-
+# analysis level muons
 Histo("ANA_mu_pt",ptbins)
 Histo("ANA_mu_eta",etabins)
 Histo("ANA_mu_phi",phibins)
@@ -59,6 +77,8 @@ Histo("ANA_w_mt",mtbins)
 Histo("ANA_met",metbins)
 
 t = ROOT.TChain('tree')
+print 'Adding files to TChain:'
+print opts.input
 t.Add(opts.input)
 nentries = t.GetEntries()
 
@@ -156,7 +176,7 @@ for evt in range(nentries):
         ef.muonpresel+=1
         continue
     # trigger
-    if True:
+    if True and not opts.notrig:
         if t.trig_l1mu0==0:
             ef.trigger+=1
             continue
@@ -302,10 +322,12 @@ if False:
     MakeAsymmRatioHistos(h_pt_p,h_pt_m,'RMU_pt__corrected')
 
 if not opts.nosave:
-    out = ROOT.TFile("out.root","RECREATE")
+    if not os.path.isdir(plotdir):
+        os.makedirs(plotdir)
+    out = ROOT.TFile(os.path.join(plotdir,'./out.root'),"RECREATE")
     for hh in h.values():
         hh.Write()
-        savePlot(hh)
+        savePlot(hh,plotdir)
     out.Close()
-    ef.Print(open('./cuts.txt','w'))
+    ef.Print(open(os.path.join(plotdir,'./cuts.txt'),'w'))
     ef.Print(open('/dev/stdout','w'))

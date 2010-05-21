@@ -24,6 +24,8 @@ class LHCR:
         os.system('dq2-ls -L ROAMING '+s.dataset_pattern%(s.rnum,s.tag))
     def pathena_submit(s):
         print './grid_submit '+s.dataset_pattern%(s.rnum,s.tag)+' --nEventsPerJob 100000'
+    def path(s):
+        return s.local_pattern%s.rnum
 
 class PLHC_runs:
     def __init__(s):
@@ -43,7 +45,7 @@ class PLHC_runs:
 
 class MCR:
     """ dataset """
-    def __init__(s,rnum,sample,tag,nevents,filteff,xsec,ntupleDS=None):
+    def __init__(s,rnum,sample,tag,xsec,filteff,nevents,ntupleDS=None):
         s.rnum = rnum
         s.sample = sample
         s.tag = tag
@@ -56,14 +58,15 @@ class MCR:
         os.system('dq2-ls -L ROAMING '+s.dataset_pattern%(s.rnum,s.sample,s.tag))
     def pathena_submit(s):
         print './grid_submit '+s.dataset_pattern%(s.rnum,s.sample,s.tag)+' --nEventsPerJob 100000'
+    def path(s):
+        return 'dcache:///pnfs/uct3/data/users/antonk/ANALYSIS/PLHC_MC/'+s.ntupleDS+'/*root*'        
 
 class MC09_samples:
     def __init__(s):
         s.runs = []
     def append(s,run):
         run.dataset_pattern='mc09_7TeV.%d.%s.merge.AOD.%s/'
-        run.local_pattern='dcache:///pnfs/uct3/data/users/antonk/ANALYSIS/PLHC_MC/%d/*root*'
-        run.ntupleDS='user10.Anton.Kapliy.'+run.dataset_pattern.strip('/')+'.ntuple.v1_7'
+        run.ntupleDS='user10.AntonKapliy.'+(run.dataset_pattern.strip('/'))%(run.rnum,run.sample,run.tag)+'.ntuple.v1_7'
         s.runs.append(run)
     def nruns(s):
         return len(s.runs)
@@ -118,35 +121,41 @@ if False:
             os.system(';'.join(cmd))
 
 mc09 = MC09_samples()
-mc09.append(MCR(105001,'pythia_minbias','e517_s764_s767_r1204_r1210',48445000.000000,1.000000,1))
-mc09.append(MCR(106047,'PythiaZmumu_no_filter','e468_s765_s767_r1207_r1210',0.851011,1.000000,1))
-mc09.append(MCR(106088,'McAtNloZmumu_no_filter','e521_s765_s767_r1207_r1210',0.952526,1.000000,1))
-mc09.append(MCR(106044,'PythiaWmunu_no_filter','e468_s765_s767_r1207_r1210',8.894060,1.000000,1))
-mc09.append(MCR(106083,'McAtNloWplusmunu_no_filter','e521_s765_s767_r1207_r1210',5.868290,1.000000,1))
-mc09.append(MCR(106084,'McAtNloWminmunu_no_filter','e521_s765_s767_r1207_r1210',3.996130,1.000000,1))
-mc09.append(MCR(108319,'PythiaDrellYan_mumu','e518_s765_s767_r1207_r1210',1.249550,1.000000,1))
-mc09.append(MCR(108321,'PythiaDrellYanLowM_mu3','e518_s765_s767_r1207_r1210 ',4.415710,0.511700,0))
-mc09.append(MCR(106022,'PythiaWtaunu_1Lepton','e468_s765_s767_r1207_r1210',8.916330,0.876600,0))
-mc09.append(MCR(106052,'PythiaZtautau','e468_s765_s767_r1205_r1210',0.854173,1.000000,1))
-mc09.append(MCR(106062,'McAtNloZtautau','e521_s765_s767_r1205_r1210',0.952427,1.000000,1))
-mc09.append(MCR(105861,'TTbar_PowHeg_Pythia','e521_s765_s767_r1207_r1210',0.145642,0.538200,0))
-mc09.append(MCR(108405,'PythiaB_bbmu15X','e521_s765_s767_r1207_r1210',73.900000,1.000000,1))
-mc09.append(MCR(106059,'PythiaB_ccmu15X','e521_s765_s767_r1207_r1210',28.400000,1.000000,1))
-mc09.append(MCR(105009,'J0_pythia_jetjet','e468_s766_s767_r1206_r1210',9752970.000000,1.000000,1))
-mc09.append(MCR(105010,'J1_pythia_jetjet','e468_s766_s767_r1206_r1210',673020.000000,1.000000,1))
-mc09.append(MCR(105011,'J2_pythia_jetjet','e468_s766_s767_r1206_r1210',41194.700000,1.000000,1))
-mc09.append(MCR(105012,'J3_pythia_jetjet','e468_s766_s767_r1206_r1210',2193.250000,1.000000,1))
-mc09.append(MCR(105013,'J4_pythia_jetjet','e468_s766_s767_r1206_r1210',87.848700,1.000000,1))
-mc09.append(MCR(105014,'J5_pythia_jetjet','e468_s766_s767_r1206_r1210',2.328560,1.000000,1))
-mc09.append(MCR(105015,'J6_pythia_jetjet','e468_s766_s767_r1206_r1210',0.033846,1.000000,1))
-mc09.append(MCR(109276,'J0_pythia_jetjet_1muon','e534_s765_s767_r1250_r1260',9752970.000000,0.000079,0))
-mc09.append(MCR(109277,'J1_pythia_jetjet_1muon','e534_s765_s767_r1250_r1260',673020.000000,0.001233,0))
-mc09.append(MCR(109278,'J2_pythia_jetjet_1muon','e534_s765_s767_r1250_r1260',41194.700000,0.005443,0))
-mc09.append(MCR(109279,'J3_pythia_jetjet_1muon','e534_s765_s767_r1250_r1260',2193.250000,0.012949,0))
-mc09.append(MCR(109280,'J4_pythia_jetjet_1muon','e534_s765_s767_r1250_r1260',87.848700,0.022156,0))
-mc09.append(MCR(109281,'J5_pythia_jetjet_1muon','e534_s765_s767_r1250_r1260',2.328560,0.029753,0))
+mc09.append(MCR(109281,'J5_pythia_jetjet_1muon','e534_s765_s767_r1250_r1260',2.328560,0.029753,500000))
+mc09.append(MCR(105001,'pythia_minbias','e517_s764_s767_r1204_r1210',48445000.000000,1.000000,9996249))
+mc09.append(MCR(106047,'PythiaZmumu_no_filter','e468_s765_s767_r1207_r1210',0.851011,1.000000,4998410))
+mc09.append(MCR(106088,'McAtNloZmumu_no_filter','e521_s765_s767_r1207_r1210',0.952526,1.000000,4990000))
+mc09.append(MCR(106044,'PythiaWmunu_no_filter','e468_s765_s767_r1207_r1210',8.894060,1.000000,6993798))
+mc09.append(MCR(106083,'McAtNloWplusmunu_no_filter','e521_s765_s767_r1207_r1210',5.868290,1.000000,3996532))
+mc09.append(MCR(106084,'McAtNloWminmunu_no_filter','e521_s765_s767_r1207_r1210',3.996130,1.000000,2997334))
+mc09.append(MCR(108319,'PythiaDrellYan_mumu','e518_s765_s767_r1207_r1210',1.249550,1.000000,999503))
+mc09.append(MCR(108321,'PythiaDrellYanLowM_mu3','e518_s765_s767_r1207_r1210 ',4.415710,0.511700,499925))
+mc09.append(MCR(106022,'PythiaWtaunu_1Lepton','e468_s765_s767_r1207_r1210',8.916330,0.876600,999874))
+mc09.append(MCR(106052,'PythiaZtautau','e468_s765_s767_r1205_r1210',0.854173,1.000000,1998598))
+mc09.append(MCR(106062,'McAtNloZtautau','e521_s765_s767_r1205_r1210',0.952427,1.000000,1998040))
+mc09.runs[-1].ntupleDS+='.retry2'
+mc09.append(MCR(105861,'TTbar_PowHeg_Pythia','e521_s765_s767_r1207_r1210',0.145642,0.538200,199838))
+mc09.append(MCR(108405,'PythiaB_bbmu15X','e521_s765_s767_r1207_r1210',73.900000,1.000000,4443898))
+mc09.append(MCR(106059,'PythiaB_ccmu15X','e521_s765_s767_r1207_r1210',28.400000,1.000000,1499257))
+mc09.append(MCR(105009,'J0_pythia_jetjet','e468_s766_s767_r1206_r1210',9752970.000000,1.000000,399993))
+mc09.append(MCR(105010,'J1_pythia_jetjet','e468_s766_s767_r1206_r1210',673020.000000,1.000000,396793))
+mc09.append(MCR(105011,'J2_pythia_jetjet','e468_s766_s767_r1206_r1210',41194.700000,1.000000,399691))
+mc09.append(MCR(105012,'J3_pythia_jetjet','e468_s766_s767_r1206_r1210',2193.250000,1.000000,399891))
+mc09.runs[-1].ntupleDS+='.retry1'
+mc09.append(MCR(105013,'J4_pythia_jetjet','e468_s766_s767_r1206_r1210',87.848700,1.000000,398944))
+mc09.append(MCR(105014,'J5_pythia_jetjet','e468_s766_s767_r1206_r1210',2.328560,1.000000,399289))
+mc09.append(MCR(105015,'J6_pythia_jetjet','e468_s766_s767_r1206_r1210',0.033846,1.000000,393341))
+mc09.append(MCR(109276,'J0_pythia_jetjet_1muon','e534_s765_s767_r1250_r1260',9752970.000000,0.000079,500000))
+mc09.runs[-1].ntupleDS+='.retry1'
+mc09.append(MCR(109277,'J1_pythia_jetjet_1muon','e534_s765_s767_r1250_r1260',673020.000000,0.001233,500000))
+mc09.append(MCR(109278,'J2_pythia_jetjet_1muon','e534_s765_s767_r1250_r1260',41194.700000,0.005443,500000))
+mc09.runs[-1].ntupleDS+='.retry1'
+mc09.append(MCR(109279,'J3_pythia_jetjet_1muon','e534_s765_s767_r1250_r1260',2193.250000,0.012949,500000))
+mc09.runs[-1].ntupleDS+='.retry2'
+mc09.append(MCR(109280,'J4_pythia_jetjet_1muon','e534_s765_s767_r1250_r1260',87.848700,0.022156,500000))
 
-if True:
+if False:
     print 'Registered',mc09.nruns(),'runs:'
     print 'nevents   =',mc09.nevents()
-    [r.pathena_submit() for r in mc09.runs]
+    #[r.pathena_submit() for r in mc09.runs]
+    #for r in mc09.runs: print r.path()
