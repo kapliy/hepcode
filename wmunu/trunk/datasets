@@ -1,3 +1,14 @@
+GRL from Peter:
+I get some explanation by Mauoro and then saw the email by Peter O. about what should be use for pLHC :
+"For Period A, runs 152166-153200: DetStatus-v02-April10-02 (in
+conjunction with April reprocessing; the physics container datasets are
+*repro03_v1*)
+For Period B, runs 153565-155160: DetStatus-v02-pass1-analysis-2010B (in
+conjunction with Tier-0 processing; the physics container datasets are
+*t0proc03_v1*)
+
+
+
 Latest data found on AMI (later than PLHC note!):
 data10_7TeV.00152844.physics_MuonswBeam.merge.AOD.r1297_p157
 

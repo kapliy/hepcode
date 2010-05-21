@@ -13,14 +13,15 @@ muMASS=0.1056584
 GeV=1
 
 # mass window for W id via transverse mass:
-wMIN=45*GeV
-wMAX=90*GeV
+wMIN=40*GeV
+wMAX=1000*GeV   # only require mT>40 GeV
 
 # binning (default)
 nobjbins = (21,-0.5,20.5,'N')
 ptbins = (100,0.,200.,'Pt, [GeV]')
 mtbins = (100,0.,200.,'Mt, [GeV]')
 etisobins = (100,0.,8.,'Et isolation, [GeV]')
+ptisobins = (20,0.,1.,'Pt isolation')
 wmassbins = (100,0.,200.,'Mass [GeV]');
 metbins = (100,0.,200.,'Missing Et [GeV]')
 etabins = (50,-3.0,3.0,'Eta')
@@ -224,33 +225,15 @@ class EventFlow:
         s.trigger=0
         s.bcid=0
         s.vertex=0
-        s.muon=0
+        s.muonpresel=0
+        s.muonpt=0
+        s.muoniso=0
         s.met=0
         s.zcut=0
         s.metmuphi=0
-        s.w=0
-    def OK(s):
-        s.ok+=1
-    def TRUTH(s):
-        s.truth+=1
-    def TRIGGER(s):
-        s.trigger+=1
-    def BCID(s):
-        s.bcid+=1
-    def VERTEX(s):
-        s.vertex+=1
-    def MUON(s):
-        s.muon+=1
-    def MET(s):
-        s.met+=1
-    def ZCUT(s):
-        s.zcut+=1
-    def METMUPHI(s):
-        s.metmuphi+=1
-    def W(s):
-        s.w+=1
+        s.wmt=0
     def Print(s,fout):
-        o=[s.truth,s.bcid,s.vertex,s.muon,s.trigger,s.met,s.zcut,s.metmuphi,s.w,s.ok]
+        o=[s.truth,s.bcid,s.vertex,s.muonpresel,s.trigger,s.muonpt,s.muoniso,s.met,s.zcut,s.wmt,s.ok]
         print >>fout,o
         def cut(o,i):
             return '%d \t %.2f%%'%(sum(o)-sum(o[:i]),100.0*(sum(o)-sum(o[:i]))/sum(o))
@@ -259,12 +242,14 @@ class EventFlow:
         print >>fout, 'After truth cuts   :',cut(o,i); i+=1
         print >>fout, 'After bcid!=0 cut  :',cut(o,i); i+=1
         print >>fout, 'After primary vtx  :',cut(o,i); i+=1
-        print >>fout, 'After muon cuts    :',cut(o,i); i+=1
+        print >>fout, '-------------------------------'
+        print >>fout, 'After muon presel  :',cut(o,i); i+=1
         print >>fout, 'After trigger      :',cut(o,i); i+=1
+        print >>fout, 'After muon pt>20   :',cut(o,i); i+=1
+        print >>fout, 'After muon iso     :',cut(o,i); i+=1
         print >>fout, 'After MET cuts     :',cut(o,i); i+=1
         print >>fout, 'After z bg cut     :',cut(o,i); i+=1
-        print >>fout, 'After dPhi[mu,met] :',cut(o,i); i+=1
-        print >>fout, 'After finding W    :',cut(o,i); i+=1
+        print >>fout, 'After mT[W] >40    :',cut(o,i); i+=1
         fout.close()
 
 def makeCanvas(label):
