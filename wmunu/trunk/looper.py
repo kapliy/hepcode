@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
 _GOODLIST = ( 21677784,22180828,29555751,29874999 )
-_GOODEVTS = ( 255497,261005,344577,347861 )
-_DATA = True
+#_GOODEVTS = ( 255497,261005,344577,347861 )
+_BCIDs = (1,1786)
+_DATA = False
 
 _INPUTS = '/scratch/antonk/zmumu.root'
 _INPUTS = '/scratch/antonk/wmunu.root'
 _INPUTS = 'dcache:///pnfs/uct3/data/users/antonk/ANALYSIS/PLHC/153565/*root*'
+_INPUTS = 'dcache:///pnfs/uct3/data/users/antonk/ANALYSIS/PLHC_MC/user10.AntonKapliy.mc09_7TeV.106044.PythiaWmunu_no_filter.merge.AOD.e468_s765_s767_r1207_r1210.ntuple.v1_7/user10.AntonKapliy.mc09_7TeV.106044.PythiaWmunu_no_filter.merge.AOD.e468_s765_s767_r1207_r1210.ntuple.v1_7.flatntuple._00001.root'
 #_LOAD_EFF = './efficiencies.root'
 
 try:
@@ -41,28 +43,20 @@ parser.add_option("-t", "--no-trigger",
 
 (opts, args) = parser.parse_args()
 
-Histo("TW_vs_TMU_eta",etabins,etabins)
-Histo("TNU_vs_MET_pt",ptbins,metbins)
+# PLHC plots
+Histo("PRESEL_mu_pt",ptbins)
+Histo("PRESEL_mu_eta",etabins)
+Histo("PRESEL_mu_phi",phibins)
+Histo("PRESEL_mu_ptiso",ptisobins)
+Histo("PRESEL_met",metbins)
+Histo("PRESEL_mu_pt_vs_met",ptbins,metbins)
 
-Histo("RW_mT_p",wmassbins,color=ROOT.kRed)
-Histo("RW_mT_m",wmassbins,color=ROOT.kBlue)
-Histo("RZ_m",wmassbins,color=ROOT.kBlue)
-
-Histo("TMU_eta_p",etabins,color=ROOT.kRed)
-Histo("TMU_eta_m",etabins,color=ROOT.kBlue)
-Histo("RMU_eta_p",etabins,color=ROOT.kRed)
-Histo("RMU_eta_m",etabins,color=ROOT.kBlue)
-
-Histo("TMU_pt_p",ptbins,color=ROOT.kRed)
-Histo("TMU_pt_m",ptbins,color=ROOT.kBlue)
-Histo("RMU_pt_p",ptbins,color=ROOT.kRed)
-Histo("RMU_pt_m",ptbins,color=ROOT.kBlue)
-
-# charge misidentification in accepted muons
-Histo("QMS_vs_QID",qbins,qbins)
-Histo("QMATCH_eta",etabins)
-Histo("QMATCH_phi",etabins)
-Histo("QMATCH_pt",ptbins)
+Histo("ANA_mu_pt",ptbins)
+Histo("ANA_mu_eta",etabins)
+Histo("ANA_mu_phi",phibins)
+Histo("ANA_mu_ptiso",ptisobins)
+Histo("ANA_w_mt",mtbins)
+Histo("ANA_met",metbins)
 
 t = ROOT.TChain('tree')
 t.Add(opts.input)
@@ -70,7 +64,7 @@ nentries = t.GetEntries()
 
 print 'Starting loop over',(opts.nevents if opts.nevents<nentries else nentries),'/',nentries,'entries'
 ef = EventFlow()
-for evt in _GOODEVTS:
+for evt in range(nentries):
     if evt>=opts.nevents:
         break
     if evt%1000==0:
@@ -98,8 +92,6 @@ for evt in _GOODEVTS:
                 v.charge = 'm' if mc_pdgid[m]==MUON else 'p'
                 if True or fabs(v.Pt())>=20.0*GeV and fabs(v.Eta())<2.4:
                     _Tmus.append(v)
-                    h['TMU_pt_%c'%v.charge].Fill(mc_pt[m])
-                    h['TMU_eta_%c'%v.charge].Fill(mc_eta[m])
             if mc_status[m]==3 and mc_pdgid[m] in (WPLUS,WMINUS):
                 v = ROOT.TLorentzVector()
                 v.SetPtEtaPhiE(mc_pt[m],mc_eta[m],mc_phi[m],mc_e[m])
@@ -114,13 +106,13 @@ for evt in _GOODEVTS:
     # truth cuts (only for testing, since it will bias the results!)
     if False and not _DATA:  # Wmunu truth cut
         if len(_Tmus)==0:
-            ef.TRUTH()
+            ef.truth+=1
             continue
 
     # event cuts
     if True and _DATA:
-        if t.bcid==0:
-            ef.BCID()
+        if t.bcid in _BCIDS:
+            ef.bcid+=1
             continue
 
     # primary vertex cut
@@ -132,45 +124,62 @@ for evt in _GOODEVTS:
                 _zvertex = t.vx_z[m]
                 break
         if _ivertex==None:
-            ef.VERTEX()
+            ef.vertex+=1
             continue
 
-    # muon preselection
-    if True:
-        nmu,mu_author,mu_q,mu_pt,mu_eta,mu_phi,mu_ptcone20,mu_ptms,mu_qms,mu_qid,mu_z0 = t.nmu,t.mu_author,t.mu_q,t.mu_pt,t.mu_eta,t.mu_phi,t.mu_ptcone20,t.mu_ptms,t.mu_qms,t.mu_qid,t.mu_z0
-        for m in range(nmu):
-            #mu_q[m]!=0
-            if (mu_author[m]&2!=0) and fabs(mu_eta[m])<2.4 and mu_pt[m]>15*GeV and mu_ptms[m]>10*GeV and fabs(mu_z0[m]-_zvertex)<10:
-                v=ROOT.TLorentzVector()
-                v.SetPtEtaPhiM(mu_pt[m],mu_eta[m],mu_phi[m],muMASS)
-                v.charge='p' if mu_q[m]==1 else 'm'
-                v.ptcone20 = mu_ptcone20[m]
-                _Rmus.append(v)
-    if len(_Rmus)==0:
-        ef.MUON()
-        continue
+    # muon preselection + W cuts
+    nmu,mu_author,mu_q,mu_pt,mu_eta,mu_phi,mu_ptcone40,mu_ptms,mu_qms,mu_qid,mu_z0 = t.nmu,t.mu_author,t.mu_q,t.mu_pt,t.mu_eta,t.mu_phi,t.mu_ptcone40,t.mu_ptms,t.mu_qms,t.mu_qid,t.mu_z0
+    presel,pt,iso=(True,)*3
+    for m in range(nmu):
+        #mu_q[m]!=0
+        if (mu_author[m]&2!=0) and fabs(mu_eta[m])<2.4 and mu_pt[m]>15*GeV and mu_ptms[m]>10*GeV and fabs(mu_z0[m]-_zvertex)<10:
+            ptcone40 = mu_ptcone40[m]/mu_pt[m]
+            presel = False
+            h['PRESEL_mu_pt'].Fill(mu_pt[m])
+            h['PRESEL_mu_phi'].Fill(mu_phi[m])
+            h['PRESEL_mu_eta'].Fill(mu_eta[m])
+            h['PRESEL_mu_ptiso'].Fill(ptcone40)
+            h['PRESEL_met'].Fill(t.met_topo+t.met_muonboy)
+            h['PRESEL_mu_pt_vs_met'].Fill(mu_pt[m],t.met_topo+t.met_muonboy)
+            if mu_pt[m]>20*GeV:
+                pt=False
+                if ptcone40<0.2:
+                    iso=False
+                    v=ROOT.TLorentzVector()
+                    v.SetPtEtaPhiM(mu_pt[m],mu_eta[m],mu_phi[m],muMASS)
+                    v.charge='p' if mu_q[m]==1 else 'm'
+                    v.ptcone40 = ptcone40
+                    _Rmus.append(v)
 
+    # muon preselection
+    if presel:
+        ef.muonpresel+=1
+        continue
     # trigger
     if True:
         if t.trig_l1mu0==0:
-            ef.TRIGGER()
+            ef.trigger+=1
             continue
+    # muon pt
+    if pt:
+        ef.muonpt+=1
+        continue
+    # muon isolation
+    if iso:
+        ef.muoniso+=1
+        continue
 
     # met from met_topo + met_muon
     if True:
-        et_topo,et_muon = t.met_topo,t.met_muon
-        et = et_topo + et_muon
-        if et<15*GeV:
-            ef.MET()
-            continue
-        et_topo_phi,et_muon_phi = t.met_topo_phi,t.met_muon_phi
+        et_topo,et_muon = t.met_topo,t.met_muonboy
+        et_topo_phi,et_muon_phi = t.met_topo_phi,t.met_muonboy_phi
         et_x = et_topo*math.cos(et_topo_phi)+et_muon*math.cos(et_muon_phi)
         et_y = et_topo*math.sin(et_topo_phi)+et_muon*math.sin(et_muon_phi)
         _met=ROOT.TVector2(et_x,et_y)
         _met.Pt = _met.Mod  # define Pt() since TVector2 doesn't have it
-
-        mu=_Rmus[0]
-    #print t.event,_met.Pt(),_met.Phi(),mu.Pt(),mu.Eta(),mu.charge
+        if _met.Pt()<25*GeV:
+            ef.met+=1
+            continue
 
     # explicitly remove events with a Z->mumu
     if False:
@@ -184,36 +193,35 @@ for evt in _GOODEVTS:
                     break
                 cands.append(M)
             if _fail:
-                ef.ZCUT()
+                ef.zcut+=1
                 continue
             else:
                 mdiff,mZ,i=closest2(zMASS,cands)
-                h["RZ_m"].Fill(mZ)
                 
     # W candidates in W->munu decay
     if True:
         cands=[]  # [mu_index,mW]
         for i,mu in enumerate(_Rmus):
-            if fabs(mu.Phi()-_met.Phi())>math.pi/2.0:  # dPhi cut on MET and muon
+            if True: #fabs(mu.Phi()-_met.Phi())>math.pi/2.0:  # dPhi cut on MET and muon
                 mW=math.sqrt( 2*mu.Pt()*_met.Pt()*(1-math.cos(_met.Phi()-mu.Phi())) )
                 cands.append((i,mW))
-        if len(cands)==0:
-            ef.METMUPHI()
-            continue
         # choose the closest W candidate:
         mdiff,mW,i=closest(wMASS,cands)
         mu=_Rmus[cands[i][0]]
-        h['RW_mT_%c'%mu.charge].Fill(mW)
+        h['ANA_w_mt'].Fill(mW)
         # reconstructed a good W:
         if (mW>wMIN and mW<wMAX):
-            ef.OK()
-            h['RMU_pt_%c'%mu.charge].Fill(mu.Pt())
-            h['RMU_eta_%c'%mu.charge].Fill(mu.Eta())
+            ef.ok+=1
+            h['ANA_mu_pt'].Fill(mu.Pt())
+            h['ANA_mu_phi'].Fill(mu.Phi())
+            h['ANA_mu_eta'].Fill(mu.Eta())
+            h['ANA_mu_ptiso'].Fill(mu.ptcone40)
+            h['ANA_met'].Fill(_met.Pt())
             #ws=RecoW(mu.E(),mu.Px(),mu.Py(),mu.Pz(),_met.Px(),_met.Py())
             #_RWs+=ws
             # check with truth
         else:
-            ef.W()
+            ef.wmt+=1
             continue
 
     if False:
