@@ -18,7 +18,7 @@ for row in rows:
         tag=parts[5].strip().strip('/')
         xsec = float(cols[1].contents[0])
         eff = float(cols[2].contents[0])
-        nevents = float(cols[2].contents[0])
+        nevents = float(cols[3].contents[0])
         print "mc09.append(MCR(%d,'%s','%s',%f,%f,%d))"%(rnum,dname,tag,xsec,eff,nevents)
     except:
         pass
