@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 
+_GOODLIST = ( 21677784,22180828,29555751,29874999 )
+_GOODEVTS = ( 255497,261005,344577,347861 )
+_DATA = True
+
 _INPUTS = '/scratch/antonk/zmumu.root'
 _INPUTS = '/scratch/antonk/wmunu.root'
+_INPUTS = 'dcache:///pnfs/uct3/data/users/antonk/ANALYSIS/PLHC/153565/*root*'
 #_LOAD_EFF = './efficiencies.root'
 
 try:
@@ -53,11 +58,10 @@ Histo("TMU_pt_m",ptbins,color=ROOT.kBlue)
 Histo("RMU_pt_p",ptbins,color=ROOT.kRed)
 Histo("RMU_pt_m",ptbins,color=ROOT.kBlue)
 
-# TODO:
-# nmu before and after cuts; ntrue mu,nu,w
-
 # charge misidentification in accepted muons
+Histo("QMS_vs_QID",qbins,qbins)
 Histo("QMATCH_eta",etabins)
+Histo("QMATCH_phi",etabins)
 Histo("QMATCH_pt",ptbins)
 
 t = ROOT.TChain('tree')
@@ -66,7 +70,7 @@ nentries = t.GetEntries()
 
 print 'Starting loop over',(opts.nevents if opts.nevents<nentries else nentries),'/',nentries,'entries'
 ef = EventFlow()
-for evt in range(nentries):
+for evt in _GOODEVTS:
     if evt>=opts.nevents:
         break
     if evt%1000==0:
@@ -74,6 +78,7 @@ for evt in range(nentries):
     t.GetEntry(evt+opts.nskip)
 
     # per-event arrays of objects
+    _ivertex = None; _zvertex = None
     _met = None
     _Tmus=[]
     _Tnus=[]
@@ -82,7 +87,7 @@ for evt in range(nentries):
     _RWs=[]
 
     # mc truth
-    if True:
+    if False and not _DATA:
         nmc,mc_status,mc_pdgid,mc_e,mc_pt,mc_eta,mc_phi = t.nmc,t.mc_status,t.mc_pdgid,t.mc_e,t.mc_pt,t.mc_eta,t.mc_phi
         for m in range(nmc):
             if mc_status[m]!=3:
@@ -91,7 +96,7 @@ for evt in range(nentries):
                 v = ROOT.TLorentzVector()
                 v.SetPtEtaPhiE(mc_pt[m],mc_eta[m],mc_phi[m],mc_e[m])
                 v.charge = 'm' if mc_pdgid[m]==MUON else 'p'
-                if True or math.fabs(v.Pt())>=20.0*GeV and math.fabs(v.Eta())<2.4:
+                if True or fabs(v.Pt())>=20.0*GeV and fabs(v.Eta())<2.4:
                     _Tmus.append(v)
                     h['TMU_pt_%c'%v.charge].Fill(mc_pt[m])
                     h['TMU_eta_%c'%v.charge].Fill(mc_eta[m])
@@ -107,44 +112,68 @@ for evt in range(nentries):
                 _Tnus.append(v)
 
     # truth cuts (only for testing, since it will bias the results!)
-    if False:  # Wmunu truth cut
+    if False and not _DATA:  # Wmunu truth cut
         if len(_Tmus)==0:
             ef.TRUTH()
             continue
 
-    # trigger
-    if not opts.notrig:
-        if t.trig_efmu10==0:
-            ef.TRIGGER()
+    # event cuts
+    if True and _DATA:
+        if t.bcid==0:
+            ef.BCID()
             continue
 
-    # met from met_ref_final
+    # primary vertex cut
     if True:
-        et,etphi=t.met_reffinal,t.met_reffinal_phi
-        if et<20*GeV:
-            ef.MET()
+        nvx,vx_type,vx_ntracks = t.nvx,t.vx_type,t.vx_ntracks
+        for m in range(nvx):
+            if vx_type[m]==1 and vx_ntracks[m]>=3 and fabs(t.vx_z[m])<150:
+                _ivertex = m
+                _zvertex = t.vx_z[m]
+                break
+        if _ivertex==None:
+            ef.VERTEX()
             continue
-        _met=ROOT.TVector2()
-        _met.SetMagPhi(et,etphi)
-        _met.Pt = _met.Mod  # define Pt() since TVector2 doesn't have it
-        if len(_Tnus)==1:
-            h["TNU_vs_MET_pt"].Fill(_Tnus[0].Pt(),_met.Pt())
 
-    # muons
+    # muon preselection
     if True:
-        nmu,mu_author,mu_q,mu_pt,mu_eta,mu_phi,mu_etcone40 = t.nmu,t.mu_author,t.mu_q,t.mu_pt,t.mu_eta,t.mu_phi,t.mu_etcone40
+        nmu,mu_author,mu_q,mu_pt,mu_eta,mu_phi,mu_ptcone20,mu_ptms,mu_qms,mu_qid,mu_z0 = t.nmu,t.mu_author,t.mu_q,t.mu_pt,t.mu_eta,t.mu_phi,t.mu_ptcone20,t.mu_ptms,t.mu_qms,t.mu_qid,t.mu_z0
         for m in range(nmu):
-            v=ROOT.TLorentzVector()
-            v.SetPtEtaPhiM(mu_pt[m],mu_eta[m],mu_phi[m],muMASS)
-            v.charge='p' if mu_q[m]==1 else 'm'
-            if (mu_author[m]&2!=0) and math.fabs(mu_eta[m])<2.4 and mu_q[m]!=0 and mu_pt[m]>15*GeV and mu_etcone40[m]<4*GeV:
+            #mu_q[m]!=0
+            if (mu_author[m]&2!=0) and fabs(mu_eta[m])<2.4 and mu_pt[m]>15*GeV and mu_ptms[m]>10*GeV and fabs(mu_z0[m]-_zvertex)<10:
+                v=ROOT.TLorentzVector()
+                v.SetPtEtaPhiM(mu_pt[m],mu_eta[m],mu_phi[m],muMASS)
+                v.charge='p' if mu_q[m]==1 else 'm'
+                v.ptcone20 = mu_ptcone20[m]
                 _Rmus.append(v)
     if len(_Rmus)==0:
         ef.MUON()
         continue
 
-    # explicitly remove events with a Z->mumu
+    # trigger
     if True:
+        if t.trig_l1mu0==0:
+            ef.TRIGGER()
+            continue
+
+    # met from met_topo + met_muon
+    if True:
+        et_topo,et_muon = t.met_topo,t.met_muon
+        et = et_topo + et_muon
+        if et<15*GeV:
+            ef.MET()
+            continue
+        et_topo_phi,et_muon_phi = t.met_topo_phi,t.met_muon_phi
+        et_x = et_topo*math.cos(et_topo_phi)+et_muon*math.cos(et_muon_phi)
+        et_y = et_topo*math.sin(et_topo_phi)+et_muon*math.sin(et_muon_phi)
+        _met=ROOT.TVector2(et_x,et_y)
+        _met.Pt = _met.Mod  # define Pt() since TVector2 doesn't have it
+
+        mu=_Rmus[0]
+    #print t.event,_met.Pt(),_met.Phi(),mu.Pt(),mu.Eta(),mu.charge
+
+    # explicitly remove events with a Z->mumu
+    if False:
         if len(_Rmus)>=2:
             cands=[]  # [mZ]
             _fail=False
@@ -165,7 +194,7 @@ for evt in range(nentries):
     if True:
         cands=[]  # [mu_index,mW]
         for i,mu in enumerate(_Rmus):
-            if math.fabs(mu.Phi()-_met.Phi())>math.pi/2.0:  # dPhi cut on MET and muon
+            if fabs(mu.Phi()-_met.Phi())>math.pi/2.0:  # dPhi cut on MET and muon
                 mW=math.sqrt( 2*mu.Pt()*_met.Pt()*(1-math.cos(_met.Phi()-mu.Phi())) )
                 cands.append((i,mW))
         if len(cands)==0:
@@ -183,13 +212,6 @@ for evt in range(nentries):
             #ws=RecoW(mu.E(),mu.Px(),mu.Py(),mu.Pz(),_met.Px(),_met.Py())
             #_RWs+=ws
             # check with truth
-            if len(_Tmus)==1 and len(_TWs)==1:
-                tmu=_Tmus[0]
-                tw=_TWs[0]
-                if mu.charge!=tmu.charge:
-                    h['QMATCH_eta'].Fill(tmu.Eta())
-                    h['QMATCH_pt'].Fill(tmu.Pt())
-                h['TW_vs_TMU_eta'].Fill(tw.Eta(),tmu.Eta())
         else:
             ef.W()
             continue
@@ -216,7 +238,7 @@ for evt in range(nentries):
             for w in _RWs:
                 Print4vec('RECO              ',w)
 
-if True:
+if False:
     # plot distributions overlayed
     PlotOverlayHistos(h["TMU_eta_p"],h["TMU_eta_m"],'True muon eta: red=mu+, blue=mu-','TMU_eta__overlay')
     PlotOverlayHistos(h["TMU_eta_p"],h["TMU_eta_m"],'True muon eta: red=mu+, blue=mu-','TMU_eta__norm',norm=True)
@@ -227,7 +249,7 @@ if True:
     PlotOverlayHistos(h["RMU_pt_p"],h["RMU_pt_m"],'Reco accepted muon pt: red=mu+, blue=mu-','RMU_pt__overlay')
     PlotOverlayHistos(h["RMU_pt_p"],h["RMU_pt_m"],'Reco accepted muon pt: red=mu+, blue=mu-','RMU_pt__norm',norm=True)
 
-if '_LOAD_EFF' in dir():
+if '_LOAD_EFF' in dir() and False:
     # load efficiency histograms from file
     f=ROOT.TFile(_LOAD_EFF)
     if not f.IsOpen():
@@ -240,7 +262,7 @@ if '_LOAD_EFF' in dir():
     h["EFF_MU_pt_p"]=f.Get("EFF_MU_pt_p").Clone()
     h["EFF_MU_pt_m"]=f.Get("EFF_MU_pt_m").Clone()
     f.Close()
-else:
+elif False:
     # make efficiency histograms
     MakeEffHistos(h["RMU_eta_p"],h["TMU_eta_p"],'MU_eta_p')
     MakeEffHistos(h["RMU_pt_p"],h["TMU_pt_p"],'MU_pt_p')
@@ -253,7 +275,7 @@ else:
     PlotOverlayHistos(h["EFF_MU_eta_p"],h["EFF_MU_eta_m"],'Reconstruction efficiency vs eta: red=mu+, blue=mu-','EFF_MU_eta__norm',norm=True)
     
 # asymmetries, ratios, efficiencies
-if True:
+if False:
     MakeAsymmRatioHistos(h["TMU_eta_p"],h["TMU_eta_m"],'TMU_eta')
     MakeAsymmRatioHistos(h["TMU_pt_p"],h["TMU_pt_m"],'TMU_pt')
     # uncorrected for relative W+/W- reconstruction efficiency
