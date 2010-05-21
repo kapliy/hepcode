@@ -3,6 +3,8 @@
 import math,re,os
 from math import sqrt,fabs
 import ROOT
+import PyCintex;
+PyCintex.Cintex.Enable()
 
 # constants
 wMASS=80.4
@@ -14,7 +16,7 @@ GeV=1
 wMIN=45*GeV
 wMAX=90*GeV
 
-# binning
+# binning (default)
 nobjbins = (21,-0.5,20.5,'N')
 ptbins = (100,0.,200.,'Pt, [GeV]')
 mtbins = (100,0.,200.,'Mt, [GeV]')
@@ -25,6 +27,16 @@ etabins = (50,-3.0,3.0,'Eta')
 ybins = (50,-3.0,3.0,'Rapidity')
 asbins = (50,-3.0,3.0,'Eta')
 phibins = (50,-math.pi,math.pi,'Phi')
+qbins = (3,-1.01,1.01,'Charge')
+
+# binning (recommendations from WZ early observation papers)
+# https://twiki.cern.ch/twiki/bin/view/AtlasProtected/WZObservationWithMuons
+ptbins = (20,0.,100.,'Pt, [GeV]')
+mtbins = (24,0.,120.,'Mt, [GeV]')
+metbins = (20,0.,100.,'Missing Et [GeV]')
+etabins = (20,-2.4,2.4,'Eta')
+phibins = (20,-math.pi,math.pi,'Phi')
+
 
 def findBin(bins,val):
     """ finds which bin a value belongs to """
@@ -134,8 +146,25 @@ def Print4vec(label,v):
 def SetStyle(styleMacro=''):
     """ Global style settings for ROOT """
     if styleMacro=='':
-        ROOT.gROOT.SetStyle("Plain")
-        ROOT.gStyle.SetPalette(1)
+        ROOT.gStyle.SetCanvasColor(0);
+        ROOT.gStyle.SetCanvasBorderMode(0);
+        ROOT.gStyle.SetPadColor(0);
+        ROOT.gStyle.SetPadBorderMode(0);
+        ROOT.gStyle.SetStatColor(0);
+        
+        ROOT.gStyle.SetOptStat(111111);
+        ROOT.gStyle.SetOptFit(1111);
+        ROOT.gStyle.SetHistFillColor(0);
+        ROOT.gStyle.SetMarkerStyle(20);
+        ROOT.gStyle.SetMarkerSize(.4);
+        ROOT.gStyle.SetHistLineWidth(2);
+        ROOT.gStyle.SetErrorX(0);
+        
+        ROOT.gStyle.SetTitleStyle(0);
+        
+        ROOT.gStyle.SetStatBorderSize(1);
+        ROOT.gStyle.SetFrameFillColor(10);
+        ROOT.gStyle.SetTitleFillColor(0);
         ROOT.gROOT.ForceStyle()
     else:
         ROOT.gROOT.LoadMacro(styleMacro);
@@ -193,8 +222,10 @@ class EventFlow:
         s.ok=0
         s.truth=0
         s.trigger=0
-        s.met=0
+        s.bcid=0
+        s.vertex=0
         s.muon=0
+        s.met=0
         s.zcut=0
         s.metmuphi=0
         s.w=0
@@ -204,10 +235,14 @@ class EventFlow:
         s.truth+=1
     def TRIGGER(s):
         s.trigger+=1
-    def MET(s):
-        s.met+=1
+    def BCID(s):
+        s.bcid+=1
+    def VERTEX(s):
+        s.vertex+=1
     def MUON(s):
         s.muon+=1
+    def MET(s):
+        s.met+=1
     def ZCUT(s):
         s.zcut+=1
     def METMUPHI(s):
@@ -215,41 +250,24 @@ class EventFlow:
     def W(s):
         s.w+=1
     def Print(s,fout):
-        o=[s.truth,s.trigger,s.met,s.muon,s.zcut,s.metmuphi,s.w,s.ok]
+        o=[s.truth,s.bcid,s.vertex,s.muon,s.trigger,s.met,s.zcut,s.metmuphi,s.w,s.ok]
         print >>fout,o
         def cut(o,i):
             return '%d \t %.2f%%'%(sum(o)-sum(o[:i]),100.0*(sum(o)-sum(o[:i]))/sum(o))
-        print >>fout, 'Total events       :',cut(o,0)
-        print >>fout, 'After truth cuts   :',cut(o,1)
-        print >>fout, 'After trigger      :',cut(o,2)
-        print >>fout, 'After MET cuts     :',cut(o,3)
-        print >>fout, 'After muon cuts    :',cut(o,4)
-        print >>fout, 'After z bg cut     :',cut(o,5)
-        print >>fout, 'After dPhi[mu,met] :',cut(o,6)
-        print >>fout, 'After finding W    :',cut(o,7)
+        i=0
+        print >>fout, 'Total events       :',cut(o,i); i+=1
+        print >>fout, 'After truth cuts   :',cut(o,i); i+=1
+        print >>fout, 'After bcid!=0 cut  :',cut(o,i); i+=1
+        print >>fout, 'After primary vtx  :',cut(o,i); i+=1
+        print >>fout, 'After muon cuts    :',cut(o,i); i+=1
+        print >>fout, 'After trigger      :',cut(o,i); i+=1
+        print >>fout, 'After MET cuts     :',cut(o,i); i+=1
+        print >>fout, 'After z bg cut     :',cut(o,i); i+=1
+        print >>fout, 'After dPhi[mu,met] :',cut(o,i); i+=1
+        print >>fout, 'After finding W    :',cut(o,i); i+=1
         fout.close()
 
 def makeCanvas(label):
-    ROOT.gStyle.SetCanvasColor(0);
-    ROOT.gStyle.SetCanvasBorderMode(0);
-    ROOT.gStyle.SetPadColor(0);
-    ROOT.gStyle.SetPadBorderMode(0);
-    ROOT.gStyle.SetStatColor(0);
-    
-    ROOT.gStyle.SetOptStat(111111);
-    ROOT.gStyle.SetOptFit(1111);
-    ROOT.gStyle.SetHistFillColor(0);
-    ROOT.gStyle.SetMarkerStyle(20);
-    ROOT.gStyle.SetMarkerSize(.4);
-    ROOT.gStyle.SetHistLineWidth(2);
-    ROOT.gStyle.SetErrorX(0);
-    
-    ROOT.gStyle.SetTitleStyle(0);
-    
-    ROOT.gStyle.SetStatBorderSize(1);
-    ROOT.gStyle.SetFrameFillColor(10);
-    ROOT.gStyle.SetTitleFillColor(0);
-    
     c = ROOT.TCanvas(label,label,1024,768);
     c.cd();
     #ROOT.gPad.SetGridx();  ROOT.gPad.SetGridy();

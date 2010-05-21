@@ -1,3 +1,8 @@
+Check that event info etc are actually correct in MC!
+
+How to apply these without ESD?
+(n90<=5 && fHEC>0.8) || fabs(jetTime)<50 || (fabs(JetQuality)>0.8 && emf>0.95)
+
 Mel:
 assymmetry + 1 stuff jet - gluons contribution rather than jet.
 * electron: very old, sophisticated, PDFs info extraction, many people. oxford - student to student
