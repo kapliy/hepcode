@@ -1,0 +1,1 @@
+./prunftk --noSubmit --site=ANALY_MWT2 --nJobs=64 --exec "echo %IN %IN2" --inDS=user10.YangyangCheng.raw_8L_50x15x144_v14pconst_32NSubsPerRegion.2010_05_19_16_08_15 --outDS user.kapliy.prun.staging.test.may2010.01 --secondaryDSs=IN2:1:user10.AntonKapliy.raw_8L_50x14x144_v14pconst_32NSubsPerRegion.2010_05_02_10_10_33
