@@ -1,0 +1,25 @@
+split arch:
+Run in subregions, but 2nd step (4L) will run ALL subregions.
+At 8L stage, we apply in-road HW (HW=1), so no hw is done across subregions!
+This means we can safely use 8L tracks from subregions without merging!
+
+So the dataflow is:
+64 * 8 grid jobs, each running:
+8L fullchain -> 4 sequential 4L jobs (which are fast because so few 8L tracks) -> 4L dummy roadmerger -> 11L tracks in this 8L subregion
+(allow DO_NOT_KEEP_ROADS)
+
+Merge job (or jobs, if multiple nfilesperjob blocks)
+Loop regions
+ Download 64 output files that contain 11L tracks
+ Merge tracks (and roads, if kept) - do "as you go" (?)
+Final merge of 8 region road / track files; trigftkana stuff
+
+TODO: smart dq2-get: if file is local and on pnfs, use dq2-get -p dcap
+
+
+njobs and inDS regulate data input.
+
+What do we want to loop?
+regs, subs, patternPoints, fileblocks
+We never actually need to convert these into njobs format. Except maybe in merge job when we need to download this:-(
+

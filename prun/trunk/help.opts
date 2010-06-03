@@ -1,0 +1,144 @@
+Usage: prun [options]
+
+  HowTo is available at https://twiki.cern.ch/twiki/bin/view/Atlas/PandaRun
+
+Options:
+  -h, --help            show this help message and exit
+  --version             Displays version
+  --inDS=INDS           Name of an input dataset or dataset container
+  --goodRunListXML=GOODRUNLISTXML
+                        Good Run List XML which will be converted to datasets
+                        by AMI
+  --goodRunListDataType=GOODRUNDATATYPE
+                        specify data type when converting Good Run List XML to
+                        datasets, e.g, AOD (default)
+  --goodRunListProdStep=GOODRUNPRODSTEP
+                        specify production step when converting Good Run List
+                        to datasets, e.g, merge (default)
+  --goodRunListDS=GOODRUNLISTDS
+                        A comma-separated list of pattern strings. Datasets
+                        which are converted from Good Run List XML will be
+                        used when they match with one of the pattern strings.
+                        Either \ or "" is required when a wild-card is used.
+                        If this option is omitted all datasets will be used
+  --eventPickEvtList=EVENTPICKEVTLIST
+                        a file name which contains a list of runs/events for
+                        event picking
+  --eventPickDataType=EVENTPICKDATATYPE
+                        type of data for event picking. one of AOD,ESD,RAW
+  --eventPickStreamName=EVENTPICKSTREAMNAME
+                        stream name for event picking. e.g.,
+                        physics_CosmicCaloEM
+  --eventPickDS=EVENTPICKDS
+                        A comma-separated list of pattern strings. Datasets
+                        which are converted from the run/event list will be
+                        used when they match with one of the pattern strings.
+                        Either \ or "" is required when a wild-card is used.
+                        e.g., data\*
+  --outDS=OUTDS         Name of an output dataset. OUTDS will contain all
+                        output files
+  --destSE=DESTSE       Destination strorage element
+  --libDS=LIBDS         Name of a library dataset
+  --removedDS=REMOVEDDS
+                        don't use datasets in the input dataset container
+  --noBuild             Skip buildGen
+  --secondaryDSs=SECONDARYDSS
+                        List of secondary datasets when the job requires
+                        multiple inputs. See PandaRun wiki page for detail
+  --site=SITE           Site name where jobs are sent (default:AUTO)
+  --cloud=CLOUD         Cloud where jobs are submitted. default is set
+                        according to your VOMS country group
+  --match=MATCH         Use only files matching with given pattern
+  --memory=MEMORY       Required memory size
+  --maxCpuCount=MAXCPUCOUNT
+                        Required CPU count in seconds. Mainly to extend time
+                        limit for looping detection
+  --official            Produce official dataset
+  --useAthenaPackages   Use Athena packages. See PandaRun wiki page for detail
+  --gluePackages=GLUEPACKAGES
+                        list of glue packages which pathena cannot fine due to
+                        empty i686-slc4-gcc34-opt. e.g.,
+                        External/AtlasHepMC,External/Lhapdf
+  --nFiles=NFILES       Use a limited number of files in the input dataset
+  --nSkipFiles=NSKIPFILES
+                        Skip N files in the input dataset
+  --nFilesPerJob=NFILESPERJOB
+                        Number of files on which each sub-job runs (default
+                        50)
+  --nJobs=NJOBS         Maximum number of sub-jobs. If the number of input
+                        files (N_in) is less than nJobs*nFilesPerJob, only
+                        N_in/nFilesPerJob sub-jobs will be instantiated
+  --maxFileSize=MAXFILESIZE
+                        Maximum size of files to be sent to WNs (default
+                        1024*1024B)
+  --athenaTag=ATHENATAG
+                        Tags to setup Athena on remote WNs, e.g.,
+                        --athenaTag=AtlasProduction,14.2.24.3
+  --workDir=WORKDIR     All files under WORKDIR will be transfered to WNs
+                        (default=./)
+  --extFile=EXTFILE     root or large files under WORKDIR are not sent to WNs
+                        by default. If you want to send some skipped files,
+                        specify their names, e.g., data.root,data.tgz
+  --excludeFile=EXCLUDEFILE
+                        specify a comma-separated string to exclude files
+                        and/or directories when gathering files in local
+                        working area. Either \ or "" is required when a
+                        wildcard is used. e.g., doc,\*.C
+  --inputFileList=INPUTFILELISTNAME
+                        name of file which contains a list of files to be run
+                        in the input dataset
+  --crossSite=CROSSSITE
+                        submit jobs to N sites at most when datasets in
+                        container split over many sites (N=5 by default)
+  --outputs=OUTPUTS     Names of output files. Comma separated. e.g.,
+                        --outputs out1.dat,out2.txt
+  --excludedSite=EXCLUDEDSITE
+                        list of sites which are not used for site section,
+                        e.g., ANALY_ABC,ANALY_XYZ
+  --noSubmit            Don't submit jobs
+  --processingType=PROCESSINGTYPE
+                        set processingType
+  --seriesLabel=SERIESLABEL
+                        set seriesLabel
+  --workingGroup=WORKINGGROUP
+                        set workingGroup
+  --tmpDir=TMPDIR       Temporary directory where an archive file is created
+  --voms=VOMSROLES      generate proxy with paticular roles. e.g., atlas:/atla
+                        s/ca/Role=production,atlas:/atlas/fr/Role=pilot
+  --update              Update panda-client to the latest version
+  --spaceToken=SPACETOKEN
+                        spacetoken for outputs. e.g., ATLASLOCALGROUPDISK
+  --devSrv              Please don't use this option. Only for developers to
+                        use the dev panda server
+  --exec=JOBPARAMS      execution string. e.g., --exec "./myscript arg1 arg2"
+  --bexec=BEXEC         execution string for build stage. e.g., --bexec "make"
+  --myproxy=MYPROXY     Name of the myproxy server
+  --dbRelease=DBRELEASE
+                        DBRelease or CDRelease (DatasetName:FileName). e.g., d
+                        do.000001.Atlas.Ideal.DBRelease.v050101:DBRelease-5.1.
+                        1.tar.gz. If --dbRelease=LATEST, the latest DBRelease
+                        is used. Most likely the --useAthenaPackages or
+                        --athenaTag option is required to setup Athena runtime
+                        on WN
+  --dbRunNumber=DBRUNNUMBER
+                        RunNumber for DBRelease or CDRelease. If this option
+                        is used some redundant files are removed to save disk
+                        usage when unpacking DBRelease tarball. e.g., 0091890
+  --notExpandDBR        By default, DBRelease.tar.gz is expanded on WN and
+                        gets deleted after changing environment variables
+                        accordingly. If you need tar.gz, use this option
+  -v                    Verbose
+  --long                Send job to a long queue
+  --outputPath=OUTPUTPATH
+                        Physical path of output directory relative to a root
+                        path
+  --panda_srvURL=PANDA_SRVURL
+                        internal parameter
+  --panda_srcName=PANDA_SRCNAME
+                        internal parameter
+  --panda_inDS=PANDA_INDS
+                        internal parameter
+  --panda_inDSForEP=PANDA_INDSFOREP
+                        internal parameter
+  --panda_origFullExecString=PANDA_ORIGFULLEXECSTRING
+                        internal parameter
