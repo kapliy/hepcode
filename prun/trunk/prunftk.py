@@ -1416,7 +1416,9 @@ isDirectAccess = PsubUtils.isDirectAccess(options.site)
 
 # runJobs
 indexOffsetMap = {}
-for iJob in range(options.nJobs):
+print 'AK CREATING JOBS:',options.nJobs
+for iJob in xrange(options.nJobs):
+    print 'AK JOB',iJob
     jobR = JobSpec()
     jobR.jobDefinitionID   = jobDefinitionID
     jobR.jobName           = jobName
@@ -1456,7 +1458,7 @@ for iJob in range(options.nJobs):
     if options.seriesLabel != '':    
         jobR.prodSeriesLabel = options.seriesLabel
     jobR.workingGroup      = options.workingGroup    
-    jobR.assignedPriority  = 1000
+    jobR.assignedPriority  = 2000
     jobR.computingSite     = options.site
     jobR.cloud             = Client.PandaSites[options.site]['cloud']
     jobR.jobParameters     = '-j "%s" ' % jobScript
@@ -1477,6 +1479,7 @@ for iJob in range(options.nJobs):
                 # replace parameters
                 tmpJobO = re.sub(match.group(0),'%s%s' % (tmpRndmNum,match.group(2)),tmpJobO)
         jobR.jobParameters += '-p "%s" ' % urllib.quote(tmpJobO)
+    print 'AK PARS', jobR.jobParameters
     # source files
     if not options.nobuild:
         fileS = FileSpec()
@@ -1566,8 +1569,10 @@ for iJob in range(options.nJobs):
             sys.exit(EC_Split)
         # set parameter
         jobR.jobParameters += '-i "%s" ' % inList
+        print 'AK INDS LIST:',inList
 	if options.secondaryDSs != {}:
 	    jobR.jobParameters += '--inMap "%s" ' % tmpInputMap
+            print 'AK SECDS MAP:',tmpInputMap
     # DBRelease
     if options.dbRelease != '':
         tmpItems = options.dbRelease.split(':')
@@ -1635,9 +1640,12 @@ for iJob in range(options.nJobs):
             outMap[tmpLFN] = file.lfn
         # set parameter
         jobR.jobParameters += '-o "%s" ' % str(outMap)
+        print 'AK OUT MAP:',outMap
     # log
     file = FileSpec()
-    file.lfn               = '%s._$PANDAID.log.tgz' % options.outDS
+    # AK: rename the log file
+    file.lfn               = '%s._%05d.log.tgz' % (options.outDS,iJob)
+    #file.lfn               = '%s._$PANDAID.log.tgz' % options.outDS
     file.type              = 'log'
     file.dataset           = options.outDS    
     file.destinationSE     = jobR.destinationSE
@@ -1652,8 +1660,9 @@ for iJob in range(options.nJobs):
             else:
                 defaulttoken = Client.PandaSites[options.site]['defaulttoken']
                 file.destinationDBlockToken = Client.getDefaultSpaceToken(vomsFQAN,defaulttoken)
+
     # check job spec
-    PsubUtils.checkJobSpec(jobR)
+    #PsubUtils.checkJobSpec(jobR) # AK: this limits a job to 200 file inputs
     # append
     if options.verbose:    
         tmpLog.debug(jobR.jobParameters)
