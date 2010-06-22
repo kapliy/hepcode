@@ -14,12 +14,19 @@ import urllib
 import shelve
 import copy
 
+# FTK settings
+_PARENTVERSION = 'panda-client-0.2.55'
+_FTKDEBUG = True
+
 # default cloud/site
 defaultCloud = None
 defaultSite  = 'AUTO'
 
 # suffix for shadow dataset
 suffixShadow = "_shadow"
+
+# max lookup for cross site option
+maxCrossSite = 10
 
 # error code
 EC_Config    = 10
@@ -104,8 +111,8 @@ optP.add_option('--excludeFile',action='store',dest='excludeFile',default='',
                 help='specify a comma-separated string to exclude files and/or directories when gathering files in local working area. Either \ or "" is required when a wildcard is used. e.g., doc,\*.C')
 optP.add_option('--inputFileList', action='store', dest='inputFileListName', default='',
                 type='string', help='name of file which contains a list of files to be run in the input dataset')
-optP.add_option('--crossSite',action='store',dest='crossSite',default=5,
-                type='int',help='submit jobs to N sites at most when datasets in container split over many sites (N=5 by default)')
+optP.add_option('--crossSite',action='store',dest='crossSite',default=maxCrossSite,
+                type='int',help='submit jobs to N sites at most when datasets in container split over many sites (N=%s by default)' % maxCrossSite)
 optP.add_option('--outputs',action='store',dest='outputs',default='',type='string',
                 help='Names of output files. Comma separated. e.g., --outputs out1.dat,out2.txt')
 optP.add_option('--excludedSite', action='store', dest='excludedSite',  default='',
@@ -140,6 +147,8 @@ optP.add_option('--dbRunNumber',action='store',dest='dbRunNumber', default='',
                 type='string', help='RunNumber for DBRelease or CDRelease. If this option is used some redundant files are removed to save disk usage when unpacking DBRelease tarball. e.g., 0091890')
 optP.add_option('--notExpandDBR',action='store_const',const=True,dest='notExpandDBR',default=False,
                 help='By default, DBRelease.tar.gz is expanded on WN and gets deleted after changing environment variables accordingly. If you need tar.gz, use this option')
+optP.add_option('--provenanceID',action='store',dest='provenanceID',default=-1,type='int',
+                help='provenanceID')
 optP.add_option('-v',action='store_const',const=True,dest='verbose',default=False,
                 help='Verbose')
 optP.add_option('--long', action='store_const',const=True,dest='long',default=False,
@@ -209,8 +218,8 @@ if options.devSrv:
 if options.panda_srvURL != '':
     Client.setServer(options.panda_srvURL)
 
-# version check (print an annoying message if the version is outdated)
-## PsubUtils.checkPandaClientVer(options.verbose)
+# version check
+PsubUtils.checkPandaClientVer(options.verbose)
 
 # exclude sites
 if options.excludedSite != '':
@@ -240,6 +249,8 @@ original_outDS_Name = options.outDS
 # reset crossSite unless container is used for output 
 if not original_outDS_Name.endswith('/'):
     options.crossSite = 0
+
+usingContainerForOut = original_outDS_Name.endswith('/')
 
 # set inDS for recursive goodRunListXML
 if options.panda_inDS != '':
@@ -401,17 +412,27 @@ elif options.athenaTag != '':
 # good run list
 if options.goodRunListXML != '':
     # look for pyAMI
-    status,options.inDS = AthenaUtils.convertGoodRunListXMLtoDS(options.goodRunListXML,
-                                                                options.goodRunDataType,
-                                                                options.goodRunProdStep,
-								options.goodRunListDS,
-                                                                options.verbose)
+    status,options.inDS,tmpAmiFileList = AthenaUtils.convertGoodRunListXMLtoDS(options.goodRunListXML,
+                                                                               options.goodRunDataType,
+                                                                               options.goodRunProdStep,
+                                                                               options.goodRunListDS,
+                                                                               options.verbose)
     if not status:
         tmpLog.error("failed to convert GoodRunListXML")
         sys.exit(EC_Config)
     if options.inDS == '':
         tmpLog.error("no datasets were extracted from AMI using %s" % options.goodRunListXML)
         sys.exit(EC_Config)
+    # write input files   
+    if options.inputFileListName == '':    
+        options.inputFileListName = '%s/ami_%s.dat' % (curDir,commands.getoutput('uuidgen'))
+        evFH = open(options.inputFileListName,'w') 
+        for tmpLFN in tmpAmiFileList:
+            evFH.write('%s\n' % tmpLFN)
+        # close        
+        evFH.close()
+        # add to be deleted on exit
+        delFilesOnExit.append(options.inputFileListName)
 
 # event picking
 if options.eventPickEvtList != '':
@@ -518,7 +539,7 @@ else:
     options.secondaryDSs = {}
 
 # FTK datasets
-#IN:user.kapliy.datasetname:sectors_raw_11L_4M_reg%REG_sub%SUB*:corrgen_raw_reg%REG*,REPEAT
+# Format: IN:user.kapliy.datasetname:*sectors_raw_11L_4M_reg%REG_sub%SUB*:*corrgen_raw_reg%REG*,REPEAT
 if options.FTKDSs != '':
     # parse
     tmpMap = {}
@@ -710,7 +731,7 @@ if options.dbRelease != '':
     dbrDsSize += long(dbrFiles[tmpDbrLFN]['fsize'])
 
 # get files in input dataset
-if options.inDS != '' or options.FTKDSs!='':   # allow to run with FTKDSs and no inputs
+if options.inDS != '' or options.FTKDSs!='':
     # query files in shadow dataset
     shadowList = []
     if shadowDSexist and not outputContExist:
@@ -725,8 +746,11 @@ if options.inDS != '' or options.FTKDSs!='':   # allow to run with FTKDSs and no
     elif outputContExist:
 	shadowList = Client.getFilesInShadowDataset(options.outDS,suffixShadow,options.verbose)
     # query files in dataset
+    recursiveFlag = True
+    if options.crossSite in [0,maxCrossSite]:
+        recursiveFlag = False
     inputFileMap,inputDsString = Client.getFilesInDatasetWithFilter(options.inDS,options.match,shadowList,options.inputFileListName,
-                                                                    options.verbose,dsStringFlag=True)
+                                                                    options.verbose,dsStringFlag=True,isRecursive=recursiveFlag)
     # sort
     inputFileList = inputFileMap.keys()
     inputFileList.sort()
@@ -774,7 +798,8 @@ if options.inDS != '' or options.FTKDSs!='':   # allow to run with FTKDSs and no
                                                                                                     options.verbose,expCloud=expCloudFlag,
                                                                                                     getReserved=True,getTapeSites=True,
                                                                                                     removeDS=True,
-                                                                                                    removedDatasets=options.removedDS)
+                                                                                                    removedDatasets=options.removedDS,
+                                                                                                    useOutContainer=usingContainerForOut)
                 # no location
                 if tmpDsLocationMap == {} and tmpDsLocationMapBack == {}:
                     if expCloudFlag:
@@ -1280,6 +1305,8 @@ elif options.libDS == '':
     jobB.jobDefinitionID   = jobDefinitionID
     jobB.jobName           = jobName
     jobB.lockedby          = 'panda-client-%s' % PandaToolsPkgInfo.release_version
+    if options.provenanceID != -1:
+        jobB.jobExecutionID = options.provenanceID
     if options.panda_origFullExecString == '':    
         jobB.metadata = fullExecString
     else:
@@ -1351,7 +1378,8 @@ elif options.libDS == '':
     for file in jobB.Files:
         if file.type in ['output','log']:
             if options.spaceToken != '':
-                file.destinationDBlockToken = options.spaceToken
+		if Client.PandaSites[options.site]['setokens'].has_key(options.spaceToken):
+		    file.destinationDBlockToken = options.spaceToken
             else:
                 defaulttoken = Client.PandaSites[options.site]['defaulttoken']
                 file.destinationDBlockToken = Client.getDefaultSpaceToken(vomsFQAN,defaulttoken)
@@ -1448,7 +1476,8 @@ isDirectAccess = PsubUtils.isDirectAccess(options.site)
 # runJobs
 indexOffsetMap = {}
 
-print 'AK CREATING JOBS:',options.nJobs,options.nFilesPerJob
+if _FTKDEBUG:
+    print 'AK CREATING JOBS:',options.nJobs,options.nFilesPerJob
 options.nFilesPerJob=2
 FTK_filegroups = range(options.nJobs)
 FTK_patpoints = (0,)
@@ -1456,16 +1485,19 @@ FTK_regions = range(0,8)
 FTK_subregions = (0,)
 
 iJob = 0      # sequential job numbering
-for iGroup in FTK_filegroups:
+for iGroup in FTK_filegroups:    
     for iPatPoint in FTK_patpoints:
         for iRegion in FTK_regions:
             for iSubregion in FTK_subregions:
                 jobLabel='%05d_reg%d_sub%d_pat%d' % (iGroup+1,iRegion,iSubregion,iPatPoint)
-                print 'AK JOB',iJob
+                if _FTKDEBUG:
+                    print 'AK JOB',iJob
                 jobR = JobSpec()
                 jobR.jobDefinitionID   = jobDefinitionID
                 jobR.jobName           = jobName
                 jobR.lockedby          = 'panda-client-%s' % PandaToolsPkgInfo.release_version
+                if options.provenanceID != -1:
+                    jobR.jobExecutionID = options.provenanceID
                 if options.panda_origFullExecString == '':
                     jobR.metadata = fullExecString
                 else:
@@ -1473,8 +1505,8 @@ for iGroup in FTK_filegroups:
                 if athenaVer != '':
                     jobR.AtlasRelease  = athenaVer
                     jobR.homepackage   = 'AnalysisTransforms'+cacheVer+nightVer
-                    jobR.transformation    = '%s/runGen-00-00-02' % Client.baseURLSUB
-                    jobR.cmtConfig         = AthenaUtils.getCmtConfig(athenaVer,cacheVer,nightVer)
+                jobR.transformation    = '%s/runGen-00-00-02' % Client.baseURLSUB
+                jobR.cmtConfig         = AthenaUtils.getCmtConfig(athenaVer,cacheVer,nightVer)
                 # memory
                 if options.memory != -1:
                     jobR.minRamCount = options.memory
@@ -1490,18 +1522,13 @@ for iGroup in FTK_filegroups:
                     jobR.destinationSE = options.destSE
                 else:                
                     jobR.destinationSE = options.site
-                if options.inDS != '':
-                    if re.search(',',options.inDS) != None:
-                        jobR.prodDBlock = options.inDS.split(',')[0]
-                    else:
-                        jobR.prodDBlock = options.inDS
                 jobR.prodSourceLabel   = 'user'
                 if options.processingType != '':
                     jobR.processingType = options.processingType
                 if options.seriesLabel != '':    
                     jobR.prodSeriesLabel = options.seriesLabel
                 jobR.workingGroup      = options.workingGroup    
-                jobR.assignedPriority  = 2000
+                jobR.assignedPriority  = 1000
                 jobR.computingSite     = options.site
                 jobR.cloud             = Client.PandaSites[options.site]['cloud']
                 jobR.jobParameters     = '-j "%s" ' % jobScript
@@ -1522,7 +1549,8 @@ for iGroup in FTK_filegroups:
                             # replace parameters
                             tmpJobO = re.sub(match.group(0),'%s%s' % (tmpRndmNum,match.group(2)),tmpJobO)
                     jobR.jobParameters += '-p "%s" ' % urllib.quote(tmpJobO)
-                print 'AK PARS', jobR.jobParameters
+                if _FTKDEBUG:
+                    print 'AK PARS', jobR.jobParameters
                 # source files
                 if not options.nobuild:
                     fileS = FileSpec()
@@ -1538,7 +1566,7 @@ for iGroup in FTK_filegroups:
                 if options.libDS != "" or options.nobuild:
                     jobR.jobParameters += '-a %s ' % archiveName
                 # input files
-                if options.inDS != '':
+                if options.inDS != '':  #TODO: allow to run without inDS (pattern production mode)
                     totalSize = 0
                     indexIn = iJob*options.nFilesPerJob
                     inList = inputFileList[indexIn:indexIn+options.nFilesPerJob]
@@ -1565,97 +1593,101 @@ for iGroup in FTK_filegroups:
                         except:
                             pass
                     tmpInputMap = {'IN': copy.deepcopy(inList)}  
-                # secondary datasets
-                for tmpSecDS,tmpSecVal in options.secondaryDSs.iteritems():
-                    tmpIndexSec = iJob*tmpSecVal['nFiles']
-                    tmpSecList  = tmpSecVal['files'][tmpIndexSec:tmpIndexSec+tmpSecVal['nFiles']]
-                    # check length
-                    if len(tmpSecList) < tmpSecVal['nFiles']:
-                        errStr  = "%s contains %s files which is insufficient for splitting. " % (tmpSecDS,len(tmpSecVal['files']))
-                        errStr += "nJobs*nFilesPerJob=%s*%s=%s files are required" % (options.nJobs,tmpSecVal['nFiles'],
-                                                                                      options.nJobs*tmpSecVal['nFiles'])
+                    # secondary datasets
+                    secMap = {}
+                    for tmpSecDS,tmpSecVal in options.secondaryDSs.iteritems():
+                        tmpIndexSec = iJob*tmpSecVal['nFiles']
+                        tmpSecList  = tmpSecVal['files'][tmpIndexSec:tmpIndexSec+tmpSecVal['nFiles']]
+                        # check length
+                        if len(tmpSecList) < tmpSecVal['nFiles']:
+                            errStr  = "%s contains %s files which is insufficient for splitting. " % (tmpSecDS,len(tmpSecVal['files']))
+                            errStr += "nJobs*nFilesPerJob=%s*%s=%s files are required" % (options.nJobs,tmpSecVal['nFiles'],
+                                                                                          options.nJobs*tmpSecVal['nFiles'])
+                            tmpLog.error(errStr)            
+                            sys.exit(EC_Split)
+                        # add FileSpec
+                        tmpSecLfnList = []
+                        for vals in tmpSecList:
+                            fileI = FileSpec()
+                            fileI.lfn        = vals['LFN']
+                            fileI.GUID       = vals['guid']
+                            fileI.fsize      = vals['fsize']
+                            fileI.md5sum     = vals['md5sum']
+                            fileI.dataset    = tmpSecDS
+                            fileI.prodDBlock = tmpSecDS
+                            fileI.type       = 'input'
+                            fileI.status     = 'ready'
+                            fileI.dispatchDBlock = commonDispName
+                            jobR.addFile(fileI)
+                            inList.append(fileI.lfn)
+                            tmpSecLfnList.append(fileI.lfn)
+                            try:
+                                totalSize += long(fileI.fsize)
+                            except:
+                                pass
+                        # append to map    
+                        tmpInputMap[tmpSecVal['streamName']] = tmpSecLfnList
+                    # FTK datasets (particular regions/subregions get specific files)
+                    for tmpSecDS,tmpSecVal in options.FTKDSs.iteritems():
+                        tmpIndexSec = iJob*tmpSecVal['nFiles']
+                        tmpSecList  = tmpSecVal['files'][:]
+                        patterns = []
+                        # special substitution patterns for FTK mode: %REG, %SUB, %PAT (looper over pattern points)
+                        for pattern in tmpSecVal['patterns']:
+                            pattern=re.sub('\.','\.',pattern)
+                            pattern=re.sub('\*','.*',pattern)
+                            pattern=re.sub('%REG',str(iRegion),pattern)
+                            pattern=re.sub('%SUB',str(iSubregion),pattern)
+                            pattern=re.sub('%PAT',str(iPatPoint),pattern)
+                            patterns.append(pattern)
+                        # add FileSpec
+                        tmpSecLfnList = []
+                        for vals in tmpSecList:
+                            fmatch = False
+                            for pattern in patterns:
+                                if re.search(pattern,vals['LFN']):
+                                    fmatch = True
+                                    break
+                            if not fmatch:
+                                continue
+                            fileI = FileSpec()
+                            fileI.lfn        = vals['LFN']
+                            fileI.GUID       = vals['guid']
+                            fileI.fsize      = vals['fsize']
+                            fileI.md5sum     = vals['md5sum']
+                            fileI.dataset    = tmpSecDS
+                            fileI.prodDBlock = tmpSecDS
+                            fileI.type       = 'input'
+                            fileI.status     = 'ready'
+                            fileI.dispatchDBlock = commonDispName
+                            jobR.addFile(fileI)
+                            inList.append(fileI.lfn)
+                            tmpSecLfnList.append(fileI.lfn)
+                            try:
+                                totalSize += long(fileI.fsize)
+                            except:
+                                pass
+                        # append to map
+                        tmpInputMap[tmpSecVal['streamName']] = tmpSecLfnList
+                    # size check    
+                    if (not isDirectAccess) and totalSize > maxTotalSize-dbrDsSize:
+                        errStr  = "A subjob has %s input files and requires %sMB of disk space " \
+                              % (len(inList), ((totalSize+dbrDsSize) >> 20))
+                        if dbrDsSize != 0:
+                            errStr += "(DBRelease=%sMB)" % (dbrDsSize>>20)
+                        errStr += ". It must be less than %sMB to avoid overflowing the remote disk. " \
+                              % (maxTotalSize >> 20)
+                        errStr += "Please split the job using --nFilesPerJob."
                         tmpLog.error(errStr)            
                         sys.exit(EC_Split)
-                    # add FileSpec
-                    tmpSecLfnList = []
-                    for vals in tmpSecList:
-                        fileI = FileSpec()
-                        fileI.lfn        = vals['LFN']
-                        fileI.GUID       = vals['guid']
-                        fileI.fsize      = vals['fsize']
-                        fileI.md5sum     = vals['md5sum']
-                        fileI.dataset    = tmpSecDS
-                        fileI.prodDBlock = tmpSecDS
-                        fileI.type       = 'input'
-                        fileI.status     = 'ready'
-                        fileI.dispatchDBlock = commonDispName
-                        jobR.addFile(fileI)
-                        inList.append(fileI.lfn)
-                        tmpSecLfnList.append(fileI.lfn)
-                        try:
-                            totalSize += long(fileI.fsize)
-                        except:
-                            pass
-                    # append to map    
-                    tmpInputMap[tmpSecVal['streamName']] = tmpSecLfnList
-                # FTK datasets (particular regions/subregions get specific files)
-                for tmpSecDS,tmpSecVal in options.FTKDSs.iteritems():
-                    tmpIndexSec = iJob*tmpSecVal['nFiles']
-                    tmpSecList  = tmpSecVal['files'][:]
-                    patterns = []
-                    for pattern in tmpSecVal['patterns']:
-                        pattern=re.sub('\.','\.',pattern)
-                        pattern=re.sub('\*','.*',pattern)
-                        pattern=re.sub('%REG',str(iRegion),pattern)
-                        pattern=re.sub('%SUB',str(iSubregion),pattern)
-                        pattern=re.sub('%PAT',str(iPatPoint),pattern)
-                        patterns.append(pattern)
-                    # add FileSpec
-                    tmpSecLfnList = []
-                    for vals in tmpSecList:
-                        match = False
-                        for pattern in patterns:
-                            if re.search(pattern,vals['LFN']):
-                                match = True
-                                break
-                        if not match:
-                            continue
-                        fileI = FileSpec()
-                        fileI.lfn        = vals['LFN']
-                        fileI.GUID       = vals['guid']
-                        fileI.fsize      = vals['fsize']
-                        fileI.md5sum     = vals['md5sum']
-                        fileI.dataset    = tmpSecDS
-                        fileI.prodDBlock = tmpSecDS
-                        fileI.type       = 'input'
-                        fileI.status     = 'ready'
-                        fileI.dispatchDBlock = commonDispName
-                        jobR.addFile(fileI)
-                        inList.append(fileI.lfn)
-                        tmpSecLfnList.append(fileI.lfn)
-                        try:
-                            totalSize += long(fileI.fsize)
-                        except:
-                            pass
-                    # append to map    
-                    tmpInputMap[tmpSecVal['streamName']] = tmpSecLfnList
-                # size check    
-                if (not isDirectAccess) and totalSize > maxTotalSize-dbrDsSize:
-                    errStr  = "A subjob has %s input files and requires %sMB of disk space " \
-                              % (len(inList), ((totalSize+dbrDsSize) >> 20))
-                    if dbrDsSize != 0:
-                        errStr += "(DBRelease=%sMB)" % (dbrDsSize>>20)
-                    errStr += ". It must be less than %sMB to avoid overflowing the remote disk. " \
-                              % (maxTotalSize >> 20)
-                    errStr += "Please split the job using --nFilesPerJob."
-                    tmpLog.error(errStr)            
-                    sys.exit(EC_Split)
-                # set parameter
-                jobR.jobParameters += '-i "%s" ' % inList
-                print 'AK INDS LIST:',inList
-                if options.secondaryDSs != {} or options.FTKDSs != {}:
-                    jobR.jobParameters += '--inMap "%s" ' % tmpInputMap
-                    print 'AK SECDS MAP:',tmpInputMap
+                    # set parameter
+                    jobR.jobParameters += '-i "%s" ' % inList
+                    if _FTKDEBUG:
+                        print 'AK INDS LIST:',inList
+                    if options.secondaryDSs != {} or options.FTKDSs != {}:
+                        jobR.jobParameters += '--inMap "%s" ' % tmpInputMap
+                        if _FTKDEBUG:
+                            print 'AK SECDS MAP:',tmpInputMap
                 # DBRelease
                 if options.dbRelease != '':
                     tmpItems = options.dbRelease.split(':')
@@ -1679,54 +1711,85 @@ for iGroup in FTK_filegroups:
                     jobR.jobParameters += '--dbrFile %s ' % file.lfn
                     if options.dbRunNumber != '':
                         jobR.jobParameters += '--dbrRun %s ' % options.dbRunNumber
-                # expansion
-                if options.notExpandDBR:
-                    jobR.jobParameters += '--notExpandDBR '
+                    # expansion
+                    if options.notExpandDBR:
+                        jobR.jobParameters += '--notExpandDBR '
                 # output files
                 outMap = {}
                 if options.outputs != '':
                     for tmpLFN in options.outputs.split(','):
+                        # set offset to 0 for fresh output dataset
+                        if existingFilesInOutDS == {}:
+                            indexOffsetMap[tmpLFN] = 0
+                        # offset is already obtained
+                        if indexOffsetMap.has_key(tmpLFN):
+                            idxOffset = indexOffsetMap[tmpLFN]
+                            getOffset = False
+                        else:
+                            idxOffset = 0
+                            getOffset = True
                         # new LFN
+                        tmpNewLFN = '%s._%05d.%s' % (options.outDS,idxOffset+iJob+1,tmpLFN)
+                        # change * to XYZ and add .tgz
+                        if tmpNewLFN.find('*') != -1:
+                            tmpNewLFN = tmpNewLFN.replace('*','XYZ')
+                            tmpNewLFN = '%s.tgz' % tmpNewLFN
+                        # get offset
+                        if getOffset:
+                            oldHead = '%s._%05d.' % (options.outDS,idxOffset+iJob+1)
+                            filePatt = tmpNewLFN.replace(oldHead,'%s\._(\d+)\.' % options.outDS)
+                            idxOffset = PsubUtils.getMaxIndex(existingFilesInOutDS,filePatt)
+                            # append
+                            existingFilesInOutDS[tmpLFN] = idxOffset
+                            # correct
+                            newHead = '%s._%05d.' % (options.outDS,idxOffset+iJob+1)
+                            tmpNewLFN = tmpNewLFN.replace(oldHead,newHead)
+                        # FTK override: new LFN. TODO: handle cases when outputDS already has something!
                         tmpNewLFN = '%s._%s.%s' % (options.outDS,jobLabel,tmpLFN)
                         # set file spec
                         file = FileSpec()
-                        file.lfn               = tmpNewLFN
+                        file.lfn               = tmpNewLFN              
                         file.type              = 'output'
-                        file.dataset           = options.outDS
+                        file.dataset           = options.outDS        
                         file.destinationSE     = jobR.destinationSE
                         file.destinationDBlock = options.outDS
                         jobR.addFile(file)
                         outMap[tmpLFN] = file.lfn
-                # set parameter
-                jobR.jobParameters += '-o "%s" ' % str(outMap)
-                print 'AK OUT MAP:',outMap
-            # log
-            file = FileSpec()
-            # AK: rename the log file
-            file.lfn               = '%s._%s.log.tgz' % (options.outDS,jobLabel)
-            print 'AK LOG FILE:',file.lfn
-            file.type              = 'log'
-            file.dataset           = options.outDS    
-            file.destinationSE     = jobR.destinationSE
-            file.destinationDBlock = options.outDS
-            jobR.addFile(file)
-            jobR.jobParameters += '-r %s ' % runDir
-            # set space token
-            for file in jobR.Files:
-                if file.type in ['output','log']:
-                    if options.spaceToken != '':
-                        file.destinationDBlockToken = options.spaceToken
-                    else:
-                        defaulttoken = Client.PandaSites[options.site]['defaulttoken']
-                        file.destinationDBlockToken = Client.getDefaultSpaceToken(vomsFQAN,defaulttoken)
-
-        # check job spec
-        #PsubUtils.checkJobSpec(jobR) # AK: this limits a job to 200 file inputs
-        # append
-        if options.verbose:    
-            tmpLog.debug(jobR.jobParameters)
-        jobList.append(jobR)
-        iJob += 1
+                    # set parameter
+                    jobR.jobParameters += '-o "%s" ' % str(outMap)
+                    if _FTKDEBUG:
+                        print 'AK OUT MAP:',outMap
+                # log
+                file = FileSpec()
+                file.lfn               = '%s._$PANDAID.log.tgz' % options.outDS
+                # FTK: rename the log file
+                file.lfn               = '%s._%s.log.tgz' % (options.outDS,jobLabel)
+                if _FTKDEBUG:
+                    print 'AK LOG FILE:',file.lfn
+                file.type              = 'log'
+                file.dataset           = options.outDS    
+                file.destinationSE     = jobR.destinationSE
+                file.destinationDBlock = options.outDS
+                jobR.addFile(file)
+                jobR.jobParameters += '-r %s ' % runDir
+                # set space token
+                for file in jobR.Files:
+                    if file.type in ['output','log']:
+                        if options.spaceToken != '':
+                            if Client.PandaSites[options.site]['setokens'].has_key(options.spaceToken):
+                                file.destinationDBlockToken = options.spaceToken
+                        else:
+                            defaulttoken = Client.PandaSites[options.site]['defaulttoken']
+                            file.destinationDBlockToken = Client.getDefaultSpaceToken(vomsFQAN,defaulttoken)
+                # set prodDBlock
+                jobR.prodDBlock = PsubUtils.getProdDBlock(jobR,options.inDS)
+                # check job spec [FTK disables it because it limits us to only 200 input files per jobs]
+                ## PsubUtils.checkJobSpec(jobR)
+                # append
+                if options.verbose:    
+                    tmpLog.debug(jobR.jobParameters)
+                jobList.append(jobR)
+                iJob += 1
 
 # no submit 
 if not options.nosubmit:
@@ -1843,9 +1906,9 @@ if not options.nosubmit:
 # go back to current dir
 os.chdir(curDir)
 
-# check site occupancy and print an annoying message that the jobs have been delayed
-##if siteSpecified or expCloudFlag:
-##    Client.checkQueuedAnalJobs(options.site,options.verbose)
+# check site occupancy
+if siteSpecified or expCloudFlag:
+    Client.checkQueuedAnalJobs(options.site,options.verbose)
 
 # try another site if input files remain
 options.crossSite -= 1

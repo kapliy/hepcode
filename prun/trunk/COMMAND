@@ -1,1 +1,0 @@
-./prunftk.py --noSubmit --athenaTag 15.6.9 --exec '%RNDM=10' --outDS user.kapliy.stupidtest.june03.01 --inDS user10.AntonKapliy.v14wh3e34ZEROREC.250evts.v1/ --nFilesPerJob 25 --outputs out_files.tbz2
