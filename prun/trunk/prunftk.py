@@ -15,8 +15,8 @@ import shelve
 import copy
 
 # FTK settings
-_PARENTVERSION = 'panda-client-0.2.55'
-_FTKDEBUG = True
+_PARENTVERSION = 'panda-client-0.2.56'
+_FTKDEBUG = False   # uncomment for verbose debug printout
 
 # default cloud/site
 defaultCloud = None
@@ -98,7 +98,7 @@ optP.add_option('--nSkipFiles',action='store',dest='nSkipFiles',default=0,type='
 optP.add_option('--nFilesPerJob',action='store',dest='nFilesPerJob',default=None,type='int',
                 help='Number of files on which each sub-job runs (default 50)')
 optP.add_option('--nJobs',action='store',dest='nJobs',default=-1,type='int',
-                help='Maximum number of sub-jobs. If the number of input files (N_in) is less than nJobs*nFilesPerJob, only N_in/nFilesPerJob sub-jobs will be instantiated')
+                help='Maximum number of input file job sub-groups. If the number of input files (N_in) is less than nJobs*nFilesPerJob, only N_in/nFilesPerJob sub-jobs will be instantiated.')
 optP.add_option('--maxFileSize',action='store',dest='maxFileSize',default=1024*1024,type='int',
                 help='Maximum size of files to be sent to WNs (default 1024*1024B)')
 optP.add_option('--athenaTag',action='store',dest='athenaTag',default='',type='string',
@@ -169,6 +169,12 @@ optP.add_option('--panda_origFullExecString', action='store', dest='panda_origFu
 
 optP.add_option('--FTKDSs',action='store',dest='FTKDSs',default='',type='string',
                 help='FTK datasets in this format: "IN:user.kapliy.datasetname:sectors_raw_11L_4M_reg%REG_sub%SUB*:corrgen_raw_reg%REG*",REPEAT')
+optP.add_option('--FTKRegions', action='store', dest='FTK_regions', default=','.join(str(i) for i in range(8)),
+                type='string', help='Comma-separated list of regions to process')
+optP.add_option('--FTKSubregions', action='store', dest='FTK_subregions', default='0',
+                type='string', help='Comma-separated list of subregions to process')
+optP.add_option('--FTKPatpoints', action='store', dest='FTK_patpoints', default='0',
+                type='string', help='Comma-separated list of patternPoints to process (from FTKCore.py) - use for effcurve runs')
 
 # parse options
 options,args = optP.parse_args()
@@ -1218,7 +1224,7 @@ if options.inDS != '' and options.nFilesPerJob == None:
         tmpNSplit += 1
     tmpNFiles,tmpMod = divmod(len(inputFileList),tmpNSplit)
     # set upper limit
-    upperLimitOnFiles = 50
+    upperLimitOnFiles = 200
     if tmpNFiles > upperLimitOnFiles:
         tmpNFiles = upperLimitOnFiles
     # check again just in case
@@ -1476,14 +1482,20 @@ isDirectAccess = PsubUtils.isDirectAccess(options.site)
 # runJobs
 indexOffsetMap = {}
 
-if _FTKDEBUG:
-    print 'AK CREATING JOBS:',options.nJobs,options.nFilesPerJob
-options.nFilesPerJob=2
 FTK_filegroups = range(options.nJobs)
-FTK_patpoints = (0,)
-FTK_regions = range(0,8)
-FTK_subregions = (0,)
+try:
+    FTK_patpoints = [int(z) for z in options.FTK_patpoints.split(',')]
+    FTK_regions = [int(z) for z in options.FTK_regions.split(',')]
+    FTK_subregions = [int(z) for z in options.FTK_subregions.split(',')]
+except:
+    print 'FTK ERROR: cannot parse --FTKPatpoints or --FTKRegions or --FTKSubregions'
+    sys.exit(0)
 
+print 'FTK : processing %s input files per job. Total number of input filegroups is %s'%(options.nJobs,options.nFilesPerJob)
+print 'FTK : processing these regions:',FTK_regions
+print 'FTK : processing these subregions:',FTK_subregions
+print 'FTK : processing these patternPoints:',FTK_patpoints
+    
 iJob = 0      # sequential job numbering
 for iGroup in FTK_filegroups:    
     for iPatPoint in FTK_patpoints:
@@ -1491,7 +1503,7 @@ for iGroup in FTK_filegroups:
             for iSubregion in FTK_subregions:
                 jobLabel='%05d_reg%d_sub%d_pat%d' % (iGroup+1,iRegion,iSubregion,iPatPoint)
                 if _FTKDEBUG:
-                    print 'AK JOB',iJob
+                    print 'FTK : JOB',iJob
                 jobR = JobSpec()
                 jobR.jobDefinitionID   = jobDefinitionID
                 jobR.jobName           = jobName
@@ -1545,12 +1557,18 @@ for iGroup in FTK_filegroups:
                     for tmpItem in tmpJobO.split():
                         match = re.search('%RNDM=(\d+)( |$|\'|\"|;)',tmpItem)
                         if match:
+                            ## FTK FIXME: maybe we should have iGroup here (so all regions/subregions share a random seed?)
                             tmpRndmNum = int(match.group(1)) + iJob
                             # replace parameters
                             tmpJobO = re.sub(match.group(0),'%s%s' % (tmpRndmNum,match.group(2)),tmpJobO)
+                    # FTK substitutions inside --exec string
+                    tmpJobO = re.sub('%REG',str(iRegion),tmpJobO)
+                    tmpJobO = re.sub('%SUB',str(iSubregion),tmpJobO)
+                    tmpJobO = re.sub('%PAT',str(iPatPoint),tmpJobO)
+                    # finally, save the --exec string
                     jobR.jobParameters += '-p "%s" ' % urllib.quote(tmpJobO)
                 if _FTKDEBUG:
-                    print 'AK PARS', jobR.jobParameters
+                    print 'FTK : PARS', jobR.jobParameters
                 # source files
                 if not options.nobuild:
                     fileS = FileSpec()
@@ -1568,7 +1586,7 @@ for iGroup in FTK_filegroups:
                 # input files
                 if options.inDS != '':  #TODO: allow to run without inDS (pattern production mode)
                     totalSize = 0
-                    indexIn = iJob*options.nFilesPerJob
+                    indexIn = iGroup*options.nFilesPerJob
                     inList = inputFileList[indexIn:indexIn+options.nFilesPerJob]
                     if inList == []:
                         break
@@ -1596,7 +1614,7 @@ for iGroup in FTK_filegroups:
                     # secondary datasets
                     secMap = {}
                     for tmpSecDS,tmpSecVal in options.secondaryDSs.iteritems():
-                        tmpIndexSec = iJob*tmpSecVal['nFiles']
+                        tmpIndexSec = iGroup*tmpSecVal['nFiles']
                         tmpSecList  = tmpSecVal['files'][tmpIndexSec:tmpIndexSec+tmpSecVal['nFiles']]
                         # check length
                         if len(tmpSecList) < tmpSecVal['nFiles']:
@@ -1629,7 +1647,7 @@ for iGroup in FTK_filegroups:
                         tmpInputMap[tmpSecVal['streamName']] = tmpSecLfnList
                     # FTK datasets (particular regions/subregions get specific files)
                     for tmpSecDS,tmpSecVal in options.FTKDSs.iteritems():
-                        tmpIndexSec = iJob*tmpSecVal['nFiles']
+                        tmpIndexSec = iGroup*tmpSecVal['nFiles']
                         tmpSecList  = tmpSecVal['files'][:]
                         patterns = []
                         # special substitution patterns for FTK mode: %REG, %SUB, %PAT (looper over pattern points)
@@ -1683,11 +1701,11 @@ for iGroup in FTK_filegroups:
                     # set parameter
                     jobR.jobParameters += '-i "%s" ' % inList
                     if _FTKDEBUG:
-                        print 'AK INDS LIST:',inList
+                        print 'FTK : INDS LIST:',inList
                     if options.secondaryDSs != {} or options.FTKDSs != {}:
                         jobR.jobParameters += '--inMap "%s" ' % tmpInputMap
                         if _FTKDEBUG:
-                            print 'AK SECDS MAP:',tmpInputMap
+                            print 'FTK : SECDS MAP:',tmpInputMap
                 # DBRelease
                 if options.dbRelease != '':
                     tmpItems = options.dbRelease.split(':')
@@ -1758,14 +1776,14 @@ for iGroup in FTK_filegroups:
                     # set parameter
                     jobR.jobParameters += '-o "%s" ' % str(outMap)
                     if _FTKDEBUG:
-                        print 'AK OUT MAP:',outMap
+                        print 'FTK : OUT MAP:',outMap
                 # log
                 file = FileSpec()
                 file.lfn               = '%s._$PANDAID.log.tgz' % options.outDS
                 # FTK: rename the log file
                 file.lfn               = '%s._%s.log.tgz' % (options.outDS,jobLabel)
                 if _FTKDEBUG:
-                    print 'AK LOG FILE:',file.lfn
+                    print 'FTK : LOG FILE:',file.lfn
                 file.type              = 'log'
                 file.dataset           = options.outDS    
                 file.destinationSE     = jobR.destinationSE
