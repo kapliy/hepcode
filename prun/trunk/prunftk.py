@@ -16,7 +16,7 @@ import copy
 
 # FTK settings
 _PARENTVERSION = 'panda-client-0.2.56'
-_FTKDEBUG = False   # uncomment for verbose debug printout
+_FTKDEBUG = True   # uncomment for verbose debug printout
 
 # default cloud/site
 defaultCloud = None
@@ -98,7 +98,7 @@ optP.add_option('--nSkipFiles',action='store',dest='nSkipFiles',default=0,type='
 optP.add_option('--nFilesPerJob',action='store',dest='nFilesPerJob',default=None,type='int',
                 help='Number of files on which each sub-job runs (default 50)')
 optP.add_option('--nJobs',action='store',dest='nJobs',default=-1,type='int',
-                help='Maximum number of input file job sub-groups. If the number of input files (N_in) is less than nJobs*nFilesPerJob, only N_in/nFilesPerJob sub-jobs will be instantiated.')
+                help='Maximum number of input file groups. If the number of input files (N_in) is less than nJobs*nFilesPerJob, only N_in/nFilesPerJob groups will be instantiated.')
 optP.add_option('--maxFileSize',action='store',dest='maxFileSize',default=1024*1024,type='int',
                 help='Maximum size of files to be sent to WNs (default 1024*1024B)')
 optP.add_option('--athenaTag',action='store',dest='athenaTag',default='',type='string',
@@ -167,14 +167,16 @@ optP.add_option('--panda_inDSForEP', action='store', dest='panda_inDSForEP', def
 optP.add_option('--panda_origFullExecString', action='store', dest='panda_origFullExecString', default='',
                 type='string', help='internal parameter')
 
+optP.add_option('--maxNJobs',action='store',dest='maxNJobs',default=-1,type='int',
+                help='Hard limit on the actual number of jobs to be submitted')
 optP.add_option('--FTKDSs',action='store',dest='FTKDSs',default='',type='string',
                 help='FTK datasets in this format: "IN:user.kapliy.datasetname:sectors_raw_11L_4M_reg%REG_sub%SUB*:corrgen_raw_reg%REG*",REPEAT')
-optP.add_option('--FTKRegions', action='store', dest='FTK_regions', default=','.join(str(i) for i in range(8)),
+optP.add_option('--FTKRegions', action='store', dest='FTKRegions', default=','.join(str(i) for i in range(8)),
                 type='string', help='Comma-separated list of regions to process')
-optP.add_option('--FTKSubregions', action='store', dest='FTK_subregions', default='0',
+optP.add_option('--FTKSubRegions', action='store', dest='FTKSubRegions', default='0',
                 type='string', help='Comma-separated list of subregions to process')
-optP.add_option('--FTKPatpoints', action='store', dest='FTK_patpoints', default='0',
-                type='string', help='Comma-separated list of patternPoints to process (from FTKCore.py) - use for effcurve runs')
+optP.add_option('--FTKExtPars', action='store', dest='FTKExtPars', default='0',
+                type='string', help='Comma-separated list of extra loop values - this can be patternPoint in effcurve runs, or run number in patt-from-const runs')
 
 # parse options
 options,args = optP.parse_args()
@@ -546,7 +548,7 @@ else:
 
 # FTK datasets
 # Format: IN:user.kapliy.datasetname:*sectors_raw_11L_4M_reg%REG_sub%SUB*:*corrgen_raw_reg%REG*,REPEAT
-if options.FTKDSs != '':
+if options.FTKDSs != '' and options.FTKDSs != '-1':
     # parse
     tmpMap = {}
     for tmpItem in options.FTKDSs.split(','):
@@ -1482,26 +1484,29 @@ isDirectAccess = PsubUtils.isDirectAccess(options.site)
 # runJobs
 indexOffsetMap = {}
 
-FTK_filegroups = range(options.nJobs)
+FTKFileGroups = range(options.nJobs)
 try:
-    FTK_patpoints = [int(z) for z in options.FTK_patpoints.split(',')]
-    FTK_regions = [int(z) for z in options.FTK_regions.split(',')]
-    FTK_subregions = [int(z) for z in options.FTK_subregions.split(',')]
+    FTKExtPars = [int(z) for z in options.FTKExtPars.split(',')]
+    FTKRegions = [int(z) for z in options.FTKRegions.split(',')]
+    FTKSubRegions = [int(z) for z in options.FTKSubRegions.split(',')]
 except:
-    print 'FTK ERROR: cannot parse --FTKPatpoints or --FTKRegions or --FTKSubregions'
+    print 'FTK ERROR: cannot parse --FTKExtPars or --FTKRegions or --FTKSubRegions'
     sys.exit(0)
 
 print 'FTK : processing %s input files per job. Total number of input filegroups is %s'%(options.nJobs,options.nFilesPerJob)
-print 'FTK : processing these regions:',FTK_regions
-print 'FTK : processing these subregions:',FTK_subregions
-print 'FTK : processing these patternPoints:',FTK_patpoints
+print 'FTK : extra outer loop values:',FTKExtPars
+print 'FTK : processing these regions:',FTKRegions
+print 'FTK : processing these subregions:',FTKSubRegions
     
 iJob = 0      # sequential job numbering
-for iGroup in FTK_filegroups:    
-    for iPatPoint in FTK_patpoints:
-        for iRegion in FTK_regions:
-            for iSubregion in FTK_subregions:
-                jobLabel='%05d_reg%d_sub%d_pat%d' % (iGroup+1,iRegion,iSubregion,iPatPoint)
+done = False
+for iGroup in FTKFileGroups:    
+    for iExtPar in FTKExtPars:
+        for iRegion in FTKRegions:
+            for iSubregion in FTKSubRegions:
+                if done:
+                    break
+                jobLabel='%05d_reg%d_sub%d_pat%d' % (iGroup+1,iRegion,iSubregion,iExtPar)
                 if _FTKDEBUG:
                     print 'FTK : JOB',iJob
                 jobR = JobSpec()
@@ -1557,14 +1562,17 @@ for iGroup in FTK_filegroups:
                     for tmpItem in tmpJobO.split():
                         match = re.search('%RNDM=(\d+)( |$|\'|\"|;)',tmpItem)
                         if match:
-                            ## FTK FIXME: maybe we should have iGroup here (so all regions/subregions share a random seed?)
                             tmpRndmNum = int(match.group(1)) + iJob
                             # replace parameters
                             tmpJobO = re.sub(match.group(0),'%s%s' % (tmpRndmNum,match.group(2)),tmpJobO)
                     # FTK substitutions inside --exec string
                     tmpJobO = re.sub('%REG',str(iRegion),tmpJobO)
                     tmpJobO = re.sub('%SUB',str(iSubregion),tmpJobO)
-                    tmpJobO = re.sub('%PAT',str(iPatPoint),tmpJobO)
+                    tmpJobO = re.sub('%EXT',str(iExtPar),tmpJobO)
+                    # special treatment for %CODE, which encodes nsubs. This way we can get code = ireg*nsubs+isub+1
+                    match = re.search('%CODE=(\d+)',tmpJobO)
+                    if match:
+                        tmpJobO = re.sub(match.group(0),str(iRegion*int(match.group(1)) + iSubregion + 1),tmpJobO)
                     # finally, save the --exec string
                     jobR.jobParameters += '-p "%s" ' % urllib.quote(tmpJobO)
                 if _FTKDEBUG:
@@ -1650,13 +1658,17 @@ for iGroup in FTK_filegroups:
                         tmpIndexSec = iGroup*tmpSecVal['nFiles']
                         tmpSecList  = tmpSecVal['files'][:]
                         patterns = []
-                        # special substitution patterns for FTK mode: %REG, %SUB, %PAT (looper over pattern points)
+                        # special substitution patterns for FTK mode: %REG, %SUB, %EXT (looper over pattern points)
                         for pattern in tmpSecVal['patterns']:
                             pattern=re.sub('\.','\.',pattern)
                             pattern=re.sub('\*','.*',pattern)
                             pattern=re.sub('%REG',str(iRegion),pattern)
                             pattern=re.sub('%SUB',str(iSubregion),pattern)
-                            pattern=re.sub('%PAT',str(iPatPoint),pattern)
+                            pattern=re.sub('%EXT',str(iExtPar),pattern)
+                            # special treatment for %CODE, which encodes nsubs. This way we can get code = ireg*nsubs+isub+1
+                            match = re.search('%CODE=(\d+)',pattern)
+                            if match:
+                                pattern = re.sub(match.group(0),str(iRegion*int(match.group(1)) + iSubregion + 1),pattern)
                             patterns.append(pattern)
                         # add FileSpec
                         tmpSecLfnList = []
@@ -1807,7 +1819,10 @@ for iGroup in FTK_filegroups:
                 if options.verbose:    
                     tmpLog.debug(jobR.jobParameters)
                 jobList.append(jobR)
+                # global job counter
                 iJob += 1
+                if iJob >= options.maxNJobs and options.maxNJobs!=-1:
+                    done = True
 
 # no submit 
 if not options.nosubmit:
