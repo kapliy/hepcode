@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<!DOCTYPE LumiRangeCollection SYSTEM "http://atlas-runquery.cern.ch/LumiRangeCollection.dtd">
+<!--This document is created by GoodRunsListWriter.-->
+<LumiRangeCollection>
+  <NamedLumiRange>
+    <Name>MyLBCollection</Name>
+    <Version>20</Version>
+    <Metadata Name="Query">find run 155698+ and ptag data10_7TeV and lhc stablebeams true and partition ATLAS and db DATA and dq atlgl,atltor,atlsol,l1ctp,cp_mu_mmuidcb,cp_mu_mstaco,cp_met_met LBSUMM#DetStatus-v03-pass1-analysis-2010C g</Metadata>
+    <Metadata Name="RQTSVNVersion">CoolRunQuery-00-03-00</Metadata>
+    <Metadata Name="RunList">156682</Metadata>
+    <Metadata Name="StreamListInfo">
+         </Metadata>
+    <LumiBlockCollection>
+      <Run>156682</Run>
+      <LBRange Start="405" End="475"/>
+      <LBRange Start="477" End="507"/>
+      <LBRange Start="509" End="512"/>
+    </LumiBlockCollection>
+  </NamedLumiRange>
+  <NamedLumiRange>
+    <Name>MyLBCollection</Name>
+    <Version>20</Version>
+    <Metadata Name="Query">find run 155161+ and ptag data10_7TeV and lhc stablebeams true and partition ATLAS and db DATA and dq atlgl,atltor,atlsol,l1ctp,cp_mu_mmuidcb,cp_mu_mstaco,cp_met_met LBSUMM#DetStatus-v02-pass1-analysis-2010C g</Metadata>
+    <Metadata Name="RQTSVNVersion">CoolRunQuery-00-03-00</Metadata>
+    <Metadata Name="RunList">155697,155678,155669,155634,155569,155280,155228</Metadata>
+    <Metadata Name="StreamListInfo">
+         </Metadata>
+    <LumiBlockCollection>
+      <Run>155228</Run>
+      <LBRange Start="131" End="148"/>
+    </LumiBlockCollection>
+    <LumiBlockCollection>
+      <Run>155280</Run>
+      <LBRange Start="360" End="375"/>
+    </LumiBlockCollection>
+    <LumiBlockCollection>
+      <Run>155569</Run>
+      <LBRange Start="228" End="467"/>
+    </LumiBlockCollection>
+    <LumiBlockCollection>
+      <Run>155634</Run>
+      <LBRange Start="144" End="147"/>
+      <LBRange Start="149" End="326"/>
+      <LBRange Start="328" End="333"/>
+    </LumiBlockCollection>
+    <LumiBlockCollection>
+      <Run>155669</Run>
+      <LBRange Start="264" End="311"/>
+    </LumiBlockCollection>
+    <LumiBlockCollection>
+      <Run>155678</Run>
+      <LBRange Start="241" End="308"/>
+    </LumiBlockCollection>
+    <LumiBlockCollection>
+      <Run>155697</Run>
+      <LBRange Start="264" End="266"/>
+      <LBRange Start="268" End="334"/>
+      <LBRange Start="336" End="352"/>
+      <LBRange Start="354" End="506"/>
+    </LumiBlockCollection>
+  </NamedLumiRange>
+</LumiRangeCollection>
