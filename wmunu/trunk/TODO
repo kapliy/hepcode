@@ -1,3 +1,36 @@
+Code grid-processing (run on ALL output at once): should be easy with prun - just need to add a script.
+
+Hao and I now agree on the use of the iLumiCalc.exe tool.
+
+I give below the total integrated limunosity for the different GRLs posted by Corinne, for L1_EM5 and with OflLumi-7TeV-001.
+
+-- WZ common --
+period A: 332.bbbbb-1
+period B: 7141.bbbbb-1
+period C: 7469.bbbbb-1
+Total: 14.94 nb-1
+
+-- Wenu --
+period A: 332.bbbbb-1
+period B: 7141.bbbbb-1
+period C: 7469.bbbbb-1
+Total: 14.94 nb-1
+
+-- Zee --
+period A: 341.bbbbb-1
+period B: 7240.bbbbb-1
+period C: 7488.bbbbb-1
+Total: 15.07 nb-1
+
+-- Zee forward--
+period A: 341.bbbbb-1
+period B: 7231.bbbbb-1
+period C: 7484.bbbbb-1
+Total: 15.06 nb-1
+
+
+Beamspot: mean and width distributions; variations with run.
+
 http://indico.cern.ch/getFile.py/access?contribId=7&resId=1&materialId=slides&confId=92304
 Make reco efficiency wrt triggered muons plots!
 Add phi plots, too!

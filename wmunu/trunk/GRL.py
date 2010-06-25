@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from datetime import date
+today=date.today()
 import sys,os
 
 # all lumi numbers are in mubars
@@ -7,7 +8,7 @@ import sys,os
 
 class LHCR:
     """ LHC run """
-    def __init__(s,rnum,d,nevents,lumi,GRL,lumiGRL,tag):
+    def __init__(s,rnum,d=today,nevents=-1,lumi=-1,GRL=(-1,-1),lumiGRL=-1,tag='None_None'):
         s.rnum = rnum
         s.date = d
         s.nevents = nevents
@@ -23,16 +24,17 @@ class LHCR:
         print 'Trying to find',s.rnum
         os.system('dq2-ls -L ROAMING '+s.dataset_pattern%(s.rnum,s.tag))
     def pathena_submit(s):
-        print './grid_submit '+s.dataset_pattern%(s.rnum,s.tag)+' --nEventsPerJob 100000'
+        print './grid_submit '+s.dataset_pattern%(s.rnum,s.tag)+' --nEventsPerJob 30000'
     def path(s):
-        return s.local_pattern%s.rnum
+        return s.local_pattern%(s.tag,s.rnum)
 
 class PLHC_runs:
     def __init__(s):
         s.runs = []
     def append(s,run):
         run.dataset_pattern='data10_7TeV.00%d.physics_MuonswBeam.merge.AOD.%s/'
-        run.local_pattern='dcache:///pnfs/uct3/data/users/antonk/ANALYSIS/PLHC/%d/*root*'
+        run.ntupleDS='user.kapliy.'+(run.dataset_pattern.strip('/'))%(run.rnum,run.tag)+'.ntuple.v1_7'
+        run.local_pattern='dcache:///pnfs/uct3/data/users/antonk/ANALYSIS/PLHC/%s/%d/*root*'
         s.runs.append(run)
     def nruns(s):
         return len(s.runs)
@@ -57,7 +59,7 @@ class MCR:
         print 'Trying to find',s.rnum
         os.system('dq2-ls -L ROAMING '+s.dataset_pattern%(s.rnum,s.sample,s.tag))
     def pathena_submit(s):
-        print './grid_submit '+s.dataset_pattern%(s.rnum,s.sample,s.tag)+' --nEventsPerJob 100000'
+        print './grid_submit '+s.dataset_pattern%(s.rnum,s.sample,s.tag)+' --nEventsPerJob 30000'
     def path(s):
         return 'dcache:///pnfs/uct3/data/users/antonk/ANALYSIS/PLHC_MC/'+s.ntupleDS+'/*root*'        
 
@@ -73,52 +75,62 @@ class MC09_samples:
     def nevents(s):
         return sum([r.nevents for r in s.runs])
 
-plhc = PLHC_runs()
+plhc_r1297_p157 = PLHC_runs()
 tag='r1297_p157'
-plhc.append(LHCR(152844,date(2010,04,11),7512,7.14,(195,234),3.3,tag))
-plhc.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00152844.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7'
-plhc.append(LHCR(152845,date(2010,04,12),14675,24.11,(111,349),24.0,tag))
-plhc.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00152845.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7'
-plhc.append(LHCR(152878,date(2010,04,13),22992,22.64,(99,214),22.8,tag))
-plhc.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00152878.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7'  # fail to dq2-get ANALY_GRIF-IRFU
-#plhc.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00152878.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7.retry2' # fail to dq2-get
-#plhc.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00152878.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7.retry3'
-plhc.append(LHCR(152933,date(2010,04,14),9413,18.34,(46,173),18.4,tag))
-plhc.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00152933.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7'
-plhc.append(LHCR(152994,date(2010,04,14),21936,4.74,(293,353),4.8,tag))
-plhc.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00152994.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7'
-plhc.append(LHCR(153030,date(2010,04,16),11641,20.08,(120,203),20.1,tag))
-plhc.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00153030.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7'
-plhc.append(LHCR(153134,date(2010,04,16),20610,27.33,(354,573),23.3,tag))
-plhc.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00153134.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7' #FREIBURG
-plhc.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00153134.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7.retry' #FREIBURG
-plhc.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00153134.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7.retry2'
-plhc.append(LHCR(153136,date(2010,04,17),8866,1.82,(249,253),0.6,tag))
-plhc.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00153136.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7' #infinite delay on start
-plhc.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00153136.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7.retry'
-plhc.append(LHCR(153159,date(2010,04,18),6683,10.08,(87,177),10.2,tag))
-plhc.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00153159.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7'
-plhc.append(LHCR(153200,date(2010,04,18),5696,6.97,(145,178),6.6,tag))
-plhc.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00153200.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7'
-plhc.append(LHCR(153565,date(2010,04,23),114207,661.83,(258,953),575.6,tag))
-plhc.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00153565.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7'
-plhc.append(LHCR(153599,date(2010,04,23),18047,45.64,(399,440),27.9,tag))
-plhc.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00153599.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7'
+plhc_r1297_p157.append(LHCR(152844,date(2010,04,11),7512,7.14,(195,234),3.3,tag))
+plhc_r1297_p157.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00152844.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7'
+plhc_r1297_p157.append(LHCR(152845,date(2010,04,12),14675,24.11,(111,349),24.0,tag))
+plhc_r1297_p157.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00152845.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7'
+plhc_r1297_p157.append(LHCR(152878,date(2010,04,13),22992,22.64,(99,214),22.8,tag))
+plhc_r1297_p157.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00152878.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7'  # fail to dq2-get ANALY_GRIF-IRFU
+#plhc_r1297_p157.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00152878.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7.retry2' # fail to dq2-get
+#plhc_r1297_p157.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00152878.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7.retry3'
+plhc_r1297_p157.append(LHCR(152933,date(2010,04,14),9413,18.34,(46,173),18.4,tag))
+plhc_r1297_p157.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00152933.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7'
+plhc_r1297_p157.append(LHCR(152994,date(2010,04,14),21936,4.74,(293,353),4.8,tag))
+plhc_r1297_p157.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00152994.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7'
+plhc_r1297_p157.append(LHCR(153030,date(2010,04,16),11641,20.08,(120,203),20.1,tag))
+plhc_r1297_p157.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00153030.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7'
+plhc_r1297_p157.append(LHCR(153134,date(2010,04,16),20610,27.33,(354,573),23.3,tag))
+plhc_r1297_p157.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00153134.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7.retry2'
+plhc_r1297_p157.append(LHCR(153136,date(2010,04,17),8866,1.82,(249,253),0.6,tag))
+plhc_r1297_p157.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00153136.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7.retry'
+plhc_r1297_p157.append(LHCR(153159,date(2010,04,18),6683,10.08,(87,177),10.2,tag))
+plhc_r1297_p157.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00153159.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7'
+plhc_r1297_p157.append(LHCR(153200,date(2010,04,18),5696,6.97,(145,178),6.6,tag))
+plhc_r1297_p157.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00153200.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7'
+plhc_r1297_p157.append(LHCR(153565,date(2010,04,23),114207,661.83,(258,953),575.6,tag))
+plhc_r1297_p157.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00153565.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7'
+plhc_r1297_p157.append(LHCR(153599,date(2010,04,23),18047,45.64,(399,440),27.9,tag))
+plhc_r1297_p157.runs[-1].ntupleDS='user10.AntonKapliy.data10_7TeV.00153599.physics_MuonswBeam.merge.AOD.r1297_p157.ntuple.v1_7'
+
+
+plhc_r1297_p161 = PLHC_runs()
+tag='r1297_p161'
+#dq2-ls -L ROAMING data10_7TeV.00*.physics_MuonswBeam.merge.AOD.r1297_p161/|sort|awk 'BEGIN{FS="."}{print $2}' | cut -b3-8
+runlist=(152166,152214,152220,152221,152345,152409,152441,152508,152777,152844,152845,152878,
+         152933,152994,153030,153134,153136,153159,153200,153565,153599,154810,154813,154815,154817,
+         )
+for rnum in runlist:
+    plhc_r1297_p161.append(LHCR(rnum,tag=tag))
+
+plhc = plhc_r1297_p157
 
 if False:
     print 'Registered',plhc.nruns(),'runs:'
     print 'nevents   =',plhc.nevents()
     print 'lumi      =',plhc.lumi()
     print 'lumi(GRL) =',plhc.lumiGRL()
-    #[r.pathena_submit() for r in plhc.runs]
-    for r in plhc.runs:
-        if r.rnum!=153134 and r.rnum!=153136 and r.rnum!=152878:   #not finished yet / failed / failed
-            print r.ntupleDS
-            cmd =  ['cd /scratch/antonk/']
-            cmd += ['dq2-get -L ROAMING '+ r.ntupleDS]
-            cmd += ['mkdir -p /pnfs/uct3/data/users/antonk/ANALYSIS/PLHC/'+str(r.rnum)]
-            cmd += ['for f in '+r.ntupleDS+'/*root*; do dccp $f /pnfs/uct3/data/users/antonk/ANALYSIS/PLHC/'+str(r.rnum)+'/ ; done']
-            os.system(';'.join(cmd))
+    [r.pathena_submit() for r in plhc.runs]
+    if False:
+        for r in plhc.runs:
+            if r.rnum!=153134 and r.rnum!=153136 and r.rnum!=152878:   #not finished yet / failed / failed
+                print r.ntupleDS
+                cmd =  ['cd /scratch/antonk/']
+                cmd += ['dq2-get -L ROAMING '+ r.ntupleDS]
+                cmd += ['mkdir -p /pnfs/uct3/data/users/antonk/ANALYSIS/PLHC/'+str(r.rnum)]
+                cmd += ['for f in '+r.ntupleDS+'/*root*; do dccp $f /pnfs/uct3/data/users/antonk/ANALYSIS/PLHC/'+str(r.rnum)+'/ ; done']
+                os.system(';'.join(cmd))
 
 mc09 = MC09_samples()
 mc09.append(MCR(109281,'J5_pythia_jetjet_1muon','e534_s765_s767_r1250_r1260',2.328560,0.029753,500000))

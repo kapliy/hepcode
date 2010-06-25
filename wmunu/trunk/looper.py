@@ -3,7 +3,7 @@ try:
     import psyco
     psyco.full()
     print 'Using psyco'
-except:
+except ImportError:
     pass
 import math,sys,glob,re
 import ROOT
@@ -14,11 +14,8 @@ ROOT.gROOT.SetBatch(1) #uncomment for interactive usage
 #INPUTS = 'dcache:///pnfs/uct3/data/users/antonk/ANALYSIS/PLHC/153565/*root*'
 
 _BCIDs = (1,1786)
-_DATA = False
 
-_INPUTS = '/scratch/antonk/zmumu.root'
-_INPUTS = '/scratch/antonk/wmunu.root'
-_INPUTS = 'dcache:///pnfs/uct3/data/users/antonk/ANALYSIS/PLHC_MC/user10.AntonKapliy.mc09_7TeV.106044.PythiaWmunu_no_filter.merge.AOD.e468_s765_s767_r1207_r1210.ntuple.v1_7/user10.AntonKapliy.mc09_7TeV.106044.PythiaWmunu_no_filter.merge.AOD.e468_s765_s767_r1207_r1210.ntuple.v1_7.flatntuple._00001.root'
+_INPUTS = '/pnfs/uct3/data/users/antonk/ANALYSIS/PLHC_MC/user10.AntonKapliy.mc09_7TeV.106044.PythiaWmunu_no_filter.merge.AOD.e468_s765_s767_r1207_r1210.ntuple.v1_7/user10.AntonKapliy.mc09_7TeV.106044.PythiaWmunu_no_filter.merge.AOD.e468_s765_s767_r1207_r1210.ntuple.v1_7.flatntuple._00001.root'
 #_LOAD_EFF = './efficiencies.root'
 
 from optparse import OptionParser
@@ -35,10 +32,16 @@ parser.add_option("-i", "--input",dest="input",
 parser.add_option("-o", "--output",dest="output",
                   type="string", default="output",
                   help="Name of output dir for plots and cutflow")
-parser.add_option("-u", "--no-save",
+parser.add_option("--xml-grl",dest="grlxml",
+                  type="string", default=None,
+                  help="Name of GRL xml file")
+parser.add_option("--no-save",
                   action="store_true",dest="nosave",
                   help="Don't save any output on disk")
-parser.add_option("-t", "--no-trigger",
+parser.add_option("--data", default=False,
+                  action="store_true",dest="data",
+                  help="Whether running over data (vs MC)")
+parser.add_option("--no-trigger",
                   action="store_true",dest="notrig",
                   help="Don't require trigger selection disk")
 parser.add_option("-g", "--grl",dest="grl",
@@ -46,6 +49,8 @@ parser.add_option("-g", "--grl",dest="grl",
                   help="Run number of MC or DATA dataset from GRL.py")
 
 (opts, args) = parser.parse_args()
+
+# Set up local GRL data accessors
 from GRL import mc09,plhc
 if opts.grl!=None:
     rc = [r for r in mc09.runs if r.rnum==opts.grl]
@@ -54,11 +59,23 @@ if opts.grl!=None:
         r = rc[0]
         opts.output = str(r.rnum)
         opts.input = r.path()
+        if r in plhc.runs:
+            opts.data = True
         print 'Expecting',r.nevents,'events'
     else:
         print "Couldn't find run",opts.grl
         sys.exit(0)
 from helpers import *
+
+# Set up GRL filtering
+def PassRunLB__dummy(*args,**kwargs):
+    """ dummy version of GoodRunList function """
+    return 1
+PassRunLB=PassRunLB__dummy
+if opts.grlxml and ROOT.gSystem.Load('libGoodRunsLists.so')==0:
+    print 'Setting up GRL from xml file:',opts.grlxml
+    ROOT.DQ.SetXMLFile(opts.grlxml);
+    PassRunLB=ROOT.DQ.PassRunLB
 
 plotdir=opts.output
 # preselection
@@ -78,13 +95,15 @@ Histo("ANA_met",metbins)
 
 t = ROOT.TChain('tree')
 print 'Adding files to TChain:'
+opts.input = addDcachePrefix(opts.input)
 print opts.input
 t.Add(opts.input)
 nentries = t.GetEntries()
 
 print 'Starting loop over',(opts.nevents if opts.nevents<nentries else nentries),'/',nentries,'entries'
 ef = EventFlow()
-for evt in range(nentries):
+_DATA = opts.data
+for evt in xrange(nentries):
     if evt>=opts.nevents:
         break
     if evt%1000==0:
@@ -103,7 +122,7 @@ for evt in range(nentries):
     # mc truth
     if False and not _DATA:
         nmc,mc_status,mc_pdgid,mc_e,mc_pt,mc_eta,mc_phi = t.nmc,t.mc_status,t.mc_pdgid,t.mc_e,t.mc_pt,t.mc_eta,t.mc_phi
-        for m in range(nmc):
+        for m in xrange(nmc):
             if mc_status[m]!=3:
                 continue
             if mc_pdgid[m] in (MUON,-MUON):
@@ -129,16 +148,46 @@ for evt in range(nentries):
             ef.truth+=1
             continue
 
-    # event cuts
-    if True and _DATA:
+    if _DATA and not PassRunLB(t.run,t.lb):
+        ef.grl+=1
+        continue
+    
+    # bcid cuts [implicitly applied through trigger]
+    if False and _DATA:
         if t.bcid in _BCIDS:
             ef.bcid+=1
             continue
 
-    # primary vertex cut
+    # trigger
+    if True and not opts.notrig:
+        if t.trig_l1mu0==0:
+            ef.trigger+=1
+            continue
+
+    # jet cleaning cut
+    if True:
+        njet,jet_n90,jet_quality,jet_time,jet_emf,jet_hecf,jet_pt_em=t.njet,t.jet_n90,t.jet_quality,t.jet_time,t.jet_emf,t.jet_hecf,t.jet_pt_em
+        failed=False
+        for m in range(njet):
+            if jet_pt_em[m]<10:
+                continue
+            if jet_quality[m]>0.8 and jet_emf[m]>0.95:
+                failed=True
+                break
+            if jet_time[m]>50:
+                failed=True
+                break
+            if jet_hecf[m]>0.8 and jet_n90[m]<6:
+                failed=True
+                break
+        if failed:
+            ef.jetclean+=1
+            continue
+
+   # primary vertex cut
     if True:
         nvx,vx_type,vx_ntracks = t.nvx,t.vx_type,t.vx_ntracks
-        for m in range(nvx):
+        for m in xrange(nvx):
             if vx_type[m]==1 and vx_ntracks[m]>=3 and fabs(t.vx_z[m])<150:
                 _ivertex = m
                 _zvertex = t.vx_z[m]
@@ -148,11 +197,11 @@ for evt in range(nentries):
             continue
 
     # muon preselection + W cuts
-    nmu,mu_author,mu_q,mu_pt,mu_eta,mu_phi,mu_ptcone40,mu_ptms,mu_qms,mu_qid,mu_z0 = t.nmu,t.mu_author,t.mu_q,t.mu_pt,t.mu_eta,t.mu_phi,t.mu_ptcone40,t.mu_ptms,t.mu_qms,t.mu_qid,t.mu_z0
-    presel,pt,iso=(True,)*3
-    for m in range(nmu):
+    nmu,mu_author,mu_q,mu_pt,mu_eta,mu_phi,mu_ptcone40,mu_ptms,mu_qms,mu_ptid,mu_qid,mu_z0 = t.nmu,t.mu_author,t.mu_q,t.mu_pt,t.mu_eta,t.mu_phi,t.mu_ptcone40,t.mu_ptms,t.mu_qms,t.mu_ptid,t.mu_qid,t.mu_z0
+    presel,pt,iso=(True,)*3  # isFailed?
+    for m in xrange(nmu):
         #mu_q[m]!=0
-        if (mu_author[m]&2!=0) and fabs(mu_eta[m])<2.4 and mu_pt[m]>15*GeV and mu_ptms[m]>10*GeV and fabs(mu_z0[m]-_zvertex)<10:
+        if (mu_author[m]&2!=0) and fabs(mu_eta[m])<2.4 and mu_pt[m]>15*GeV and mu_ptms[m]>10*GeV and fabs(mu_ptms[m]-mu_ptid[m])<10*GeV and fabs(mu_z0[m]-_zvertex)<10*mm:
             ptcone40 = mu_ptcone40[m]/mu_pt[m]
             presel = False
             h['PRESEL_mu_pt'].Fill(mu_pt[m])
@@ -175,11 +224,6 @@ for evt in range(nentries):
     if presel:
         ef.muonpresel+=1
         continue
-    # trigger
-    if True and not opts.notrig:
-        if t.trig_l1mu0==0:
-            ef.trigger+=1
-            continue
     # muon pt
     if pt:
         ef.muonpt+=1
@@ -191,11 +235,9 @@ for evt in range(nentries):
 
     # met from met_topo + met_muon
     if True:
-        et_topo,et_muon = t.met_topo,t.met_muonboy
-        et_topo_phi,et_muon_phi = t.met_topo_phi,t.met_muonboy_phi
-        et_x = et_topo*math.cos(et_topo_phi)+et_muon*math.cos(et_muon_phi)
-        et_y = et_topo*math.sin(et_topo_phi)+et_muon*math.sin(et_muon_phi)
-        _met=ROOT.TVector2(et_x,et_y)
+        et_ichep,et_ichep_phi = t.met_ichep,t.met_ichep_phi
+        _met=ROOT.TVector2()
+        _met.SetMagPhi(et_ichep,et_ichep_phi)
         _met.Pt = _met.Mod  # define Pt() since TVector2 doesn't have it
         if _met.Pt()<25*GeV:
             ef.met+=1

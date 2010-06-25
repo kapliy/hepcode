@@ -11,6 +11,7 @@ wMASS=80.4
 zMASS=91.19
 muMASS=0.1056584
 GeV=1
+mm=1
 
 # mass window for W id via transverse mass:
 wMIN=40*GeV
@@ -199,6 +200,13 @@ def Histo(title,bins=None,bins2=None,bins3=None,histo=None,color=None):
         h[title].SetLineColor(color)
     h[title].Sumw2()
 
+def addDcachePrefix(p):
+    """If path starts with /pnfs, prepend dcap:// to it"""
+    if re.match('/pnfs',p):
+        return 'dcap://'+p
+    else:
+        return p
+    
 def pairs(lst):
     """ easy loop over all unique pairs of objects """
     n = len(lst)
@@ -220,7 +228,9 @@ class EventFlow:
         s.ok=0
         s.truth=0
         s.trigger=0
+        s.grl=0
         s.bcid=0
+        s.jetclean=0
         s.vertex=0
         s.muonpresel=0
         s.muonpt=0
@@ -230,18 +240,20 @@ class EventFlow:
         s.metmuphi=0
         s.wmt=0
     def Print(s,fout):
-        o=[s.truth,s.bcid,s.vertex,s.muonpresel,s.trigger,s.muonpt,s.muoniso,s.met,s.zcut,s.wmt,s.ok]
+        o=[s.truth,s.grl,s.bcid,s.trigger,s.jetclean,s.vertex,s.muonpresel,s.muonpt,s.muoniso,s.met,s.zcut,s.wmt,s.ok]
         print >>fout,o
         def cut(o,i):
             return '%d \t %.2f%%'%(sum(o)-sum(o[:i]),100.0*(sum(o)-sum(o[:i]))/sum(o))
         i=0
         print >>fout, 'Total events       :',cut(o,i); i+=1
         print >>fout, 'After truth cuts   :',cut(o,i); i+=1
+        print >>fout, 'After applying GRL :',cut(o,i); i+=1
         print >>fout, 'After bcid!=0 cut  :',cut(o,i); i+=1
+        print >>fout, 'After trigger      :',cut(o,i); i+=1
+        print >>fout, 'After jet cleaning :',cut(o,i); i+=1
         print >>fout, 'After primary vtx  :',cut(o,i); i+=1
         print >>fout, '-------------------------------'
         print >>fout, 'After muon presel  :',cut(o,i); i+=1
-        print >>fout, 'After trigger      :',cut(o,i); i+=1
         print >>fout, 'After muon pt>20   :',cut(o,i); i+=1
         print >>fout, 'After muon iso     :',cut(o,i); i+=1
         print >>fout, 'After MET cuts     :',cut(o,i); i+=1
