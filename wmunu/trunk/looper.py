@@ -78,6 +78,7 @@ if opts.grlxml and ROOT.gSystem.Load('libGoodRunsLists.so')==0:
     PassRunLB=ROOT.DQ.PassRunLB
 
 plotdir=opts.output
+candfile = open(os.path.join(plotdir,'cands.txt'),'w')
 # preselection
 Histo("PRESEL_mu_pt",ptbins)
 Histo("PRESEL_mu_eta",etabins)
@@ -197,11 +198,11 @@ for evt in xrange(nentries):
             continue
 
     # muon preselection + W cuts
-    nmu,mu_author,mu_q,mu_pt,mu_eta,mu_phi,mu_ptcone40,mu_ptms,mu_qms,mu_ptid,mu_qid,mu_z0 = t.nmu,t.mu_author,t.mu_q,t.mu_pt,t.mu_eta,t.mu_phi,t.mu_ptcone40,t.mu_ptms,t.mu_qms,t.mu_ptid,t.mu_qid,t.mu_z0
+    nmu,mu_author,mu_q,mu_pt,mu_eta,mu_phi,mu_ptcone40,mu_ptms,mu_ptexms,mu_qms,mu_ptid,mu_qid,mu_z0 = t.nmu,t.mu_author,t.mu_q,t.mu_pt,t.mu_eta,t.mu_phi,t.mu_ptcone40,t.mu_ptms,t.mu_ptexms,t.mu_qms,t.mu_ptid,t.mu_qid,t.mu_z0
     presel,pt,iso=(True,)*3  # isFailed?
     for m in xrange(nmu):
         #mu_q[m]!=0
-        if (mu_author[m]&2!=0) and fabs(mu_eta[m])<2.4 and mu_pt[m]>15*GeV and mu_ptms[m]>10*GeV and fabs(mu_ptms[m]-mu_ptid[m])<10*GeV and fabs(mu_z0[m]-_zvertex)<10*mm:
+        if mu_author[m]&2!=0 and mu_ptid[m]!=-1 and fabs(mu_eta[m])<2.4 and mu_pt[m]>15*GeV and mu_ptexms[m]>10*GeV and fabs(mu_ptexms[m]-mu_ptid[m])<15*GeV and fabs(mu_z0[m]-_zvertex)<10*mm:
             ptcone40 = mu_ptcone40[m]/mu_pt[m]
             presel = False
             h['PRESEL_mu_pt'].Fill(mu_pt[m])
@@ -279,6 +280,7 @@ for evt in xrange(nentries):
             h['ANA_mu_eta'].Fill(mu.Eta())
             h['ANA_mu_ptiso'].Fill(mu.ptcone40)
             h['ANA_met'].Fill(_met.Pt())
+            print >>candfile, '%d\t%d\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f%.2f '%(t.run,t.event,mu.charge,mu.Pt(),mu.Eta(),mu.Phi(),mu.ptcone40,_met.Pt(),mW)
             #ws=RecoW(mu.E(),mu.Px(),mu.Py(),mu.Pz(),_met.Px(),_met.Py())
             #_RWs+=ws
             # check with truth
@@ -308,18 +310,22 @@ for evt in xrange(nentries):
             for w in _RWs:
                 Print4vec('RECO              ',w)
 
-if False:
-    # plot distributions overlayed
-    PlotOverlayHistos(h["TMU_eta_p"],h["TMU_eta_m"],'True muon eta: red=mu+, blue=mu-','TMU_eta__overlay')
-    PlotOverlayHistos(h["TMU_eta_p"],h["TMU_eta_m"],'True muon eta: red=mu+, blue=mu-','TMU_eta__norm',norm=True)
-    PlotOverlayHistos(h["RMU_eta_p"],h["RMU_eta_m"],'Reco accepted muon eta: red=mu+, blue=mu-','RMU_eta__overlay')
-    PlotOverlayHistos(h["RMU_eta_p"],h["RMU_eta_m"],'Reco accepted muon eta: red=mu+, blue=mu-','RMU_eta__norm',norm=True)
-    PlotOverlayHistos(h["TMU_pt_p"],h["TMU_pt_m"],'True muon pt: red=mu+, blue=mu-','TMU_pt__overlay')
-    PlotOverlayHistos(h["TMU_pt_p"],h["TMU_pt_m"],'True muon pt: red=mu+, blue=mu-','TMU_pt__norm',norm=True)
-    PlotOverlayHistos(h["RMU_pt_p"],h["RMU_pt_m"],'Reco accepted muon pt: red=mu+, blue=mu-','RMU_pt__overlay')
-    PlotOverlayHistos(h["RMU_pt_p"],h["RMU_pt_m"],'Reco accepted muon pt: red=mu+, blue=mu-','RMU_pt__norm',norm=True)
+candfile.close()
 
-if '_LOAD_EFF' in dir() and False:
+if True:
+    # plot distributions overlayed
+    if "TMU_eta_p" in h:
+        PlotOverlayHistos(h["TMU_eta_p"],h["TMU_eta_m"],'True muon eta: red=mu+, blue=mu-','TMU_eta__overlay')
+        PlotOverlayHistos(h["TMU_eta_p"],h["TMU_eta_m"],'True muon eta: red=mu+, blue=mu-','TMU_eta__norm',norm=True)
+        PlotOverlayHistos(h["TMU_pt_p"],h["TMU_pt_m"],'True muon pt: red=mu+, blue=mu-','TMU_pt__overlay')
+        PlotOverlayHistos(h["TMU_pt_p"],h["TMU_pt_m"],'True muon pt: red=mu+, blue=mu-','TMU_pt__norm',norm=True)
+    if "RMU_eta_p" in h:
+        PlotOverlayHistos(h["RMU_eta_p"],h["RMU_eta_m"],'Reco accepted muon eta: red=mu+, blue=mu-','RMU_eta__overlay')
+        PlotOverlayHistos(h["RMU_eta_p"],h["RMU_eta_m"],'Reco accepted muon eta: red=mu+, blue=mu-','RMU_eta__norm',norm=True)
+        PlotOverlayHistos(h["RMU_pt_p"],h["RMU_pt_m"],'Reco accepted muon pt: red=mu+, blue=mu-','RMU_pt__overlay')
+        PlotOverlayHistos(h["RMU_pt_p"],h["RMU_pt_m"],'Reco accepted muon pt: red=mu+, blue=mu-','RMU_pt__norm',norm=True)
+
+if '_LOAD_EFF' in dir():
     # load efficiency histograms from file
     f=ROOT.TFile(_LOAD_EFF)
     if not f.IsOpen():
@@ -332,7 +338,7 @@ if '_LOAD_EFF' in dir() and False:
     h["EFF_MU_pt_p"]=f.Get("EFF_MU_pt_p").Clone()
     h["EFF_MU_pt_m"]=f.Get("EFF_MU_pt_m").Clone()
     f.Close()
-elif False:
+elif 'TMU_eta_p':
     # make efficiency histograms
     MakeEffHistos(h["RMU_eta_p"],h["TMU_eta_p"],'MU_eta_p')
     MakeEffHistos(h["RMU_pt_p"],h["TMU_pt_p"],'MU_pt_p')
@@ -346,22 +352,24 @@ elif False:
     
 # asymmetries, ratios, efficiencies
 if False:
-    MakeAsymmRatioHistos(h["TMU_eta_p"],h["TMU_eta_m"],'TMU_eta')
-    MakeAsymmRatioHistos(h["TMU_pt_p"],h["TMU_pt_m"],'TMU_pt')
     # uncorrected for relative W+/W- reconstruction efficiency
     MakeAsymmRatioHistos(h["RMU_eta_p"],h["RMU_eta_m"],'RMU_eta__uncorrected')
     MakeAsymmRatioHistos(h["RMU_pt_p"],h["RMU_pt_m"],'RMU_pt__uncorrected')
-    # corrected for relative W+/W- reconstruction efficiency (using efficiency histograms)
-    h_eta_p = h["RMU_eta_p"].Clone(h["RMU_eta_p"].GetName() + "__corrected")
-    h_eta_m = h["RMU_eta_m"].Clone(h["RMU_eta_m"].GetName() + "__corrected")
-    h_pt_p = h["RMU_pt_p"].Clone(h["RMU_pt_p"].GetName() + "__corrected")
-    h_pt_m = h["RMU_pt_m"].Clone(h["RMU_pt_m"].GetName() + "__corrected")
-    h_eta_p.Divide(h['EFF_MU_eta_p'])
-    h_eta_m.Divide(h['EFF_MU_eta_m'])
-    h_pt_p.Divide(h['EFF_MU_pt_p'])
-    h_pt_m.Divide(h['EFF_MU_pt_m'])
-    MakeAsymmRatioHistos(h_eta_p,h_eta_m,'RMU_eta__corrected')
-    MakeAsymmRatioHistos(h_pt_p,h_pt_m,'RMU_pt__corrected')
+    if "TMU_eta_p" in h and "TMU_eta_m" in h:
+        MakeAsymmRatioHistos(h["TMU_eta_p"],h["TMU_eta_m"],'TMU_eta')
+        MakeAsymmRatioHistos(h["TMU_pt_p"],h["TMU_pt_m"],'TMU_pt')
+    if False:
+        # corrected for relative W+/W- reconstruction efficiency (using efficiency histograms)
+        h_eta_p = h["RMU_eta_p"].Clone(h["RMU_eta_p"].GetName() + "__corrected")
+        h_eta_m = h["RMU_eta_m"].Clone(h["RMU_eta_m"].GetName() + "__corrected")
+        h_pt_p = h["RMU_pt_p"].Clone(h["RMU_pt_p"].GetName() + "__corrected")
+        h_pt_m = h["RMU_pt_m"].Clone(h["RMU_pt_m"].GetName() + "__corrected")
+        h_eta_p.Divide(h['EFF_MU_eta_p'])
+        h_eta_m.Divide(h['EFF_MU_eta_m'])
+        h_pt_p.Divide(h['EFF_MU_pt_p'])
+        h_pt_m.Divide(h['EFF_MU_pt_m'])
+        MakeAsymmRatioHistos(h_eta_p,h_eta_m,'RMU_eta__corrected')
+        MakeAsymmRatioHistos(h_pt_p,h_pt_m,'RMU_pt__corrected')
 
 if not opts.nosave:
     if not os.path.isdir(plotdir):
