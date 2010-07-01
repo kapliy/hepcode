@@ -6,12 +6,12 @@
 
 date
 cd /home/antonk
-source setup/setup.sh
+source work/current/cmtsite/setup.sh
 echo $anadir
 echo $outdir
-echo $rnum
+echo $inpdir
 mkdir -p ${outdir}
 cd ${outdir}/
 date
-time python ${anadir}/looper.py -g ${rnum}
+time python ${anadir}/looper.py -i "${inpdir}/*root*" -x "${anadir}/xml/*.xml" -o ${outdir} ${extras}
 date
