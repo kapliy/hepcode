@@ -1,8 +1,11 @@
+post-processing python script:
+Specify out.root files and xsections, plus integrated lumi for data.
+ls histogram, then plotall - scales MC histos to integrated lumi.
+
 Code grid-processing (run on ALL output at once): should be easy with prun - just need to add a script.
 
-Hao and I now agree on the use of the iLumiCalc.exe tool.
-I give below the total integrated limunosity for the different GRLs posted by Corinne, for L1_EM5 and with OflLumi-7TeV-001.
 
+I give below the total integrated limunosity for the different GRLs posted by Corinne, for L1_EM5 and with OflLumi-7TeV-001.
 -- WZ common --
 period A: 332.bbbbb-1
 period B: 7141.bbbbb-1

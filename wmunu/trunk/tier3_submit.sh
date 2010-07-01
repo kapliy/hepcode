@@ -1,11 +1,21 @@
 anadir=/home/antonk/analysis
-outdir=/home/antonk/logs
-runs="106044 105861 106022 106047 106052  109276 109277 109278 109279 109280 109281"
-info="Wmunu  ttbar  Wtaunu Zmumu  Ztautau J0     J1     J2     J3     J4     J5"
-#runs="152844  152845  152878  152933  152994  153030  153134  153136  153159  153200  153565  153599"
-echo $info
+outdir=/home/antonk/output
+DATADIR=/pnfs/uct3/data/users/antonk/ANALYSIS/ICHEP_DATA
+MCDIR=/pnfs/uct3/data/users/antonk/ANALYSIS/ICHEP_MC
 
-for rnum in `echo $runs`; do
-    echo "Submitting job $rnum"
-    qsub -v anadir=${anadir},outdir=${outdir},rnum=${rnum} -N looper${rnum} -o $outdir/$rnum/log$id.stdout -e $outdir/$rnum/log$id.stderr pbs.sh
-done;
+id=0
+for dsampledir in $DATADIR; do
+    dsample=periodABC
+    echo "Submitting job $id: $dsample"
+    mkdir -p $outdir/$dsample
+    qsub -v anadir=${anadir},inpdir="${dsampledir}/*",outdir=${outdir}/$dsample,extras="--data" -N looper${id} -o $outdir/$dsample/log.stdout -e $outdir/$dsample/log.stderr pbs.sh
+    ((id++))
+done
+
+for dsampledir in `find $MCDIR -maxdepth 1 -mindepth 1 -type d | sort`; do
+    dsample=`basename $dsampledir`
+    echo "Submitting job $id: $dsample"
+    mkdir -p $outdir/$dsample
+    qsub -v anadir=${anadir},inpdir=${dsampledir},outdir=${outdir}/$dsample,extras="" -N looper${id} -o $outdir/$dsample/log.stdout -e $outdir/$dsample/log.stderr pbs.sh
+    ((id++))
+done

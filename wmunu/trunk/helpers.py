@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import math,re,os
+import math,re,os,glob,time
 from math import sqrt,fabs
 import ROOT
 import PyCintex;
@@ -73,6 +73,31 @@ WPLUS=24
 WMINUS=-24
 GLUON=21
 HIGGS=25
+
+class GoodRunsList:
+    """ General GRL abstraction """
+    libname = 'libGoodRunsLists.so'
+    def __init__(s,xmls):
+        if not ROOT.gSystem.Load(s.libname)==0:
+            print 'Failed to load',s.libname
+            sys.exit(0)
+        s.load(xmls)
+    def load(s,xmls):
+        """ Accepts comma-separated list of xml files """
+        s.xmls = xmls
+        s.reader = ROOT.Root.TGoodRunsListReader()
+        for xml in s.xmls.split(','):
+            for file in glob.glob(xml):
+                s.reader.AddXMLFile(file)
+        s.reader.Interpret()
+        s.grl = s.reader.GetMergedGRLCollection()
+    def summary(s):
+        s.grl.Summary()
+    def passRunLB__real(s,run,lb):
+        return s.grl.HasRunLumiBlock(run,lb)
+    @staticmethod
+    def passRunLB__dummy(*args,**kwargs):
+        return 1
 
 def RecoW(emu,pmux,pmuy,pmuz,pnux,pnuy,mW=wMASS):
     """ Reconstructs W from Wmunu assuming W mass value
@@ -177,6 +202,32 @@ def Legend(hreco,htruth):
     leg.AddEntry(hTruth,"Truth","l")
     leg.Draw()
 
+def FillQ(title,q,*args):
+    """ Fill per-charge histograms """
+    h['%s_%s'%(title,q)].Fill(*args)
+
+_qhistos = []
+def HistoQ(*args,**kwargs):
+    """ Books general and per-charge histograms"""
+    title = args[0]
+    _qhistos.append(title)
+    for q in ('_p','_m'):
+        newargs = [a for a in args]
+        newargs[0]=title+q
+        color = ROOT.kBlue if q == '_p' else ROOT.kRed
+        kwargs['color']=color
+        Histo(*newargs,**kwargs)
+def MergeHistoQ():
+    """ Makes a joint histogram out of p and m histograms """
+    for label in _qhistos:
+        try:
+            h1 = h[label+'_m'].Clone(label)
+            h1.SetTitle(label)
+            h1.Add(h[label+'_p'])
+            Histo(label,histo=h1,color=ROOT.kBlack)
+        except KeyError:
+            continue
+
 def Histo(title,bins=None,bins2=None,bins3=None,histo=None,color=None):
     """ Register a histogram in the global histogram dictionary """
     if histo:
@@ -226,13 +277,15 @@ class EventFlow:
     """ trivial event flow manager """
     def __init__(s):
         s.ok=0
-        s.truth=0
+        s.truthmet=0
+        s.truthmu=0
         s.trigger=0
         s.grl=0
         s.bcid=0
         s.jetclean=0
         s.vertex=0
         s.muonpresel=0
+        s.muonqual=0
         s.muonpt=0
         s.muoniso=0
         s.met=0
@@ -240,25 +293,30 @@ class EventFlow:
         s.metmuphi=0
         s.wmt=0
     def Print(s,fout):
-        o=[s.truth,s.grl,s.bcid,s.trigger,s.jetclean,s.vertex,s.muonpresel,s.muonpt,s.muoniso,s.met,s.zcut,s.wmt,s.ok]
+        o=[s.truthmet,s.truthmu,s.grl,s.bcid,s.jetclean,s.trigger,s.vertex,s.muonpresel,s.muonqual,s.muonpt,s.muoniso,s.met,s.zcut,s.wmt,s.ok]
         print >>fout,o
         def cut(o,i):
-            return '%d \t %.2f%%'%(sum(o)-sum(o[:i]),100.0*(sum(o)-sum(o[:i]))/sum(o))
+            try:
+                return '%d \t %.2f%%'%(sum(o)-sum(o[:i]),100.0*(sum(o)-sum(o[:i]))/sum(o))
+            except ZeroDivisionError:
+                return 'ZERO DIVISION ERROR'
         i=0
-        print >>fout, 'Total events       :',cut(o,i); i+=1
-        print >>fout, 'After truth cuts   :',cut(o,i); i+=1
-        print >>fout, 'After applying GRL :',cut(o,i); i+=1
-        print >>fout, 'After bcid!=0 cut  :',cut(o,i); i+=1
-        print >>fout, 'After trigger      :',cut(o,i); i+=1
-        print >>fout, 'After jet cleaning :',cut(o,i); i+=1
-        print >>fout, 'After primary vtx  :',cut(o,i); i+=1
+        print >>fout, 'Total events        :',cut(o,i); i+=1
+        print >>fout, 'After true-met cuts :',cut(o,i); i+=1        
+        print >>fout, 'After true-mu cuts  :',cut(o,i); i+=1
+        print >>fout, 'After applying GRL  :',cut(o,i); i+=1
+        print >>fout, 'After bcid!=0 cut   :',cut(o,i); i+=1
+        print >>fout, 'After jet cleaning  :',cut(o,i); i+=1
+        print >>fout, 'After trigger       :',cut(o,i); i+=1
+        print >>fout, 'After primary vtx   :',cut(o,i); i+=1
         print >>fout, '-------------------------------'
-        print >>fout, 'After muon presel  :',cut(o,i); i+=1
-        print >>fout, 'After muon pt>20   :',cut(o,i); i+=1
-        print >>fout, 'After muon iso     :',cut(o,i); i+=1
-        print >>fout, 'After MET cuts     :',cut(o,i); i+=1
-        print >>fout, 'After z bg cut     :',cut(o,i); i+=1
-        print >>fout, 'After mT[W] >40    :',cut(o,i); i+=1
+        print >>fout, 'After muon presel   :',cut(o,i); i+=1
+        print >>fout, 'After muon quality  :',cut(o,i); i+=1
+        print >>fout, 'After muon pt>20    :',cut(o,i); i+=1
+        print >>fout, 'After muon iso      :',cut(o,i); i+=1
+        print >>fout, 'After MET cuts      :',cut(o,i); i+=1
+        print >>fout, 'After z bg cut      :',cut(o,i); i+=1
+        print >>fout, 'After mT[W] >40     :',cut(o,i); i+=1
         fout.close()
 
 def makeCanvas(label):
