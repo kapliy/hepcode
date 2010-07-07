@@ -9,7 +9,8 @@ import math,sys,glob,re
 import ROOT
 ROOT.gROOT.SetBatch(1) #uncomment for interactive usage
 
-_BCIDs = (1,1786)
+_BCIDs = (1, 201, 301, 101, 1786, 1886, 1986, 2086)  #up to run 156682
+
 _INPUTS = '/pnfs/uct3/data/users/antonk/ANALYSIS/PLHC_MC/user10.AntonKapliy.mc09_7TeV.106044.PythiaWmunu_no_filter.merge.AOD.e468_s765_s767_r1207_r1210.ntuple.v1_7/user10.AntonKapliy.mc09_7TeV.106044.PythiaWmunu_no_filter.merge.AOD.e468_s765_s767_r1207_r1210.ntuple.v1_7.flatntuple._00001.root'
 
 from optparse import OptionParser
@@ -35,20 +36,20 @@ parser.add_option("--effmap",dest="effmap",
 parser.add_option("--data", default=False,
                   action="store_true",dest="data",
                   help="Whether running over data (vs MC)")
-parser.add_option("--no-save",
-                  action="store_true",dest="nosave",
-                  help="Don't save any output on disk")
+parser.add_option("--no-plots",
+                  action="store_true",dest="noplots",
+                  help="Don't save any plots on disk")
 parser.add_option("--no-trigger",
                   action="store_true",dest="notrig",
                   help="Don't require trigger selection disk")
-parser.add_option("--truth",
-                  action="store_true",dest="truth",
-                  help="Enable truth studies when running over MC")
+parser.add_option("--truthcuts",
+                  action="store_true",dest="truthcuts",
+                  help="Enable truth cut studies when running over MC")
 
 (opts, args) = parser.parse_args()
 _DATA = opts.data
 _MC = not _DATA
-_TRUTH = opts.truth
+_TRUTHCUTS = opts.truthcuts
 from helpers import *
 
 # Set up GRL
@@ -61,13 +62,21 @@ if opts.grlxml and _DATA:
 plotdir=opts.output
 if not os.path.isdir(plotdir):
     os.makedirs(plotdir)
-candfile = open(os.path.join(plotdir,'cands.txt'),'w')
+candlist = []
 
 # truth
 HistoQ("TRUTH_mu_pt",ptbins)
 HistoQ("TRUTH_mu_eta",etabins)
 HistoQ("TRUTH_mu_phi",phibins)
-HistoQ("TRUTH_met",metbins)
+HistoQ("TRUTH_w_pt",ptbins)
+HistoQ("TRUTH_w_eta",etabins)
+HistoQ("TRUTH_w_phi",phibins)
+HistoQ("TRUTH_w_mt",phibins)
+# after event-quality cuts but before any muon / met cuts
+Histo("EVENT_njets",nobjbins)
+Histo("EVENT_nmus",nobjbins)
+Histo("EVENT_met",metbins)
+Histo('EVENT_mu_ptms_ptid',dptbins)
 # preselection
 HistoQ("PRESEL_mu_pt",ptbins)
 HistoQ("PRESEL_mu_eta",etabins)
@@ -75,13 +84,22 @@ HistoQ("PRESEL_mu_phi",phibins)
 HistoQ("PRESEL_mu_ptiso",ptisobins)
 HistoQ("PRESEL_met",metbins)
 HistoQ("PRESEL_mu_pt_vs_met",ptbins,metbins)
-# analysis level (after all cuts)
-HistoQ("ANA_mu_pt",ptbins)
-HistoQ("ANA_mu_eta",etabins)
-HistoQ("ANA_mu_phi",phibins)
-HistoQ("ANA_mu_ptiso",ptisobins)
-HistoQ("ANA_met",metbins)
-HistoQ("ANA_w_mt",mtbins)
+HistoQ("PRESEL_mu_iso_vs_met",ptisobins,metbins)
+HistoQ("PRESEL_mu_eta_vs_phi",etabins,phibins)
+Histo("PRESEL_njets",nobjbins)
+# pre-analysis (before mT cut) and analysis (after all cuts)
+for lvl in ('PREANA','ANA'):
+    HistoQ("%s_mu_pt"%lvl,ptbins)
+    HistoQ("%s_mu_eta"%lvl,etabins)
+    HistoQ("%s_mu_phi"%lvl,phibins)
+    HistoQ("%s_mu_ptiso"%lvl,ptisobins)
+    HistoQ("%s_met"%lvl,metbins)
+    HistoQ("%s_mu_pt_vs_met"%lvl,ptbins,metbins)
+    HistoQ("%s_mu_iso_vs_met"%lvl,ptisobins,metbins)
+    HistoQ("%s_w_mt_vs_met"%lvl,mtbins,metbins)
+    HistoQ("%s_w_mt"%lvl,mtbins)
+    HistoQ("%s_w_pt"%lvl,ptbins)
+    Histo("%s_njets"%lvl,nobjbins)
 
 t = ROOT.TChain('tree')
 print 'Adding files to TChain:'
@@ -113,40 +131,51 @@ for evt in xrange(nentries):
     _RWs=[]
 
     # mc truth
-    if _TRUTH and _MC:
-        nmc,mc_status,mc_pdgid,mc_e,mc_pt,mc_eta,mc_phi = t.nmc,t.mc_status,t.mc_pdgid,t.mc_e,t.mc_pt,t.mc_eta,t.mc_phi
-        if t.met_truth<25*GeV:
-            ef.truthmet+=1
-            continue
+    if _TRUTHCUTS and _MC:
+        nmc,mc_status,mc_pdgid,mc_e,mc_pt,mc_eta,mc_phi,mc_parent = t.nmc,t.mc_status,t.mc_pdgid,t.mc_e,t.mc_pt,t.mc_eta,t.mc_phi,t.mc_parent
         for m in xrange(nmc):
             if mc_status[m]!=3:
                 continue
-            if mc_pdgid[m] in (MUON,-MUON):
+            # w's don't have a parent with mc_status==3
+            if mc_pdgid[m] in (WPLUS,WMINUS):
+                v = ROOT.TLorentzVector()
+                v.SetPtEtaPhiE(mc_pt[m],mc_eta[m],mc_phi[m],mc_e[m])
+                v.charge = charge = 'p' if mc_pdgid[m]==WPLUS else 'm'
+                FillQ('TRUTH_w_pt',charge,mc_pt[m])
+                FillQ('TRUTH_w_phi',charge,mc_phi[m])
+                FillQ('TRUTH_w_eta',charge,mc_eta[m])
+                FillQ('TRUTH_w_mt',charge,v.Mt())
+                _TWs.append(v)
+            if mc_parent[m]==-1:
+                continue
+            mp = mc_parent[m]
+            if mc_pdgid[m] in (MUON,-MUON) and mc_pdgid[mp] in (WPLUS,WMINUS):
                 if fabs(mc_pt[m])>=20.0*GeV and fabs(mc_eta[m])<2.4:
-                    charge = 'm' if mc_pdgid[m]==MUON else 'p'
                     v = ROOT.TLorentzVector()
                     v.SetPtEtaPhiE(mc_pt[m],mc_eta[m],mc_phi[m],mc_e[m])
-                    v.charge = charge
+                    v.charge = charge = 'm' if mc_pdgid[m]==MUON else 'p'
                     _Tmus.append(v)
                     FillQ('TRUTH_mu_pt',charge,mc_pt[m])
                     FillQ('TRUTH_mu_phi',charge,mc_phi[m])
                     FillQ('TRUTH_mu_eta',charge,mc_eta[m])
-                    FillQ('TRUTH_met',charge,t.met_truth)
-            if mc_status[m]==3 and mc_pdgid[m] in (WPLUS,WMINUS):
+            if mc_status[m]==3 and mc_pdgid[m] in (NEUTRINOS) and mc_pdgid[mp] in (WPLUS,WMINUS):
                 v = ROOT.TLorentzVector()
                 v.SetPtEtaPhiE(mc_pt[m],mc_eta[m],mc_phi[m],mc_e[m])
-                v.charge = 'p' if mc_pdgid[m]==WPLUS else 'm'
-                _TWs.append(v)
-            if mc_status[m]==3 and mc_pdgid[m] in (NEUTRINOS):
-                v = ROOT.TLorentzVector()
-                v.SetPtEtaPhiE(mc_pt[m],mc_eta[m],mc_phi[m],mc_e[m])
-                v.charge = 'n'
+                v.charge = charge = 'p' if mc_pdgid[m] in NEUTRINOS[3:] else 'm'
                 _Tnus.append(v)
-
+        _Tmus.sort(key=lambda p: p.Pt(),reverse=True)
+        _TWs.sort(key=lambda p: p.Pt(),reverse=True)
+        _Tnus.sort(key=lambda p: p.Pt(),reverse=True)
     # truth cuts
-    if _TRUTH and _MC:  # Wmunu truth cut
+    if _TRUTHCUTS and _MC:
+        if len(_Tnus)==0 or _Tnus[0].Pt()<25*GeV:
+            ef.truthmet+=1
+            continue
         if len(_Tmus)==0 or len(_TWs)==0:
             ef.truthmu+=1
+            continue
+        if _TWs[0].Mt()<40*GeV:
+            ef.truthwmt+=1
             continue
 
     # GRL cuts
@@ -198,12 +227,18 @@ for evt in xrange(nentries):
             ef.vertex+=1
             continue
 
+    # event-wide histograms
+    h['EVENT_njets'].Fill(t.njet)
+    h['EVENT_nmus'].Fill(t.nmu)
+    h['EVENT_met'].Fill(t.met_ichep)
+
     # muon preselection + W cuts
     nmu,mu_author,mu_q,mu_pt,mu_eta,mu_phi,mu_ptcone40,mu_ptms,mu_ptexms,mu_qms,mu_ptid,mu_qid,mu_z0 = t.nmu,t.mu_author,t.mu_q,t.mu_pt,t.mu_eta,t.mu_phi,t.mu_ptcone40,t.mu_ptms,t.mu_ptexms,t.mu_qms,t.mu_ptid,t.mu_qid,t.mu_z0
     presel,quality,pt,iso=(True,)*4  # isFailed?
     for m in xrange(nmu):
         if mu_author[m]&2!=0 and mu_ptid[m]!=-1 and mu_q[m]!=0 and fabs(mu_eta[m])<2.4 and mu_pt[m]>15*GeV and fabs(mu_z0[m]-_zvertex)<10*mm:
             presel = False
+            h['EVENT_mu_ptms_ptid'].Fill(mu_ptexms[m]-mu_ptid[m])
             if mu_ptexms[m]>10*GeV and fabs(mu_ptexms[m]-mu_ptid[m])<15*GeV:
                 quality = False
                 ptcone40 = mu_ptcone40[m]/mu_pt[m]
@@ -214,6 +249,8 @@ for evt in xrange(nentries):
                 FillQ('PRESEL_mu_ptiso',charge,ptcone40)
                 FillQ('PRESEL_met',charge,t.met_ichep)
                 FillQ('PRESEL_mu_pt_vs_met',charge,mu_pt[m],t.met_ichep)
+                FillQ("PRESEL_mu_iso_vs_met",charge,ptcone40,t.met_ichep)
+                FillQ('PRESEL_mu_eta_vs_phi',charge,mu_eta[m],mu_phi[m])
                 if mu_pt[m]>20*GeV:
                     pt=False
                     if ptcone40<0.2:
@@ -223,11 +260,13 @@ for evt in xrange(nentries):
                         v.charge=charge
                         v.ptcone40 = ptcone40
                         _Rmus.append(v)
-
+    _Rmus.sort(key=lambda p: p.Pt(),reverse=True)
+    
     # muon preselection
     if presel:
         ef.muonpresel+=1
         continue
+    h['PRESEL_njets'].Fill(t.njet)
     # muon quality (MS-ID pt cuts)
     if quality:
         ef.muonqual+=1
@@ -273,24 +312,40 @@ for evt in xrange(nentries):
         cands=[]  # [mu_index,mW]
         for i,mu in enumerate(_Rmus):
             if True: #fabs(mu.Phi()-_met.Phi())>math.pi/2.0:  # dPhi cut on MET and muon
-                mW=math.sqrt( 2*mu.Pt()*_met.Pt()*(1-math.cos(_met.Phi()-mu.Phi())) )
+                mW=sqrt( 2*mu.Pt()*_met.Pt()*(1-cos(_met.Phi()-mu.Phi())) )
                 cands.append((i,mW))
         # choose the closest W candidate:
-        mdiff,mW,i=closest(wMASS,cands)
-        mu=_Rmus[cands[i][0]]
-        FillQ('ANA_w_mt',mu.charge,mW)
-        print >>candfile, '%d\t%d\t%d\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f '%(t.run,t.lb,t.event,mu.charge,mu.Pt(),mu.Eta(),mu.Phi(),mu.ptcone40,_met.Pt(),mW)
+        mdiff,mtW,i=closest(wMASS,cands)
+        mu,met =_Rmus[cands[i][0]],_met.Pt()
+        charge = mu.charge
+        ptW = sqrt(mu.Pt()**2+met**2+2*mu.Pt()*met*cos(mu.Phi()-_met.Phi()))
+        if len(candlist)<1000:
+            candlist.append('%d\t%d\t%d\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f'%(t.run,t.lb,t.event,charge,mu.Pt(),mu.Eta(),mu.Phi(),mu.ptcone40,met,mtW,ptW))
+        FillQ('PREANA_w_mt',charge,mtW)
+        FillQ('PREANA_w_pt',charge,ptW)
+        FillQ('PREANA_mu_pt',charge,mu.Pt())
+        FillQ('PREANA_mu_phi',charge,mu.Phi())
+        FillQ('PREANA_mu_eta',charge,mu.Eta())
+        FillQ('PREANA_mu_ptiso',charge,mu.ptcone40)
+        FillQ('PREANA_met',charge,met)
+        FillQ("PREANA_mu_pt_vs_met",charge,mu.Pt(),met)
+        FillQ("PREANA_mu_iso_vs_met",charge,mu.ptcone40,met)
+        FillQ("PREANA_w_mt_vs_met",charge,mtW,met)
         # reconstructed a good W:
-        if (mW>wMIN and mW<wMAX):
+        if (mtW>wMIN and mtW<wMAX):
             ef.ok+=1
-            FillQ('ANA_mu_pt',mu.charge,mu.Pt())
-            FillQ('ANA_mu_phi',mu.charge,mu.Phi())
-            FillQ('ANA_mu_eta',mu.charge,mu.Eta())
-            FillQ('ANA_mu_ptiso',mu.charge,mu.ptcone40)
-            FillQ('ANA_met',mu.charge,_met.Pt())
+            FillQ('ANA_w_mt',charge,mtW)
+            FillQ('ANA_w_pt',charge,ptW)
+            FillQ('ANA_mu_pt',charge,mu.Pt())
+            FillQ('ANA_mu_phi',charge,mu.Phi())
+            FillQ('ANA_mu_eta',charge,mu.Eta())
+            FillQ('ANA_mu_ptiso',charge,mu.ptcone40)
+            FillQ('ANA_met',charge,met)
+            FillQ("ANA_mu_pt_vs_met",charge,mu.Pt(),met)
+            FillQ("ANA_mu_iso_vs_met",charge,mu.ptcone40,met)
+            FillQ("ANA_w_mt_vs_met",charge,mtW,met)
+            h['ANA_njets'].Fill(t.njet)
             #ws=RecoW(mu.E(),mu.Px(),mu.Py(),mu.Pz(),_met.Px(),_met.Py())
-            #_RWs+=ws
-            # check with truth
         else:
             ef.wmt+=1
             continue
@@ -319,7 +374,10 @@ for evt in xrange(nentries):
 
 # merge per-charge histograms
 MergeHistoQ()
+
 # write out candidate events
+candfile = open(os.path.join(plotdir,'cands.txt'),'w')
+candfile.write('\n'.join(candlist))
 candfile.close()
 
 if True:
@@ -348,7 +406,7 @@ if opts.effmap:
     h["EFF_mu_pt_p"]=f.Get("EFF_mu_pt_p").Clone()
     h["EFF_mu_pt_m"]=f.Get("EFF_mu_pt_m").Clone()
     f.Close()
-elif _TRUTH and _MC:
+elif _TRUTHCUTS and _MC:
     # make efficiency histograms
     for var in 'eta','pt':
         for q in 'p','m':
@@ -370,13 +428,13 @@ if False:
         except KeyError:
             continue
 
-if not opts.nosave:
-    if not os.path.isdir(plotdir):
-        os.makedirs(plotdir)
-    out = ROOT.TFile(os.path.join(plotdir,'./out.root'),"RECREATE")
-    for hh in h.values():
-        hh.Write()
+if not os.path.isdir(plotdir):
+    os.makedirs(plotdir)
+out = ROOT.TFile(os.path.join(plotdir,'./out.root'),"RECREATE")
+for hh in h.values():
+    hh.Write()
+    if not opts.noplots:
         savePlot(hh,plotdir)
-    out.Close()
-    ef.Print(open(os.path.join(plotdir,'./cuts.txt'),'w'))
-    ef.Print(open('/dev/stdout','w'))
+out.Close()
+ef.Print(open(os.path.join(plotdir,'./cuts.txt'),'w'))
+ef.Print(open('/dev/stdout','w'))

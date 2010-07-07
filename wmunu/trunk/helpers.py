@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import math,re,os,glob,time
-from math import sqrt,fabs
+from math import sqrt,fabs,cos,sin
 import ROOT
 import PyCintex;
 PyCintex.Cintex.Enable()
@@ -20,6 +20,7 @@ wMAX=1000*GeV   # only require mT>40 GeV
 # binning (default)
 nobjbins = (21,-0.5,20.5,'N')
 ptbins = (100,0.,200.,'Pt, [GeV]')
+dptbins = (20,-50,50.,'delta-Pt, [GeV]')
 mtbins = (100,0.,200.,'Mt, [GeV]')
 etisobins = (100,0.,8.,'Et isolation, [GeV]')
 ptisobins = (20,0.,1.,'Pt isolation')
@@ -279,6 +280,7 @@ class EventFlow:
         s.ok=0
         s.truthmet=0
         s.truthmu=0
+        s.truthwmt=0
         s.trigger=0
         s.grl=0
         s.bcid=0
@@ -293,7 +295,7 @@ class EventFlow:
         s.metmuphi=0
         s.wmt=0
     def Print(s,fout):
-        o=[s.truthmet,s.truthmu,s.grl,s.bcid,s.jetclean,s.trigger,s.vertex,s.muonpresel,s.muonqual,s.muonpt,s.muoniso,s.met,s.zcut,s.wmt,s.ok]
+        o=[s.truthmet,s.truthmu,s.truthwmt,s.grl,s.bcid,s.jetclean,s.trigger,s.vertex,s.muonpresel,s.muonqual,s.muonpt,s.muoniso,s.met,s.zcut,s.wmt,s.ok]
         print >>fout,o
         def cut(o,i):
             try:
@@ -301,22 +303,23 @@ class EventFlow:
             except ZeroDivisionError:
                 return 'ZERO DIVISION ERROR'
         i=0
-        print >>fout, 'Total events        :',cut(o,i); i+=1
-        print >>fout, 'After true-met cuts :',cut(o,i); i+=1        
-        print >>fout, 'After true-mu cuts  :',cut(o,i); i+=1
-        print >>fout, 'After applying GRL  :',cut(o,i); i+=1
-        print >>fout, 'After bcid!=0 cut   :',cut(o,i); i+=1
-        print >>fout, 'After jet cleaning  :',cut(o,i); i+=1
-        print >>fout, 'After trigger       :',cut(o,i); i+=1
-        print >>fout, 'After primary vtx   :',cut(o,i); i+=1
+        print >>fout, 'Total events         :',cut(o,i); i+=1
+        print >>fout, 'After true-met cuts  :',cut(o,i); i+=1        
+        print >>fout, 'After true-mu cuts   :',cut(o,i); i+=1
+        print >>fout, 'After true-w mT cuts :',cut(o,i); i+=1
+        print >>fout, 'After applying GRL   :',cut(o,i); i+=1
+        print >>fout, 'After bcid!=0 cut    :',cut(o,i); i+=1
+        print >>fout, 'After jet cleaning   :',cut(o,i); i+=1
+        print >>fout, 'After trigger        :',cut(o,i); i+=1
+        print >>fout, 'After primary vtx    :',cut(o,i); i+=1
         print >>fout, '-------------------------------'
-        print >>fout, 'After muon presel   :',cut(o,i); i+=1
-        print >>fout, 'After muon quality  :',cut(o,i); i+=1
-        print >>fout, 'After muon pt>20    :',cut(o,i); i+=1
-        print >>fout, 'After muon iso      :',cut(o,i); i+=1
-        print >>fout, 'After MET cuts      :',cut(o,i); i+=1
-        print >>fout, 'After z bg cut      :',cut(o,i); i+=1
-        print >>fout, 'After mT[W] >40     :',cut(o,i); i+=1
+        print >>fout, 'After muon presel    :',cut(o,i); i+=1
+        print >>fout, 'After muon quality   :',cut(o,i); i+=1
+        print >>fout, 'After muon pt>20     :',cut(o,i); i+=1
+        print >>fout, 'After muon iso       :',cut(o,i); i+=1
+        print >>fout, 'After MET cuts       :',cut(o,i); i+=1
+        print >>fout, 'After z bg cut       :',cut(o,i); i+=1
+        print >>fout, 'After mT[W] >40      :',cut(o,i); i+=1
         fout.close()
 
 def makeCanvas(label):
