@@ -5,13 +5,12 @@
 #PBS -m e
 
 date
-cd /home/antonk
-source work/current/cmtsite/setup.sh
-echo $anadir
-echo $outdir
-echo $inpdir
+source /home/antonk/work/current/cmtsite/setup.sh -tag=15.6.9.13
+echo "${anadir}"
+echo "${outdir}"
+echo "${inpdir}"
 mkdir -p ${outdir}
 cd ${outdir}/
 date
-time python ${anadir}/looper.py -i "${inpdir}/*root*" -x "${anadir}/xml/*.xml" -o ${outdir} ${extras}
+time python ${anadir}/looper.py -i "${inpdir}" -x "${anadir}/xml/*.xml" -o ${outdir} ${extras}
 date

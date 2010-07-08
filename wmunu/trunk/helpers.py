@@ -203,6 +203,9 @@ def Legend(hreco,htruth):
     leg.AddEntry(hTruth,"Truth","l")
     leg.Draw()
 
+def hgood(title):
+    return (title in h) and h[title].GetEntries()
+
 def FillQ(title,q,*args):
     """ Fill per-charge histograms """
     h['%s_%s'%(title,q)].Fill(*args)
@@ -250,7 +253,8 @@ def Histo(title,bins=None,bins2=None,bins3=None,histo=None,color=None):
         h[title].SetLineWidth(2)
     if color:
         h[title].SetLineColor(color)
-    h[title].Sumw2()
+    if h[title].GetSumw2N()==0:
+        h[title].Sumw2()
 
 def addDcachePrefix(p):
     """If path starts with /pnfs, prepend dcap:// to it"""

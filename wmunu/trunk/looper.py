@@ -8,6 +8,7 @@ except ImportError:
 import math,sys,glob,re
 import ROOT
 ROOT.gROOT.SetBatch(1) #uncomment for interactive usage
+ROOT.SetSignalPolicy(ROOT.kSignalFast)
 
 _BCIDs = (1, 201, 301, 101, 1786, 1886, 1986, 2086)  #up to run 156682
 
@@ -378,16 +379,17 @@ MergeHistoQ()
 # write out candidate events
 candfile = open(os.path.join(plotdir,'cands.txt'),'w')
 candfile.write('\n'.join(candlist))
+candfile.write('\n')
 candfile.close()
 
 if True:
     # plot distributions overlayed
-    if "TMU_eta_p" in h:
+    if hgood("TMU_eta_p"):
         PlotOverlayHistos(h["TMU_eta_p"],h["TMU_eta_m"],'True muon eta: red=mu+, blue=mu-','TMU_eta__overlay')
         PlotOverlayHistos(h["TMU_eta_p"],h["TMU_eta_m"],'True muon eta: red=mu+, blue=mu-','TMU_eta__norm',norm=True)
         PlotOverlayHistos(h["TMU_pt_p"],h["TMU_pt_m"],'True muon pt: red=mu+, blue=mu-','TMU_pt__overlay')
         PlotOverlayHistos(h["TMU_pt_p"],h["TMU_pt_m"],'True muon pt: red=mu+, blue=mu-','TMU_pt__norm',norm=True)
-    if "RMU_eta_p" in h:
+    if hgood("RMU_eta_p"):
         PlotOverlayHistos(h["RMU_eta_p"],h["RMU_eta_m"],'Reco accepted muon eta: red=mu+, blue=mu-','RMU_eta__overlay')
         PlotOverlayHistos(h["RMU_eta_p"],h["RMU_eta_m"],'Reco accepted muon eta: red=mu+, blue=mu-','RMU_eta__norm',norm=True)
         PlotOverlayHistos(h["RMU_pt_p"],h["RMU_pt_m"],'Reco accepted muon pt: red=mu+, blue=mu-','RMU_pt__overlay')
@@ -410,10 +412,8 @@ elif _TRUTHCUTS and _MC:
     # make efficiency histograms
     for var in 'eta','pt':
         for q in 'p','m':
-            try:
+            if hgood("PRESEL_mu_%s_%s"%(var,q)) and hgood("TRUTH_mu_%s_%s"%(var,q)):
                 MakeEffHistos(h["PRESEL_mu_%s_%s"%(var,q)],h["TRUTH_mu_%s_%s"%(var,q)],'mu_%s_%s'%(var,q))
-            except KeyError:
-                continue
         try:
             PlotOverlayHistos(h["EFF_mu_%s_p"%var],h["EFF_mu_%s_m"%var],'Reconstruction efficiency vs %s: red=mu+, blue=mu-'%var,'EFF_mu_%s__overlay'%var,plotdir=plotdir)
             PlotOverlayHistos(h["EFF_mu_%s_p"%var],h["EFF_mu_%s_m"%var],'Reconstruction efficiency vs %s: red=mu+, blue=mu-'%var,'EFF_mu_%s__norm'%var,norm=True,plotdir=plotdir)
