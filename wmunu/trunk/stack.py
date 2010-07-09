@@ -98,9 +98,10 @@ class AnaFile():
             # prepare the canvas
             c = ROOT.TCanvas('c'+key,key,800,600)
             c.cd()
+            outext='.png'
             # mc
             s.hs[key].Draw("H")
-            s.hs[key].SetMinimum(0.0)
+            s.hs[key].SetMinimum(0.1)
             s.hs[key].SetMaximum(maximum*1.25)
             #s.hs[key].GetHistogram().GetYaxis().SetRangeUser(0.0,maximum*1.25)
             #data
@@ -111,11 +112,11 @@ class AnaFile():
             if savedir:
                 if not os.path.exists(savedir):
                     os.makedirs(savedir)
-                c.SaveAs(os.path.join(savedir,key+'.png'))
+                c.SaveAs(os.path.join(savedir,key+outext))
                 if log:
                     ROOT.gPad.SetLogy(ROOT.kTRUE)
-                    c.SaveAs(os.path.join(savedir,key+'_log.png'))
-                    ROOT.gPad.SetLogy(ROOT.kFALSE)
+                    outext='_log%s'%outext
+                    c.SaveAs(os.path.join(savedir,key+outext))
             return c
     def Close(s):
         if s.file.IsOpen():
