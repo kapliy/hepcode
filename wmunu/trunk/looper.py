@@ -2,18 +2,12 @@
 try:
     import psyco
     psyco.full()
-    print 'Using psyco'
 except ImportError:
     pass
-import math,sys,glob,re
-import ROOT
-ROOT.gROOT.SetBatch(1) #uncomment for interactive usage
-ROOT.SetSignalPolicy(ROOT.kSignalFast)
 
 _BCIDs = (1, 201, 301, 101, 1786, 1886, 1986, 2086)  #up to run 156682
 
-_INPUTS = '/pnfs/uct3/data/users/antonk/ANALYSIS/PLHC_MC/user10.AntonKapliy.mc09_7TeV.106044.PythiaWmunu_no_filter.merge.AOD.e468_s765_s767_r1207_r1210.ntuple.v1_7/user10.AntonKapliy.mc09_7TeV.106044.PythiaWmunu_no_filter.merge.AOD.e468_s765_s767_r1207_r1210.ntuple.v1_7.flatntuple._00001.root'
-
+_INPUTS = None
 from optparse import OptionParser
 parser = OptionParser()
 parser.add_option("-n", "--nevents",dest="nevents",
@@ -52,6 +46,7 @@ _DATA = opts.data
 _MC = not _DATA
 _TRUTHCUTS = opts.truthcuts
 from helpers import *
+ROOT.gROOT.SetBatch(1) #uncomment for interactive usage
 
 # Set up GRL
 PassRunLB = GoodRunsList.passRunLB__dummy
