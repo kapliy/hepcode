@@ -3,7 +3,8 @@
 import math,re,os,glob,time,sys
 from math import sqrt,fabs,cos,sin
 import ROOT
-ROOT.SetSignalPolicy(ROOT.kSignalFast)
+ROOT.SetSignalPolicy(ROOT.kSignalFast)  # speed-up
+ROOT.gErrorIgnoreLevel = 2999           # get rid of verbose crap
 import PyCintex;
 PyCintex.Cintex.Enable()
 
@@ -50,6 +51,15 @@ def findBin(bins,val):
         if val>=lb and val<lb+binw:
             break
     return i
+
+def xflatten(seq):
+    """a generator to flatten a nested list"""
+    for x in seq:
+        if type(x) is list:
+            for y in xflatten(x):
+                yield y
+        else:
+            yield x
 
 h = {}
 _ext = 'png'
@@ -100,6 +110,22 @@ class GoodRunsList:
     @staticmethod
     def passRunLB__dummy(*args,**kwargs):
         return 1
+
+class PlotOrder:
+    """ A class that specifies stack ordering and colors """
+    def __init__(s):
+        s.mcg_name = []
+        s.mcg = []
+        s.mcgc = []
+    def Check(s):
+        assert len(s.mcg)==len(s.mcg_name)==len(s.mcgc), 'PlotOrder internal error: wrong list sizes'
+    def Add(s,name,samples,color):
+        s.mcg_name.append(name)
+        if isinstance(samples,list):
+            s.mcg.append(samples)
+        else:
+            s.mcg.append([samples])
+        s.mcgc.append(color)
 
 def RecoW(emu,pmux,pmuy,pmuz,pnux,pnuy,mW=wMASS):
     """ Reconstructs W from Wmunu assuming W mass value

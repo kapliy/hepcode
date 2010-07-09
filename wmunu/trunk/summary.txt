@@ -1,6 +1,0 @@
-Event 999500
-Good events: 78435
-Failed trigger: 683989
-Failed MET cuts: 125481
-Failed muon cuts: 111047
-Failed to find W: 111985
