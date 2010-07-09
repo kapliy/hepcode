@@ -1,0 +1,12 @@
+source Athena first
+
+and then do
+merge_goodrunslists ../GRL/  merge_egamma_GRL.xml  MergeIntoOne True  MatchGRLInfo True
+
+GRLInfo True
+>> Found 4 input xml files.
+>> Now merging ... (this takes some time)
+--- TGRLCollection      : Now merging GRLs where possible. Metadata required to be identical.
+>> Found 4 independent good-runs lists. Now writing merged xml files.
+--- TGoodRunsListWriter : GoodRunsList stored as        : merge_egamma_GRL.xml
+

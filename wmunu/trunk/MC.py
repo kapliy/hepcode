@@ -31,15 +31,16 @@ class MC09_samples:
     def nevents(s):
         return sum([r.nevents for r in s.runs])
     def match_run(s,path):
-        runs = [a for a in s.runs if re.search(str(a.rnum),str(path))]
+        runs = [a for a in s.runs if re.search('%s'%a.rnum,str(path))]
         if len(runs)==1:
             return runs[0]
         return None
     def get_xsec(s,path):
-        return math_run(path).xsec
+        return s.match_run(path).xsec
+    def get_nevents(s,path):
+        return s.match_run(path).nevents
 
 mc09 = MC09_samples()
-mc09.append(MCR(109281,'J5_pythia_jetjet_1muon','*',2.328560,0.029753,500000))
 mc09.append(MCR(105001,'pythia_minbias','*',48445000.000000,1.000000,9996249))
 mc09.append(MCR(106047,'PythiaZmumu_no_filter','*',0.851011,1.000000,4998410))
 mc09.append(MCR(106088,'McAtNloZmumu_no_filter','*',0.952526,1.000000,4990000))
@@ -66,8 +67,8 @@ mc09.append(MCR(109277,'J1_pythia_jetjet_1muon','*',673020.000000,0.001233,50000
 mc09.append(MCR(109278,'J2_pythia_jetjet_1muon','*',41194.700000,0.005443,500000))
 mc09.append(MCR(109279,'J3_pythia_jetjet_1muon','*',2193.250000,0.012949,500000))
 mc09.append(MCR(109280,'J4_pythia_jetjet_1muon','*',87.848700,0.022156,500000))
-mc09.append(MCR(109280,'J5_pythia_jetjet_1muon','*',2.328560,0.02975340,500000))
-mc09.append(MCR(109280,'J6_pythia_jetjet_1muon','*',0.033846,0.03,500000))  # filter eff unknown!
+mc09.append(MCR(109281,'J5_pythia_jetjet_1muon','*',2.328560,0.029753,500000))
+mc09.append(MCR(109282,'J6_pythia_jetjet_1muon','*',0.033846,0.03,500000))  # filter eff unknown!
 
 if False:
     print 'Registered',mc09.nruns(),'runs:'

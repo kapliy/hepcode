@@ -1,3 +1,9 @@
+USER DATA in out.root:
+* nevents
+* efficiencies
+* version
+
+
 post-processing python script:
 Specify out.root files and xsections, plus integrated lumi for data.
 ls histogram, then plotall - scales MC histos to integrated lumi.

@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-import math,re,os,glob,time
+import math,re,os,glob,time,sys
 from math import sqrt,fabs,cos,sin
 import ROOT
+ROOT.SetSignalPolicy(ROOT.kSignalFast)
 import PyCintex;
 PyCintex.Cintex.Enable()
 
