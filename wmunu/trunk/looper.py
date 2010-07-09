@@ -104,16 +104,18 @@ inputs = opts.input.split(',')
 for input in inputs:
     for file in glob.glob(input):
         t.Add(addDcachePrefix(file))
+
 nentries = t.GetEntries()
-print 'Starting loop over',(opts.nevents if opts.nevents<nentries else nentries),'/',nentries,'entries'
+niters = opts.nevents if opts.nevents<nentries else nentries
+import SimpleProgressBar
+bar = SimpleProgressBar.SimpleProgressBar(20,niters)
+print 'Starting loop over',niters,'/',nentries,'entries'
 ef = EventFlow()
 t1 = time.time()
-for evt in xrange(nentries):
-    if evt>=opts.nevents:
-        break
-    if evt%1000==0:
+for evt in xrange(niters):
+    if evt%5000==0:
         if evt!=0:
-            print "Event %d (rate=%.1f Hz)"%(evt+opts.nskip,1000.0/(time.time()-t1))
+            print "%s: event %6d, rate %.1f Hz"%(bar.show(evt),evt+opts.nskip,5000.0/(time.time()-t1))
         t1 = time.time()
     t.GetEntry(evt+opts.nskip)
 
@@ -433,3 +435,11 @@ for hh in h.values():
 out.Close()
 ef.Print(open(os.path.join(plotdir,'./cuts.txt'),'w'))
 ef.Print(open('/dev/stdout','w'))
+
+#TODO: user info - nevents (at least)
+# treeUserInfo = self.hsvc['/flatntuple/tree'].GetUserInfo()
+# uimap = ROOT.TMap()
+# uimap.Add(ROOT.TObjString('NtuplerRevision'),
+#           ROOT.TObjString('$Revision: 35056 $'))
+# treeUserInfo.Add(uimap)
+# ROOT.SetOwnership(uimap, False)

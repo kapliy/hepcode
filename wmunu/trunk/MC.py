@@ -39,6 +39,8 @@ class MC09_samples:
         return s.match_run(path).xsec
     def get_nevents(s,path):
         return s.match_run(path).nevents
+    def get_sample(s,path):
+        return s.match_run(path).sample
 
 mc09 = MC09_samples()
 mc09.append(MCR(105001,'pythia_minbias','*',48445000.000000,1.000000,9996249))
