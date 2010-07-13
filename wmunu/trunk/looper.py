@@ -34,9 +34,9 @@ parser.add_option("--data", default=False,
 parser.add_option("--no-plots",
                   action="store_true",dest="noplots",
                   help="Don't save any plots on disk")
-parser.add_option("--no-trigger",
-                  action="store_true",dest="notrig",
-                  help="Don't require trigger selection disk")
+parser.add_option("--trigger",dest="trigger",
+                  type='string', default='L1_MU6',
+                  help="Choose L1 trigger, such as L1_MU6 or L1_MU0")
 parser.add_option("--truthcuts",
                   action="store_true",dest="truthcuts",
                   help="Enable truth cut studies when running over MC")
@@ -211,8 +211,8 @@ for evt in xrange(niters):
             continue
 
     # trigger
-    if True and not opts.notrig:
-        if t.trig_l1mu0==0:
+    if True:
+        if opts.trigger not in t.trig_l1:
             ef.trigger+=1
             continue
 
@@ -421,7 +421,7 @@ elif _TRUTHCUTS and _MC:
             PlotOverlayHistos(h["EFF_mu_%s_p"%var],h["EFF_mu_%s_m"%var],'Reconstruction efficiency vs %s: red=mu+, blue=mu-'%var,'EFF_mu_%s__norm'%var,norm=True,plotdir=plotdir)
         except KeyError:
             continue
-    
+
 # asymmetries, ratios, efficiencies (uncorrected for relative W+/W- reconstruction efficiency)
 if False:
     for var in 'eta','pt':

@@ -12,7 +12,7 @@ parser.add_option("--data",dest="data",
                   type="string", default=None,
                   help="Path to data folder")
 parser.add_option("--lumi",dest="lumi",
-                  type="float", default=16.6,
+                  type="float", default=72.773163,
                   help="Integrated luminosity for data (in nb^-1)")
 parser.add_option("--qcd-scale",dest="qcdscale",
                   type="float", default=0.575,
