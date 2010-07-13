@@ -57,6 +57,8 @@ class AnaFile():
         hl=s.file.GetListOfKeys()
         for obj in hl:
             key = obj.GetName()
+            if key in ('_meta','_cutflow'):
+                continue
             s.keys.append(key)
             hobj = s.file.Get(key)
             s.h[key] = hobj.Clone()

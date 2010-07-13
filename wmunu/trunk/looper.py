@@ -95,6 +95,8 @@ for lvl in ('PREANA','ANA'):
     HistoQ("%s_w_mt_vs_met"%lvl,mtbins,metbins)
     HistoQ("%s_w_mt"%lvl,mtbins)
     HistoQ("%s_w_pt"%lvl,ptbins)
+    HistoQ("%s_mu_etavar"%lvl,etavarbins)
+    Histo("%s_mu_q"%lvl,qbins)
     Histo("%s_njets"%lvl,nobjbins)
 
 t = ROOT.TChain('tree')
@@ -104,6 +106,7 @@ inputs = opts.input.split(',')
 for input in inputs:
     for file in glob.glob(input):
         t.Add(addDcachePrefix(file))
+SetTreeBranches_V11(t)
 
 nentries = t.GetEntries()
 niters = opts.nevents if opts.nevents<nentries else nentries
@@ -200,7 +203,7 @@ for evt in xrange(niters):
             if jet_time[m]>50:
                 failed=True
                 break
-            if jet_hecf[m]>0.8 and jet_n90[m]<6:
+            if jet_hecf[m]>0.8 and jet_n90[m]<=5:
                 failed=True
                 break
         if failed:
@@ -336,7 +339,9 @@ for evt in xrange(niters):
             FillQ('ANA_w_pt',charge,ptW)
             FillQ('ANA_mu_pt',charge,mu.Pt())
             FillQ('ANA_mu_phi',charge,mu.Phi())
+            h['ANA_mu_q'].Fill(1 if charge=='p' else -1)
             FillQ('ANA_mu_eta',charge,mu.Eta())
+            FillQ('ANA_mu_etavar',charge,mu.Eta())
             FillQ('ANA_mu_ptiso',charge,mu.ptcone40)
             FillQ('ANA_met',charge,met)
             FillQ("ANA_mu_pt_vs_met",charge,mu.Pt(),met)
@@ -425,21 +430,24 @@ if False:
         except KeyError:
             continue
 
+# save all output
 if not os.path.isdir(plotdir):
     os.makedirs(plotdir)
 out = ROOT.TFile(os.path.join(plotdir,'./out.root'),"RECREATE")
+out.cd()
+# user info information
+uimap = ROOT.TMap()
+uimap.Add(ROOT.TObjString('nevents'),ROOT.TObjString(str(niters)))
+uimap.Add(ROOT.TObjString('input'),ROOT.TObjString(opts.input))
+uimap.Add(ROOT.TObjString('grl'),ROOT.TObjString(opts.grlxml if opts.grlxml else 'None'))
+uimap.Add(ROOT.TObjString('isdata'),ROOT.TObjString('1' if opts.data else '0'))
+uimap.Write('_meta',1)
+ROOT.gFile.ls()
 for hh in h.values():
     hh.Write()
     if not opts.noplots:
         savePlot(hh,plotdir)
-out.Close()
 ef.Print(open(os.path.join(plotdir,'./cuts.txt'),'w'))
-ef.Print(open('/dev/stdout','w'))
-
-#TODO: user info - nevents (at least)
-# treeUserInfo = self.hsvc['/flatntuple/tree'].GetUserInfo()
-# uimap = ROOT.TMap()
-# uimap.Add(ROOT.TObjString('NtuplerRevision'),
-#           ROOT.TObjString('$Revision: 35056 $'))
-# treeUserInfo.Add(uimap)
-# ROOT.SetOwnership(uimap, False)
+cutflow = ef.Print(open('/dev/stdout','w'),doMap=True)
+cutflow.Write('_cutflow',1)
+out.Close()
