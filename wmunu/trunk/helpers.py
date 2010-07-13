@@ -137,7 +137,7 @@ def SetTreeBranches_V11(t):
     br.append(['run','lb','bcid'])
     br.append(['nmc','mc_status','mc_pdgid','mc_e','mc_pt','mc_eta','mc_phi','mc_parent'])
     br.append(['njet','jet_n90','jet_quality','jet_time','jet_emf','jet_hecf','jet_pt_em'])
-    br.append(['trig_l1*'])
+    br.append(['trig_l1'])
     br.append(['nvx','vx_type','vx_ntracks','vx_z'])
     br.append(['met_ichep','met_ichep_phi'])
     br.append(['nmu','mu_author','mu_q','mu_pt','mu_eta','mu_phi','mu_ptcone40','mu_ptms','mu_ptexms','mu_qms','mu_ptid','mu_qid','mu_z0'])
