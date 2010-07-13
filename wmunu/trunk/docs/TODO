@@ -1,10 +1,11 @@
-Use folders for histograms?
+* Change to L1_MU6 due to MU0 prescale.
+* LumiCalc crosscheck (ideally, will be able to run from tier3)
+* Wrap the minbias samples and check muon trigger efficiency
 
 USER DATA in out.root:
 * nevents
 * efficiencies
 * version
-
 
 post-processing python script:
 Specify out.root files and xsections, plus integrated lumi for data.

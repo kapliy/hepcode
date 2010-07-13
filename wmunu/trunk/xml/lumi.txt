@@ -1,3 +1,0 @@
-PeriodD from Alberto Belloni:
-   W: 57429.5/ub
-   Z: 61894.8/ub

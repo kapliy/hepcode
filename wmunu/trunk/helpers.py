@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
-import math,re,os,glob,time,sys
+import PyCintex;
+PyCintex.Cintex.Enable()
+
+import math,re,os,glob,time,sys,array
 from math import sqrt,fabs,cos,sin
 import ROOT
 ROOT.SetSignalPolicy(ROOT.kSignalFast)  # speed-up
 ROOT.gErrorIgnoreLevel = 2999           # get rid of verbose crap
-import PyCintex;
-PyCintex.Cintex.Enable()
 
 # constants
 wMASS=80.4
@@ -41,7 +42,9 @@ mtbins = (24,0.,120.,'Mt, [GeV]')
 metbins = (20,0.,100.,'Missing Et [GeV]')
 etabins = (20,-2.4,2.4,'Eta')
 phibins = (20,-math.pi,math.pi,'Phi')
-
+# variable binning
+_etavarbins = (-2.4,-1.52,-1.37,-1.05,0.0,1.05,1.37,1.52,2.4)
+etavarbins = (len(_etavarbins)-1,array.array('f',_etavarbins),None, 'Eta')
 
 def findBin(bins,val):
     """ finds which bin a value belongs to """
@@ -126,6 +129,19 @@ class PlotOrder:
         else:
             s.mcg.append([samples])
         s.mcgc.append(color)
+
+def SetTreeBranches_V11(t):
+    """ Sets branches for v11 peter ntuple """
+    t.SetBranchStatus("*", 0)
+    br = []
+    br.append(['run','lb','bcid'])
+    br.append(['nmc','mc_status','mc_pdgid','mc_e','mc_pt','mc_eta','mc_phi','mc_parent'])
+    br.append(['njet','jet_n90','jet_quality','jet_time','jet_emf','jet_hecf','jet_pt_em'])
+    br.append(['trig_l1*'])
+    br.append(['nvx','vx_type','vx_ntracks','vx_z'])
+    br.append(['met_ichep','met_ichep_phi'])
+    br.append(['nmu','mu_author','mu_q','mu_pt','mu_eta','mu_phi','mu_ptcone40','mu_ptms','mu_ptexms','mu_qms','mu_ptid','mu_qid','mu_z0'])
+    [t.SetBranchStatus(v,1) for v in xflatten(br)]
 
 def RecoW(emu,pmux,pmuy,pmuz,pnux,pnuy,mW=wMASS):
     """ Reconstructs W from Wmunu assuming W mass value
@@ -233,6 +249,9 @@ def Legend(hreco,htruth):
 def hgood(title):
     return (title in h) and h[title].GetEntries()
 
+def Fill(title,*args):
+    """ Fill per-charge histograms """
+    h[title].Fill(*args)
 def FillQ(title,q,*args):
     """ Fill per-charge histograms """
     h['%s_%s'%(title,q)].Fill(*args)
@@ -275,7 +294,10 @@ def Histo(title,bins=None,bins2=None,bins3=None,histo=None,color=None):
         h[title].GetYaxis().SetTitle(bins2[3])
     else:
         assert bins!=None,'You need to provide at least one binning argument to Histo()'
-        h[title] = ROOT.TH1F("%s" % title,title,bins[0],bins[1],bins[2])
+        if isinstance(bins[1],array.array):  # variable bins
+            h[title] = ROOT.TH1F("%s" % title,title,bins[0],bins[1])
+        else:
+            h[title] = ROOT.TH1F("%s" % title,title,bins[0],bins[1],bins[2])
         h[title].GetXaxis().SetTitle(bins[3])
         h[title].SetLineWidth(2)
     if color:
@@ -325,7 +347,10 @@ class EventFlow:
         s.zcut=0
         s.metmuphi=0
         s.wmt=0
-    def Print(s,fout):
+    def Print(s,fout,doMap=False):
+        cflist=None
+        if doMap:
+            cflist = ROOT.TList()
         o=[s.truthmet,s.truthmu,s.truthwmt,s.grl,s.bcid,s.jetclean,s.trigger,s.vertex,s.muonpresel,s.muonqual,s.muonpt,s.muoniso,s.met,s.zcut,s.wmt,s.ok]
         print >>fout,o
         def cut(o,i):
@@ -333,25 +358,32 @@ class EventFlow:
                 return '%d \t %.2f%%'%(sum(o)-sum(o[:i]),100.0*(sum(o)-sum(o[:i]))/sum(o))
             except ZeroDivisionError:
                 return 'ZERO DIVISION ERROR'
-        i=0
-        print >>fout, 'Total events         :',cut(o,i); i+=1
-        print >>fout, 'After true-met cuts  :',cut(o,i); i+=1        
-        print >>fout, 'After true-mu cuts   :',cut(o,i); i+=1
-        print >>fout, 'After true-w mT cuts :',cut(o,i); i+=1
-        print >>fout, 'After applying GRL   :',cut(o,i); i+=1
-        print >>fout, 'After bcid!=0 cut    :',cut(o,i); i+=1
-        print >>fout, 'After jet cleaning   :',cut(o,i); i+=1
-        print >>fout, 'After trigger        :',cut(o,i); i+=1
-        print >>fout, 'After primary vtx    :',cut(o,i); i+=1
-        print >>fout, '-------------------------------'
-        print >>fout, 'After muon presel    :',cut(o,i); i+=1
-        print >>fout, 'After muon quality   :',cut(o,i); i+=1
-        print >>fout, 'After muon pt>20     :',cut(o,i); i+=1
-        print >>fout, 'After muon iso       :',cut(o,i); i+=1
-        print >>fout, 'After MET cuts       :',cut(o,i); i+=1
-        print >>fout, 'After z bg cut       :',cut(o,i); i+=1
-        print >>fout, 'After mT[W] >40      :',cut(o,i); i+=1
+        def PM(caption,value):
+            print >>fout,caption,value
+            if doMap:
+                m = ROOT.TMap()
+                m.Add(ROOT.TObjString(caption),ROOT.TObjString(value))
+                cflist.Add(m)
+        icut=0
+        PM('Total events         :',cut(o,icut)); icut+=1
+        PM('After true-met cuts  :',cut(o,icut)); icut+=1        
+        PM('After true-mu cuts   :',cut(o,icut)); icut+=1
+        PM('After true-w mT cuts :',cut(o,icut)); icut+=1
+        PM('After applying GRL   :',cut(o,icut)); icut+=1
+        PM('After bcid!=0 cut    :',cut(o,icut)); icut+=1
+        PM('After jet cleaning   :',cut(o,icut)); icut+=1
+        PM('After trigger        :',cut(o,icut)); icut+=1
+        PM('After primary vtx    :',cut(o,icut)); icut+=1
+        PM('-------------------------------','')
+        PM('After muon presel    :',cut(o,icut)); icut+=1
+        PM('After muon quality   :',cut(o,icut)); icut+=1
+        PM('After muon pt>20     :',cut(o,icut)); icut+=1
+        PM('After muon iso       :',cut(o,icut)); icut+=1
+        PM('After MET cuts       :',cut(o,icut)); icut+=1
+        PM('After z bg cut       :',cut(o,icut)); icut+=1
+        PM('After mT[W] >40      :',cut(o,icut)); icut+=1
         fout.close()
+        return cflist
 
 def makeCanvas(label):
     c = ROOT.TCanvas(label,label,1024,768);
