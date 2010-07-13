@@ -442,7 +442,6 @@ uimap.Add(ROOT.TObjString('input'),ROOT.TObjString(opts.input))
 uimap.Add(ROOT.TObjString('grl'),ROOT.TObjString(opts.grlxml if opts.grlxml else 'None'))
 uimap.Add(ROOT.TObjString('isdata'),ROOT.TObjString('1' if opts.data else '0'))
 uimap.Write('_meta',1)
-ROOT.gFile.ls()
 for hh in h.values():
     hh.Write()
     if not opts.noplots:
