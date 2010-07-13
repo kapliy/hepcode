@@ -104,7 +104,7 @@ class AnaFile():
             # mc
             s.hs[key].Draw("H")
             s.hs[key].SetMinimum(0.1)
-            s.hs[key].SetMaximum(maximum*1.25)
+            s.hs[key].SetMaximum(maximum*1.4)
             #s.hs[key].GetHistogram().GetYaxis().SetRangeUser(0.0,maximum*1.25)
             #data
             s.h[key].SetMarkerSize(1.0)
