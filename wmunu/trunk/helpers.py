@@ -130,12 +130,13 @@ class PlotOrder:
             s.mcg.append([samples])
         s.mcgc.append(color)
 
-def SetTreeBranches_V11(t):
+def SetTreeBranches_V11(t,doTruth=False):
     """ Sets branches for v11 peter ntuple """
     t.SetBranchStatus("*", 0)
     br = []
     br.append(['run','lb','bcid'])
-    br.append(['nmc','mc_status','mc_pdgid','mc_e','mc_pt','mc_eta','mc_phi','mc_parent'])
+    if doTruth:
+        br.append(['nmc','mc_status','mc_pdgid','mc_e','mc_pt','mc_eta','mc_phi','mc_parent'])
     br.append(['njet','jet_n90','jet_quality','jet_time','jet_emf','jet_hecf','jet_pt_em'])
     br.append(['trig_l1'])
     br.append(['nvx','vx_type','vx_ntracks','vx_z'])
