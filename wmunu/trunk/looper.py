@@ -76,6 +76,7 @@ Histo('EVENT_mu_ptms_ptid',dptbins)
 # preselection
 HistoQ("PRESEL_mu_pt",ptbins)
 HistoQ("PRESEL_mu_eta",etabins)
+HistoQ("PRESEL_mu_etavar",etavarbins)
 HistoQ("PRESEL_mu_phi",phibins)
 HistoQ("PRESEL_mu_ptiso",ptisobins)
 HistoQ("PRESEL_met",metbins)
@@ -106,7 +107,7 @@ inputs = opts.input.split(',')
 for input in inputs:
     for file in glob.glob(input):
         t.Add(addDcachePrefix(file))
-SetTreeBranches_V11(t)
+SetTreeBranches_V11(t,doTruth=_MC)
 
 nentries = t.GetEntries()
 niters = opts.nevents if opts.nevents<nentries else nentries
@@ -132,7 +133,7 @@ for evt in xrange(niters):
     _RWs=[]
 
     # mc truth
-    if _TRUTHCUTS and _MC:
+    if _MC:
         nmc,mc_status,mc_pdgid,mc_e,mc_pt,mc_eta,mc_phi,mc_parent = t.nmc,t.mc_status,t.mc_pdgid,t.mc_e,t.mc_pt,t.mc_eta,t.mc_phi,t.mc_parent
         for m in xrange(nmc):
             if mc_status[m]!=3:
@@ -191,7 +192,7 @@ for evt in xrange(niters):
             continue
 
     # jet cleaning cut
-    if True:
+    if _DATA:
         njet,jet_n90,jet_quality,jet_time,jet_emf,jet_hecf,jet_pt_em=t.njet,t.jet_n90,t.jet_quality,t.jet_time,t.jet_emf,t.jet_hecf,t.jet_pt_em
         failed=False
         for m in range(njet):
@@ -247,6 +248,7 @@ for evt in xrange(niters):
                 FillQ('PRESEL_mu_pt',charge,mu_pt[m])
                 FillQ('PRESEL_mu_phi',charge,mu_phi[m])
                 FillQ('PRESEL_mu_eta',charge,mu_eta[m])
+                FillQ('PRESEL_mu_etavar',charge,mu_eta[m])
                 FillQ('PRESEL_mu_ptiso',charge,ptcone40)
                 FillQ('PRESEL_met',charge,t.met_ichep)
                 FillQ('PRESEL_mu_pt_vs_met',charge,mu_pt[m],t.met_ichep)
@@ -327,6 +329,7 @@ for evt in xrange(niters):
         FillQ('PREANA_mu_pt',charge,mu.Pt())
         FillQ('PREANA_mu_phi',charge,mu.Phi())
         FillQ('PREANA_mu_eta',charge,mu.Eta())
+        FillQ('PREANA_mu_etavar',charge,mu.Eta())
         FillQ('PREANA_mu_ptiso',charge,mu.ptcone40)
         FillQ('PREANA_met',charge,met)
         FillQ("PREANA_mu_pt_vs_met",charge,mu.Pt(),met)
@@ -441,7 +444,6 @@ uimap.Add(ROOT.TObjString('nevents'),ROOT.TObjString(str(niters)))
 uimap.Add(ROOT.TObjString('input'),ROOT.TObjString(opts.input))
 uimap.Add(ROOT.TObjString('grl'),ROOT.TObjString(opts.grlxml if opts.grlxml else 'None'))
 uimap.Add(ROOT.TObjString('isdata'),ROOT.TObjString('1' if opts.data else '0'))
-uimap.Write('_meta',1)
 for hh in h.values():
     hh.Write()
     if not opts.noplots:
@@ -449,4 +451,5 @@ for hh in h.values():
 ef.Print(open(os.path.join(plotdir,'./cuts.txt'),'w'))
 cutflow = ef.Print(open('/dev/stdout','w'),doMap=True)
 cutflow.Write('_cutflow',1)
+uimap.Write('_meta',1)
 out.Close()

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 try:
     import psyco
     psyco.full()
@@ -38,7 +37,12 @@ plot.Add(name='Z#rightarrow#tau#tau',samples='PythiaZtautau',color=ROOT.kMagenta
 plot.Add(name='W#rightarrow#tau#nu',samples='PythiaWtaunu_1Lepton',color=ROOT.kYellow)
 plot.Add(name='Z#rightarrow#mu#mu',samples='PythiaZmumu_no_filter',color=ROOT.kRed)
 plot.Add(name='QCD',samples=['J%d_pythia_jetjet_1muon'%z for z in range(6)],color=ROOT.kCyan)
+#plot.Add(name='QCD',samples=['J%d_pythia_jetjet_1muon'%z for z in range(6)]+['PythiaB_ccmu15X','PythiaB_bbmu15X'],color=ROOT.kCyan)
 plot.Add(name='W#rightarrow#mu#nu',samples='PythiaWmunu_no_filter',color=10)
+
+# Determine which plots to make
+whitelist = ['ANA_*','PRESEL_*','EVENT*']
+blacklist = ['*_vs_*']
 
 class AnaFile():
     """ Histogram holder file """

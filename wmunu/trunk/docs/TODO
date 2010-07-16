@@ -1,6 +1,11 @@
-* Change to L1_MU6 due to MU0 prescale.
-* LumiCalc crosscheck (ideally, will be able to run from tier3)
-* Wrap the minbias samples and check muon trigger efficiency
+* white/blacklist
+* Wrap pile-up QCD samples
+* Wrap MC processes with other PDFs and generators - to compare!
+* Wrap the minbias samples and check muon trigger efficiency for RPC and TGC! -> make 2d trigger efficiency maps wrt staco.
+* check the event filtering script on ESDs (in bookmarks)
+
+* parallel processing: events are easy, but merging cutflows needs a better cutflow format. Maybe an upgrade to Map cutflow is in order!
+
 
 USER DATA in out.root:
 * nevents
