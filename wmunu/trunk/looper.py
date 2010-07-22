@@ -435,7 +435,7 @@ if False:
 
 # save all output
 ef.Print(open(os.path.join(plotdir,'./cuts.txt'),'w'))
-ef.Print(open('/dev/stdout','w'))
+ef.Print()
 print 'Writing results to disk. Please wait...'
 out.cd()
 out.SaveCandTree()

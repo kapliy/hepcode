@@ -1,5 +1,3 @@
-* Make a TTree with all PREANA data: charge, 4vector, run, event, lb
-* new cutflow + merging in stack.py
 * pbs splitter and joiner: make simple script that Adds all histograms and adds dataflow numbers.
 * check out template fitting method. Use it to estimate the background. Check TFractionFitter vs template fitting.
 
