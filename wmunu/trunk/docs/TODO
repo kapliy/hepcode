@@ -1,48 +1,21 @@
-* white/blacklist
+* Make a TTree with all PREANA data: charge, 4vector, run, event, lb
+* new cutflow + merging in stack.py
+* pbs splitter and joiner: make simple script that Adds all histograms and adds dataflow numbers.
+* check out template fitting method. Use it to estimate the background. Check TFractionFitter vs template fitting.
+
 * Wrap pile-up QCD samples
 * Wrap MC processes with other PDFs and generators - to compare!
 * Wrap the minbias samples and check muon trigger efficiency for RPC and TGC! -> make 2d trigger efficiency maps wrt staco.
 * check the event filtering script on ESDs (in bookmarks)
 
-* parallel processing: events are easy, but merging cutflows needs a better cutflow format. Maybe an upgrade to Map cutflow is in order!
-
-
-USER DATA in out.root:
-* nevents
-* efficiencies
-* version
+* analysis:
+njets with a pt cut; pileup samples; add sumet (if present in the ntuple)
 
 post-processing python script:
 Specify out.root files and xsections, plus integrated lumi for data.
 ls histogram, then plotall - scales MC histos to integrated lumi.
 
 Code grid-processing (run on ALL output at once): should be easy with prun - just need to add a script.
-
-
-I give below the total integrated limunosity for the different GRLs posted by Corinne, for L1_EM5 and with OflLumi-7TeV-001.
--- WZ common --
-period A: 332.bbbbb-1
-period B: 7141.bbbbb-1
-period C: 7469.bbbbb-1
-Total: 14.94 nb-1
-
--- Wenu --
-period A: 332.bbbbb-1
-period B: 7141.bbbbb-1
-period C: 7469.bbbbb-1
-Total: 14.94 nb-1
-
--- Zee --
-period A: 341.bbbbb-1
-period B: 7240.bbbbb-1
-period C: 7488.bbbbb-1
-Total: 15.07 nb-1
-
--- Zee forward--
-period A: 341.bbbbb-1
-period B: 7231.bbbbb-1
-period C: 7484.bbbbb-1
-Total: 15.06 nb-1
 
 
 Beamspot: mean and width distributions; variations with run.

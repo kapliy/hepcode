@@ -5,7 +5,7 @@
 #PBS -m e
 
 date
-source /home/antonk/work/current/cmtsite/setup.sh -tag=15.6.9.13
+source /home/antonk/work/15.6.10.7/cmtsite/setup.sh
 echo "${anadir}"
 echo "${outdir}"
 echo "${inpfiles}"

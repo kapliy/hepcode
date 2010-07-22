@@ -31,9 +31,9 @@ parser.add_option("--effmap",dest="effmap",
 parser.add_option("--data", default=False,
                   action="store_true",dest="data",
                   help="Whether running over data (vs MC)")
-parser.add_option("--no-plots",
-                  action="store_true",dest="noplots",
-                  help="Don't save any plots on disk")
+parser.add_option("--make-plots",default=False,
+                  action="store_true",dest="makeplots",
+                  help="Save all plots on disk in the end of the run")
 parser.add_option("--trigger",dest="trigger",
                   type='string', default='L1_MU6',
                   help="Choose L1 trigger, such as L1_MU6 or L1_MU0")
@@ -55,10 +55,12 @@ if opts.grlxml and _DATA:
     grl = GoodRunsList(opts.grlxml)
     PassRunLB=grl.passRunLB__real
 
+# prepare output
 plotdir=opts.output
 if not os.path.isdir(plotdir):
     os.makedirs(plotdir)
-candlist = []
+out = AnaFile(os.path.join(plotdir,'./out.root'),mode="RECREATE")
+out.MakeCandTree()
 
 # truth
 HistoQ("TRUTH_mu_pt",ptbins)
@@ -100,6 +102,7 @@ for lvl in ('PREANA','ANA'):
     Histo("%s_mu_q"%lvl,qbins)
     Histo("%s_njets"%lvl,nobjbins)
 
+# prepare input
 t = ROOT.TChain('tree')
 print 'Adding files to TChain:'
 print opts.input
@@ -109,12 +112,15 @@ for input in inputs:
         t.Add(addDcachePrefix(file))
 SetTreeBranches_V11(t,doTruth=_MC)
 
+# prepare cutflow
+cuts=['truthmet','truthmu','truthwmt','grl','bcid','jetclean','trigger','vertex','muonpresel','muonqual','muonpt','muoniso','met','zcut','wmt','ok']
+ef = EventFlow(cuts)
+
 nentries = t.GetEntries()
 niters = opts.nevents if opts.nevents<nentries else nentries
 import SimpleProgressBar
 bar = SimpleProgressBar.SimpleProgressBar(20,niters)
 print 'Starting loop over',niters,'/',nentries,'entries'
-ef = EventFlow()
 t1 = time.time()
 for evt in xrange(niters):
     if evt%5000==0:
@@ -238,10 +244,10 @@ for evt in xrange(niters):
     nmu,mu_author,mu_q,mu_pt,mu_eta,mu_phi,mu_ptcone40,mu_ptms,mu_ptexms,mu_qms,mu_ptid,mu_qid,mu_z0 = t.nmu,t.mu_author,t.mu_q,t.mu_pt,t.mu_eta,t.mu_phi,t.mu_ptcone40,t.mu_ptms,t.mu_ptexms,t.mu_qms,t.mu_ptid,t.mu_qid,t.mu_z0
     presel,quality,pt,iso=(True,)*4  # isFailed?
     for m in xrange(nmu):
-        if mu_author[m]&2!=0 and mu_ptid[m]!=-1 and mu_q[m]!=0 and fabs(mu_eta[m])<2.4 and mu_pt[m]>15*GeV and fabs(mu_z0[m]-_zvertex)<10*mm:
+        if mu_author[m]&2!=0 and fabs(mu_eta[m])<2.40001 and mu_pt[m]>15.0*GeV and fabs(mu_z0[m]-_zvertex)<10.0*mm: # and mu_ptid[m]!=-1 and mu_q[m]!=0
             presel = False
             h['EVENT_mu_ptms_ptid'].Fill(mu_ptexms[m]-mu_ptid[m])
-            if mu_ptexms[m]>10*GeV and fabs(mu_ptexms[m]-mu_ptid[m])<15*GeV:
+            if mu_ptexms[m]>10.0*GeV and fabs(mu_ptexms[m]-mu_ptid[m])<15.0*GeV:
                 quality = False
                 ptcone40 = mu_ptcone40[m]/mu_pt[m]
                 charge = 'p' if mu_q[m]==1 else 'm'
@@ -254,7 +260,7 @@ for evt in xrange(niters):
                 FillQ('PRESEL_mu_pt_vs_met',charge,mu_pt[m],t.met_ichep)
                 FillQ("PRESEL_mu_iso_vs_met",charge,ptcone40,t.met_ichep)
                 FillQ('PRESEL_mu_eta_vs_phi',charge,mu_eta[m],mu_phi[m])
-                if mu_pt[m]>20*GeV:
+                if mu_pt[m]>20.0*GeV:
                     pt=False
                     if ptcone40<0.2:
                         iso=False
@@ -322,8 +328,8 @@ for evt in xrange(niters):
         mu,met =_Rmus[cands[i][0]],_met.Pt()
         charge = mu.charge
         ptW = sqrt(mu.Pt()**2+met**2+2*mu.Pt()*met*cos(mu.Phi()-_met.Phi()))
-        if len(candlist)<1000:
-            candlist.append('%d\t%d\t%d\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f'%(t.run,t.lb,t.event,charge,mu.Pt(),mu.Eta(),mu.Phi(),mu.ptcone40,met,mtW,ptW))
+        if _DATA:
+            out.AddCand(run=t.run,event=t.event,lb=t.lb,charge=chargemap[charge],mu_pt=mu.Pt(),mu_eta=mu.Eta(),mu_phi=mu.Phi(),mu_ptcone40=mu.ptcone40,met=met,w_mt=mtW,w_pt=ptW)
         FillQ('PREANA_w_mt',charge,mtW)
         FillQ('PREANA_w_pt',charge,ptW)
         FillQ('PREANA_mu_pt',charge,mu.Pt())
@@ -381,12 +387,6 @@ for evt in xrange(niters):
 # merge per-charge histograms
 MergeHistoQ()
 
-# write out candidate events
-candfile = open(os.path.join(plotdir,'cands.txt'),'w')
-candfile.write('\n'.join(candlist))
-candfile.write('\n')
-candfile.close()
-
 if True:
     # plot distributions overlayed
     if hgood("TMU_eta_p"):
@@ -434,22 +434,16 @@ if False:
             continue
 
 # save all output
-if not os.path.isdir(plotdir):
-    os.makedirs(plotdir)
-out = ROOT.TFile(os.path.join(plotdir,'./out.root'),"RECREATE")
-out.cd()
-# user info information
-uimap = ROOT.TMap()
-uimap.Add(ROOT.TObjString('nevents'),ROOT.TObjString(str(niters)))
-uimap.Add(ROOT.TObjString('input'),ROOT.TObjString(opts.input))
-uimap.Add(ROOT.TObjString('grl'),ROOT.TObjString(opts.grlxml if opts.grlxml else 'None'))
-uimap.Add(ROOT.TObjString('isdata'),ROOT.TObjString('1' if opts.data else '0'))
-for hh in h.values():
-    hh.Write()
-    if not opts.noplots:
-        savePlot(hh,plotdir)
 ef.Print(open(os.path.join(plotdir,'./cuts.txt'),'w'))
-cutflow = ef.Print(open('/dev/stdout','w'),doMap=True)
-cutflow.Write('_cutflow',1)
-uimap.Write('_meta',1)
+ef.Print(open('/dev/stdout','w'))
+print 'Writing results to disk. Please wait...'
+out.cd()
+out.SaveCandTree()
+out.SaveCutFlow(ef)
+out.SaveHistos(h)
+if opts.makeplots:
+    out.PrintHistos(plotdir)
+out.SaveMeta(nevents=niters,input=opts.input,grl=opts.grlxml if opts.grlxml else 'None',isdata='1' if opts.data else '0')
+
+#done
 out.Close()

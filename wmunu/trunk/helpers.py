@@ -3,11 +3,25 @@
 import PyCintex;
 PyCintex.Cintex.Enable()
 
-import math,re,os,glob,time,sys,array
+import math,re,os,glob,time,sys,array,copy
 from math import sqrt,fabs,cos,sin
 import ROOT
 ROOT.SetSignalPolicy(ROOT.kSignalFast)  # speed-up
 ROOT.gErrorIgnoreLevel = 2999           # get rid of verbose crap
+ROOT.gROOT.ProcessLine(
+    "struct CandStruct {\
+    Int_t run;\
+    Int_t event;\
+    Int_t lb;\
+    Int_t charge;\
+    Float_t mu_pt;\
+    Float_t mu_eta;\
+    Float_t mu_phi;\
+    Float_t mu_ptcone40;\
+    Float_t met;\
+    Float_t w_mt;\
+    Float_t w_pt;\
+    };" );
 
 # constants
 wMASS=80.4
@@ -45,6 +59,8 @@ phibins = (20,-math.pi,math.pi,'Phi')
 # variable binning
 _etavarbins = (-2.4,-1.52,-1.37,-1.05,0.0,1.05,1.37,1.52,2.4)
 etavarbins = (len(_etavarbins)-1,array.array('f',_etavarbins),None, 'Eta')
+
+chargemap = {'p' : 1, 'm' : -1}
 
 def findBin(bins,val):
     """ finds which bin a value belongs to """
@@ -91,20 +107,33 @@ HIGGS=25
 
 class GoodRunsList:
     """ General GRL abstraction """
-    libname = 'libGoodRunsLists.so'
+    libnames = ['./libs/i686-slc4-gcc34-opt/libGoodRunsListsLib.so','./libs/i686-slc5-gcc43-opt/libGoodRunsListsLib.so']
+    libnames = [os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])),v) for v in libnames ]
+    libnames = ['/home/antonk/setup/15.5.1/GoodRunsLists/i686-slc4-gcc34-opt/libGoodRunsListsLib.so']
     def __init__(s,xmls):
-        if not ROOT.gSystem.Load(s.libname)==0:
-            print 'Failed to load',s.libname
-            sys.exit(0)
+        for i,libname in enumerate(s.libnames):
+            if ROOT.gSystem.Load(libname)==-1 and i==len(s.libnames):
+                print 'GRL: failed to load either library:',s.libname
+                sys.exit(0)
+            else:
+                print 'GRL: loaded',libname
+                break
         s.load(xmls)
     def load(s,xmls):
         """ Accepts comma-separated list of xml files """
         s.xmls = xmls
         s.reader = ROOT.Root.TGoodRunsListReader()
+        s.nfiles = 0
         for xml in s.xmls.split(','):
             for file in glob.glob(xml):
+                print 'GRL: adding',file
                 s.reader.AddXMLFile(file)
+                s.nfiles+=1
+        if s.nfiles==0:
+            print "GRL: didn't find any grl files matching requested pattern:",xmls
+            sys.exit(0)
         s.reader.Interpret()
+        #s.grl = s.reader.GetMergedGoodRunsList()
         s.grl = s.reader.GetMergedGRLCollection()
     def summary(s):
         s.grl.Summary()
@@ -330,61 +359,73 @@ def closest2(target,cands):
 
 class EventFlow:
     """ trivial event flow manager """
-    def __init__(s):
-        s.ok=0
-        s.truthmet=0
-        s.truthmu=0
-        s.truthwmt=0
-        s.trigger=0
-        s.grl=0
-        s.bcid=0
-        s.jetclean=0
-        s.vertex=0
-        s.muonpresel=0
-        s.muonqual=0
-        s.muonpt=0
-        s.muoniso=0
-        s.met=0
-        s.zcut=0
-        s.metmuphi=0
-        s.wmt=0
-    def Print(s,fout,doMap=False):
-        cflist=None
-        if doMap:
-            cflist = ROOT.TList()
-        o=[s.truthmet,s.truthmu,s.truthwmt,s.grl,s.bcid,s.jetclean,s.trigger,s.vertex,s.muonpresel,s.muonqual,s.muonpt,s.muoniso,s.met,s.zcut,s.wmt,s.ok]
-        print >>fout,o
-        def cut(o,i):
-            try:
-                return '%d \t %.2f%%'%(sum(o)-sum(o[:i]),100.0*(sum(o)-sum(o[:i]))/sum(o))
-            except ZeroDivisionError:
-                return 'ZERO DIVISION ERROR'
-        def PM(caption,value):
-            print >>fout,caption,value
-            if doMap:
-                m = ROOT.TMap()
-                m.Add(ROOT.TObjString(caption),ROOT.TObjString(value))
-                cflist.Add(m)
-        icut=0
-        PM('Total events         :',cut(o,icut)); icut+=1
-        PM('After true-met cuts  :',cut(o,icut)); icut+=1        
-        PM('After true-mu cuts   :',cut(o,icut)); icut+=1
-        PM('After true-w mT cuts :',cut(o,icut)); icut+=1
-        PM('After applying GRL   :',cut(o,icut)); icut+=1
-        PM('After bcid!=0 cut    :',cut(o,icut)); icut+=1
-        PM('After jet cleaning   :',cut(o,icut)); icut+=1
-        PM('After trigger        :',cut(o,icut)); icut+=1
-        PM('After primary vtx    :',cut(o,icut)); icut+=1
-        PM('-------------------------------','')
-        PM('After muon presel    :',cut(o,icut)); icut+=1
-        PM('After muon quality   :',cut(o,icut)); icut+=1
-        PM('After muon pt>20     :',cut(o,icut)); icut+=1
-        PM('After muon iso       :',cut(o,icut)); icut+=1
-        PM('After MET cuts       :',cut(o,icut)); icut+=1
-        PM('After z bg cut       :',cut(o,icut)); icut+=1
-        PM('After mT[W] >40      :',cut(o,icut)); icut+=1
-        fout.close()
+    def __init__(s,cuts,values=None):
+        s.cuts = cuts  # cut names
+        [setattr(s,cut,0) for cut in s.cuts]
+        if values:
+            s.ForceValues(values)
+    def ForceValues(s,values):
+        [setattr(s,cut,values[i]) for i,cut in enumerate(s.cuts)]
+    def __add__(s,c):
+        """ Overloaded '+' operator to merge two cutflow lists """
+        assert s.cuts==c.cuts, 'ERROR: different cut names in EventFlow::<operator>plus'
+        out = EventFlow(s.cuts)
+        [setattr(out,cut,getattr(s,cut)+getattr(c,cut)) for cut in s.cuts]
+        return out
+    def CutList(s):
+        return s.CutNameList(),s.CutValueList()
+    def CutNameList(s):
+        """ Returns a list containing cut names """
+        cflist = ROOT.TList()
+        [cflist.Add(ROOT.TObjString(cut)) for cut in s.cuts]
         return cflist
+    def CutValueList(s):
+        """ Returns a list containing cut values """
+        cflist = ROOT.TList()
+        [cflist.Add(ROOT.TObjString(str(getattr(s,cut)))) for cut in s.cuts]
+        return cflist
+    def Print(s,fout):
+        """ Prints complete event cutflow into file fout
+            Note: the function closes fout in the end!
+        """
+        o=[getattr(s,cut) for cut in s.cuts]
+        print >>fout,s.cuts
+        print >>fout,o
+        def cut_tuple(o,i):
+            """ Returns a tuple: nevents,total_efficiency,relative_efficiency """
+            try:
+                ntotal = sum(o)
+                npassed = sum(o)-sum(o[:i])
+                npassed_prev = sum(o) - (sum(o[:i-1]) if i>0 else sum(o[:i]))
+                return (npassed),100.0*npassed/ntotal,100.0*npassed/npassed_prev
+            except ZeroDivisionError:
+                print 'WARNING: zero division error'
+                return (0,0,0)
+        for icut,cut in enumerate((['total']+s.cuts)[:-1]):
+            print >>fout,str('After %s:'%cut).ljust(22),
+            v1,v2,v3 = cut_tuple(o,icut)
+            print >>fout,str('%d'%v1).ljust(8),
+            print >>fout,str('%.2f%%'%v2).rjust(9),
+            print >>fout,str('%.2f%%'%v3).rjust(9)
+            #print >>fout,'%d \t %.2f%% \t %.2f%%'%cut_tuple(o,icut)
+#         PrintCut('Total events         :',cut_tuple(o,icut)); icut+=1
+#         PrintCut('After true-met cuts  :',cut_tuple(o,icut)); icut+=1
+#         PrintCut('After true-mu cuts   :',cut_tuple(o,icut)); icut+=1
+#         PrintCut('After true-w mT cuts :',cut_tuple(o,icut)); icut+=1
+#         PrintCut('After applying GRL   :',cut_tuple(o,icut)); icut+=1
+#         PrintCut('After bcid!=0 cut    :',cut_tuple(o,icut)); icut+=1
+#         PrintCut('After jet cleaning   :',cut_tuple(o,icut)); icut+=1
+#         PrintCut('After trigger        :',cut_tuple(o,icut)); icut+=1
+#         PrintCut('After primary vtx    :',cut_tuple(o,icut)); icut+=1
+#         PrintCut('-------------------------------','')
+#         PrintCut('After muon presel    :',cut_tuple(o,icut)); icut+=1
+#         PrintCut('After muon quality   :',cut_tuple(o,icut)); icut+=1
+#         PrintCut('After muon pt>20     :',cut_tuple(o,icut)); icut+=1
+#         PrintCut('After muon iso       :',cut_tuple(o,icut)); icut+=1
+#         PrintCut('After MET cuts       :',cut_tuple(o,icut)); icut+=1
+#         PrintCut('After z bg cut       :',cut_tuple(o,icut)); icut+=1
+#         PrintCut('After mT[W] >40      :',cut_tuple(o,icut)); icut+=1
+        fout.close()
 
 def makeCanvas(label):
     c = ROOT.TCanvas(label,label,1024,768);
@@ -421,3 +462,173 @@ def savePlot(o,plotdir='plots'):
     if re.match("TH1",o.ClassName()):
         o.GetYaxis().SetRangeUser(0.0,o.GetMaximum()*1.2);
     c.SaveAs('%s/%s.%s'%(plotdir,title,_ext))
+
+
+class AnaFile():
+    """ Histogram / cutflow holder file (out.root abstraction) """
+    def __str__(s):
+        return s.path
+    def __init__(s,path=None,mode='READ'):
+        s.path = path
+        if s.path:
+            s.file = ROOT.TFile.Open(path,mode)
+            s.file.cd()
+        s.keys = []
+        s.h = {}
+        s.mrun = None
+        s.xsec = None
+        s.nevents = None
+        s.sample = None
+        # meta and cuts
+        s.meta=None
+        s.ef = None
+        # candidates
+        s.MakeCandTree()
+    def cd(s):
+        """ wrapper around TDirectory::cd() """
+        if s.file:
+            s.file.cd()
+    def MakeCandTree(s,name="_cands"):
+        """ Prepares a tree to store final candidate events """
+        s.cands = ROOT.TTree(name,'Tree with event candidates')
+        s.cand = ROOT.CandStruct()
+        s.cands.Branch("tree",s.cand,'run/I:event/I:lb/I:charge/I:mu_pt/F:mu_eta/F:mu_phi/F:mu_ptcone40/F:met/F:w_mt/F:w_pt/F')
+    def AddCand(s,**kwargs):
+        """ Adds one candidate to ouput tree """
+        for key,value in kwargs.iteritems():
+            setattr(s.cand,key,value)
+        s.cands.Fill()
+    def SaveCandTree(s):
+        s.cands.Write()
+    def SaveHistos(s,h):
+        """ Saves all histograms into out.root file """
+        s.h,s.keys = h,h.keys()
+        for key,val in s.h.iteritems():
+            val.Write()
+    def PrintHistos(s,plotdir):
+        """ Saves a png copy of all histograms """
+        for hh in s.h.values():
+            savePlot(hh,plotdir)
+    def SaveCutFlow(s,ef):
+        """ serializes cutflow into _cutnames and _cutvalues """
+        s.ef = ef
+        cutnames,cutvalues = s.ef.CutList()
+        cutnames.Write('_cutnames',1)
+        cutvalues.Write('_cutvalues',1)
+    def SaveMeta(s,**kwargs):
+        """ Saves event metadata into a TMap """
+        uimap = ROOT.TMap()
+        for key,value in kwargs.iteritems():
+            uimap.Add(ROOT.TObjString(key),ROOT.TObjString(str(value)))
+        uimap.Write('_meta',1)
+    def match_list(s,key,whitelist,blacklist):
+        """ Matches key in list of patterns; blacklist patterns_black """
+        return all( [re.search(key,re.sub('\*','.*',pattern)) for pattern in blacklist] ) and any( [re.search(key,re.sub('\*','.*',pattern)) for pattern in whitelist] )
+    def Load(s,whitelist,blacklist):
+        hl=s.file.GetListOfKeys()
+        #histos
+        for obj in hl:
+            key = obj.GetName()
+            if key in ('_meta','_cutnames','_cutvalues','_cands'):
+                continue
+            if not s.match_list(key,blacklist,whitelist):
+                continue
+            s.keys.append(key)
+            hobj = s.file.Get(key)
+            s.h[key] = hobj.Clone()
+        #metadata
+        s.meta = s.file._meta.Clone()
+        try:
+            s.nevents = int(s.file._meta.GetValue('nevents'))
+        except:
+            print 'WARNING: failed to get nevents from file; will use default values in MC.py'
+            s.nevents = None
+        # event flow
+        s.ef = EventFlow([str(c) for c in f._cutnames],[int(str(c)) for c in f._cutvalues])
+        # candidates
+        s.cand = ROOT.CandStruct()
+        s.cands = s.file._cands
+    def __add__(s,c):
+        """ Overloaded '+' operator to merge two files """
+        if isinstance(c,int):
+            return s
+        ana = AnaFile()
+        # merge event flows
+        ana.ef = s.ef + c.ef
+        # update event counters
+        ana.nevents = s.nevents + c.nevents
+        # merge histograms
+        ana.keys = s.keys
+        for key in s.keys:
+            ana.h[key]=s.h[key].Clone()
+        ana.AddHistos(c)
+        # merge candidate tree
+        ana.MakeCandTree()
+        ana.cands.CopyEntries(s.cands)
+        ana.cands.CopyEntries(c.cands)
+        return ana
+    def __radd__(self, other):
+        return self.__add__(other)
+    def ScaleToLumi(s,lumi):
+        mrun = s.mrun = mc09.match_run(s.path)
+        if mrun:
+            xsec = s.xsec = mrun.xsec*mrun.filteff
+            if not s.nevents:
+                s.nevents = mrun.nevents
+            nevents = s.nevents
+            sample = s.sample = mrun.sample
+            print 'MC %s: \t\t xsec=%.1f nb'%(sample,xsec)
+            for hh in s.h.values():
+                hh.Scale(1.0/nevents*lumi*xsec)
+                if sample in ['J%d_pythia_jetjet_1muon'%z for z in range(10)]:
+                    hh.Scale(opts.qcdscale)
+                    pass
+        else:
+            print 'Failed to look up xsection for:',s.path
+    def ChangeColor(s,color):
+        [hh.SetLineColor(ROOT.kBlack) for hh in s.h.values()]
+        [hh.SetFillColor(color) for hh in s.h.values()]
+    def AddHistos(s,file):
+        """ Add to itself all histograms from another AnaFile """
+        [s.h[key].Add(file.h[key]) for key in s.keys if key in file.h]
+    def InitStack(s):
+        s.hs = {}
+        s.leg = {}
+        for key in s.keys:
+            s.leg[key] = ROOT.TLegend(0.55,0.70,0.88,0.88,"Data and MC","brNDC")
+            s.leg[key].SetFillStyle(1001);
+            s.leg[key].SetFillColor(10);
+            s.hs[key] = ROOT.THStack(key,key)
+    def AddToStack(s,file):
+        [s.hs[key].Add(file.h[key]) for key in s.keys if key in file.h]
+    def AddToLegend(s,file,name,type='F'):
+        [s.leg[key].AddEntry(file.h[key],name,type) for key in s.keys if key in file.h]
+    def Draw(s,key,savedir=None,log=False):
+        if key in s.h and key in s.hs:
+            maximum = max((s.h[key].GetMaximum(),s.hs[key].GetMaximum()))
+            # prepare the canvas
+            c = ROOT.TCanvas('c'+key,key,800,600)
+            c.cd()
+            outext='.png'
+            # mc
+            s.hs[key].Draw("H")
+            s.hs[key].SetMinimum(0.1)
+            s.hs[key].SetMaximum(maximum*1.4)
+            #s.hs[key].GetHistogram().GetYaxis().SetRangeUser(0.0,maximum*1.25)
+            #data
+            s.h[key].SetMarkerSize(1.0)
+            s.h[key].Draw("Lsame")
+            s.leg[key].Draw("same")
+            # save the plot?
+            if savedir:
+                if not os.path.exists(savedir):
+                    os.makedirs(savedir)
+                c.SaveAs(os.path.join(savedir,key+outext))
+                if log:
+                    ROOT.gPad.SetLogy(ROOT.kTRUE)
+                    outext='_log%s'%outext
+                    c.SaveAs(os.path.join(savedir,key+outext))
+            return c
+    def Close(s):
+        if s.file.IsOpen():
+            s.file.Close()
