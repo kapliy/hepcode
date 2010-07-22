@@ -163,7 +163,7 @@ def SetTreeBranches_V11(t,doTruth=False):
     """ Sets branches for v11 peter ntuple """
     t.SetBranchStatus("*", 0)
     br = []
-    br.append(['run','lb','bcid'])
+    br.append(['run','event','lb','bcid'])
     if doTruth:
         br.append(['nmc','mc_status','mc_pdgid','mc_e','mc_pt','mc_eta','mc_phi','mc_parent'])
     br.append(['njet','jet_n90','jet_quality','jet_time','jet_emf','jet_hecf','jet_pt_em'])
@@ -384,7 +384,7 @@ class EventFlow:
         cflist = ROOT.TList()
         [cflist.Add(ROOT.TObjString(str(getattr(s,cut)))) for cut in s.cuts]
         return cflist
-    def Print(s,fout):
+    def Print(s,fout=sys.stdout):
         """ Prints complete event cutflow into file fout
             Note: the function closes fout in the end!
         """
@@ -407,25 +407,8 @@ class EventFlow:
             print >>fout,str('%d'%v1).ljust(8),
             print >>fout,str('%.2f%%'%v2).rjust(9),
             print >>fout,str('%.2f%%'%v3).rjust(9)
-            #print >>fout,'%d \t %.2f%% \t %.2f%%'%cut_tuple(o,icut)
-#         PrintCut('Total events         :',cut_tuple(o,icut)); icut+=1
-#         PrintCut('After true-met cuts  :',cut_tuple(o,icut)); icut+=1
-#         PrintCut('After true-mu cuts   :',cut_tuple(o,icut)); icut+=1
-#         PrintCut('After true-w mT cuts :',cut_tuple(o,icut)); icut+=1
-#         PrintCut('After applying GRL   :',cut_tuple(o,icut)); icut+=1
-#         PrintCut('After bcid!=0 cut    :',cut_tuple(o,icut)); icut+=1
-#         PrintCut('After jet cleaning   :',cut_tuple(o,icut)); icut+=1
-#         PrintCut('After trigger        :',cut_tuple(o,icut)); icut+=1
-#         PrintCut('After primary vtx    :',cut_tuple(o,icut)); icut+=1
-#         PrintCut('-------------------------------','')
-#         PrintCut('After muon presel    :',cut_tuple(o,icut)); icut+=1
-#         PrintCut('After muon quality   :',cut_tuple(o,icut)); icut+=1
-#         PrintCut('After muon pt>20     :',cut_tuple(o,icut)); icut+=1
-#         PrintCut('After muon iso       :',cut_tuple(o,icut)); icut+=1
-#         PrintCut('After MET cuts       :',cut_tuple(o,icut)); icut+=1
-#         PrintCut('After z bg cut       :',cut_tuple(o,icut)); icut+=1
-#         PrintCut('After mT[W] >40      :',cut_tuple(o,icut)); icut+=1
-        fout.close()
+        if not fout==sys.stdout:
+            fout.close()
 
 def makeCanvas(label):
     c = ROOT.TCanvas(label,label,1024,768);
@@ -473,6 +456,10 @@ class AnaFile():
         if s.path:
             s.file = ROOT.TFile.Open(path,mode)
             s.file.cd()
+            try:
+                s.file._cands.GetEntries()
+            except:
+                pass
         s.keys = []
         s.h = {}
         s.mrun = None
@@ -521,17 +508,17 @@ class AnaFile():
         for key,value in kwargs.iteritems():
             uimap.Add(ROOT.TObjString(key),ROOT.TObjString(str(value)))
         uimap.Write('_meta',1)
-    def match_list(s,key,whitelist,blacklist):
+    def match_list(s,key,whitelist=['*'],blacklist=[]):
         """ Matches key in list of patterns; blacklist patterns_black """
-        return all( [re.search(key,re.sub('\*','.*',pattern)) for pattern in blacklist] ) and any( [re.search(key,re.sub('\*','.*',pattern)) for pattern in whitelist] )
-    def Load(s,whitelist,blacklist):
+        return len( [re.search(re.sub('\*','.*',pattern),key) for pattern in blacklist] )==0 and any( [re.search(re.sub('\*','.*',pattern),key) for pattern in whitelist] )
+    def Load(s,whitelist=['*'],blacklist=[]):
         hl=s.file.GetListOfKeys()
         #histos
         for obj in hl:
             key = obj.GetName()
             if key in ('_meta','_cutnames','_cutvalues','_cands'):
                 continue
-            if not s.match_list(key,blacklist,whitelist):
+            if not s.match_list(key,whitelist,blacklist):
                 continue
             s.keys.append(key)
             hobj = s.file.Get(key)
@@ -539,12 +526,12 @@ class AnaFile():
         #metadata
         s.meta = s.file._meta.Clone()
         try:
-            s.nevents = int(s.file._meta.GetValue('nevents'))
+            s.nevents = int(str(s.file._meta.GetValue('nevents')))
         except:
             print 'WARNING: failed to get nevents from file; will use default values in MC.py'
             s.nevents = None
         # event flow
-        s.ef = EventFlow([str(c) for c in f._cutnames],[int(str(c)) for c in f._cutvalues])
+        s.ef = EventFlow([str(c) for c in s.file._cutnames],[int(str(c)) for c in s.file._cutvalues])
         # candidates
         s.cand = ROOT.CandStruct()
         s.cands = s.file._cands
@@ -564,8 +551,8 @@ class AnaFile():
         ana.AddHistos(c)
         # merge candidate tree
         ana.MakeCandTree()
-        ana.cands.CopyEntries(s.cands)
-        ana.cands.CopyEntries(c.cands)
+        #ana.cands.CopyEntries(s.cands)
+        #ana.cands.CopyEntries(c.cands)
         return ana
     def __radd__(self, other):
         return self.__add__(other)
