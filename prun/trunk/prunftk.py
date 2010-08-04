@@ -16,7 +16,7 @@ import copy
 
 # FTK settings
 _PARENTVERSION = 'panda-client-0.2.56'
-_FTKDEBUG = True   # uncomment for verbose debug printout
+_FTKDEBUG = False   # for verbose FTK debug printouts
 
 # default cloud/site
 defaultCloud = None
@@ -226,8 +226,8 @@ if options.devSrv:
 if options.panda_srvURL != '':
     Client.setServer(options.panda_srvURL)
 
-# version check
-PsubUtils.checkPandaClientVer(options.verbose)
+# version check [ FTK - disable to remove annoying message ]
+##PsubUtils.checkPandaClientVer(options.verbose)
 
 # exclude sites
 if options.excludedSite != '':
@@ -1112,8 +1112,8 @@ else:
                         continue
                     # check size
                     if size > options.maxFileSize:
-                        print "  skip large file %s:%sB>%sB" % (tmpPath,size,options.maxFileSize)
-                        skippedFlag = True
+                        #print "  skip large file %s:%sB>%sB" % (tmpPath,size,options.maxFileSize)
+                        #skippedFlag = True
                         continue
 
                 # remove ./
@@ -1493,13 +1493,16 @@ except:
     print 'FTK ERROR: cannot parse --FTKExtPars or --FTKRegions or --FTKSubRegions'
     sys.exit(0)
 
-print 'FTK : processing %s input files per job. Total number of input filegroups is %s'%(options.nJobs,options.nFilesPerJob)
-print 'FTK : extra outer loop values:',FTKExtPars
-print 'FTK : processing these regions:',FTKRegions
-print 'FTK : processing these subregions:',FTKSubRegions
-    
-iJob = 0      # sequential job numbering
-done = False
+print 'FTK  : preparing to submit %d grid jobs'%(len(FTKFileGroups)*len(FTKExtPars)*len(FTKRegions)*len(FTKSubRegions))
+print 'FTK  : processing %s wrapper files per group'%(options.nFilesPerJob,)
+print 'FTK  : processing these %d filegroups:'%len(FTKFileGroups),FTKFileGroups
+print 'FTK  : extra outer loop %d values:'%len(FTKExtPars),FTKExtPars
+print 'FTK  : processing these %d regions:'%len(FTKRegions),FTKRegions
+print 'FTK  : processing these %d subregions:'%len(FTKSubRegions),FTKSubRegions
+
+jobSpaceUsage = []    # keep track of space usage in staged area of grid nodes
+done = False          # loop exit
+iJob = 0              # sequential job numbering
 for iGroup in FTKFileGroups:    
     for iExtPar in FTKExtPars:
         for iRegion in FTKRegions:
@@ -1508,7 +1511,7 @@ for iGroup in FTKFileGroups:
                     break
                 jobLabel='%05d_reg%d_sub%d_pat%d' % (iGroup+1,iRegion,iSubregion,iExtPar)
                 if _FTKDEBUG:
-                    print 'FTK : JOB',iJob
+                    print 'FTK  : JOB',iJob
                 jobR = JobSpec()
                 jobR.jobDefinitionID   = jobDefinitionID
                 jobR.jobName           = jobName
@@ -1572,11 +1575,11 @@ for iGroup in FTKFileGroups:
                     # special treatment for %CODE, which encodes nsubs. This way we can get code = ireg*nsubs+isub+1
                     match = re.search('%CODE=(\d+)',tmpJobO)
                     if match:
-                        tmpJobO = re.sub(match.group(0),str(iRegion*int(match.group(1)) + iSubregion + 1),tmpJobO)
+                        tmpJobO = re.sub(match.group(0),'%05d'%(iRegion*int(match.group(1)) + iSubregion + 1),tmpJobO)
                     # finally, save the --exec string
                     jobR.jobParameters += '-p "%s" ' % urllib.quote(tmpJobO)
                 if _FTKDEBUG:
-                    print 'FTK : PARS', jobR.jobParameters
+                    print 'FTK  : PARS', jobR.jobParameters
                 # source files
                 if not options.nobuild:
                     fileS = FileSpec()
@@ -1591,6 +1594,7 @@ for iGroup in FTKFileGroups:
                 # additional files for libDS or noBuild
                 if options.libDS != "" or options.nobuild:
                     jobR.jobParameters += '-a %s ' % archiveName
+                file_cache = []
                 # input files
                 if options.inDS != '':  #TODO: allow to run without inDS (pattern production mode)
                     totalSize = 0
@@ -1614,6 +1618,7 @@ for iGroup in FTKFileGroups:
                         fileI.status     = 'ready'
                         fileI.dispatchDBlock = commonDispName
                         jobR.addFile(fileI)
+                        file_cache.append(fileI.lfn)
                         try:
                             totalSize += long(fileI.fsize)
                         except:
@@ -1647,6 +1652,7 @@ for iGroup in FTKFileGroups:
                             jobR.addFile(fileI)
                             inList.append(fileI.lfn)
                             tmpSecLfnList.append(fileI.lfn)
+                            file_cache.append(fileI.lfn)
                             try:
                                 totalSize += long(fileI.fsize)
                             except:
@@ -1660,7 +1666,7 @@ for iGroup in FTKFileGroups:
                         patterns = []
                         # special substitution patterns for FTK mode: %REG, %SUB, %EXT (looper over pattern points)
                         for pattern in tmpSecVal['patterns']:
-                            pattern=re.sub('\.','\.',pattern)
+                            pattern=re.sub('\.','\\.',pattern)
                             pattern=re.sub('\*','.*',pattern)
                             pattern=re.sub('%REG',str(iRegion),pattern)
                             pattern=re.sub('%SUB',str(iSubregion),pattern)
@@ -1668,7 +1674,7 @@ for iGroup in FTKFileGroups:
                             # special treatment for %CODE, which encodes nsubs. This way we can get code = ireg*nsubs+isub+1
                             match = re.search('%CODE=(\d+)',pattern)
                             if match:
-                                pattern = re.sub(match.group(0),str(iRegion*int(match.group(1)) + iSubregion + 1),pattern)
+                                pattern = re.sub(match.group(0),'%05d'%(iRegion*int(match.group(1)) + iSubregion + 1),pattern)
                             patterns.append(pattern)
                         # add FileSpec
                         tmpSecLfnList = []
@@ -1693,13 +1699,15 @@ for iGroup in FTKFileGroups:
                             jobR.addFile(fileI)
                             inList.append(fileI.lfn)
                             tmpSecLfnList.append(fileI.lfn)
+                            file_cache.append(fileI.lfn)
                             try:
                                 totalSize += long(fileI.fsize)
                             except:
                                 pass
                         # append to map
                         tmpInputMap[tmpSecVal['streamName']] = tmpSecLfnList
-                    # size check    
+                    # size check
+                    jobSpaceUsage.append(totalSize/1024**2) # in MB
                     if (not isDirectAccess) and totalSize > maxTotalSize-dbrDsSize:
                         errStr  = "A subjob has %s input files and requires %sMB of disk space " \
                               % (len(inList), ((totalSize+dbrDsSize) >> 20))
@@ -1713,11 +1721,11 @@ for iGroup in FTKFileGroups:
                     # set parameter
                     jobR.jobParameters += '-i "%s" ' % inList
                     if _FTKDEBUG:
-                        print 'FTK : INDS LIST:',inList
+                        print 'FTK  : INDS LIST:',inList
                     if options.secondaryDSs != {} or options.FTKDSs != {}:
                         jobR.jobParameters += '--inMap "%s" ' % tmpInputMap
                         if _FTKDEBUG:
-                            print 'FTK : SECDS MAP:',tmpInputMap
+                            print 'FTK  : SECDS MAP:',tmpInputMap
                 # DBRelease
                 if options.dbRelease != '':
                     tmpItems = options.dbRelease.split(':')
@@ -1788,14 +1796,14 @@ for iGroup in FTKFileGroups:
                     # set parameter
                     jobR.jobParameters += '-o "%s" ' % str(outMap)
                     if _FTKDEBUG:
-                        print 'FTK : OUT MAP:',outMap
+                        print 'FTK  : OUT MAP:',outMap
                 # log
                 file = FileSpec()
                 file.lfn               = '%s._$PANDAID.log.tgz' % options.outDS
                 # FTK: rename the log file
                 file.lfn               = '%s._%s.log.tgz' % (options.outDS,jobLabel)
                 if _FTKDEBUG:
-                    print 'FTK : LOG FILE:',file.lfn
+                    print 'FTK  : LOG FILE:',file.lfn
                 file.type              = 'log'
                 file.dataset           = options.outDS    
                 file.destinationSE     = jobR.destinationSE
@@ -1823,6 +1831,8 @@ for iGroup in FTKFileGroups:
                 iJob += 1
                 if iJob >= options.maxNJobs and options.maxNJobs!=-1:
                     done = True
+
+print 'FTK  : mean (maximum) staged-space usage = %d (%d) MB'%(sum(jobSpaceUsage)/len(jobSpaceUsage),max(jobSpaceUsage))
 
 # no submit 
 if not options.nosubmit:
