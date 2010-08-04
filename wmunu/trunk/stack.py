@@ -11,7 +11,7 @@ parser.add_option("--data",dest="data",
                   type="string", default=None,
                   help="Path to data folder")
 parser.add_option("--lumi",dest="lumi",
-                  type="float", default=72.773163,
+                  type="float", default=310.01,
                   help="Integrated luminosity for data (in nb^-1)")
 parser.add_option("--qcd-scale",dest="qcdscale",
                   type="float", default=0.575,
@@ -25,7 +25,7 @@ parser.add_option("-o", "--output",dest="output",
 (opts, args) = parser.parse_args()
 
 from helpers import *
-from MC import *
+from MC import mc09
 ROOT.TH1.AddDirectory(ROOT.kFALSE)  # ensure that we own all the histograms
 ROOT.gROOT.SetBatch(1) #uncomment for interactive usage
 SetStyle()
@@ -64,8 +64,9 @@ for attr in files:
                 files[attr].append(AnaFile(file))
                 files[attr][-1].Load(whitelist,blacklist)
                 if attr=='mc':
-                    files[attr][-1].ScaleToLumi(opts.lumi)
+                    files[attr][-1].ScaleToLumi(opts.lumi,opts.qcdscale)
                 files[attr][-1].Close()
+print 'Loaded %d MC files and %d DATA files'%(len(files['mc']),len(files['data']))
 
 # prepare output
 out = AnaFile("fout.root",mode="RECREATE")
@@ -91,11 +92,12 @@ for i,bgnames in enumerate(plot.mcg):
 # create data histograms
 [files['data'][0].AddHistos(fc) for fc in files['data'][1:]]
 out.h = files['data'][0].h
-out.AddToLegend(out,'Data(%.1f nb^{-1})'%opts.lumi,'LP')
+out.AddToLegend(out,'Data(#int L dt = %.1f nb^{-1})'%opts.lumi,'LP')
 
 print 'Saving final plots...'
 import SimpleProgressBar
 bar = SimpleProgressBar.SimpleProgressBar(20,len(out.keys))
+
 for i,key in enumerate(out.keys):
     print bar.show(i),key
     out.Draw(key,savedir=opts.output,log=True)
