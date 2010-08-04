@@ -223,15 +223,14 @@ for evt in xrange(niters):
             ef.trigger+=1
             continue
 
-   # primary vertex cut
+   # find primary vertex (aka highest sum-pt) and apply some cuts to it
     if True:
-        nvx,vx_type,vx_ntracks = t.nvx,t.vx_type,t.vx_ntracks
-        for m in xrange(nvx):
-            if vx_type[m]==1 and vx_ntracks[m]>=3 and fabs(t.vx_z[m])<150:
-                _ivertex = m
-                _zvertex = t.vx_z[m]
-                break
-        if _ivertex==None:
+        nvx,vx_type,vx_ntracks,vx_sumpt,vx_z = t.nvx,t.vx_type,t.vx_ntracks,t.vx_sumpt,t.vx_z
+        sumpt,m=max((x,i) for i,x in enumerate([vx_sumpt[m] for m in xrange(nvx)])) if nvx>0 else (None,None)
+        if sumpt and vx_type[m]==1 and vx_ntracks[m]>=3 and fabs(vx_z[m])<150:
+            _ivertex = m
+            _zvertex = t.vx_z[m]
+        else:
             ef.vertex+=1
             continue
 
@@ -244,7 +243,7 @@ for evt in xrange(niters):
     nmu,mu_author,mu_q,mu_pt,mu_eta,mu_phi,mu_ptcone40,mu_ptms,mu_ptexms,mu_qms,mu_ptid,mu_qid,mu_z0 = t.nmu,t.mu_author,t.mu_q,t.mu_pt,t.mu_eta,t.mu_phi,t.mu_ptcone40,t.mu_ptms,t.mu_ptexms,t.mu_qms,t.mu_ptid,t.mu_qid,t.mu_z0
     presel,quality,pt,iso=(True,)*4  # isFailed?
     for m in xrange(nmu):
-        if mu_author[m]&2!=0 and fabs(mu_eta[m])<2.40001 and mu_pt[m]>15.0*GeV and fabs(mu_z0[m]-_zvertex)<10.0*mm: # and mu_ptid[m]!=-1 and mu_q[m]!=0
+        if mu_author[m]&2!=0 and fabs(mu_eta[m])<2.4 and mu_pt[m]>15.0*GeV and fabs(mu_z0[m]-_zvertex)<10.0*mm and mu_ptid[m]!=-1 and mu_q[m]!=0:
             presel = False
             h['EVENT_mu_ptms_ptid'].Fill(mu_ptexms[m]-mu_ptid[m])
             if mu_ptexms[m]>10.0*GeV and fabs(mu_ptexms[m]-mu_ptid[m])<15.0*GeV:
@@ -306,7 +305,7 @@ for evt in xrange(niters):
             _fail=False
             for m1,m2 in pairs(_Rmus):
                 M=(m1+m2).M()
-                if M>zMASS-10*GeV and M<zMASS+10*GeV:
+                if M>zMIN and M<zMAX:
                     _fail=True
                     break
                 cands.append(M)
@@ -315,9 +314,11 @@ for evt in xrange(niters):
                 continue
             else:
                 mdiff,mZ,i=closest2(zMASS,cands)
-                
+
     # W candidates in W->munu decay
     if True:
+        # only the highest-pt muon is used:
+        _Rmus = _Rmus[:1]
         cands=[]  # [mu_index,mW]
         for i,mu in enumerate(_Rmus):
             if True: #fabs(mu.Phi()-_met.Phi())>math.pi/2.0:  # dPhi cut on MET and muon

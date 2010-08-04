@@ -317,10 +317,18 @@
     <LumiBlockCollection>
       <Run>159224</Run>
       <LBRange Start="249" End="278"/>
-      <LBRange Start="280" End="298"/>
+      <LBRange Start="280" End="282"/>
+      <LBRange Start="284" End="298"/>
       <LBRange Start="300" End="368"/>
       <LBRange Start="370" End="385"/>
-      <LBRange Start="388" End="417"/>
+      <LBRange Start="388" End="423"/>
+      <LBRange Start="425" End="430"/>
+      <LBRange Start="448" End="537"/>
+      <LBRange Start="539" End="612"/>
+      <LBRange Start="614" End="666"/>
+      <LBRange Start="668" End="773"/>
+      <LBRange Start="775" End="796"/>
+      <LBRange Start="798" End="813"/>
     </LumiBlockCollection>
   </NamedLumiRange>
 </LumiRangeCollection>

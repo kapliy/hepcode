@@ -1,4 +1,3 @@
-* pbs splitter and joiner: make simple script that Adds all histograms and adds dataflow numbers.
 * check out template fitting method. Use it to estimate the background. Check TFractionFitter vs template fitting.
 
 * Wrap pile-up QCD samples
@@ -7,22 +6,10 @@
 * check the event filtering script on ESDs (in bookmarks)
 
 * analysis:
-njets with a pt cut; pileup samples; add sumet (if present in the ntuple)
-
-post-processing python script:
-Specify out.root files and xsections, plus integrated lumi for data.
-ls histogram, then plotall - scales MC histos to integrated lumi.
+njets with a pt cut; pileup samples;
 
 Code grid-processing (run on ALL output at once): should be easy with prun - just need to add a script.
 
-
-Beamspot: mean and width distributions; variations with run.
-
-http://indico.cern.ch/getFile.py/access?contribId=7&resId=1&materialId=slides&confId=92304
-Make reco efficiency wrt triggered muons plots!
-Add phi plots, too!
-
-Switch to MET_Topo!
 
 * Plot zmumu peak (even when running on Ws)
  * Plot number of muons/Ws etc per event

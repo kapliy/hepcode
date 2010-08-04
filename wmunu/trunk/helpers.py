@@ -33,6 +33,8 @@ mm=1
 # mass window for W id via transverse mass:
 wMIN=40*GeV
 wMAX=1000*GeV   # only require mT>40 GeV
+zMIN=60*GeV
+zMAX=120*GeV
 
 # binning (default)
 nobjbins = (21,-0.5,20.5,'N')
@@ -107,10 +109,10 @@ HIGGS=25
 
 class GoodRunsList:
     """ General GRL abstraction """
+    #libnames = ['/home/antonk/setup/15.5.1/GoodRunsLists/i686-slc4-gcc34-opt/libGoodRunsListsLib.so']
     libnames = ['./libs/i686-slc4-gcc34-opt/libGoodRunsListsLib.so','./libs/i686-slc5-gcc43-opt/libGoodRunsListsLib.so']
-    libnames = [os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])),v) for v in libnames ]
-    libnames = ['/home/antonk/setup/15.5.1/GoodRunsLists/i686-slc4-gcc34-opt/libGoodRunsListsLib.so']
-    def __init__(s,xmls):
+    libnames = [os.path.join(sys.path[0],v) for v in libnames ]
+    def __init__(s,xmls=None):
         for i,libname in enumerate(s.libnames):
             if ROOT.gSystem.Load(libname)==-1 and i==len(s.libnames):
                 print 'GRL: failed to load either library:',s.libname
@@ -118,7 +120,8 @@ class GoodRunsList:
             else:
                 print 'GRL: loaded',libname
                 break
-        s.load(xmls)
+        if xmls:
+            s.load(xmls)
     def load(s,xmls):
         """ Accepts comma-separated list of xml files """
         s.xmls = xmls
@@ -135,6 +138,15 @@ class GoodRunsList:
         s.reader.Interpret()
         #s.grl = s.reader.GetMergedGoodRunsList()
         s.grl = s.reader.GetMergedGRLCollection()
+    def save(s,fname='merged_grl.xml'):
+        """ Saves a merged GRL file """
+        if not s.grl:
+            print 'Warning: no GRLs have been loaded yet. Skipping save...'
+            return
+        writer = ROOT.Root.TGoodRunsListWriter()
+        writer.SetGRLCollection(s.grl)
+        writer.SetFilename(fname)
+        writer.WriteXMLFile()
     def summary(s):
         s.grl.Summary()
     def passRunLB__real(s,run,lb):
@@ -168,7 +180,7 @@ def SetTreeBranches_V11(t,doTruth=False):
         br.append(['nmc','mc_status','mc_pdgid','mc_e','mc_pt','mc_eta','mc_phi','mc_parent'])
     br.append(['njet','jet_n90','jet_quality','jet_time','jet_emf','jet_hecf','jet_pt_em'])
     br.append(['trig_l1'])
-    br.append(['nvx','vx_type','vx_ntracks','vx_z'])
+    br.append(['nvx','vx_type','vx_ntracks','vx_sumpt','vx_z'])
     br.append(['met_ichep','met_ichep_phi'])
     br.append(['nmu','mu_author','mu_q','mu_pt','mu_eta','mu_phi','mu_ptcone40','mu_ptms','mu_ptexms','mu_qms','mu_ptid','mu_qid','mu_z0'])
     [t.SetBranchStatus(v,1) for v in xflatten(br)]
@@ -510,7 +522,7 @@ class AnaFile():
         uimap.Write('_meta',1)
     def match_list(s,key,whitelist=['*'],blacklist=[]):
         """ Matches key in list of patterns; blacklist patterns_black """
-        return len( [re.search(re.sub('\*','.*',pattern),key) for pattern in blacklist] )==0 and any( [re.search(re.sub('\*','.*',pattern),key) for pattern in whitelist] )
+        return not any( [re.search(re.sub('\*','.*',pattern),key) for pattern in blacklist] ) and any( [re.search(re.sub('\*','.*',pattern),key) for pattern in whitelist] )
     def Load(s,whitelist=['*'],blacklist=[]):
         hl=s.file.GetListOfKeys()
         #histos
@@ -556,7 +568,8 @@ class AnaFile():
         return ana
     def __radd__(self, other):
         return self.__add__(other)
-    def ScaleToLumi(s,lumi):
+    def ScaleToLumi(s,lumi,qcdscale):
+        from MC import mc09
         mrun = s.mrun = mc09.match_run(s.path)
         if mrun:
             xsec = s.xsec = mrun.xsec*mrun.filteff
@@ -567,8 +580,8 @@ class AnaFile():
             print 'MC %s: \t\t xsec=%.1f nb'%(sample,xsec)
             for hh in s.h.values():
                 hh.Scale(1.0/nevents*lumi*xsec)
-                if sample in ['J%d_pythia_jetjet_1muon'%z for z in range(10)]:
-                    hh.Scale(opts.qcdscale)
+                if qcdscale!='AUTO' and sample in ['J%d_pythia_jetjet_1muon'%z for z in range(10)]:
+                    hh.Scale(qcdscale)
                     pass
         else:
             print 'Failed to look up xsection for:',s.path
@@ -600,7 +613,7 @@ class AnaFile():
             # mc
             s.hs[key].Draw("H")
             s.hs[key].SetMinimum(0.1)
-            s.hs[key].SetMaximum(maximum*1.4)
+            s.hs[key].SetMaximum(maximum*1.5)
             #s.hs[key].GetHistogram().GetYaxis().SetRangeUser(0.0,maximum*1.25)
             #data
             s.h[key].SetMarkerSize(1.0)

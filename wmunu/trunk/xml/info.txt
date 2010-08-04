@@ -1,2 +1,12 @@
 0.375173 + 8.05594 + 8.42725 + 26.8893 + 29.0255
-# A + B + C + D1 + D2 [L1_MU6]
+# A + B + C + D1 + D2 [L1_MU6] = 72.773163
+
+A..D6 = 349.8282 (SCTloose) or 271.599 nb-1 (RPCloose); using prompt for D6!
+
+A..D6
+W D6: 97057.6/ub
+Z D6: 101847/ub
+
+W A-D6: 310010/ub
+Z A-D6: 330763/ub
+
