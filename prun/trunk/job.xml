@@ -3,6 +3,7 @@
     * combination of output=True options is unique across all subjobs
     * if a subjob is missing command tag, global submission command will be used
     * if an input dataset has no files requested, it will be discarded
+    * if inDS option is non-empty, it must actually be used in every subjob
     Panda-client SHALL do the following:
     * the actual output name will be modified to give a unique GID.
       Note that only "prepend=true" options are appended to output name:
@@ -14,9 +15,10 @@
 <submission>
   <title>Grid submission job description</title>
   <tag>ftk_8L_wh3e34</tag>
-  <command>./prun_job.sh</command>
+  <inDS>user10.AntonKapliy.v14wh3e34ZEROREC.250evts.v1</inDS>
+  <command>echo %IN; ls -l > out_files.dat; tar cfj out_files.tbz2 out_files.dat; </command>
   <outds>
-    <name>user.kapliy.raw_8L_50x16x144_wh3e34_test1</name>
+    <name>user.kapliy.raw_8L_50x16x144_wh3e34_test3</name>
   </outds>
 
   <job>
@@ -38,6 +40,7 @@
     <option name="reg"  forward="true"  prepend="true">0</option>
     <option name="sub"  forward="true"  prepend="true">0</option>
     <option name="ext"  forward="false" prepend="false">2</option>
+    <option name="FILES"  forward="true" prepend="false">%IN</option>
     <output>out_files.tbz2</output>
   </job>
 
@@ -60,6 +63,7 @@
     <option name="reg"  forward="true"  prepend="true">3</option>
     <option name="sub"  forward="true"  prepend="true">8</option>
     <option name="ext"  forward="false" prepend="false">2</option>
+    <option name="FILES"  forward="true" prepend="false">%IN</option>
     <output>out_files.tbz2</output>
   </job>
 
