@@ -59,8 +59,12 @@ class dom_job:
         """ a tag string prepended to output files """
         return '_'.join( ['%s%s'%(v[0],v[1]) for v in s.prepend])
     def exec_string(s):
-        """ exec string for prun """
-        return '%s %s'%(s.command,s.forward_opts())
+        """ exec string for prun.
+        If user requested to run script run.sh (via <command>run.sh</command>), it will return
+        opt1=value1 opt2=value2 opt3=value3 run.sh
+        This way, all options will be set inside run.sh
+        """
+        return '%s %s'%(s.forward_opts(),s.command)
 
 class dom_parser:
     def __init__(s,fname):
