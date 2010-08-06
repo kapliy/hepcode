@@ -14,6 +14,8 @@ import urllib
 import shelve
 import copy
 
+_FTKDEBUG = False
+
 # default cloud/site
 defaultCloud = None
 defaultSite  = 'AUTO'
@@ -84,6 +86,8 @@ optP.add_option('--maxCpuCount',action='store',dest='maxCpuCount',default=-1,typ
                 help='Required CPU count in seconds. Mainly to extend time limit for looping detection')
 optP.add_option('--official',action='store_const',const=True,dest='official',default=False,
                 help='Produce official dataset')
+optP.add_option('--descriptionInLFN',action='store',dest='descriptionInLFN',default='',
+                help='LFN is user.nickname.jobsetID.something (e.g. user.harumaki.12345.AOD._00001.pool) by default. This option allows users to put a description string into LFN. i.e., user.nickname.jobsetID.description.something')
 optP.add_option('--useAthenaPackages',action='store_const',const=True,dest='useAthenaPackages',default=False,
                 help='Use Athena packages. See PandaRun wiki page for detail')
 optP.add_option('--gluePackages', action='store', dest='gluePackages',  default='',
@@ -175,7 +179,8 @@ optP.add_option('--panda_dbRelease', action='store', dest='panda_dbRelease', def
                 type='string', help='internal parameter')
 optP.add_option('--panda_suppressMsg',action='store_const',const=True,dest='panda_suppressMsg',default=False,
                 help='internal parameter')
-
+optP.add_option('--load_xml',action='store',dest='load_xml',default=None,
+                help='Expert mode: load complete submission configuration from an XML file ')
 
 # parse options
 options,args = optP.parse_args()
@@ -230,6 +235,24 @@ PsubUtils.checkPandaClientVer(options.verbose)
 
 # suffix for shadow dataset
 suffixShadow = Client.suffixShadow
+
+# load the submission configuration from xml file (if provided)
+xconfig = None
+if options.load_xml:
+    import parsexml
+    xconfig = parsexml.dom_parser(options.load_xml)
+    xconfig.dump(options.verbose)
+    if options.outDS=='':
+        options.outDS=xconfig.outDS()
+    if options.inDS=='':
+        # inDS taken as the first dataset in the xml file
+        options.inDS=xconfig.inDS()
+        options.match=xconfig.files_in_DS(options.inDS,regex=True)
+    else:
+        # inDS is managed from command line, rather than XML file
+        xconfig.separate_inDS = True
+    options.jobParams='WILL_BE_REDEFINED_FOR_EACH_SUBJOB'
+    options.outputs='WILL_BE_REDEFINED_FOR_EACH_SUBJOB'
 
 # exclude sites
 if options.excludedSite != '':
@@ -528,10 +551,13 @@ if options.outDS == '':
     sys.exit(EC_Config)
 
 # secondary datasets
-if options.secondaryDSs != '':
+if options.secondaryDSs != '' or options.load_xml:
     if options.inDS == '':
         tmpLog.error("Primary input dataset is not defined using --inDS although --secondaryDSs is set")
         sys.exit(EC_Config)
+    # populate secondaryDSs from xml file
+    if options.load_xml:
+        options.secondaryDSs = xconfig.secondaryDSs_config()
     # parse
     tmpMap = {}
     for tmpItem in options.secondaryDSs.split(','):
@@ -768,7 +794,20 @@ if options.inDS != '':
                 errStr += " or --antiMatch is wrong"
         tmpLog.error(errStr)
         sys.exit(EC_Config)
-
+    # if list of files was given in the xml file, check that they are all present:
+    if options.load_xml:
+        assert len(inputFileMap)>=xconfig.nFiles_in_DS(options.inDS),'ERROR: xml config requires files that are missing in inDS=%s'%options.inDS
+    # check if all files were used
+    unUsedFlag = False
+    for tmpLFN in inputFileMap.keys():
+        if not tmpLFN in shadowList:
+            unUsedFlag = True
+            break
+    if not unUsedFlag:
+        # exit
+        tmpMsg = "Done. All input files were (or are being) processed"
+        tmpLog.info(tmpMsg)
+        sys.exit(0)
     # sort
     inputFileList = inputFileMap.keys()
     inputFileList.sort()
@@ -776,6 +815,9 @@ if options.inDS != '':
     # query files in secondary datasets
     for tmpDsName,tmpValMap in options.secondaryDSs.iteritems():
         tmpSecFileMap = Client.getFilesInDatasetWithFilter(tmpDsName,tmpValMap['pattern'],shadowList,'',options.verbose)
+        # if list of files was given in the xml file, check that they are all present:
+        if options.load_xml:
+            assert len(tmpSecFileMap)>=xconfig.nFiles_in_DS(tmpDsName),'ERROR: xml config requires files that are missing in secondaryDS=%s'%tmpDsName
         # sort
         tmpSecFileList = tmpSecFileMap.keys()
         tmpSecFileList.sort()
@@ -783,7 +825,7 @@ if options.inDS != '':
         for tmpSecFile in tmpSecFileList:
             tmpSecFileMap[tmpSecFile]['LFN'] = tmpSecFile
             options.secondaryDSs[tmpDsName]['files'].append(tmpSecFileMap[tmpSecFile])
-        # skip files    
+        # skip files
         options.secondaryDSs[tmpDsName]['files'] = options.secondaryDSs[tmpDsName]['files'][options.secondaryDSs[tmpDsName]['nSkip']:]
         # change nFiles=0 to the real size 
         if options.secondaryDSs[tmpDsName]['nFiles'] == 0:
@@ -794,7 +836,7 @@ if options.inDS != '':
             if inputDsString == '':
                 tmpDsForLookUpList = [options.inDS] + options.secondaryDSs.keys()
             else:
-                tmpDsForLookUpList = [inputDsString] + options.secondaryDSs.keys()                
+                tmpDsForLookUpList = [inputDsString] + options.secondaryDSs.keys()
             tmpDsLocationForTest = {}
             dsLocationMap = None
             dsLocationMapBack = None
@@ -975,6 +1017,7 @@ if options.inDS != '':
             # go back to current dir
             os.chdir(curDir)
             # try another site if input files remain
+	    options.crossSite -= 1
             if options.crossSite > 0 and options.inDS != '' and not siteSpecified:
                 if missList != []:
                     PsubUtils.runPrunRec(missList,tmpDir,fullExecString,options.nFiles,inputFileMap,
@@ -1029,7 +1072,7 @@ else:
             if not Client.PandaSites.has_key(out):
                 tmpLog.error('brokerage gave wrong PandaSiteID:%s' % out)
                 sys.exit(EC_Config)
-            break    
+            break
         # set site
         options.site = out
 
@@ -1250,8 +1293,11 @@ if options.nGBPerJob != -1:
 
 # set number of files per job
 if options.inDS != '':
-    if options.nFilesPerJob == None and options.nGBPerJob < 0:
-        # count total size for inputs
+    if options.load_xml and not xconfig.separate_inDS:
+        # xml file explicitly creates each job; do nothing here
+        pass
+    elif options.nFilesPerJob == None and options.nGBPerJob < 0:
+        # count total size for inputs (ignore secondaryDS in GB calculation)
         totalSize = 0
         for tmpLFN in inputFileList:
             vals = inputFileMap[tmpLFN]
@@ -1265,7 +1311,7 @@ if options.inDS != '':
             tmpNSplit += 1
         tmpNFiles,tmpMod = divmod(len(inputFileList),tmpNSplit)
         # set upper limit
-        upperLimitOnFiles = 50
+        upperLimitOnFiles = 200
         if tmpNFiles > upperLimitOnFiles:
             tmpNFiles = upperLimitOnFiles
         # check again just in case
@@ -1315,7 +1361,10 @@ if options.inDS != '':
 
 # calculate number of jobs
 if options.nJobs == -1:
-    if options.inDS == '':
+    if options.load_xml and not xconfig.separate_inDS:
+        # xml file explicitly creates each job, so get job count from there:
+        options.nJobs=xconfig.nJobs()
+    elif options.inDS == '':
         options.nJobs = 1
     elif options.nGBPerJob < 0:
         rest = len(inputFileList) % options.nFilesPerJob
@@ -1327,6 +1376,10 @@ if options.nJobs == -1:
     else:
         # nGBPerJob
         options.nJobs = len(nFilesEachSubJob)
+    if options.load_xml and xconfig.separate_inDS:
+        # xml file manages all secondaryDS jobs, while prun manages inDS jobs
+        # in this case, the total nJobs = # xml jobs * # inDS jobs
+        options.nJobs *= xconfig.nJobs()
 
 # read jobID
 jobDefinitionID = 1
@@ -1550,6 +1603,20 @@ isDirectAccess = PsubUtils.isDirectAccess(options.site)
 indexOffsetMap = {}
 jobsetIDMapForLFN = {}
 for iJob in range(options.nJobs):
+    if _FTKDEBUG:
+        print 'FTK  : JOB',iJob
+    if options.load_xml:
+        if xconfig.separate_inDS:
+            # xml file manages all secondaryDS jobs, while prun manages inDS jobs
+            # in this case, the total nJobs = # xml jobs * # inDS jobs
+            iXmlJob = iJob%xconfig.nJobs()
+        else:
+            # xml file manages both inDS and secondaryDS jobs, so iJob=iXmlJob
+            iXmlJob = iJob
+        jobXML = xconfig.jobs[iXmlJob]
+        jobLabel = jobXML.prepend_string()
+        options.jobParams = jobXML.exec_string()
+        options.outputs = jobXML.outputs()
     jobR = JobSpec()
     jobR.jobDefinitionID   = jobDefinitionID
     if not options.panda_jobsetID in [None,'NULL']:
@@ -1612,6 +1679,8 @@ for iJob in range(options.nJobs):
         if '%DB:LATEST' in tmpJobO and options.dbRelease != '':
             tmpJobO = tmpJobO.replace('%DB:LATEST',options.dbRelease.split(':')[-1])
         jobR.jobParameters += '-p "%s" ' % urllib.quote(tmpJobO)
+        if _FTKDEBUG:
+            print 'FTK  : PARS', jobR.jobParameters
     # source files
     if not options.nobuild:
         fileS = FileSpec()
@@ -1629,7 +1698,18 @@ for iJob in range(options.nJobs):
     # input files
     if options.inDS != '':
         totalSize = 0
-        if options.nGBPerJob < 0:
+        if options.load_xml:
+            # input files are listed explicitly for each subjob in the xml file
+            if xconfig.separate_inDS:
+                # xml file manages all secondaryDS jobs, while prun manages inDS jobs
+                # in this case, the total nJobs = # xml jobs * # inDS jobs
+                indexIn = int(iJob/xconfig.nJobs())
+                inList = inputFileList[indexIn:indexIn+options.nFilesPerJob]
+            else:
+                # xml file manages both inDS and secondaryDSs
+                # in this case, we simply use inDS files specified in xml
+                inList = [v for v in inputFileList if v in jobXML.files_in_DS(options.inDS)]
+        elif options.nGBPerJob < 0:
             indexIn = iJob*options.nFilesPerJob
             inList = inputFileList[indexIn:indexIn+options.nFilesPerJob]
         else:
@@ -1637,7 +1717,7 @@ for iJob in range(options.nJobs):
             indexIn = 0
             for tmpNFiles in nFilesEachSubJob[:iJob]:
                 indexIn += tmpNFiles
-            inList = inputFileList[indexIn:indexIn+nFilesEachSubJob[iJob]]    
+            inList = inputFileList[indexIn:indexIn+nFilesEachSubJob[iJob]]
         if inList == []:
             break
         for tmpLFN in inList:
@@ -1664,15 +1744,20 @@ for iJob in range(options.nJobs):
         # secondary datasets
         secMap = {}
         for tmpSecDS,tmpSecVal in options.secondaryDSs.iteritems():
-            tmpIndexSec = iJob*tmpSecVal['nFiles']
-            tmpSecList  = tmpSecVal['files'][tmpIndexSec:tmpIndexSec+tmpSecVal['nFiles']]
-            # check length
-            if len(tmpSecList) < tmpSecVal['nFiles']:
-                errStr  = "%s contains %s files which is insufficient for splitting. " % (tmpSecDS,len(tmpSecVal['files']))
-                errStr += "nJobs*nFilesPerJob=%s*%s=%s files are required" % (options.nJobs,tmpSecVal['nFiles'],
-                                                                              options.nJobs*tmpSecVal['nFiles'])
-                tmpLog.error(errStr)            
-                sys.exit(EC_Split)
+            if options.load_xml:
+                # if xml file manages which secondaryDSs files are used in each job:
+                tmpSecList = [v for v in tmpSecVal['files'] if v['LFN'] in jobXML.files_in_DS(tmpSecDS)]
+            else:
+                # if prun manages secondaryDSs:
+                tmpIndexSec = iJob*tmpSecVal['nFiles']
+                tmpSecList  = tmpSecVal['files'][tmpIndexSec:tmpIndexSec+tmpSecVal['nFiles']]
+                # check length
+                if len(tmpSecList) < tmpSecVal['nFiles']:
+                    errStr  = "%s contains %s files which is insufficient for splitting. " % (tmpSecDS,len(tmpSecVal['files']))
+                    errStr += "nJobs*nFilesPerJob=%s*%s=%s files are required" % (options.nJobs,tmpSecVal['nFiles'],
+                                                                                  options.nJobs*tmpSecVal['nFiles'])
+                    tmpLog.error(errStr)            
+                    sys.exit(EC_Split)
             # add FileSpec
             tmpSecLfnList = []
             for vals in tmpSecList:
@@ -1693,8 +1778,9 @@ for iJob in range(options.nJobs):
                     totalSize += long(fileI.fsize)
                 except:
                     pass
-            # append to map    
-            tmpInputMap[tmpSecVal['streamName']] = tmpSecLfnList
+            # append to map
+            if len(tmpSecLfnList)>0:
+                tmpInputMap[tmpSecVal['streamName']] = tmpSecLfnList
         # size check    
         if (not isDirectAccess) and totalSize > maxTotalSize-dbrDsSize:
             errStr  = "A subjob has %s input files and requires %sMB of disk space " \
@@ -1709,8 +1795,12 @@ for iJob in range(options.nJobs):
             sys.exit(EC_Split)
         # set parameter
         jobR.jobParameters += '-i "%s" ' % inList
+        if _FTKDEBUG:
+            print 'FTK  : INDS LIST:',inList
 	if options.secondaryDSs != {}:
 	    jobR.jobParameters += '--inMap "%s" ' % tmpInputMap
+            if _FTKDEBUG:
+                print 'FTK  : SECDS MAP:',tmpInputMap
     # DBRelease
     if options.dbRelease != '':
         tmpItems = options.dbRelease.split(':')
@@ -1760,10 +1850,16 @@ for iJob in range(options.nJobs):
                     lfnPrefix = '%s.%s.%s' % (matchLFN.group(1),matchLFN.group(2),jobsetIDMapForLFN[tmpLFN])
                 else:
                     lfnPrefix = '%s.%s.$JOBSETID' % (matchLFN.group(1),matchLFN.group(2))                    
+		if options.descriptionInLFN != '':
+		    lfnPrefix += '.%s' % options.descriptionInLFN
             else:
                 flagUseNewLFN = False
                 lfnPrefix = dsNameWoSlash
-            tmpNewLFN = '%s._%05d.%s' % (lfnPrefix,idxOffset+iJob+1,tmpLFN)
+            if options.load_xml and False: # FIXME
+                # append additional metadata to output file name according to xml file settings
+                tmpNewLFN = '%s._%05d.%s.%s' % (lfnPrefix,idxOffset+iJob+1,jobXML.prepend_string(),tmpLFN)
+            else:
+                tmpNewLFN = '%s._%05d.%s' % (lfnPrefix,idxOffset+iJob+1,tmpLFN)
             # change * to XYZ and add .tgz
 	    if tmpNewLFN.find('*') != -1:
 		tmpNewLFN = tmpNewLFN.replace('*','XYZ')
@@ -1780,7 +1876,7 @@ for iJob in range(options.nJobs):
                     indexOffsetMap[tmpLFN] = idxOffset
                     # correct
                     newHead = '%s._%05d.' % (dsNameWoSlash,idxOffset+iJob+1)
-                    tmpNewLFN = tmpNewLFN.replace(oldHead,newHead)                    
+                    tmpNewLFN = tmpNewLFN.replace(oldHead,newHead)
                 else:
                     # short LFN : user.nickname.XYZ
                     filePatt = tmpNewLFN.replace(oldHead,'%s\._(\d+)\.' % lfnPrefix.replace('$JOBSETID','(\d+)'))
@@ -1792,7 +1888,7 @@ for iJob in range(options.nJobs):
                     # correct
                     if jobsetIDinLFN != None:
                         newHead = '%s._%05d.' % (lfnPrefix.replace('$JOBSETID',jobsetIDinLFN),idxOffset+iJob+1)
-                        tmpNewLFN = tmpNewLFN.replace(oldHead,newHead)                    
+                        tmpNewLFN = tmpNewLFN.replace(oldHead,newHead)
             # set file spec
             file = FileSpec()
             file.lfn               = tmpNewLFN              
@@ -1804,9 +1900,15 @@ for iJob in range(options.nJobs):
             outMap[tmpLFN] = file.lfn
         # set parameter
         jobR.jobParameters += '-o "%s" ' % str(outMap)
+        if _FTKDEBUG:
+            print 'FTK  : OUT MAP:',outMap
     # log
     file = FileSpec()
-    file.lfn               = '%s._$PANDAID.log.tgz' % dsNameWoSlash
+    if options.load_xml and False: # FIXME
+        # append additional metadata to output file name according to xml file settings
+        file.lfn               = '%s._$PANDAID.%s.log.tgz' % (dsNameWoSlash,jobXML.prepend_string())
+    else:
+        file.lfn               = '%s._$PANDAID.log.tgz' % dsNameWoSlash
     file.type              = 'log'
     file.dataset           = original_outDS_Name
     file.destinationSE     = jobR.destinationSE
@@ -1828,6 +1930,8 @@ for iJob in range(options.nJobs):
     if options.useChirpServer != '':
         PsubUtils.setCHIRPtokenToOutput(jobR,options.useChirpServer)
     # check job spec
+    if options.load_xml:
+        PsubUtils.limit_maxNumInputs=1000
     PsubUtils.checkJobSpec(jobR)
     # append
     if options.verbose:    
