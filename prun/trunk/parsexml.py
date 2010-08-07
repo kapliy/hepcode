@@ -81,7 +81,7 @@ class dom_parser:
         for node in pnode.childNodes:
             if node.nodeType == node.TEXT_NODE:
                 rc.append(node.data)
-        return ''.join(rc)
+        return str(''.join(rc)) # convert from unicode to string
     def parse(s):
         """ loads submission configuration from an xml file """
         try:
