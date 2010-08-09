@@ -9,9 +9,9 @@ class dom_job:
         forward  - list of (option,value) forwarded to the grid job
         command  - script that will be executed on the grid
     """
-    def __init__(s,domjob,primaryDS=None):
+    def __init__(s,domjob,primaryds=None):
         """ Loads <job></job> from xml file.
-        If primaryDS is set, makes sure it is present in job spec """
+        If primaryds is set, makes sure it is present in job spec """
         s.infiles = {}
         s.outfiles = []
         s.prepend  = []
@@ -26,8 +26,8 @@ class dom_job:
             s.infiles[name]=[]
             for file in files:
                 s.infiles[name].append(dom_parser.text(file))
-        if primaryDS and primaryDS not in s.infiles.keys():
-            print 'ERROR: primaryDS=%s must be present in each job'%primaryDS
+        if primaryds and primaryds not in s.infiles.keys():
+            print 'ERROR: primaryds=%s must be present in each job'%primaryds
             sys.exit(0)
         # output files
         [s.outfiles.append(dom_parser.text(v)) for v in domjob.getElementsByTagName('output')]
@@ -46,6 +46,33 @@ class dom_job:
         # script executed on the grid node for this job
         if domjob.getElementsByTagName('command'):
             s.command = dom_parser.text(domjob.getElementsByTagName('command')[0])
+    def to_dom(s):
+        """ Converts this job to a dom tree branch """
+        x = xml.dom.minidom.Document()
+        job = x.createElement('job')
+        for inds in s.infiles.keys():
+            job.appendChild(x.createElement('inds'))
+            job.childNodes[-1].appendChild(x.createElement('name'))
+            job.childNodes[-1].childNodes[-1].appendChild(x.createTextNode(inds))
+            for file in s.infiles[inds]:
+                job.childNodes[-1].appendChild(x.createElement('file'))
+                job.childNodes[-1].childNodes[-1].appendChild(x.createTextNode(file))
+        for outfile in s.outfiles:
+            job.appendChild(x.createElement('output'))
+            job.childNodes[-1].appendChild(x.createTextNode(outfile))
+        for option in set(s.forward+s.prepend):
+            job.appendChild(x.createElement('option'))
+            job.childNodes[-1].setAttribute('name',str(option[0]))
+            if option in s.forward:
+                job.childNodes[-1].setAttribute('forward','true')
+            else:
+                job.childNodes[-1].setAttribute('forward','false')
+            if option in s.prepend:
+                job.childNodes[-1].setAttribute('prepend','true')
+            else:
+                job.childNodes[-1].setAttribute('prepend','false')
+            job.childNodes[-1].appendChild(x.createTextNode(str(option[1])))            
+        return job
     def files_in_DS(s,DS):
         """ Returns a list of files used in a given job in a given dataset"""
         return s.infiles[DS] if DS in s.infiles else []
@@ -96,17 +123,37 @@ class dom_parser:
             s.command = dom_parser.text(s.dom.getElementsByTagName('command')[0])
             # see if one of the input datasets was explicitly labeled as inDS
             if len(s.dom.getElementsByTagName('inDS'))>0 and dom_parser.text(s.dom.getElementsByTagName('inDS')[0])!='':
-                s.primaryDS = dom_parser.text(s.dom.getElementsByTagName('inDS')[0])
+                s.primaryds = dom_parser.text(s.dom.getElementsByTagName('inDS')[0])
             else:
-                s.primaryDS = None
+                s.primaryds = None
             s.outds = dom_parser.text(s.dom.getElementsByTagName('outds')[0])
             s.jobs = []
             for job in s.dom.getElementsByTagName('job'):
                 job.command = s.command      # default command if the job doesn't specify its own
-                s.jobs.append(dom_job(job,primaryDS=s.primaryDS))
+                s.jobs.append(dom_job(job,primaryds=s.primaryds))
         except:
             print 'ERROR: failed to parse',s.fname
             sys.exit(0)
+    def to_dom(s):
+        """ Converts this submission to a dom tree branch """
+        x = xml.dom.minidom.Document()
+        submission = x.createElement('submission')
+        if s.title:
+            submission.appendChild(x.createElement('title'))
+            submission.childNodes[-1].appendChild(x.createTextNode(s.title))
+        if s.tag:
+            submission.appendChild(x.createElement('tag'))
+            submission.childNodes[-1].appendChild(x.createTextNode(s.tag))
+        if s.primaryds:
+            submission.appendChild(x.createElement('primaryds'))
+            submission.childNodes[-1].appendChild(x.createTextNode(s.primaryds))
+        submission.appendChild(x.createElement('command'))
+        submission.childNodes[-1].appendChild(x.createTextNode(s.command))
+        submission.appendChild(x.createElement('outds'))
+        submission.childNodes[-1].appendChild(x.createTextNode(s.outds))
+        for job in s.jobs:
+            submission.appendChild(job.to_dom())
+        return submission
     def check(s):
         """ checks that all output files have unique qualifiers """
         quals=[]
@@ -130,8 +177,8 @@ class dom_parser:
     def inDS(s):
         """ chooses a dataset we'll call inDS; others will become secondaryDS """
         # user manually labeled one of datasets as primary, so make it inDS:
-        if s.primaryDS:
-            return s.primaryDS
+        if s.primaryds:
+            return s.primaryds
         # OR: choose inDS dataset randomly
         else:
             return s.input_datasets()[0]
