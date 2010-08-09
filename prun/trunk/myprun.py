@@ -177,6 +177,10 @@ optP.add_option('--panda_jobsetID',action='store',dest='panda_jobsetID',default=
                 type='int', help='internal parameter for jobsetID')
 optP.add_option('--panda_dbRelease', action='store', dest='panda_dbRelease', default='',
                 type='string', help='internal parameter')
+optP.add_option('--panda_exec', action='store', dest='panda_exec', default='',
+                type='string', help='internal parameter')
+optP.add_option('--panda_bexec', action='store', dest='panda_bexec', default='',
+                type='string', help='internal parameter')
 optP.add_option('--panda_suppressMsg',action='store_const',const=True,dest='panda_suppressMsg',default=False,
                 help='internal parameter')
 optP.add_option('--load_xml',action='store',dest='load_xml',default=None,
@@ -537,9 +541,15 @@ if options.antiMatch != '':
 
 # get job script
 jobScript = ''
+if options.panda_bexec != '':
+    options.bexec = urllib.unquote(options.panda_bexec)
+if options.panda_exec != '':
+    options.jobParams = urllib.unquote(options.panda_exec)
 if options.jobParams == '':
     tmpLog.error("you need to give --exec\n  prun [--inDS inputdataset] --outDS outputdataset --exec 'myScript arg1 arg2 ...'")
     sys.exit(EC_Config)
+orig_execStr  = options.jobParams
+orig_bexecStr = options.bexec
 
 # replace : to = for backward compatibility
 for optArg in ['RNDM']:
@@ -757,6 +767,7 @@ if options.dbRelease != '':
             tmpLog.info("query files in %s" % tmpDbrDS)
         tmpList = Client.queryFilesInDataset(tmpDbrDS,options.verbose)
         # append
+        dbrDsList.append(tmpDbrDS)
         for tmpLFN,tmpVal in tmpList.iteritems():
             dbrFiles[tmpLFN] = tmpVal
     # check
@@ -837,25 +848,30 @@ if options.inDS != '':
                 tmpDsForLookUpList = [options.inDS] + options.secondaryDSs.keys()
             else:
                 tmpDsForLookUpList = [inputDsString] + options.secondaryDSs.keys()
+            tmpDsForLookUpList += dbrDsList    
             tmpDsLocationForTest = {}
             dsLocationMap = None
             dsLocationMapBack = None
             for tmpDsForLookUp in tmpDsForLookUpList:
-                tmpDsLocationMap,tmpDsLocationMapBack,dsTapeSites,dsUsedDsMap = Client.getLocations(tmpDsForLookUp,[],options.cloud,False,
-                                                                                                    options.verbose,expCloud=expCloudFlag,
-                                                                                                    getReserved=True,getTapeSites=True,
-                                                                                                    removeDS=True,
-                                                                                                    removedDatasets=options.removedDS,
-                                                                                                    useOutContainer=usingContainerForOut)
+                tmpDsLocationMap,tmpDsLocationMapBack,dsTapeSites,tmpDsUsedDsMap = \
+                                                                                 Client.getLocations(tmpDsForLookUp,[],options.cloud,False,
+                                                                                                     options.verbose,expCloud=expCloudFlag,
+                                                                                                     getReserved=True,getTapeSites=True,
+                                                                                                     removeDS=True,
+                                                                                                     removedDatasets=options.removedDS,
+                                                                                                     useOutContainer=usingContainerForOut)
+                # use UsedDsMap of primary dataset
+                if tmpDsForLookUp == tmpDsForLookUpList[0]:
+                    dsUsedDsMap = tmpDsUsedDsMap
                 # no location
                 if tmpDsLocationMap == {} and tmpDsLocationMapBack == {}:
+		    if dsTapeSites != []:
+			tmpLog.error("Tape sites %s hold the dataset. Please request subscription to disk area first if needed" % dsTapeSites)
                     if options.crossSite in [0,maxCrossSite] or options.verbose:
                         if expCloudFlag:
                             tmpLog.error("could not find supported/online sites in the %s cloud for %s" % (options.cloud,tmpDsForLookUp))
                         else:
                             tmpLog.error("could not find supported/online sites for %s" % tmpDsForLookUp)
-                        if dsTapeSites != []:
-                            tmpLog.error("Tape sites %s hold the dataset. Please request subscription to disk area first if needed" % dsTapeSites)
                     else:
                         errStr = "could not find supported/online sites for the missing files"
                         tmpLog.error(errStr)
@@ -1023,7 +1039,8 @@ if options.inDS != '':
                     PsubUtils.runPrunRec(missList,tmpDir,fullExecString,options.nFiles,inputFileMap,
                                          options.site,options.crossSite,"",options.removedDS,
 					 options.inDS,options.goodRunListXML,options.eventPickEvtList,
-                                         options.panda_dbRelease,options.panda_jobsetID,options.verbose)
+                                         options.panda_dbRelease,options.panda_jobsetID,
+                                         orig_bexecStr,orig_execStr,options.verbose)
             # succeeded
             sys.exit(0)
     # truncate
@@ -1835,6 +1852,11 @@ for iJob in range(options.nJobs):
             # set offset to 0 for fresh output dataset
             if existingFilesInOutDS == {}:
                 indexOffsetMap[tmpLFN] = 0
+                jobsetIDMapForLFN[tmpLFN] = ''
+                if dsNameWoSlash.startswith('group'):
+		    # append group job SN since group.xyz.jobsetID may be duplicated
+                    jobsetIDMapForLFN[tmpLFN] += "$GROUPJOBSN_"
+                jobsetIDMapForLFN[tmpLFN] += '$JOBSETID'    
             # offset is already obtained
             if indexOffsetMap.has_key(tmpLFN):
                 idxOffset = indexOffsetMap[tmpLFN]
@@ -1855,7 +1877,7 @@ for iJob in range(options.nJobs):
             else:
                 flagUseNewLFN = False
                 lfnPrefix = dsNameWoSlash
-            if options.load_xml and False: # FIXME
+            if options.load_xml:
                 # append additional metadata to output file name according to xml file settings
                 tmpNewLFN = '%s._%05d.%s.%s' % (lfnPrefix,idxOffset+iJob+1,jobXML.prepend_string(),tmpLFN)
             else:
@@ -1879,7 +1901,7 @@ for iJob in range(options.nJobs):
                     tmpNewLFN = tmpNewLFN.replace(oldHead,newHead)
                 else:
                     # short LFN : user.nickname.XYZ
-                    filePatt = tmpNewLFN.replace(oldHead,'%s\._(\d+)\.' % lfnPrefix.replace('$JOBSETID','(\d+)'))
+                    filePatt = tmpNewLFN.replace(oldHead,'%s\._(\d+)\.' % lfnPrefix.replace('$JOBSETID','([_\d]+)'))
                     # get offset    
                     idxOffset,jobsetIDinLFN = PsubUtils.getMaxIndex(existingFilesInOutDS,filePatt,shortLFN=True)
                     # append
@@ -1888,6 +1910,10 @@ for iJob in range(options.nJobs):
                     # correct
                     if jobsetIDinLFN != None:
                         newHead = '%s._%05d.' % (lfnPrefix.replace('$JOBSETID',jobsetIDinLFN),idxOffset+iJob+1)
+                        tmpNewLFN = tmpNewLFN.replace(oldHead,newHead)
+                    elif dsNameWoSlash.startswith('group'):
+			# append group job SN since group.xyz.jobsetID may be duplicated 
+                        newHead = '%s._%05d.' % (lfnPrefix.replace('$JOBSETID','$GROUPJOBSN_$JOBSETID'),idxOffset+iJob+1)
                         tmpNewLFN = tmpNewLFN.replace(oldHead,newHead)
             # set file spec
             file = FileSpec()
@@ -1904,7 +1930,7 @@ for iJob in range(options.nJobs):
             print 'FTK  : OUT MAP:',outMap
     # log
     file = FileSpec()
-    if options.load_xml and False: # FIXME
+    if options.load_xml:
         # append additional metadata to output file name according to xml file settings
         file.lfn               = '%s._$PANDAID.%s.log.tgz' % (dsNameWoSlash,jobXML.prepend_string())
     else:
@@ -2071,6 +2097,7 @@ if options.crossSite > 0 and options.inDS != '' and not siteSpecified:
 	PsubUtils.runPrunRec(missList,tmpDir,fullExecString,options.nFiles,inputFileMap,
                              options.site,options.crossSite,archiveName,options.removedDS,
 			     options.inDS,options.goodRunListXML,options.eventPickEvtList,
-			     options.panda_dbRelease,jobsetID,options.verbose)
+			     options.panda_dbRelease,jobsetID,
+                             orig_bexecStr,orig_execStr,options.verbose)
 # succeeded
 sys.exit(0)
