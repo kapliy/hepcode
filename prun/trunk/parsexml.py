@@ -9,9 +9,9 @@ class dom_job:
         forward  - list of (option,value) forwarded to the grid job
         command  - script that will be executed on the grid
     """
-    def __init__(s,domjob,requiredDS=None):
+    def __init__(s,domjob,primaryDS=None):
         """ Loads <job></job> from xml file.
-        If requiredDS is set, makes sure it is present in job spec """
+        If primaryDS is set, makes sure it is present in job spec """
         s.infiles = {}
         s.outfiles = []
         s.prepend  = []
@@ -26,8 +26,8 @@ class dom_job:
             s.infiles[name]=[]
             for file in files:
                 s.infiles[name].append(dom_parser.text(file))
-        if requiredDS and requiredDS not in s.infiles.keys():
-            print 'ERROR: inDS=%s is not used in every job specified in xml file'%requiredDS
+        if primaryDS and primaryDS not in s.infiles.keys():
+            print 'ERROR: primaryDS=%s must be present in each job'%primaryDS
             sys.exit(0)
         # output files
         [s.outfiles.append(dom_parser.text(v)) for v in domjob.getElementsByTagName('output')]
@@ -85,18 +85,25 @@ class dom_parser:
     def parse(s):
         """ loads submission configuration from an xml file """
         try:
-            s.title = dom_parser.text(s.dom.getElementsByTagName('title')[0])
-            s.tag = dom_parser.text(s.dom.getElementsByTagName('tag')[0])
+            if len(s.dom.getElementsByTagName('title'))>0:
+                s.title = dom_parser.text(s.dom.getElementsByTagName('title')[0])
+            else:
+                s.title = 'Default title'
+            if len(s.dom.getElementsByTagName('tag'))>0:
+                s.tag = dom_parser.text(s.dom.getElementsByTagName('tag')[0])
+            else:
+                s.tag = 'default_tag'
             s.command = dom_parser.text(s.dom.getElementsByTagName('command')[0])
             # see if one of the input datasets was explicitly labeled as inDS
-            s.requiredDS = None
             if len(s.dom.getElementsByTagName('inDS'))>0 and dom_parser.text(s.dom.getElementsByTagName('inDS')[0])!='':
-                s.requiredDS = dom_parser.text(s.dom.getElementsByTagName('inDS')[0])
-            s.outds = dom_parser.text(s.dom.getElementsByTagName('outds')[0].getElementsByTagName('name')[0])
+                s.primaryDS = dom_parser.text(s.dom.getElementsByTagName('inDS')[0])
+            else:
+                s.primaryDS = None
+            s.outds = dom_parser.text(s.dom.getElementsByTagName('outds')[0])
             s.jobs = []
             for job in s.dom.getElementsByTagName('job'):
                 job.command = s.command      # default command if the job doesn't specify its own
-                s.jobs.append(dom_job(job,requiredDS=s.requiredDS))
+                s.jobs.append(dom_job(job,primaryDS=s.primaryDS))
         except:
             print 'ERROR: failed to parse',s.fname
             sys.exit(0)
@@ -122,10 +129,10 @@ class dom_parser:
         return s.outds
     def inDS(s):
         """ chooses a dataset we'll call inDS; others will become secondaryDS """
-        # user manually labeled one of datasets as inDS:
-        if s.requiredDS:
-            return s.requiredDS
-        # choose inDS dataset randomly
+        # user manually labeled one of datasets as primary, so make it inDS:
+        if s.primaryDS:
+            return s.primaryDS
+        # OR: choose inDS dataset randomly
         else:
             return s.input_datasets()[0]
     def secondaryDSs(s):
