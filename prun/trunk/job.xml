@@ -1,9 +1,9 @@
 <!--
     Parser SHALL enforce the following:
-    * combination of output=True options is unique across all subjobs
-    * if a subjob is missing command tag, global submission command will be used
+    * combination of output=True options is unique across all jobs
+    * if a job is missing command tag, global submission command will be used
     * if an input dataset has no files requested, it will be discarded
-    * if primaryDS option is given, this dataset must actually be used in every subjob
+    * if primaryDS option is given, this dataset must actually be used in every job
     Panda-client SHALL do the following:
     * the actual output name will be modified to give a unique GID.
       Note that only "prepend=true" options are appended to output name:
@@ -13,55 +13,73 @@
 -->
 
 <submission>
+
+  <!-- General submission settings -->
   <title>Grid submission job description</title>
   <tag>ftk_8L_wh3e34</tag>
-  <primaryds>user10.AntonKapliy.v14wh3e34ZEROREC.250evts.v1</primaryds>
-  <command>echo %IN; touch out_files.dat;</command>
-  <outds>user.kapliy.raw_8L_50x16x144_wh3e34_test8</outds>
+  <command>echo %IN; touch out_files.dat; tar cfj out_files.tbz2 out_files.dat; </command>
+  <outds>user.kapliy.raw_8L_50x16x144_wh3e34_test10</outds>
 
+  <!-- Declaration of input datasets and their stream names
+       You can declare one dataset as "primary", which will become inDS
+       All others will become secondaryDSs.
+       If declared, the primary DS needs to be present in each job.
+  -->
+  <inds comment="input events" primary="true">
+    <stream>IN</stream>
+    <name>user10.AntonKapliy.v14wh3e34ZEROREC.250evts.v1</name>
+  </inds>
+  <inds comment="FTK sectors and constants" primary="false">
+    <stream>INbaseDS</stream>
+    <name>user10.AntonKapliy.FtkV14_base8Lv4_20100218</name>
+  </inds>
+  <inds comment="FTK patterns" primary="false">
+    <stream>INbankdir</stream>
+    <name>user10.AntonKapliy.v14.raw_8L_50x16x144_16M_wpgen.2010_03_11.v1</name>
+  </inds>
+
+  <!-- Declaration of each job -->
   <job>
-    <inds comment="input events">
+    <inds>
       <name>user10.AntonKapliy.v14wh3e34ZEROREC.250evts.v1</name>
       <file>user10.AntonKapliy.v14wh3e34ZEROREC.250evts.v1._user09.AntonioBoveia.v14WHbb.set01_RECO3E34.rset1.20091114.EXT0._00072.ftksim_wrap_raw.dat.bz2</file>
       <file>user10.AntonKapliy.v14wh3e34ZEROREC.250evts.v1._user09.AntonioBoveia.v14WHbb.set01_RECO3E34.rset1.20091114.EXT0._00116.ftksim_wrap_raw.dat.bz2</file>
     </inds>
-    <inds comment="FTK sectors and constants">
+    <inds>
       <name>user10.AntonKapliy.FtkV14_base8Lv4_20100218</name>
       <file>user10.AntonKapliy.FtkV14_base8Lv4_20100218._sectors_raw_8L_16M_reg0_sub0.patt.bz2</file>
       <file>user10.AntonKapliy.FtkV14_base8Lv4_20100218._corrgen_raw_8L_16M_reg0_sub0.gcon.bz2</file>
     </inds>
-    <inds comment="FTK patterns">
+    <inds>
       <name>user10.AntonKapliy.v14.raw_8L_50x16x144_16M_wpgen.2010_03_11.v1</name>
       <file>user10.AntonKapliy.v14.raw_8L_50x16x144_16M_wpgen.2010_03_11.v1._patterns_raw_8L_50x16x144_16M_reg0_sub0.patt.bz2</file>
     </inds>
     <option name="inp"  forward="false" prepend="true">0</option>
     <option name="reg"  forward="true"  prepend="true">0</option>
     <option name="sub"  forward="true"  prepend="true">0</option>
-    <option name="ext"  forward="false" prepend="false">2</option>
-    <option name="FILES"  forward="true" prepend="false">%IN</option>
+    <option name="loop"  forward="false" prepend="false">2</option>
     <output>out_files.tbz2</output>
   </job>
 
   <job>
-    <inds comment="input events">
+    <inds>
       <name>user10.AntonKapliy.v14wh3e34ZEROREC.250evts.v1</name>
-      <file>user10.AntonKapliy.v14wh3e34ZEROREC.250evts.v1._user09.AntonioBoveia.v14WHbb.set01_RECO3E34.rset1.20091114.EXT0._00137.ftksim_wrap_raw.dat.bz2</file>
-      <file>user10.AntonKapliy.v14wh3e34ZEROREC.250evts.v1._user09.AntonioBoveia.v14WHbb.set01_RECO3E34.rset1.20091114.EXT0._00138.ftksim_wrap_raw.dat.bz2</file>
+      <file>user10.AntonKapliy.v14wh3e34ZEROREC.250evts.v1._user09.AntonioBoveia.v14WHbb.set01_RECO3E34.rset1.20091114.EXT0._00072.ftksim_wrap_raw.dat.bz2</file>
+      <file>user10.AntonKapliy.v14wh3e34ZEROREC.250evts.v1._user09.AntonioBoveia.v14WHbb.set01_RECO3E34.rset1.20091114.EXT0._00116.ftksim_wrap_raw.dat.bz2</file>
     </inds>
-    <inds comment="FTK sectors and constants">
+    <inds>
       <name>user10.AntonKapliy.FtkV14_base8Lv4_20100218</name>
-      <file>user10.AntonKapliy.FtkV14_base8Lv4_20100218._sectors_raw_8L_16M_reg3_sub8.patt.bz2</file>
-      <file>user10.AntonKapliy.FtkV14_base8Lv4_20100218._corrgen_raw_8L_16M_reg3_sub8.gcon.bz2</file>
+      <file>user10.AntonKapliy.FtkV14_base8Lv4_20100218._sectors_raw_8L_16M_reg1_sub1.patt.bz2</file>
+      <file>user10.AntonKapliy.FtkV14_base8Lv4_20100218._corrgen_raw_8L_16M_reg1_sub1.gcon.bz2</file>
     </inds>
-    <inds comment="FTK patterns">
+    <inds>
       <name>user10.AntonKapliy.v14.raw_8L_50x16x144_16M_wpgen.2010_03_11.v1</name>
-      <file>user10.AntonKapliy.v14.raw_8L_50x16x144_16M_wpgen.2010_03_11.v1._patterns_raw_8L_50x16x144_16M_reg3_sub8.patt.bz2</file>
+      <file>user10.AntonKapliy.v14.raw_8L_50x16x144_16M_wpgen.2010_03_11.v1._patterns_raw_8L_50x16x144_16M_reg1_sub1.patt.bz2</file>
     </inds>
-    <option name="inp"  forward="false" prepend="true">2</option>
-    <option name="reg"  forward="true"  prepend="true">3</option>
-    <option name="sub"  forward="true"  prepend="true">8</option>
-    <option name="ext"  forward="false" prepend="false">2</option>
-    <option name="FILES"  forward="true" prepend="false">%IN</option>
+    <option name="inp"  forward="false" prepend="true">0</option>
+    <option name="reg"  forward="true"  prepend="true">1</option>
+    <option name="sub"  forward="true"  prepend="true">1</option>
+    <option name="loop"  forward="false" prepend="false">2</option>
     <output>out_files.tbz2</output>
   </job>
 

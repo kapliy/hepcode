@@ -9,13 +9,15 @@ class dom_job:
         forward  - list of (option,value) forwarded to the grid job
         command  - script that will be executed on the grid
     """
-    def __init__(s,domjob,primaryds=None):
+    def __init__(s,domjob=None,primaryds=None):
         """ Loads <job></job> from xml file.
         If primaryds is set, makes sure it is present in job spec """
         s.infiles = {}
         s.outfiles = []
         s.prepend  = []
         s.forward = []
+        if not domjob:
+            return
         s.command = domjob.command
         # input files
         for inds in domjob.getElementsByTagName('inds'):
@@ -32,13 +34,11 @@ class dom_job:
         # output files
         [s.outfiles.append(dom_parser.text(v)) for v in domjob.getElementsByTagName('output')]
         # gearing options
-        def true(v):
-            return v in ('true', '1', 'True', 'TRUE', 'yes')
         for o in domjob.getElementsByTagName('option'):
             name=o.attributes['name'].value
             value=dom_parser.text(o)
-            prepend=true(o.attributes['prepend'].value)
-            forward=true(o.attributes['forward'].value)
+            prepend=dom_parser.true(o.attributes['prepend'].value)
+            forward=dom_parser.true(o.attributes['forward'].value)
             if prepend:
                 s.prepend.append((name,value))
             if forward:
@@ -94,13 +94,16 @@ class dom_job:
         return '%s %s'%(s.forward_opts(),s.command)
 
 class dom_parser:
-    def __init__(s,fname):
-        """ creates a dom object out of a text file """
+    def __init__(s,fname=None):
+        """ creates a dom object out of a text file (if provided) """
         s.dom = xml.dom.minidom.parse(fname)
         s.fname = fname
         s.parse()
         s.check()
         s.separate_inDS = False
+    @staticmethod
+    def true(v):
+        return v in ('true', '1', 'True', 'TRUE', 'yes')
     @staticmethod
     def text(pnode):
         """ extracts the value stored in the node """
@@ -112,6 +115,7 @@ class dom_parser:
     def parse(s):
         """ loads submission configuration from an xml file """
         try:
+            # general settings
             if len(s.dom.getElementsByTagName('title'))>0:
                 s.title = dom_parser.text(s.dom.getElementsByTagName('title')[0])
             else:
@@ -121,19 +125,31 @@ class dom_parser:
             else:
                 s.tag = 'default_tag'
             s.command = dom_parser.text(s.dom.getElementsByTagName('command')[0])
+            s.outds = dom_parser.text(s.dom.getElementsByTagName('outds')[0])
+            # declaration of all input datasets
+            s.inds = {}
+            primarydss = []
+            for elm in s.dom.getElementsByTagName('submission')[0].childNodes:
+                if elm.nodeName != 'inds':
+                    continue
+                primary=True if 'primary' in elm.attributes.keys() and dom_parser.true(elm.attributes['primary'].value) else False
+                stream=dom_parser.text(elm.getElementsByTagName('stream')[0])
+                name=dom_parser.text(elm.getElementsByTagName('name')[0])
+                s.inds[name]=stream
+                if primary:
+                    primarydss.append(name)
             # see if one of the input datasets was explicitly labeled as inDS
-            if len(s.dom.getElementsByTagName('inDS'))>0 and dom_parser.text(s.dom.getElementsByTagName('inDS')[0])!='':
-                s.primaryds = dom_parser.text(s.dom.getElementsByTagName('inDS')[0])
+            if len(primarydss)==1:
+                s.primaryds = primarydss[0]
             else:
                 s.primaryds = None
-            s.outds = dom_parser.text(s.dom.getElementsByTagName('outds')[0])
             s.jobs = []
             for job in s.dom.getElementsByTagName('job'):
                 job.command = s.command      # default command if the job doesn't specify its own
                 s.jobs.append(dom_job(job,primaryds=s.primaryds))
         except:
             print 'ERROR: failed to parse',s.fname
-            sys.exit(0)
+            raise
     def to_dom(s):
         """ Converts this submission to a dom tree branch """
         x = xml.dom.minidom.Document()
@@ -144,9 +160,16 @@ class dom_parser:
         if s.tag:
             submission.appendChild(x.createElement('tag'))
             submission.childNodes[-1].appendChild(x.createTextNode(s.tag))
-        if s.primaryds:
-            submission.appendChild(x.createElement('primaryds'))
-            submission.childNodes[-1].appendChild(x.createTextNode(s.primaryds))
+        for name,stream in s.inds.iteritems():
+            submission.appendChild(x.createElement('inds'))
+            if name==s.primaryds:
+                submission.childNodes[-1].setAttribute('primary','true')
+            else:
+                submission.childNodes[-1].setAttribute('primary','false')
+            submission.childNodes[-1].appendChild(x.createElement('stream'))
+            submission.childNodes[-1].childNodes[-1].appendChild(x.createTextNode(stream))
+            submission.childNodes[-1].appendChild(x.createElement('name'))
+            submission.childNodes[-1].childNodes[-1].appendChild(x.createTextNode(name))
         submission.appendChild(x.createElement('command'))
         submission.childNodes[-1].appendChild(x.createTextNode(s.command))
         submission.appendChild(x.createElement('outds'))
@@ -244,4 +267,3 @@ class dom_parser:
 if __name__=="__main__":
     p = dom_parser('./job.xml')
     p.dump()
-    print p.input_datasets()
