@@ -847,18 +847,8 @@ if options.inDS != '':
         # if list of files was given in the xml file, check that they are all present:
         if options.load_xml:
             assert len(tmpSecFileMap)>=xconfig.nFiles_in_DS(tmpDsName),'ERROR: xml config requires files that are missing in secondaryDS=%s'%tmpDsName
-        # sort
-        tmpSecFileList = tmpSecFileMap.keys()
-        tmpSecFileList.sort()
         # append
-        for tmpSecFile in tmpSecFileList:
-            tmpSecFileMap[tmpSecFile]['LFN'] = tmpSecFile
-            options.secondaryDSs[tmpDsName]['files'].append(tmpSecFileMap[tmpSecFile])
-        # skip files
-        options.secondaryDSs[tmpDsName]['files'] = options.secondaryDSs[tmpDsName]['files'][options.secondaryDSs[tmpDsName]['nSkip']:]
-        # change nFiles=0 to the real size 
-        if options.secondaryDSs[tmpDsName]['nFiles'] == 0:
-            options.secondaryDSs[tmpDsName]['nFiles'] = len(options.secondaryDSs[tmpDsName]['files'])
+        options.secondaryDSs[tmpDsName]['fileMap'] = tmpSecFileMap
     # get locations
     if inputFileList != []:
         if options.site == "AUTO":
@@ -1015,6 +1005,32 @@ if options.inDS != '':
             if not inputFile in missList:
                 newInputFiles.append(inputFile)
         inputFileList = newInputFiles
+        # check for seconday datasets
+        for tmpDsName,tmpDsValMap in options.secondaryDSs.iteritems():
+            if not options.skipScan:
+		tmpLog.info("scanning LFC for %s" % tmpDsName)
+                if tmpDsValMap['nFiles'] == 0 and tmpDsValMap['nSkip'] != 0:
+                    secMissList = Client.getMissLFNsFromLFC(tmpDsValMap['fileMap'],options.site,True,options.verbose)
+                else:
+                    secMissList = Client.getMissLFNsFromLFC(tmpDsValMap['fileMap'],options.site,True,options.verbose,
+                                                            tmpDsValMap['nFiles']+tmpDsValMap['nSkip'],shadowList)
+            else:
+                secMissList = []
+            # remove missing
+            tmpSecFileList = tmpDsValMap['fileMap'].keys()
+            tmpSecFileList.sort()
+            options.secondaryDSs[tmpDsName]['files'] = []
+            for tmpSecFile in tmpSecFileList:
+                if tmpSecFile in secMissList:
+                    continue
+                # append
+                tmpSecFileMap[tmpSecFile]['LFN'] = tmpSecFile
+                options.secondaryDSs[tmpDsName]['files'].append(tmpSecFileMap[tmpSecFile])
+            # skip files    
+            options.secondaryDSs[tmpDsName]['files'] = options.secondaryDSs[tmpDsName]['files'][options.secondaryDSs[tmpDsName]['nSkip']:]
+            # change nFiles=0 to the real size 
+            if options.secondaryDSs[tmpDsName]['nFiles'] == 0:
+                options.secondaryDSs[tmpDsName]['nFiles'] = len(options.secondaryDSs[tmpDsName]['files'])
     # update shadow just in case since LFC scan may take long time
     if not options.skipScan:
         shadowUpdated = False
@@ -1299,7 +1315,7 @@ else:
 for path in sys.path:
     if path == '':
         path = curDir
-    if os.path.exists(path) and 'pandatools' in os.listdir(path):
+    if os.path.exists(path) and os.path.isdir(path) and 'pandatools' in os.listdir(path):
         # make symlink for module name.
         os.symlink('%s/pandatools' % path,'taskbuffer')
         break
@@ -1622,7 +1638,10 @@ if options.outputs != '' and (outputDSexist or outputContExist):
 
 if options.inDS != '':
     if len(missList) == 0:
-	tmpLog.info("all files are available at %s" % options.site)
+        if options.secondaryDSs == {}:
+            tmpLog.info("all files are available at %s" % options.site)
+        else:
+            tmpLog.info("all files in the primary DS are available at %s" % options.site)            
     else:
         tmpLog.info("%s files are missing or unchecked at %s" % (len(missList),options.site))
     tmpLog.info("use %s files" % len(inputFileList)) 
@@ -1791,10 +1810,11 @@ for iJob in range(options.nJobs):
                 tmpSecList  = tmpSecVal['files'][tmpIndexSec:tmpIndexSec+tmpSecVal['nFiles']]
                 # check length
                 if len(tmpSecList) < tmpSecVal['nFiles']:
-                    errStr  = "%s contains %s files which is insufficient for splitting. " % (tmpSecDS,len(tmpSecVal['files']))
+                    errStr  = "only %s files in %s are available at %s which is insufficient for splitting. " % \
+                              (len(tmpSecVal['files']),tmpSecDS,options.site)
                     errStr += "nJobs*nFilesPerJob=%s*%s=%s files are required" % (options.nJobs,tmpSecVal['nFiles'],
                                                                                   options.nJobs*tmpSecVal['nFiles'])
-                    tmpLog.error(errStr)            
+                    tmpLog.error(errStr)
                     sys.exit(EC_Split)
             # add FileSpec
             tmpSecLfnList = []
