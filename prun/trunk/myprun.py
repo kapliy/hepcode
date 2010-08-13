@@ -1024,6 +1024,7 @@ if options.inDS != '':
                 if tmpSecFile in secMissList:
                     continue
                 # append
+                tmpSecFileMap = options.secondaryDSs[tmpDsName]['fileMap']
                 tmpSecFileMap[tmpSecFile]['LFN'] = tmpSecFile
                 options.secondaryDSs[tmpDsName]['files'].append(tmpSecFileMap[tmpSecFile])
             # skip files    
@@ -1362,7 +1363,7 @@ if options.inDS != '':
             tmpNSplit += 1
         tmpNFiles,tmpMod = divmod(len(inputFileList),tmpNSplit)
         # set upper limit
-        upperLimitOnFiles = 200
+        upperLimitOnFiles = 50
         if tmpNFiles > upperLimitOnFiles:
             tmpNFiles = upperLimitOnFiles
         # check again just in case
