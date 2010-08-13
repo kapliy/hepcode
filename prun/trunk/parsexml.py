@@ -217,7 +217,19 @@ class dom_parser:
         out = []
         DSs = s.secondaryDSs()
         for i,DS in enumerate(DSs):
-            out.append('IN%d:0:%s:%s'%(i+1,DS,s.files_in_DS(DS,regex=True)))
+            stream=s.inds[DS] if DS in s.inds else 'IN%d'%(i+1,)
+            out.append('%s:0:%s:%s'%(stream,DS,s.files_in_DS(DS,regex=True)))
+        return ','.join(out)
+    def writeInputToTxt(s):
+        """ Prepares prun option --writeInputToTxt
+        comma-separated list of STREAM:STREAM.files.dat
+        """
+        out = []
+        DSs = s.secondaryDSs()
+        for i,DS in enumerate(DSs):
+            stream=s.inds[DS] if DS in s.inds else 'IN%d'%(i+1,)
+            out.append('%s:%s.files.dat'%(stream,stream))
+        out.append('IN','IN.files.dat')
         return ','.join(out)
     def files_in_DS(s,DS,regex=False):
         """ Returns a list of all files from a given dataset
