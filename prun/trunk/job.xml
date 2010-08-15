@@ -17,8 +17,8 @@
   <!-- General submission settings -->
   <title>Grid submission job description</title>
   <tag>ftk_8L_wh3e34</tag>
-  <command>echo %IN; touch out_files.dat; tar cfj out_files.tbz2 out_files.dat; </command>
-  <outds>user.kapliy.raw_8L_50x16x144_wh3e34_test11</outds>
+  <command>echo "Value of reg=$reg"; touch out_files.dat; tar cfj out_files.tbz2 out_files.dat; </command>
+  <outds>user.kapliy.raw_8L_50x16x144_wh3e34_test12</outds>
 
   <!-- Declaration of input datasets and their stream names
        You can declare one dataset as "primary", which will become inDS
