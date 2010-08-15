@@ -13,7 +13,7 @@ class dom_job:
         """ Loads <job></job> from xml file.
         If primaryds is set, makes sure it is present in job spec """
         s.infiles = {}
-        s.outfiles = defaultout
+        s.outfiles = []
         s.command=defaultcmd
         s.prepend  = []
         s.forward = []
@@ -34,9 +34,10 @@ class dom_job:
         if primaryds and primaryds not in s.infiles.keys():
             print 'ERROR: primaryds=%s must be present in each job'%primaryds
             sys.exit(0)
-        # output files
-        [s.outfiles.append(dom_parser.text(v)) for v in domjob.getElementsByTagName('output')]
-        # todo - enforce output file uniqueness
+        # output files (also, drop duplicates within this job)
+        outfiles = set(defaultout)
+        [outfiles.add(dom_parser.text(v)) for v in domjob.getElementsByTagName('output')]
+        s.outfiles = list(outfiles)
         # gearing options
         for o in domjob.getElementsByTagName('option'):
             name=o.attributes['name'].value
@@ -93,12 +94,15 @@ class dom_job:
         This way, all options will be set inside run.sh
         """
         return '%s %s'%(s.forward_opts(),s.command)
+    def outputs_list(s):
+        """ python list with finalized output file names """
+        if s.prepend_string():
+            return [s.prepend_string()+'.'+o for o in s.outfiles]
+        else:
+            return [o for o in s.outfiles]
     def outputs(s):
         """ Comma-separated list of output files accepted by prun """
-        if s.prepend_string():
-            return ','.join(s.prepend_string()+'.'+s.outfiles)
-        else:
-            return ','.join(s.outfiles)
+        return ','.join(s.outputs_list())
 
 class dom_parser:
     def __init__(s,fname=None):
@@ -136,11 +140,11 @@ class dom_parser:
                     continue
                 s.command = dom_parser.text(elm)
                 break
-            s.outfiles = []    # subjobs can append *additional* outputs
+            global_outfiles = []    # subjobs can append *additional* outputs
             for elm in s.dom.getElementsByTagName('submission')[0].childNodes:
                 if elm.nodeName != 'output':
                     continue
-                s.outfiles.append(dom_parser.text(elm))
+                global_outfiles.append(dom_parser.text(elm))
             s.outds = dom_parser.text(s.dom.getElementsByTagName('outds')[0])
             # declaration of all input datasets
             s.inds = {}
@@ -161,7 +165,8 @@ class dom_parser:
                 s.primaryds = None
             s.jobs = []
             for job in s.dom.getElementsByTagName('job'):
-                s.jobs.append(dom_job(job,primaryds=s.primaryds,defaultcmd=s.command,defaultout=s.outfiles))
+                print 'STARTING job:', global_outfiles
+                s.jobs.append(dom_job(job,primaryds=s.primaryds,defaultcmd=s.command,defaultout=global_outfiles))
         except:
             print 'ERROR: failed to parse',s.fname
             raise
@@ -200,8 +205,8 @@ class dom_parser:
         """ checks that all output files have unique qualifiers """
         quals=[]
         for j in s.jobs:
-            for o in j.outfiles:
-                quals.append('%s_%s'%(j.prepend_string(),o))
+            quals+=j.outputs_list()
+        print quals
         if len(list(set(quals))) != len(quals):
             print 'ERROR: found non-unique output file names across the jobs'
             print '(you likely need to review xml options with prepend=true)'
@@ -286,7 +291,7 @@ class dom_parser:
             for i,job in enumerate(s.jobs):
                 P('===============> JOB%d'%i)
                 P('command',job.exec_string())
-                P('outfiles',job.prepend_string()+'^ '+' '.join(job.outfiles))
+                P('outfiles',job.outputs())
                 P('INPUTS:')
                 j=0
                 for dsname,files in job.infiles.iteritems():
