@@ -5,9 +5,9 @@ import xml.dom.minidom
 class dom_job:
     """ infiles[inds]=[file1,file2...]
         outfiles = [file1,file2...]
+        command  - script that will be executed on the grid
         prepend  - list of (option,value) prepended to output file name
         forward  - list of (option,value) forwarded to the grid job
-        command  - script that will be executed on the grid
     """
     def __init__(s,domjob=None,primaryds=None,defaultcmd=None,defaultout=[]):
         """ Loads <job></job> from xml file.
@@ -36,6 +36,7 @@ class dom_job:
             sys.exit(0)
         # output files
         [s.outfiles.append(dom_parser.text(v)) for v in domjob.getElementsByTagName('output')]
+        # todo - enforce output file uniqueness
         # gearing options
         for o in domjob.getElementsByTagName('option'):
             name=o.attributes['name'].value
@@ -74,14 +75,11 @@ class dom_job:
                 job.childNodes[-1].setAttribute('prepend','true')
             else:
                 job.childNodes[-1].setAttribute('prepend','false')
-            job.childNodes[-1].appendChild(x.createTextNode(str(option[1])))            
+            job.childNodes[-1].appendChild(x.createTextNode(str(option[1])))
         return job
     def files_in_DS(s,DS):
         """ Returns a list of files used in a given job in a given dataset"""
         return s.infiles[DS] if DS in s.infiles else []
-    def outputs(s):
-        """ Comma-separated list of output files accepted by prun """
-        return ','.join(s.outfiles)
     def forward_opts(s):
         """ passable string of forward options """
         return ' '.join( ['%s=%s'%(v[0],v[1]) for v in s.forward])
@@ -95,6 +93,12 @@ class dom_job:
         This way, all options will be set inside run.sh
         """
         return '%s %s'%(s.forward_opts(),s.command)
+    def outputs(s):
+        """ Comma-separated list of output files accepted by prun """
+        if s.prepend_string():
+            return ','.join(s.prepend_string()+'.'+s.outfiles)
+        else:
+            return ','.join(s.outfiles)
 
 class dom_parser:
     def __init__(s,fname=None):
@@ -103,7 +107,6 @@ class dom_parser:
         s.fname = fname
         s.parse()
         s.check()
-        s.separate_inDS = False
     @staticmethod
     def true(v):
         return v in ('true', '1', 'True', 'TRUE', 'yes')
@@ -133,7 +136,7 @@ class dom_parser:
                     continue
                 s.command = dom_parser.text(elm)
                 break
-            s.outfiles = []    # subjobs can also append additional outputs
+            s.outfiles = []    # subjobs can append *additional* outputs
             for elm in s.dom.getElementsByTagName('submission')[0].childNodes:
                 if elm.nodeName != 'output':
                     continue
@@ -158,7 +161,6 @@ class dom_parser:
                 s.primaryds = None
             s.jobs = []
             for job in s.dom.getElementsByTagName('job'):
-                job.command = s.command      # default command if the job doesn't specify its own
                 s.jobs.append(dom_job(job,primaryds=s.primaryds,defaultcmd=s.command,defaultout=s.outfiles))
         except:
             print 'ERROR: failed to parse',s.fname
@@ -224,7 +226,7 @@ class dom_parser:
             return s.input_datasets()[0]
     def secondaryDSs(s):
         """ returns all secondaryDSs. This excludes inDS, unless inDS is managed by prun"""
-        return [d for d in s.input_datasets() if d!=s.inDS() or s.separate_inDS==True ]
+        return [d for d in s.input_datasets() if d!=s.inDS() ]
     def secondaryDSs_config(s):
         """ returns secondaryDSs string in prun format:
         StreamName:nFilesPerJob:DatasetName[:MatchingPattern[:nSkipFiles]]
