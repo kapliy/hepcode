@@ -94,15 +94,15 @@ class dom_job:
         This way, all options will be set inside run.sh
         """
         return '%s %s'%(s.forward_opts(),s.command)
-    def outputs_list(s):
+    def outputs_list(s,prepend=False):
         """ python list with finalized output file names """
-        if s.prepend_string():
+        if prepend and s.prepend_string():
             return [s.prepend_string()+'.'+o for o in s.outfiles]
         else:
             return [o for o in s.outfiles]
-    def outputs(s):
+    def outputs(s,prepend=False):
         """ Comma-separated list of output files accepted by prun """
-        return ','.join(s.outputs_list())
+        return ','.join(s.outputs_list(prepend))
 
 class dom_parser:
     def __init__(s,fname=None):
@@ -205,8 +205,7 @@ class dom_parser:
         """ checks that all output files have unique qualifiers """
         quals=[]
         for j in s.jobs:
-            quals+=j.outputs_list()
-        print quals
+            quals+=j.outputs_list(True)
         if len(list(set(quals))) != len(quals):
             print 'ERROR: found non-unique output file names across the jobs'
             print '(you likely need to review xml options with prepend=true)'

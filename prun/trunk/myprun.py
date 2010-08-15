@@ -1894,7 +1894,10 @@ for iJob in range(options.nJobs):
             else:
                 flagUseNewLFN = False
                 lfnPrefix = dsNameWoSlash
-            tmpNewLFN = '%s._%05d.%s' % (lfnPrefix,idxOffset+iJob+1,tmpLFN)
+            if options.load_xml and jobXML.prepend_string():
+                tmpNewLFN = '%s._%05d.%s.%s' % (lfnPrefix,idxOffset+iJob+1,jobXML.prepend_string(),tmpLFN)
+            else:
+                tmpNewLFN = '%s._%05d.%s' % (lfnPrefix,idxOffset+iJob+1,tmpLFN)
             # change * to XYZ and add .tgz
 	    if tmpNewLFN.find('*') != -1:
 		tmpNewLFN = tmpNewLFN.replace('*','XYZ')
