@@ -252,15 +252,10 @@ if options.load_xml:
     xconfig.dump(options.verbose)
     if options.outDS=='':
         options.outDS=xconfig.outDS()
-    if options.inDS=='':
-        # inDS taken as the first dataset in the xml file
-        options.inDS=xconfig.inDS()
-        options.match=xconfig.files_in_DS(options.inDS,regex=True)
-    else:
-        # inDS is managed from command line, rather than XML file
-        xconfig.separate_inDS = True
-    options.jobParams='WILL_BE_REDEFINED_FOR_EACH_SUBJOB'
     options.outputs='WILL_BE_REDEFINED_FOR_EACH_SUBJOB'
+    options.inDS=xconfig.inDS()
+    options.match=xconfig.files_in_DS(options.inDS,regex=True)
+    options.jobParams='WILL_BE_REDEFINED_FOR_EACH_SUBJOB'
 
 # exclude sites
 if options.excludedSite != '':
@@ -825,7 +820,7 @@ if options.inDS != '':
         sys.exit(EC_Config)
     # if list of files was given in the xml file, check that they are all present:
     if options.load_xml:
-        assert len(inputFileMap)>=xconfig.nFiles_in_DS(options.inDS),'ERROR: xml config requires files that are missing in inDS=%s'%options.inDS
+        assert len(inputFileMap)==xconfig.nFiles_in_DS(options.inDS),'ERROR: xml config requires files that are missing in inDS=%s'%options.inDS
     # check if all files were used
     unUsedFlag = False
     for tmpLFN in inputFileMap.keys():
@@ -846,7 +841,7 @@ if options.inDS != '':
         tmpSecFileMap = Client.getFilesInDatasetWithFilter(tmpDsName,tmpValMap['pattern'],shadowList,'',options.verbose)
         # if list of files was given in the xml file, check that they are all present:
         if options.load_xml:
-            assert len(tmpSecFileMap)>=xconfig.nFiles_in_DS(tmpDsName),'ERROR: xml config requires files that are missing in secondaryDS=%s'%tmpDsName
+            assert len(tmpSecFileMap)==xconfig.nFiles_in_DS(tmpDsName),'ERROR: xml config requires files that are missing in secondaryDS=%s'%tmpDsName
         # append
         options.secondaryDSs[tmpDsName]['fileMap'] = tmpSecFileMap
     # get locations
@@ -1345,7 +1340,7 @@ if options.nGBPerJob != -1:
 
 # set number of files per job
 if options.inDS != '':
-    if options.load_xml and not xconfig.separate_inDS:
+    if options.load_xml:
         # xml file explicitly creates each job; do nothing here
         pass
     elif options.nFilesPerJob == None and options.nGBPerJob < 0:
@@ -1413,7 +1408,7 @@ if options.inDS != '':
 
 # calculate number of jobs
 if options.nJobs == -1:
-    if options.load_xml and not xconfig.separate_inDS:
+    if options.load_xml:
         # xml file explicitly creates each job, so get job count from there:
         options.nJobs=xconfig.nJobs()
     elif options.inDS == '':
@@ -1428,10 +1423,6 @@ if options.nJobs == -1:
     else:
         # nGBPerJob
         options.nJobs = len(nFilesEachSubJob)
-    if options.load_xml and xconfig.separate_inDS:
-        # xml file manages all secondaryDS jobs, while prun manages inDS jobs
-        # in this case, the total nJobs = # xml jobs * # inDS jobs
-        options.nJobs *= xconfig.nJobs()
 
 # read jobID
 jobDefinitionID = 1
@@ -1660,16 +1651,8 @@ jobsetIDMapForLFN = {}
 for iJob in range(options.nJobs):
     if _FTKDEBUG:
         print 'FTK  : JOB',iJob
-    iXmlJob = iJob
-    iIndsJob = iJob
     if options.load_xml:
-        if xconfig.separate_inDS:
-            # xml file manages all secondaryDS jobs, while prun manages inDS jobs
-            # in this case, the total nJobs = # xml jobs * # inDS jobs
-            iXmlJob = iJob%xconfig.nJobs()
-            iIndsJob = int(iJob/xconfig.nJobs())
-        jobXML = xconfig.jobs[iXmlJob]
-        jobLabel = jobXML.prepend_string()
+        jobXML = xconfig.jobs[iJob]
         options.jobParams = jobXML.exec_string()
         options.outputs = jobXML.outputs()
     jobR = JobSpec()
@@ -1758,15 +1741,7 @@ for iJob in range(options.nJobs):
         totalSize = 0
         if options.load_xml:
             # input files are listed explicitly for each subjob in the xml file
-            if xconfig.separate_inDS:
-                # xml file manages all secondaryDS jobs, while prun manages inDS jobs
-                # in this case, the total nJobs = # xml jobs * # inDS jobs
-                indexIn = iIndsJob
-                inList = inputFileList[indexIn:indexIn+options.nFilesPerJob]
-            else:
-                # xml file manages both inDS and secondaryDSs
-                # in this case, we simply use inDS files specified in xml
-                inList = [v for v in inputFileList if v in jobXML.files_in_DS(options.inDS)]
+            inList = [v for v in inputFileList if v in jobXML.files_in_DS(options.inDS)]
         elif options.nGBPerJob < 0:
             indexIn = iJob*options.nFilesPerJob
             inList = inputFileList[indexIn:indexIn+options.nFilesPerJob]
@@ -1919,18 +1894,14 @@ for iJob in range(options.nJobs):
             else:
                 flagUseNewLFN = False
                 lfnPrefix = dsNameWoSlash
-            if options.load_xml:
-                # append additional metadata to output file name according to xml file settings
-                tmpNewLFN = '%s._%05d.%s.%s' % (lfnPrefix,idxOffset+iIndsJob+1,jobXML.prepend_string(),tmpLFN)
-            else:
-                tmpNewLFN = '%s._%05d.%s' % (lfnPrefix,idxOffset+iIndsJob+1,tmpLFN)
+            tmpNewLFN = '%s._%05d.%s' % (lfnPrefix,idxOffset+iJob+1,tmpLFN)
             # change * to XYZ and add .tgz
 	    if tmpNewLFN.find('*') != -1:
 		tmpNewLFN = tmpNewLFN.replace('*','XYZ')
 		tmpNewLFN = '%s.tgz' % tmpNewLFN
             # get offset
             if getOffset:
-                oldHead = '%s._%05d.' % (lfnPrefix,idxOffset+iIndsJob+1)
+                oldHead = '%s._%05d.' % (lfnPrefix,idxOffset+iJob+1)
                 if not flagUseNewLFN:
                     # old LFN format : Datasetname.XYZ
                     filePatt = tmpNewLFN.replace(oldHead,'%s\._(\d+)\.' % lfnPrefix)
@@ -1939,23 +1910,23 @@ for iJob in range(options.nJobs):
                     # append
                     indexOffsetMap[tmpLFN] = idxOffset
                     # correct
-                    newHead = '%s._%05d.' % (dsNameWoSlash,idxOffset+iIndsJob+1)
+                    newHead = '%s._%05d.' % (dsNameWoSlash,idxOffset+iJob+1)
                     tmpNewLFN = tmpNewLFN.replace(oldHead,newHead)
                 else:
                     # short LFN : user.nickname.XYZ
                     filePatt = tmpNewLFN.replace(oldHead,'%s\._(\d+)\.' % lfnPrefix.replace('$JOBSETID','([_\d]+)'))
-                    # get offset    
+                    # get offset
                     idxOffset,jobsetIDinLFN = PsubUtils.getMaxIndex(existingFilesInOutDS,filePatt,shortLFN=True)
                     # append
                     indexOffsetMap[tmpLFN] = idxOffset
                     jobsetIDMapForLFN[tmpLFN] = jobsetIDinLFN
                     # correct
                     if jobsetIDinLFN != None:
-                        newHead = '%s._%05d.' % (lfnPrefix.replace('$JOBSETID',jobsetIDinLFN),idxOffset+iIndsJob+1)
+                        newHead = '%s._%05d.' % (lfnPrefix.replace('$JOBSETID',jobsetIDinLFN),idxOffset+iJob+1)
                         tmpNewLFN = tmpNewLFN.replace(oldHead,newHead)
                     elif dsNameWoSlash.startswith('group'):
 			# append group job SN since group.xyz.jobsetID may be duplicated 
-                        newHead = '%s._%05d.' % (lfnPrefix.replace('$JOBSETID','$GROUPJOBSN_$JOBSETID'),idxOffset+iIndsJob+1)
+                        newHead = '%s._%05d.' % (lfnPrefix.replace('$JOBSETID','$GROUPJOBSN_$JOBSETID'),idxOffset+iJob+1)
                         tmpNewLFN = tmpNewLFN.replace(oldHead,newHead)
             # set file spec
             file = FileSpec()
@@ -1972,8 +1943,8 @@ for iJob in range(options.nJobs):
             print 'FTK  : OUT MAP:',outMap
     # log
     file = FileSpec()
-    if options.load_xml:
-        # append additional metadata to output file name according to xml file settings
+    if options.load_xml and jobXML.prepend_string():
+        # optionally append additional metadata to log file name according to xml file settings
         file.lfn               = '%s._$PANDAID.%s.log.tgz' % (dsNameWoSlash,jobXML.prepend_string())
     else:
         file.lfn               = '%s._$PANDAID.log.tgz' % dsNameWoSlash
