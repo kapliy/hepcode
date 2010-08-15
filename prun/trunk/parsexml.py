@@ -9,16 +9,19 @@ class dom_job:
         forward  - list of (option,value) forwarded to the grid job
         command  - script that will be executed on the grid
     """
-    def __init__(s,domjob=None,primaryds=None):
+    def __init__(s,domjob=None,primaryds=None,defaultcmd=None,defaultout=[]):
         """ Loads <job></job> from xml file.
         If primaryds is set, makes sure it is present in job spec """
         s.infiles = {}
-        s.outfiles = []
+        s.outfiles = defaultout
+        s.command=defaultcmd
         s.prepend  = []
         s.forward = []
         if not domjob:
             return
-        s.command = domjob.command
+        # script executed on the grid node for this job
+        if len(domjob.getElementsByTagName('command'))>0:
+            s.command = dom_parser.text(domjob.getElementsByTagName('command')[0])
         # input files
         for inds in domjob.getElementsByTagName('inds'):
             name = dom_parser.text(inds.getElementsByTagName('name')[0])
@@ -43,9 +46,6 @@ class dom_job:
                 s.prepend.append((name,value))
             if forward:
                 s.forward.append((name,value))
-        # script executed on the grid node for this job
-        if domjob.getElementsByTagName('command'):
-            s.command = dom_parser.text(domjob.getElementsByTagName('command')[0])
     def to_dom(s):
         """ Converts this job to a dom tree branch """
         x = xml.dom.minidom.Document()
@@ -60,6 +60,9 @@ class dom_job:
         for outfile in s.outfiles:
             job.appendChild(x.createElement('output'))
             job.childNodes[-1].appendChild(x.createTextNode(outfile))
+        if s.command:
+            job.appendChild(x.createElement('command'))
+            job.childNodes[-1].appendChild(x.createTextNode(s.command))
         for option in set(s.forward+s.prepend):
             job.appendChild(x.createElement('option'))
             job.childNodes[-1].setAttribute('name',str(option[0]))
@@ -124,7 +127,17 @@ class dom_parser:
                 s.tag = dom_parser.text(s.dom.getElementsByTagName('tag')[0])
             else:
                 s.tag = 'default_tag'
-            s.command = dom_parser.text(s.dom.getElementsByTagName('command')[0])
+            s.command = None  # can be overridden in subjobs
+            for elm in s.dom.getElementsByTagName('submission')[0].childNodes:
+                if elm.nodeName != 'command':
+                    continue
+                s.command = dom_parser.text(elm)
+                break
+            s.outfiles = []    # subjobs can also append additional outputs
+            for elm in s.dom.getElementsByTagName('submission')[0].childNodes:
+                if elm.nodeName != 'output':
+                    continue
+                s.outfiles.append(dom_parser.text(elm))
             s.outds = dom_parser.text(s.dom.getElementsByTagName('outds')[0])
             # declaration of all input datasets
             s.inds = {}
@@ -146,7 +159,7 @@ class dom_parser:
             s.jobs = []
             for job in s.dom.getElementsByTagName('job'):
                 job.command = s.command      # default command if the job doesn't specify its own
-                s.jobs.append(dom_job(job,primaryds=s.primaryds))
+                s.jobs.append(dom_job(job,primaryds=s.primaryds,defaultcmd=s.command,defaultout=s.outfiles))
         except:
             print 'ERROR: failed to parse',s.fname
             raise
@@ -170,8 +183,12 @@ class dom_parser:
             submission.childNodes[-1].childNodes[-1].appendChild(x.createTextNode(stream))
             submission.childNodes[-1].appendChild(x.createElement('name'))
             submission.childNodes[-1].childNodes[-1].appendChild(x.createTextNode(name))
-        submission.appendChild(x.createElement('command'))
-        submission.childNodes[-1].appendChild(x.createTextNode(s.command))
+        if s.command:
+            submission.appendChild(x.createElement('command'))
+            submission.childNodes[-1].appendChild(x.createTextNode(s.command))
+        for outfile in s.outfiles:
+            submission.appendChild(x.createElement('output'))
+            submission.childNodes[-1].appendChild(x.createTextNode(outfile))
         submission.appendChild(x.createElement('outds'))
         submission.childNodes[-1].appendChild(x.createTextNode(s.outds))
         for job in s.jobs:

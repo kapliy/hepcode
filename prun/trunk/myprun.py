@@ -1660,14 +1660,14 @@ jobsetIDMapForLFN = {}
 for iJob in range(options.nJobs):
     if _FTKDEBUG:
         print 'FTK  : JOB',iJob
+    iXmlJob = iJob
+    iIndsJob = iJob
     if options.load_xml:
         if xconfig.separate_inDS:
             # xml file manages all secondaryDS jobs, while prun manages inDS jobs
             # in this case, the total nJobs = # xml jobs * # inDS jobs
             iXmlJob = iJob%xconfig.nJobs()
-        else:
-            # xml file manages both inDS and secondaryDS jobs, so iJob=iXmlJob
-            iXmlJob = iJob
+            iIndsJob = int(iJob/xconfig.nJobs())
         jobXML = xconfig.jobs[iXmlJob]
         jobLabel = jobXML.prepend_string()
         options.jobParams = jobXML.exec_string()
@@ -1761,7 +1761,7 @@ for iJob in range(options.nJobs):
             if xconfig.separate_inDS:
                 # xml file manages all secondaryDS jobs, while prun manages inDS jobs
                 # in this case, the total nJobs = # xml jobs * # inDS jobs
-                indexIn = int(iJob/xconfig.nJobs())
+                indexIn = iIndsJob
                 inList = inputFileList[indexIn:indexIn+options.nFilesPerJob]
             else:
                 # xml file manages both inDS and secondaryDSs
@@ -1898,7 +1898,7 @@ for iJob in range(options.nJobs):
                 if dsNameWoSlash.startswith('group'):
 		    # append group job SN since group.xyz.jobsetID may be duplicated
                     jobsetIDMapForLFN[tmpLFN] += "$GROUPJOBSN_"
-                jobsetIDMapForLFN[tmpLFN] += '$JOBSETID'    
+                jobsetIDMapForLFN[tmpLFN] += '$JOBSETID'
             # offset is already obtained
             if indexOffsetMap.has_key(tmpLFN):
                 idxOffset = indexOffsetMap[tmpLFN]
@@ -1913,7 +1913,7 @@ for iJob in range(options.nJobs):
                 if jobsetIDMapForLFN.has_key(tmpLFN) and jobsetIDMapForLFN[tmpLFN] != None:
                     lfnPrefix = '%s.%s.%s' % (matchLFN.group(1),matchLFN.group(2),jobsetIDMapForLFN[tmpLFN])
                 else:
-                    lfnPrefix = '%s.%s.$JOBSETID' % (matchLFN.group(1),matchLFN.group(2))                    
+                    lfnPrefix = '%s.%s.$JOBSETID' % (matchLFN.group(1),matchLFN.group(2))
 		if options.descriptionInLFN != '':
 		    lfnPrefix += '.%s' % options.descriptionInLFN
             else:
@@ -1921,25 +1921,25 @@ for iJob in range(options.nJobs):
                 lfnPrefix = dsNameWoSlash
             if options.load_xml:
                 # append additional metadata to output file name according to xml file settings
-                tmpNewLFN = '%s._%05d.%s.%s' % (lfnPrefix,idxOffset+iJob+1,jobXML.prepend_string(),tmpLFN)
+                tmpNewLFN = '%s._%05d.%s.%s' % (lfnPrefix,idxOffset+iIndsJob+1,jobXML.prepend_string(),tmpLFN)
             else:
-                tmpNewLFN = '%s._%05d.%s' % (lfnPrefix,idxOffset+iJob+1,tmpLFN)
+                tmpNewLFN = '%s._%05d.%s' % (lfnPrefix,idxOffset+iIndsJob+1,tmpLFN)
             # change * to XYZ and add .tgz
 	    if tmpNewLFN.find('*') != -1:
 		tmpNewLFN = tmpNewLFN.replace('*','XYZ')
 		tmpNewLFN = '%s.tgz' % tmpNewLFN
             # get offset
             if getOffset:
-                oldHead = '%s._%05d.' % (lfnPrefix,idxOffset+iJob+1)
+                oldHead = '%s._%05d.' % (lfnPrefix,idxOffset+iIndsJob+1)
                 if not flagUseNewLFN:
                     # old LFN format : Datasetname.XYZ
                     filePatt = tmpNewLFN.replace(oldHead,'%s\._(\d+)\.' % lfnPrefix)
-                    # get offset    
+                    # get offset
                     idxOffset = PsubUtils.getMaxIndex(existingFilesInOutDS,filePatt)
                     # append
                     indexOffsetMap[tmpLFN] = idxOffset
                     # correct
-                    newHead = '%s._%05d.' % (dsNameWoSlash,idxOffset+iJob+1)
+                    newHead = '%s._%05d.' % (dsNameWoSlash,idxOffset+iIndsJob+1)
                     tmpNewLFN = tmpNewLFN.replace(oldHead,newHead)
                 else:
                     # short LFN : user.nickname.XYZ
@@ -1951,11 +1951,11 @@ for iJob in range(options.nJobs):
                     jobsetIDMapForLFN[tmpLFN] = jobsetIDinLFN
                     # correct
                     if jobsetIDinLFN != None:
-                        newHead = '%s._%05d.' % (lfnPrefix.replace('$JOBSETID',jobsetIDinLFN),idxOffset+iJob+1)
+                        newHead = '%s._%05d.' % (lfnPrefix.replace('$JOBSETID',jobsetIDinLFN),idxOffset+iIndsJob+1)
                         tmpNewLFN = tmpNewLFN.replace(oldHead,newHead)
                     elif dsNameWoSlash.startswith('group'):
 			# append group job SN since group.xyz.jobsetID may be duplicated 
-                        newHead = '%s._%05d.' % (lfnPrefix.replace('$JOBSETID','$GROUPJOBSN_$JOBSETID'),idxOffset+iJob+1)
+                        newHead = '%s._%05d.' % (lfnPrefix.replace('$JOBSETID','$GROUPJOBSN_$JOBSETID'),idxOffset+iIndsJob+1)
                         tmpNewLFN = tmpNewLFN.replace(oldHead,newHead)
             # set file spec
             file = FileSpec()
