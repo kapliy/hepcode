@@ -18,7 +18,7 @@
   <title>Grid submission job description</title>
   <tag>ftk_8L_wh3e34</tag>
   <command>./prun_job.sh; touch out_files.dat; tar cfj out_files.tbz2 out_files.dat; </command>
-  <outds>user.kapliy.raw_8L_50x16x144_wh3e34_test14</outds>
+  <outds>user.kapliy.raw_8L_50x16x144_wh3e34_test15</outds>
 
   <!-- Declaration of input datasets and their stream names
        You can declare one dataset as "primary", which will become inDS
