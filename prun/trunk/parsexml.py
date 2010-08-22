@@ -65,7 +65,7 @@ class dom_job:
         if s.command:
             job.appendChild(x.createElement('command'))
             job.childNodes[-1].appendChild(x.createTextNode(s.command))
-        for option in set(s.forward+s.prepend):
+        for option in s.prepend + list(set(s.prepend+s.forward)-set(s.prepend)):
             job.appendChild(x.createElement('option'))
             job.childNodes[-1].setAttribute('name',str(option[0]))
             if option in s.forward:
@@ -107,10 +107,20 @@ class dom_job:
 class dom_parser:
     def __init__(s,fname=None):
         """ creates a dom object out of a text file (if provided) """
-        s.dom = xml.dom.minidom.parse(fname)
         s.fname = fname
-        s.parse()
-        s.check()
+        s.dom = None
+        s.title = None
+        s.tag = None
+        s.command = None
+        s.outds = None
+        s.inds = {}
+        s.global_outfiles = []
+        s.jobs = []
+        s.primaryds = None
+        if fname:
+            s.dom = xml.dom.minidom.parse(fname)
+            s.parse()
+            s.check()
     @staticmethod
     def true(v):
         return v in ('true', '1', 'True', 'TRUE', 'yes')
@@ -120,8 +130,8 @@ class dom_parser:
         rc = []
         for node in pnode.childNodes:
             if node.nodeType == node.TEXT_NODE:
-                rc.append(node.data)
-        return str(''.join(rc)) # convert from unicode to string
+                rc.append(str(node.data).strip())
+        return ''.join(rc)
     def parse(s):
         """ loads submission configuration from an xml file """
         try:
@@ -140,14 +150,13 @@ class dom_parser:
                     continue
                 s.command = dom_parser.text(elm)
                 break
-            global_outfiles = []    # subjobs can append *additional* outputs
+            s.global_outfiles = []    # subjobs can append *additional* outputs
             for elm in s.dom.getElementsByTagName('submission')[0].childNodes:
                 if elm.nodeName != 'output':
                     continue
-                global_outfiles.append(dom_parser.text(elm))
+                s.global_outfiles.append(dom_parser.text(elm))
             s.outds = dom_parser.text(s.dom.getElementsByTagName('outds')[0])
             # declaration of all input datasets
-            s.inds = {}
             primarydss = []
             for elm in s.dom.getElementsByTagName('submission')[0].childNodes:
                 if elm.nodeName != 'inds':
@@ -163,10 +172,8 @@ class dom_parser:
                 s.primaryds = primarydss[0]
             else:
                 s.primaryds = None
-            s.jobs = []
             for job in s.dom.getElementsByTagName('job'):
-                print 'STARTING job:', global_outfiles
-                s.jobs.append(dom_job(job,primaryds=s.primaryds,defaultcmd=s.command,defaultout=global_outfiles))
+                s.jobs.append(dom_job(job,primaryds=s.primaryds,defaultcmd=s.command,defaultout=s.global_outfiles))
         except:
             print 'ERROR: failed to parse',s.fname
             raise
@@ -193,7 +200,7 @@ class dom_parser:
         if s.command:
             submission.appendChild(x.createElement('command'))
             submission.childNodes[-1].appendChild(x.createTextNode(s.command))
-        for outfile in s.outfiles:
+        for outfile in s.global_outfiles:
             submission.appendChild(x.createElement('output'))
             submission.childNodes[-1].appendChild(x.createTextNode(outfile))
         submission.appendChild(x.createElement('outds'))
@@ -252,7 +259,7 @@ class dom_parser:
         for i,DS in enumerate(DSs):
             stream=s.inds[DS] if DS in s.inds else 'IN%d'%(i+1,)
             out.append('%s:%s.files.dat'%(stream,stream))
-        out.append('IN','IN.files.dat')
+        out.append('IN:IN.files.dat')
         return ','.join(out)
     def files_in_DS(s,DS,regex=False):
         """ Returns a list of all files from a given dataset
