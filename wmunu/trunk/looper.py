@@ -46,6 +46,10 @@ _DATA = opts.data
 _MC = not _DATA
 _TRUTHCUTS = opts.truthcuts
 from helpers import *
+try:
+    ROOT.PyConfig.IgnoreCommandLineOptions = True
+except:
+    pass
 ROOT.gROOT.SetBatch(1) #uncomment for interactive usage
 
 # Set up GRL
@@ -219,14 +223,16 @@ for evt in xrange(niters):
 
     # trigger
     if True:
-        if opts.trigger not in t.trig_l1:
+        if opts.trigger not in t.trig_l1 and opts.trigger not in t.trig_ef:
             ef.trigger+=1
             continue
 
    # find primary vertex (aka highest sum-pt) and apply some cuts to it
     if True:
-        nvx,vx_type,vx_ntracks,vx_sumpt,vx_z = t.nvx,t.vx_type,t.vx_ntracks,t.vx_sumpt,t.vx_z
-        sumpt,m=max((x,i) for i,x in enumerate([vx_sumpt[m] for m in xrange(nvx)])) if nvx>0 else (None,None)
+        #nvx,vx_type,vx_ntracks,vx_sumpt,vx_z = t.nvx,t.vx_type,t.vx_ntracks,t.vx_sumpt,t.vx_z
+        #sumpt,m=max((x,i) for i,x in enumerate([vx_sumpt[m] for m in xrange(nvx)])) if nvx>0 else (None,None)
+        nvx,vx_type,vx_ntracks,vx_z = t.nvx,t.vx_type,t.vx_ntracks,t.vx_z
+        sumpt,m=max((x,i) for i,x in enumerate([vx_ntracks[m] for m in xrange(nvx)])) if nvx>0 else (None,None)
         if sumpt and vx_type[m]==1 and vx_ntracks[m]>=3 and fabs(vx_z[m])<150:
             _ivertex = m
             _zvertex = t.vx_z[m]
@@ -235,9 +241,9 @@ for evt in xrange(niters):
             continue
 
     # event-wide histograms
-    h['EVENT_njets'].Fill(t.njet)
-    h['EVENT_nmus'].Fill(t.nmu)
-    h['EVENT_met'].Fill(t.met_ichep)
+    Fill('EVENT_njets',t.njet)
+    Fill('EVENT_nmus',t.nmu)
+    Fill('EVENT_met',t.met_ichep)
 
     # muon preselection + W cuts
     nmu,mu_author,mu_q,mu_pt,mu_eta,mu_phi,mu_ptcone40,mu_ptms,mu_ptexms,mu_qms,mu_ptid,mu_qid,mu_z0 = t.nmu,t.mu_author,t.mu_q,t.mu_pt,t.mu_eta,t.mu_phi,t.mu_ptcone40,t.mu_ptms,t.mu_ptexms,t.mu_qms,t.mu_ptid,t.mu_qid,t.mu_z0
@@ -245,7 +251,7 @@ for evt in xrange(niters):
     for m in xrange(nmu):
         if mu_author[m]&2!=0 and fabs(mu_eta[m])<2.4 and mu_pt[m]>15.0*GeV and fabs(mu_z0[m]-_zvertex)<10.0*mm and mu_ptid[m]!=-1 and mu_q[m]!=0:
             presel = False
-            h['EVENT_mu_ptms_ptid'].Fill(mu_ptexms[m]-mu_ptid[m])
+            Fill('EVENT_mu_ptms_ptid',mu_ptexms[m]-mu_ptid[m])
             if mu_ptexms[m]>10.0*GeV and fabs(mu_ptexms[m]-mu_ptid[m])<15.0*GeV:
                 quality = False
                 ptcone40 = mu_ptcone40[m]/mu_pt[m]
@@ -274,7 +280,7 @@ for evt in xrange(niters):
     if presel:
         ef.muonpresel+=1
         continue
-    h['PRESEL_njets'].Fill(t.njet)
+    Fill('PRESEL_njets',t.njet)
     # muon quality (MS-ID pt cuts)
     if quality:
         ef.muonqual+=1
@@ -349,7 +355,7 @@ for evt in xrange(niters):
             FillQ('ANA_w_pt',charge,ptW)
             FillQ('ANA_mu_pt',charge,mu.Pt())
             FillQ('ANA_mu_phi',charge,mu.Phi())
-            h['ANA_mu_q'].Fill(1 if charge=='p' else -1)
+            Fill('ANA_mu_q',1 if charge=='p' else -1)
             FillQ('ANA_mu_eta',charge,mu.Eta())
             FillQ('ANA_mu_etavar',charge,mu.Eta())
             FillQ('ANA_mu_ptiso',charge,mu.ptcone40)
@@ -357,7 +363,7 @@ for evt in xrange(niters):
             FillQ("ANA_mu_pt_vs_met",charge,mu.Pt(),met)
             FillQ("ANA_mu_iso_vs_met",charge,mu.ptcone40,met)
             FillQ("ANA_w_mt_vs_met",charge,mtW,met)
-            h['ANA_njets'].Fill(t.njet)
+            Fill('ANA_njets',t.njet)
             #ws=RecoW(mu.E(),mu.Px(),mu.Py(),mu.Pz(),_met.Px(),_met.Py())
         else:
             ef.wmt+=1

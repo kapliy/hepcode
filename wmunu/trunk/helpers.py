@@ -82,6 +82,7 @@ def xflatten(seq):
         else:
             yield x
 
+_WEIGHT = 1
 h = {}
 _ext = 'png'
 
@@ -110,13 +111,20 @@ HIGGS=25
 class GoodRunsList:
     """ General GRL abstraction """
     #libnames = ['/home/antonk/setup/15.5.1/GoodRunsLists/i686-slc4-gcc34-opt/libGoodRunsListsLib.so']
-    libnames = ['./libs/i686-slc4-gcc34-opt/libGoodRunsListsLib.so','./libs/i686-slc5-gcc43-opt/libGoodRunsListsLib.so']
+    libnames = ['./libs/i686-slc4-gcc34-opt/libGoodRunsListsLib.so','./libs/i686-slc5-gcc43-opt/libGoodRunsListsLib.so', './libs/i686-slc5-gcc43-opt2/libGoodRunsListsLib.so']
     libnames = [os.path.join(sys.path[0],v) for v in libnames ]
     def __init__(s,xmls=None):
         for i,libname in enumerate(s.libnames):
-            if ROOT.gSystem.Load(libname)==-1 and i==len(s.libnames):
-                print 'GRL: failed to load either library:',s.libname
-                sys.exit(0)
+            try:
+                st = ROOT.gSystem.Load(libname)
+                print ROOT.Root
+            except:
+                st = -1
+            if st==-1:
+                print 'GRL: failed to load GRL library from:',libname
+                if i==len(s.libnames):
+                    print 'Exhausted all options; exiting...'
+                    sys.exit(0)
             else:
                 print 'GRL: loaded',libname
                 break
@@ -179,7 +187,7 @@ def SetTreeBranches_V11(t,doTruth=False):
     if doTruth:
         br.append(['nmc','mc_status','mc_pdgid','mc_e','mc_pt','mc_eta','mc_phi','mc_parent'])
     br.append(['njet','jet_n90','jet_quality','jet_time','jet_emf','jet_hecf','jet_pt_em'])
-    br.append(['trig_l1'])
+    br.append(['trig_l1','trig_ef'])
     br.append(['nvx','vx_type','vx_ntracks','vx_sumpt','vx_z'])
     br.append(['met_ichep','met_ichep_phi'])
     br.append(['nmu','mu_author','mu_q','mu_pt','mu_eta','mu_phi','mu_ptcone40','mu_ptms','mu_ptexms','mu_qms','mu_ptid','mu_qid','mu_z0'])
@@ -293,10 +301,12 @@ def hgood(title):
 
 def Fill(title,*args):
     """ Fill per-charge histograms """
+    #h[title].Fill(*args,_WEIGHT)
     h[title].Fill(*args)
 def FillQ(title,q,*args):
     """ Fill per-charge histograms """
     h['%s_%s'%(title,q)].Fill(*args)
+    #h['%s_%s'%(title,q)].Fill(*args,_WEIGHT)
 
 _qhistos = []
 def HistoQ(*args,**kwargs):
