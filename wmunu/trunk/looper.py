@@ -35,8 +35,8 @@ parser.add_option("--make-plots",default=False,
                   action="store_true",dest="makeplots",
                   help="Save all plots on disk in the end of the run")
 parser.add_option("--trigger",dest="trigger",
-                  type='string', default='L1_MU6',
-                  help="Choose L1 trigger, such as L1_MU6 or L1_MU0")
+                  type='string', default='L1_MU10',
+                  help="Choose L1 trigger, such as L1_MU6 or L1_MU10")
 parser.add_option("--truthcuts",
                   action="store_true",dest="truthcuts",
                   help="Enable truth cut studies when running over MC")
@@ -117,7 +117,7 @@ for input in inputs:
 SetTreeBranches_V11(t,doTruth=_MC)
 
 # prepare cutflow
-cuts=['truthmet','truthmu','truthwmt','grl','bcid','jetclean','trigger','vertex','muonpresel','muonqual','muonpt','muoniso','met','zcut','wmt','ok']
+cuts=['truthmet','truthmu','truthwmt','grl','bcid','trigger','vertex','jetclean','muonpresel','muonqual','muonpt','muoniso','met','zcut','wmt','ok']
 ef = EventFlow(cuts)
 
 nentries = t.GetEntries()
@@ -145,9 +145,11 @@ for evt in xrange(niters):
     # mc truth
     if _MC:
         nmc,mc_status,mc_pdgid,mc_e,mc_pt,mc_eta,mc_phi,mc_parent = t.nmc,t.mc_status,t.mc_pdgid,t.mc_e,t.mc_pt,t.mc_eta,t.mc_phi,t.mc_parent
+        print 'NMC',nmc
         for m in xrange(nmc):
             if mc_status[m]!=3:
                 continue
+            print m,mc_pdgid[m],mc_pt[m],mc_eta[m],mc_phi[m],mc_e[m]
             # w's don't have a parent with mc_status==3
             if mc_pdgid[m] in (WPLUS,WMINUS):
                 v = ROOT.TLorentzVector()
@@ -201,6 +203,29 @@ for evt in xrange(niters):
             ef.bcid+=1
             continue
 
+    # trigger
+    if True:
+        if opts.trigger not in t.trig_l1 and opts.trigger not in t.trig_ef:
+            ef.trigger+=1
+            continue
+
+   # find primary vertex (aka highest sum-pt) and apply some cuts to it
+    if True:
+        #nvx,vx_type,vx_ntracks,vx_sumpt,vx_z = t.nvx,t.vx_type,t.vx_ntracks,t.vx_sumpt,t.vx_z
+        #sumpt,m=max((x,i) for i,x in enumerate([vx_sumpt[m] for m in xrange(nvx)])) if nvx>0 else (None,None)
+        nvx,vx_type,vx_ntracks,vx_z = t.nvx,t.vx_type,t.vx_ntracks,t.vx_z
+        _vfound = False
+        for m in xrange(nvx):
+            if vx_type[m]==1 and vx_ntracks[m]>=3 and fabs(vx_z[m])<150:
+                _vfound = True
+                break
+        if _vfound:
+            _ivertex = m
+            _zvertex = t.vx_z[m]
+        else:
+            ef.vertex+=1
+            continue
+
     # jet cleaning cut
     if _DATA:
         njet,jet_n90,jet_quality,jet_time,jet_emf,jet_hecf,jet_pt_em=t.njet,t.jet_n90,t.jet_quality,t.jet_time,t.jet_emf,t.jet_hecf,t.jet_pt_em
@@ -221,35 +246,17 @@ for evt in xrange(niters):
             ef.jetclean+=1
             continue
 
-    # trigger
-    if True:
-        if opts.trigger not in t.trig_l1 and opts.trigger not in t.trig_ef:
-            ef.trigger+=1
-            continue
-
-   # find primary vertex (aka highest sum-pt) and apply some cuts to it
-    if True:
-        #nvx,vx_type,vx_ntracks,vx_sumpt,vx_z = t.nvx,t.vx_type,t.vx_ntracks,t.vx_sumpt,t.vx_z
-        #sumpt,m=max((x,i) for i,x in enumerate([vx_sumpt[m] for m in xrange(nvx)])) if nvx>0 else (None,None)
-        nvx,vx_type,vx_ntracks,vx_z = t.nvx,t.vx_type,t.vx_ntracks,t.vx_z
-        sumpt,m=max((x,i) for i,x in enumerate([vx_ntracks[m] for m in xrange(nvx)])) if nvx>0 else (None,None)
-        if sumpt and vx_type[m]==1 and vx_ntracks[m]>=3 and fabs(vx_z[m])<150:
-            _ivertex = m
-            _zvertex = t.vx_z[m]
-        else:
-            ef.vertex+=1
-            continue
-
     # event-wide histograms
     Fill('EVENT_njets',t.njet)
     Fill('EVENT_nmus',t.nmu)
     Fill('EVENT_met',t.met_ichep)
 
     # muon preselection + W cuts
-    nmu,mu_author,mu_q,mu_pt,mu_eta,mu_phi,mu_ptcone40,mu_ptms,mu_ptexms,mu_qms,mu_ptid,mu_qid,mu_z0 = t.nmu,t.mu_author,t.mu_q,t.mu_pt,t.mu_eta,t.mu_phi,t.mu_ptcone40,t.mu_ptms,t.mu_ptexms,t.mu_qms,t.mu_ptid,t.mu_qid,t.mu_z0
+    #TODO - mu class!!!
+    nmu,mu_author,mu_class,mu_q,mu_pt,mu_eta,mu_phi,mu_ptcone40,mu_ptms,mu_ptexms,mu_qms,mu_ptid,mu_qid,mu_z0 = t.nmu,t.mu_author,t.mu_class,t.mu_q,t.mu_pt,t.mu_eta,t.mu_phi,t.mu_ptcone40,t.mu_ptms,t.mu_ptexms,t.mu_qms,t.mu_ptid,t.mu_qid,t.mu_z0
     presel,quality,pt,iso=(True,)*4  # isFailed?
     for m in xrange(nmu):
-        if mu_author[m]&2!=0 and fabs(mu_eta[m])<2.4 and mu_pt[m]>15.0*GeV and fabs(mu_z0[m]-_zvertex)<10.0*mm and mu_ptid[m]!=-1 and mu_q[m]!=0:
+        if mu_author[m]&2!=0 and mu_class[m]==1 and fabs(mu_eta[m])<=2.4 and mu_pt[m]>15.0*GeV and fabs(mu_z0[m]-_zvertex)<10.0*mm and mu_ptid[m]!=-1 and mu_q[m]!=0:
             presel = False
             Fill('EVENT_mu_ptms_ptid',mu_ptexms[m]-mu_ptid[m])
             if mu_ptexms[m]>10.0*GeV and fabs(mu_ptexms[m]-mu_ptid[m])<15.0*GeV:
@@ -390,6 +397,7 @@ for evt in xrange(niters):
                 Print4vec('TRECO(wrong both) ',w)
             for w in _RWs:
                 Print4vec('RECO              ',w)
+
 
 # merge per-charge histograms
 MergeHistoQ()
