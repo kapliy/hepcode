@@ -1,3 +1,5 @@
 dgplot -q -b runG.dg periodG.root | grep '+' | awk 'NF>15{print $0}'
 dgplot -q -b runH.dg periodH.root | grep '+' | awk 'NF>15{print $0}'
 dgplot -q -b runI.dg periodI.root | grep '+' | awk 'NF>15{print $0}'
+
+#python -i plot.py -i dataG2H2.dat -p 'G2-H2' -m2

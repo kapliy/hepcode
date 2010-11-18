@@ -3,16 +3,35 @@
 import sys,math
 from array import array
 
-mode = 1
-if len(sys.argv)>1:
-    try:
-        mode = int(sys.argv[1])
-    except:
-        mode = 1
+from optparse import OptionParser
+parser = OptionParser()
+parser.add_option("-i", "--input",dest="input",
+                  type="string", default='data.dat',
+                  help="Name of the input file to process")
+parser.add_option("-m", "--mode",dest="mode",
+                  type="int", default=1,
+                  help="Plot mode")
+parser.add_option("-p", "--period",dest="period",
+                  type="string", default='G2-I2',
+                  help="Range of data period")
+
+(opts, args) = parser.parse_args()
+
+mode = opts.mode
+input = opts.input
+period = opts.period
 print "MODE =",mode
+print "INPUT =",input
 
 def canvas():
-    c = ROOT.TCanvas("c1","c1",200,10,1024,768)
+    ROOT.gStyle.SetOptFit()
+    ROOT.gStyle.SetStatX(0.9)
+    ROOT.gStyle.SetStatY(0.9)
+    ROOT.gStyle.SetStatW(0.13)
+    ROOT.gStyle.SetStatH(0.07)
+    ROOT.gStyle.SetStatColor(20)
+    ROOT.gStyle.SetTitleFillColor(20)
+    c = ROOT.TCanvas("c1","c1",200,10,800,600)
     c.SetFillColor(42);
     c.SetGrid();
     c.GetFrame().SetFillColor(21);
@@ -29,8 +48,10 @@ def graph(*args):
     
 if mode==1:
     #['0.2256', '+/-', '0.0410053', 'RAW:', '383', '+', '242', '=', '625;', '165591', '147.542', 'SCALED:', '2.59587', '+', '1.64021', '=', '4.23608']
-    title = "Per-run raw asymmetry (W^{+} - W^{-})/(W^{+} + W^{-}) for data periods G-I"
-    f = open('data.dat')
+    #0.161125 +/- 0.0499114 RAW: 227 + 164 = 391; 165703 87.5158 SCALED: 2.59382 + 1.87395 = 4.46776
+    #0.223622 +/- 0.0157906 RAW: 2331 + 1479 = 3810; 165732 902.983 SCALED: 2.58144 + 1.6379 = 4.21935
+    title = "Per-run raw asymmetry (W^{+} - W^{-})/(W^{+} + W^{-}) for data periods %s"%period
+    f = open(input)
     x = []
     ex = []
     y = []
@@ -43,19 +64,25 @@ if mode==1:
         ex.append(0.0)
         y.append(float(l[0]))
         ey.append(float(l[2]))
+        print y[-1],ey[-1]
         i+=1
+    assert(len(x)==len(y))
     import ROOT
     c = canvas()
-    g = graph(i,array('d',x),array('d',y),array('d',ex),array('d',ey))
+    n=len(x)
+    g = graph(n,array('d',x),array('d',y),array('d',ex),array('d',ey))
     g.SetMarkerColor(ROOT.kBlack)
     g.Draw("ALP")
     g.GetYaxis().SetRangeUser(0.0,0.5);
-    c.SaveAs("_raw_asym.png")
+    g.Fit('pol0')
+    st = g.GetListOfFunctions().FindObject("stats")
+    bname = input.split('.')[0]
+    c.SaveAs("_raw_asym_%s.png"%bname)
 
 if mode==2:
     #['0.2256', '+/-', '0.0410053', 'RAW:', '383', '+', '242', '=', '625;', '165591', '147.542', 'SCALED:', '2.59587', '+', '1.64021', '=', '4.23608']
-    title = "Per-run event yield per nb^{-1} for W(black), W^{+}(red), W^{-}(blue) for data periods G-I"
-    f = open('data.dat')
+    title = "Per-run event yield per nb^{-1} for W(black), W^{+}(red), W^{-}(blue) for data periods %s"%period
+    f = open(input)
     x = []
     ex = []
     y = [[] for z in xrange(3)]
@@ -78,17 +105,20 @@ if mode==2:
     import ROOT
     c = canvas()
     z=0
-    gall = graph(i,array('d',x),array('d',y[z]),array('d',ex),array('d',ey[z]))
+    n=len(x)
+    gall = graph(n,array('d',x),array('d',y[z]),array('d',ex),array('d',ey[z]))
     gall.SetMarkerColor(ROOT.kBlack)
+    gall.Fit('pol0')
+    st = gall.GetListOfFunctions().FindObject("stats")
     z=1
-    gpos = graph(i,array('d',x),array('d',y[z]),array('d',ex),array('d',ey[z]))
+    gpos = graph(n,array('d',x),array('d',y[z]),array('d',ex),array('d',ey[z]))
     gpos.SetMarkerColor(ROOT.kRed)
     z=2
-    gneg = graph(i,array('d',x),array('d',y[z]),array('d',ex),array('d',ey[z]))
+    gneg = graph(n,array('d',x),array('d',y[z]),array('d',ex),array('d',ey[z]))
     gneg.SetMarkerColor(ROOT.kBlue)
     gall.Draw("ALP")
     gall.GetYaxis().SetRangeUser(0.0,6.0);
     gpos.Draw("PLsames")
     gneg.Draw("PLsames")
-    c.SaveAs("_raw_yield.png")
-    
+    bname = input.split('.')[0]
+    c.SaveAs("_raw_yield_%s.png"%bname)
