@@ -122,3 +122,70 @@ if mode==2:
     gneg.Draw("PLsames")
     bname = input.split('.')[0]
     c.SaveAs("_raw_yield_%s.png"%bname)
+
+# same as mode=2 (yield), but getting contribution to chi2 from each run
+if mode==3:
+    #['0.2256', '+/-', '0.0410053', 'RAW:', '383', '+', '242', '=', '625;', '165591', '147.542', 'SCALED:', '2.59587', '+', '1.64021', '=', '4.23608']
+    title = "Per-run event yield per nb^{-1} for W(black), W^{+}(red), W^{-}(blue) for data periods %s"%period
+    bname = input.split('.')[0]
+    f = open(input)
+    x = []
+    ex = []
+    y = [[] for z in xrange(3)]
+    ey = [[] for z in xrange(3)]
+    runs = []
+    i = 0
+    for line in f:
+        l=line.split()
+        #x.append(float(l[9]))
+        x.append(i)
+        runs.append(int(l[9]))
+        ex.append(0.0)
+        y[0].append(float(l[16]))
+        y[1].append(float(l[12]))
+        y[2].append(float(l[14]))
+        l[8] = l[8].replace(';','')
+        sf = float(l[8])/float(l[16])
+        ey[0].append(math.sqrt(float(l[8]))/sf)
+        ey[1].append(math.sqrt(float(l[4]))/sf)
+        ey[2].append(math.sqrt(float(l[6]))/sf)
+        i+=1
+    import ROOT
+    c = canvas()
+    z=0
+    n=len(x)
+    gall = graph(n,array('d',x),array('d',y[z]),array('d',ex),array('d',ey[z]))
+    gall.SetMarkerColor(ROOT.kBlack)
+    gall.Fit('pol0')
+    f = gall.GetFunction('pol0')
+    chi2_def = f.GetChisquare()
+    ndf_def = f.GetNDF()
+    y_def =  f.GetParameter(0)
+    print chi2_def, y_def
+    chi2s = []
+    ys = []
+    for i in range(len(runs)):
+        tmpy = [yy for yy in y[z]]
+        tmpy[i] = y_def  # remove contribution
+        tmpey = [yy for yy in ey[z]]
+        tmpey[i] = 0.00000001
+        g = graph(n,array('d',x),array('d',tmpy),array('d',ex),array('d',tmpey))
+        g.Fit('pol0')
+        f = g.GetFunction('pol0')
+        chi2 = f.GetChisquare()
+        ys.append(f.GetParameter(0))
+        chi2s.append(chi2)
+    print 'chi2 | ndf | chi2_prob | W event yield     (total for period %s)'%period
+    print '%.3f %.3f %.3f%% %.3f'%(chi2_def,ndf_def,100.0*ROOT.TMath.Prob(chi2_def,ndf_def),y_def)
+    checksum = 0.0
+    print 'run_index | run | chi2 contribution from each run'
+    for i,chi2 in enumerate(chi2s):
+        run = runs[i]
+        print '%d %d %.3f'%(i,run,chi2_def-chi2)
+        checksum += chi2_def-chi2
+    print 'Sanity check: sum of contributions = %.3f'%checksum
+    if True:
+        st = gall.GetListOfFunctions().FindObject("stats")
+        gall.Draw("ALP")
+        gall.GetYaxis().SetRangeUser(0.0,6.0);
+        c.SaveAs("_raw_yield_%s.png"%bname)

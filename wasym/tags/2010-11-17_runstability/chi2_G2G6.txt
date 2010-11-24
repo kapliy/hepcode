@@ -1,0 +1,16 @@
+chi2 | ndf | chi2_prob | W event yield     (total for period G2-G6)
+14.604 11.000 20.137% 4.122
+run_index | run | chi2 contribution from each run
+0 165703 2.336
+1 165732 2.010
+2 165767 0.076
+3 165815 0.054
+4 165818 1.327
+5 165821 0.033
+6 165954 0.625
+7 165956 1.366
+8 166097 0.011
+9 166142 1.072
+10 166143 0.796
+11 166198 4.899
+Sanity check: sum of contributions = 14.604
