@@ -46,7 +46,6 @@ def graph(*args):
     g.SetMarkerStyle(21);
     return g
 
-
 def WRatio(hplus,hminus,title,label='ratio'):
     """ Ratio of W+ to W- workhorse function
     Alternatively, can be used to calculate efficiency
@@ -65,27 +64,84 @@ def WAsymmetry(hplus,hminus,title='asymmetry'):
     hsum.Divide(hdiff)
     hsum.SetTitle(title)
     return hsum
-                                                    
+
 if mode==1:
-    bname = input.split('.')[0]
+    sfile = 'periodI.root'
+    bname = sfile.split('.')[0]
     import ROOT
     f = ROOT.TFile.Open(input)
-    sfile = 'periodI.root'
     g=f.GetDirectory(sfile).GetDirectory('dg').GetDirectory('dg').GetDirectory('st_w_final')
     pos = g.GetDirectory('POS')
     neg = g.GetDirectory('NEG')
-    heta=[];
+    heta=[]
     heta.append(pos.Get('lepton_eta').Clone())
     heta.append(neg.Get('lepton_eta').Clone())
-    heta.append(pos.Get('lepton_modeta').Clone())
+    heta.append(pos.Get('lepton_modeta').Clone())  # |eta|, same binning
     heta.append(neg.Get('lepton_modeta').Clone())
+    heta.append(pos.Get('lepton_modetam').Clone())  # -|eta|, same binning
+    heta.append(neg.Get('lepton_modetam').Clone())
+    # make a pos-only and neg-only part of each histo
+    if True:
+        h = heta[0].Clone()
+        for i in range(0,h.GetNbinsX()/2+1):
+            h.SetBinContent(i,0)
+        heta.append(h)
+        h = heta[1].Clone()
+        for i in range(0,h.GetNbinsX()/2+1):
+            h.SetBinContent(i,0)
+        heta.append(h)
     [h.Sumw2() for h in heta]
     [h.Rebin(2) for h in heta]
-    h1 = WAsymmetry(heta[0],heta[1])
+    h1 = WAsymmetry(heta[6],heta[7])
     h1.SetMarkerColor(ROOT.kRed)
     h2 = WAsymmetry(heta[2],heta[3])
     h2.SetMarkerColor(ROOT.kBlue)
     c = canvas()
     h1.Draw()
     h2.Draw("SAME")
-    #c.SaveAs("_raw_asym_eta%s.png"%bname)
+    kt = h1.KolmogorovTest(h2)
+    print kt
+    h1.SetTitle('Uncorrected asymmetry: Red=eta, Blue=|eta|. Kolmogorov p=%.2f'%kt)
+    c.SaveAs("_raw_asym_etapos%s.png"%bname)
+
+if mode==2:
+    sfile = 'periodI.root'
+    bname = sfile.split('.')[0]
+    import ROOT
+    f = ROOT.TFile.Open(input)
+    g=f.GetDirectory(sfile).GetDirectory('dg').GetDirectory('dg').GetDirectory('st_w_final')
+    pos = g.GetDirectory('POS')
+    neg = g.GetDirectory('NEG')
+    heta=[]
+    heta.append(pos.Get('lepton_eta').Clone())
+    heta.append(neg.Get('lepton_eta').Clone())
+    heta.append(pos.Get('lepton_modeta').Clone())  # |eta|, same binning
+    heta.append(neg.Get('lepton_modeta').Clone())
+    heta.append(pos.Get('lepton_modetam').Clone())  # -|eta|, same binning
+    heta.append(neg.Get('lepton_modetam').Clone())
+    # make a pos-only and neg-only part of each histo
+    if True:
+        h = heta[0].Clone()
+        for i in range(h.GetNbinsX()/2,h.GetNbinsX()):
+            h.SetBinContent(i,0)
+        if False:  # check: that blown-up errors make test compatible!
+            for i in range(0,h.GetNbinsX()/2+1):
+                h.SetBinError(i,h.GetBinError(i)*2)
+        heta.append(h)
+        h = heta[1].Clone()
+        for i in range(h.GetNbinsX()/2,h.GetNbinsX()):
+            h.SetBinContent(i,0)
+        heta.append(h)
+    [h.Sumw2() for h in heta]
+    [h.Rebin(2) for h in heta]
+    h1 = WAsymmetry(heta[6],heta[7])
+    h1.SetMarkerColor(ROOT.kRed)
+    h2 = WAsymmetry(heta[4],heta[5])
+    h2.SetMarkerColor(ROOT.kBlue)
+    c = canvas()
+    h1.Draw()
+    h2.Draw("SAME")
+    kt = h1.KolmogorovTest(h2)
+    print kt
+    h1.SetTitle('Uncorrected asymmetry: Red=eta, Blue=|eta|. Kolmogorov p=%.2f'%kt)
+    c.SaveAs("_raw_asym_etaneg%s.png"%bname)
