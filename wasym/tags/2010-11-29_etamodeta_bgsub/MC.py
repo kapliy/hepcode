@@ -1,0 +1,83 @@
+#!/usr/bin/env python
+import sys,os,re
+
+class PlotOrder:
+    """ A class that specifies stack ordering and colors """
+    def __init__(s):
+        s.mcg_name = []
+        s.mcg = []
+        s.mcgc = []
+    def Check(s):
+        assert len(s.mcg)==len(s.mcg_name)==len(s.mcgc), 'PlotOrder internal error: wrong list sizes'
+    def Add(s,name,samples,color):
+        s.mcg_name.append(name)
+        if isinstance(samples,list):
+            s.mcg.append(samples)
+        else:
+            s.mcg.append([samples])
+        s.mcgc.append(color)
+
+class MCR:
+    """ dataset """
+    def __init__(s,rnum,sample,tag,xsec,filteff,nevents,ntupleDS=None):
+        s.rnum = rnum
+        s.sample = sample
+        s.tag = tag
+        s.nevents = nevents
+        s.filteff = filteff
+        s.xsec = xsec   # in nanobarns   # /1000.0 # convert nanobarns to microbarns
+        s.ntupleDS=ntupleDS
+    def dq2_ls(s):
+        print 'Trying to find',s.rnum
+        os.system('dq2-ls -L ROAMING '+s.dataset_pattern%(s.rnum,s.sample,s.tag))
+    def pathena_submit(s):
+        print './grid_submit '+s.dataset_pattern%(s.rnum,s.sample,s.tag)+' --nEventsPerJob 30000'
+    def path(s):
+        return '/pnfs/uct3/data/users/antonk/ANALYSIS/ICHEP_MC/'+s.ntupleDS+'/*root*'
+
+class MC09_samples:
+    def __init__(s):
+        s.runs = []
+    def append(s,run):
+        run.dataset_pattern='mc09_7TeV.%d.%s.merge.AOD.%s/'
+        run.ntupleDS='user.ponyisi.'+(run.dataset_pattern.strip('/'))%(run.rnum,run.sample,run.tag)+'.ntuple.v1_11'
+        s.runs.append(run)
+    def nruns(s):
+        return len(s.runs)
+    def nevents(s):
+        return sum([r.nevents for r in s.runs])
+    def match_run(s,path):
+        runs = [a for a in s.runs if re.search('%s'%a.rnum,str(path))]
+        if len(runs)==1:
+            return runs[0]
+        return None
+    def match_sample(s,path):
+        runs = [a for a in s.runs if re.search(str(a.sample),str(path))]
+        if len(runs)==1:
+            return runs[0]
+        return None
+    def get_xsec(s,path):
+        return s.match_run(path).xsec
+    def get_nevents(s,path):
+        return s.match_run(path).nevents
+    def get_sample(s,path):
+        return s.match_run(path).sample
+
+mc09 = MC09_samples()
+mc09.append(MCR(106044,'wmunu','*',8.894060,1.000000,6993798))
+mc09.append(MCR(106022,'wtaunu','*',8.916330,0.876600,999874))
+mc09.append(MCR(106047,'zmumu','*',0.851011,1.000000,4998410))
+mc09.append(MCR(106052,'ztautau','*',0.854173,1.000000,1998598))
+mc09.append(MCR(105861,'ttbar','*',0.145642,0.538200,199838))
+mc09.append(MCR(109276,'J0','*',9752970.000000,0.000079,500000))
+mc09.append(MCR(109277,'J1','*',673020.000000,0.001233,500000))
+mc09.append(MCR(109278,'J2','*',41194.700000,0.005443,500000))
+mc09.append(MCR(109279,'J3','*',2193.250000,0.012949,500000))
+mc09.append(MCR(109280,'J4','*',87.848700,0.022156,500000))
+mc09.append(MCR(109281,'J5','*',2.328560,0.029753,500000))
+
+if False:
+    print 'Registered',mc09.nruns(),'runs:'
+    print 'nevents   =',mc09.nevents()
+    #[r.pathena_submit() for r in mc09.runs]
+    #for r in mc09.runs: print r.path()
