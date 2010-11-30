@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 
+import sys,re
 from optparse import OptionParser
 parser = OptionParser()
-parser.add_option("--data",dest="data",
-                  type="string", default=None,
-                  help="Path to data container")
-parser.add_option("--mc",dest="mc",
-                  type="string", default=None,
-                  help="Path to mc container")
+parser.add_option("--input",dest="input",
+                  type="string", default='root_G2I2_mc.root',
+                  help="Path to input root file with all histos")
+parser.add_option("--hname",dest="hname",
+                  type="string", default='lepton_eta',
+                  help="Histogram name under consideration")
 parser.add_option("--lumi",dest="lumi",
-                  type="float", default=23000.0,
+                  type="float", default=31401.9,
                   help="Integrated luminosity for data (in nb^-1)")
 parser.add_option("--qcd-scale",dest="qcdscale",
                   type="float", default=0.62,
@@ -19,9 +20,9 @@ parser.add_option("-o", "--output",dest="output",
                   help="Name of output dir for plots")
 (opts, args) = parser.parse_args()
 
-
+import ROOT
 ROOT.TH1.AddDirectory(ROOT.kFALSE)    # ensure that we own all the histograms
-ROOT.gROOT.SetBatch(1)                # uncomment for interactive usage
+#ROOT.gROOT.SetBatch(1)                # uncomment for interactive usage
 
 def SetStyle(styleMacro=''):
     """ Global style settings for ROOT """
@@ -51,79 +52,78 @@ def SetStyle(styleMacro=''):
 SetStyle()
 
 # Determine plot ordering for MC stacks
+from MC import *
+
 po = PlotOrder()
-po.Add(name='t#bar{t}',samples='ttbar',color=ROOT.kGreen)
-po.Add(name='Z#rightarrow#tau#tau',samples='ztautau',color=ROOT.kMagenta)
-po.Add(name='W#rightarrow#tau#nu',samples='wtaunu',color=ROOT.kYellow)
-po.Add(name='Z#rightarrow#mu#mu',samples='zmumu',color=ROOT.kRed)
-po.Add(name='QCD',samples=['J%d'%z for z in range(6)],color=ROOT.kCyan)
-po.Add(name='W#rightarrow#mu#nu',samples='wmunu',color=10)
+#po.Add(name='t#bar{t}',samples='mc_ttbar',color=ROOT.kGreen)
+#po.Add(name='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta)
+#po.Add(name='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow)
+#po.Add(name='Z#rightarrow#mu#mu',samples='mc_zmumu',color=ROOT.kRed)
+#po.Add(name='QCD',samples=['mc_J%d'%z for z in range(6)],color=ROOT.kCyan)
+po.Add(name='W#rightarrow#mu#nu',samples='mc_wmunu',color=10)
+# Determine which data periods to plot
+data = ['periodG','periodH','periodI']
+mc = list(xflatten(po.mcg))
+# All histo files that we need to get
+allnames = data + mc
 
-h = {}
-h['data'] = []
-h['mc']   = []
+hdataP = []
+hdataM = []
+hmcP = {}
+hmcM = {}
+# truth level for wmunu only!
+htrP = None
+htrM = None
 
-f = ROOT.TFile.Open(opts.data)
-for sfile in ['periodG','periodH','periodI']:
-    g=f.GetDirectory(sfile+'.root').GetDirectory('dg').GetDirectory('dg').GetDirectory('st_w_final')
+# load the inputs
+f = ROOT.TFile.Open(opts.input)
+for iname in allnames:
+    print 'Loading',iname
+    g=f.GetDirectory(iname+'.root').GetDirectory('dg').GetDirectory('dg').GetDirectory('st_w_final')
     pos = g.GetDirectory('POS')
     neg = g.GetDirectory('NEG')
-    heta.append(pos.Get('lepton_eta').Clone())
-    heta.append(neg.Get('lepton_eta').Clone())
+    if re.match('mc',iname):
+        hmcP[iname]=ScaleToLumi(pos.Get('lepton_eta').Clone(),iname,opts.lumi,opts.qcdscale)
+        hmcM[iname]=ScaleToLumi(neg.Get('lepton_eta').Clone(),iname,opts.lumi,opts.qcdscale)
+        if re.search('wmunu',iname):
+            # for signal MC, also get truth-level template for efficiency
+            g=f.GetDirectory(iname+'.root').GetDirectory('dg').GetDirectory('dg').GetDirectory('truth').GetDirectory('st_truth_mu')
+            pos = g.GetDirectory('POS')
+            neg = g.GetDirectory('NEG')
+            htrP = ScaleToLumi(pos.Get('eta').Clone(),iname,opts.lumi,opts.qcdscale)
+            htrM = ScaleToLumi(neg.Get('eta').Clone(),iname,opts.lumi,opts.qcdscale)
+    else: #data:
+        hdataP.append(pos.Get('lepton_eta').Clone())
+        hdataM.append(neg.Get('lepton_eta').Clone())
 
-
-
-# load all histograms
-for attr in files:
-    if getattr(opts,attr):
-        inputs = getattr(opts,attr).split(',')
-        for input in inputs:
-            input = os.path.expanduser(input)
-            for file in glob.glob(input):
-                # skip those mc runs that are not known to MC.py
-                if attr=='mc':
-                    if not mc09.match_run(file):
-                        continue
-                    if mc09.get_sample(file) not in list(xflatten(plot.mcg)):
-                        continue
-                file = addDcachePrefix(file)
-                files[attr].append(AnaFile(file))
-                files[attr][-1].Load(whitelist,blacklist)
-                if attr=='mc':
-                    files[attr][-1].ScaleToLumi(opts.lumi,opts.qcdscale)
-                files[attr][-1].Close()
-print 'Loaded %d MC files and %d DATA files'%(len(files['mc']),len(files['data']))
-
-# prepare output
-out = AnaFile("fout.root",mode="RECREATE")
-if len(files['mc'])>0:
-    out.keys = files['mc'][0].keys
-elif len(files['data'])>0:
-    out.keys = files['data'][0].keys
-else:
-    print 'Nothing to do...'
-    sys.exit(0)
-out.InitStack()
+# prepare output holders
+leg = [ROOT.TLegend(0.55,0.70,0.88,0.88,"Data and MC","brNDC"),ROOT.TLegend(0.55,0.70,0.88,0.88,"Data and MC","brNDC")]
+[l.SetFillStyle(1001) for l in leg]
+[l.SetFillColor(10) for l in leg]
+hs = [ROOT.THStack('eta','eta'), ROOT.THStack('eta','eta')]
 
 # create mc histogram stacks
-for i,bgnames in enumerate(plot.mcg):
-    filecands = [f for f in files['mc'] if f.sample in bgnames]
-    if len(filecands)!=len(bgnames):
-        print 'WARNING: skipping',bgnames
-        continue
-    [filecands[0].AddHistos(fc) for fc in filecands[1:]]
-    filecands[0].ChangeColor(plot.mcgc[i])
-    out.AddToStack(filecands[0])
-    out.AddToLegend(filecands[0],plot.mcg_name[i],'F')
+for i,bgnames in enumerate(po.mcg):
+    hP = [hmcP[f] for f in bgnames]
+    [hP[0].Add(fc) for fc in hP[1:]]
+    hP[0].SetLineColor(ROOT.kBlack)
+    hP[0].SetFillColor(po.mcgc[i])
+    hs[0].Add(hP[0])
+    leg[0].AddEntry(hP[0],po.mcg_name[i],'F')
 # create data histograms
-[files['data'][0].AddHistos(fc) for fc in files['data'][1:]]
-out.h = files['data'][0].h
-out.AddToLegend(out,'Data(#int L dt = %.1f nb^{-1})'%opts.lumi,'LP')
+[hdataP[0].Add(fc) for fc in hdataP[1:]]
+leg[0].AddEntry(hdataP[0],'Data(#int L dt = %.1f nb^{-1})'%opts.lumi,'LP')
 
-print 'Saving final plots...'
-import SimpleProgressBar
-bar = SimpleProgressBar.SimpleProgressBar(20,len(out.keys))
-
-for i,key in enumerate(out.keys):
-    print bar.show(i),key
-    out.Draw(key,savedir=opts.output,log=True)
+maximum = max((hdataP[0].GetMaximum(),hs[0].GetMaximum()))
+# prepare the canvas
+c = ROOT.TCanvas('c','c',800,600)
+c.cd()
+# mc
+hs[0].Draw("H")
+hs[0].SetMinimum(0.1)
+hs[0].SetMaximum(maximum*1.5)
+#s.hs[key].GetHistogram().GetYaxis().SetRangeUser(0.0,maximum*1.25)
+#data
+hdataP[0].SetMarkerSize(1.0)
+hdataP[0].Draw("Lsame")
+leg[0].Draw("same")
