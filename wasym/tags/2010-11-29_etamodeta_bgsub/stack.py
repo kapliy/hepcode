@@ -7,7 +7,7 @@ parser.add_option("--input",dest="input",
                   type="string", default='root_G2I2_mc.root',
                   help="Path to input root file with all histos")
 parser.add_option("--hname",dest="hname",
-                  type="string", default='lepton_eta',
+                  type="string", default='asym_etav',
                   help="Histogram name under consideration")
 parser.add_option("--lumi",dest="lumi",
                   type="float", default=31401.9,
@@ -19,6 +19,7 @@ parser.add_option("-o", "--output",dest="output",
                   type="string", default="output",
                   help="Name of output dir for plots")
 (opts, args) = parser.parse_args()
+hname = opts.hname
 
 import ROOT
 ROOT.TH1.AddDirectory(ROOT.kFALSE)    # ensure that we own all the histograms
@@ -49,17 +50,18 @@ def SetStyle(styleMacro=''):
         ROOT.gROOT.ForceStyle()
     else:
         ROOT.gROOT.LoadMacro(styleMacro);
-SetStyle()
+        ROOT.SetAtlasStyle()
+SetStyle("AtlasStyle.C")
 
 # Determine plot ordering for MC stacks
 from MC import *
 
 po = PlotOrder()
-#po.Add(name='t#bar{t}',samples='mc_ttbar',color=ROOT.kGreen)
-#po.Add(name='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta)
-#po.Add(name='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow)
-#po.Add(name='Z#rightarrow#mu#mu',samples='mc_zmumu',color=ROOT.kRed)
-#po.Add(name='QCD',samples=['mc_J%d'%z for z in range(6)],color=ROOT.kCyan)
+po.Add(name='t#bar{t}',samples='mc_ttbar',color=ROOT.kGreen)
+po.Add(name='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta)
+po.Add(name='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow)
+po.Add(name='Z#rightarrow#mu#mu',samples='mc_zmumu',color=ROOT.kRed)
+po.Add(name='QCD',samples=['mc_J%d'%z for z in range(6)],color=ROOT.kCyan)
 po.Add(name='W#rightarrow#mu#nu',samples='mc_wmunu',color=10)
 # Determine which data periods to plot
 data = ['periodG','periodH','periodI']
@@ -83,18 +85,24 @@ for iname in allnames:
     pos = g.GetDirectory('POS')
     neg = g.GetDirectory('NEG')
     if re.match('mc',iname):
-        hmcP[iname]=ScaleToLumi(pos.Get('lepton_eta').Clone(),iname,opts.lumi,opts.qcdscale)
-        hmcM[iname]=ScaleToLumi(neg.Get('lepton_eta').Clone(),iname,opts.lumi,opts.qcdscale)
+        hmcP[iname]=ScaleToLumi(pos.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale)
+        hmcP[iname].Sumw2()
+        hmcM[iname]=ScaleToLumi(neg.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale)
+        hmcM[iname].Sumw2()
         if re.search('wmunu',iname):
             # for signal MC, also get truth-level template for efficiency
             g=f.GetDirectory(iname+'.root').GetDirectory('dg').GetDirectory('dg').GetDirectory('truth').GetDirectory('st_truth_mu')
             pos = g.GetDirectory('POS')
             neg = g.GetDirectory('NEG')
-            htrP = ScaleToLumi(pos.Get('eta').Clone(),iname,opts.lumi,opts.qcdscale)
-            htrM = ScaleToLumi(neg.Get('eta').Clone(),iname,opts.lumi,opts.qcdscale)
+            htrP = ScaleToLumi(pos.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale)
+            htrP.Sumw2()
+            htrM = ScaleToLumi(neg.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale)
+            htrM.Sumw2()
     else: #data:
-        hdataP.append(pos.Get('lepton_eta').Clone())
-        hdataM.append(neg.Get('lepton_eta').Clone())
+        hdataP.append(pos.Get(hname).Clone())
+        hdataP[-1].Sumw2()
+        hdataM.append(neg.Get(hname).Clone())
+        hdataM[-1].Sumw2()
 
 # prepare output holders
 leg = [ROOT.TLegend(0.55,0.70,0.88,0.88,"Data and MC","brNDC"),ROOT.TLegend(0.55,0.70,0.88,0.88,"Data and MC","brNDC")]
