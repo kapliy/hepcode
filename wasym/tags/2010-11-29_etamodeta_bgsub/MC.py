@@ -1,6 +1,27 @@
 #!/usr/bin/env python
 import sys,os,re
 
+def ScaleToLumi(h,name,lumi,qcdscale):
+    mrun = mc09.match_sample(name)
+    if mrun:
+        xsec = mrun.xsec*mrun.filteff
+        nevents = mrun.nevents
+        sample = mrun.sample
+        print 'MC %s: \t\t xsec=%.1f nb'%(sample,xsec)
+        h.Scale(1.0/nevents*lumi*xsec)
+        if qcdscale!='AUTO' and sample in ['mc_J%d'%z for z in range(10)]:
+            h.Scale(qcdscale)
+    return h
+
+def xflatten(seq):
+    """a generator to flatten a nested list"""
+    for x in seq:
+        if type(x) is list:
+            for y in xflatten(x):
+                yield y
+        else:
+            yield x
+
 class PlotOrder:
     """ A class that specifies stack ordering and colors """
     def __init__(s):
@@ -64,17 +85,17 @@ class MC09_samples:
         return s.match_run(path).sample
 
 mc09 = MC09_samples()
-mc09.append(MCR(106044,'wmunu','*',8.894060,1.000000,6993798))
-mc09.append(MCR(106022,'wtaunu','*',8.916330,0.876600,999874))
-mc09.append(MCR(106047,'zmumu','*',0.851011,1.000000,4998410))
-mc09.append(MCR(106052,'ztautau','*',0.854173,1.000000,1998598))
-mc09.append(MCR(105861,'ttbar','*',0.145642,0.538200,199838))
-mc09.append(MCR(109276,'J0','*',9752970.000000,0.000079,500000))
-mc09.append(MCR(109277,'J1','*',673020.000000,0.001233,500000))
-mc09.append(MCR(109278,'J2','*',41194.700000,0.005443,500000))
-mc09.append(MCR(109279,'J3','*',2193.250000,0.012949,500000))
-mc09.append(MCR(109280,'J4','*',87.848700,0.022156,500000))
-mc09.append(MCR(109281,'J5','*',2.328560,0.029753,500000))
+mc09.append(MCR(106044,'mc_wmunu','*',8.894060,1.000000,6993798))
+mc09.append(MCR(106022,'mc_wtaunu','*',8.916330,0.876600,999874))
+mc09.append(MCR(106047,'mc_zmumu','*',0.851011,1.000000,4998410))
+mc09.append(MCR(106052,'mc_ztautau','*',0.854173,1.000000,1998598))
+mc09.append(MCR(105861,'mc_ttbar','*',0.145642,0.538200,199838))
+mc09.append(MCR(109276,'mc_J0','*',9752970.000000,0.000079,500000))
+mc09.append(MCR(109277,'mc_J1','*',673020.000000,0.001233,500000))
+mc09.append(MCR(109278,'mc_J2','*',41194.700000,0.005443,500000))
+mc09.append(MCR(109279,'mc_J3','*',2193.250000,0.012949,500000))
+mc09.append(MCR(109280,'mc_J4','*',87.848700,0.022156,500000))
+mc09.append(MCR(109281,'mc_J5','*',2.328560,0.029753,500000))
 
 if False:
     print 'Registered',mc09.nruns(),'runs:'
