@@ -96,10 +96,12 @@ if mode==1:
     ex = []
     y = []
     ey = []
+    runs = []
     i = 0
     for line in f:
         l=line.split()
         #x.append(float(l[9]))
+        runs.append(int(l[9]))
         x.append(i)
         ex.append(0.0)
         y.append(float(l[0]))
@@ -112,13 +114,73 @@ if mode==1:
     n=len(x)
     g = graph(n,array('d',x),array('d',y),array('d',ex),array('d',ey))
     g.SetMarkerColor(ROOT.kBlack)
-    g.Draw("ALP")
-    g.GetYaxis().SetRangeUser(0.0,0.5);
-    g.Fit('pol0')
-    st = g.GetListOfFunctions().FindObject("stats")
-    bname = input.split('.')[0]
-    c.SaveAs("_raw_asym_%s.png"%bname)
+    #g.Draw("ALP")
+    #g.GetYaxis().SetRangeUser(0.0,0.5);
+    #g.Fit('pol0')
+    # total histo
+    hall = ROOT.TH1F('hall','hall',n,0,n)
+    hall.SetLineColor(ROOT.kBlack)
+    hall.SetMarkerColor(ROOT.kBlack)
+    rtight=None
+    for i in range(n):
+        if runs[i] in mu13_tight and not rtight:
+            rtight=i
+        hall.SetBinContent(i+1,y[i])
+        hall.SetBinError(i+1,ey[i])
 
+    # draw
+    hall.Fit('pol0','','')
+    #hall.Fit('pol0','+','',rtight,n)
+    fs = [v for v in hall.GetListOfFunctions()]
+    fs[0].SetLineColor(hall.GetLineColor())
+    #fs[1].SetLineColor(hall.GetLineColor())
+    #range
+    ymin = 0.0
+    ymax = 0.6
+    hall.GetYaxis().SetRangeUser(ymin,ymax);
+    hall.SetLabelSize(0.04)
+    if False:
+        # period-trigger separator
+        lsep = ROOT.TLine(rtight,ymin,rtight,ymax)
+        lsep.Draw()
+    # axis labels
+    hall.GetYaxis().SetTitle('Asymmetry: (W^{+} - W^{-})/(W^{+} + W^{-})');
+    hall.GetXaxis().SetTitle('Run Number');
+
+    # set pave text
+    p = ROOT.TPaveText(.2,.70 , (.2+.30),(.70+.20) ,"NDC")
+    p.SetTextAlign(11)
+    p.SetFillColor(0)
+    z=0
+    chi2 = fs[z].GetChisquare()
+    ndf = fs[z].GetNDF()
+    prob = fs[z].GetProb()
+    par = fs[z].GetParameter(0)
+    #p.AddText('Period G2-I1 (EF_mu13_MG): yield=%.1f chi2/ndof=%.1f/%d p-value=%.2f'%(par,chi2,ndf,prob))
+    p.AddText('Uncorrected asymmetry for periods G2-I2:')
+    p.AddText('   asymmetry = %.2f'%par)
+    p.AddText('   chi2/ndof = %.1f/%d'%(chi2,ndf))
+    p.AddText('   p-value   = %.2f'%prob)
+    p.Draw()
+
+    # label x axis
+    if True:
+        ax = hall.GetXaxis()
+        for i in range(len(runs)):
+            try:
+                ax.SetBinLabel(i+1,str(runs[i]))
+                pass
+            except:
+                print 'ERROR: bin',i
+    hall.LabelsOption('v')
+    # save output
+    def save():
+        bname = input.split('.')[0]
+        for ext in ('png','ps','pdf','C'):
+            c.SaveAs("muon_run_asym_%s.%s"%(bname,ext))
+
+# W yield as a function of run - with verbose tpavetext summary printout
+# done separately for I1-I2 tight trigger period
 if mode==2:
     #['0.2256', '+/-', '0.0410053', 'RAW:', '383', '+', '242', '=', '625;', '165591', '147.542', 'SCALED:', '2.59587', '+', '1.64021', '=', '4.23608']
     title = "Per-run event yield per nb^{-1} for W(black), W^{+}(red), W^{-}(blue) for data periods %s"%period
@@ -195,7 +257,7 @@ if mode==2:
     ymin = 3.0
     ymax = 8.0
     hall.GetYaxis().SetRangeUser(ymin,ymax);
-    hall.SetLabelSize(0.03)
+    hall.SetLabelSize(0.04)
     # period-trigger separator
     lsep = ROOT.TLine(rtight,ymin,rtight,ymax)
     lsep.Draw()
@@ -335,7 +397,7 @@ if mode==22:
     ymin=0.0
     ymax=6.0
     hall.GetYaxis().SetRangeUser(ymin,ymax)
-    hall.SetLabelSize(0.03)
+    hall.SetLabelSize(0.04)
     hpos.Fit('pol0','',"same",0,rtight)
     hpos.Fit('pol0','+',"same",rtight,n)
     [st.SetLineColor(hpos.GetLineColor()) for st in hpos.GetListOfFunctions()]
