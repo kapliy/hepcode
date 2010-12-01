@@ -1,7 +1,7 @@
 {
 //=========Macro generated from canvas: c1/c1
-//=========  (Wed Dec  1 00:18:22 2010) by ROOT version5.22/00d
-   TCanvas *c1 = new TCanvas("c1", "c1",365,49,800,500);
+//=========  (Wed Dec  1 01:02:19 2010) by ROOT version5.22/00d
+   TCanvas *c1 = new TCanvas("c1", "c1",204,49,800,500);
    gStyle->SetOptStat(0);
    c1->SetHighLightColor(2);
    c1->Range(-5.265823,1.987342,27.64557,8.316456);
@@ -152,7 +152,6 @@
    hall->GetXaxis()->SetBinLabel(26,"167776");
    hall->GetXaxis()->SetBit(TAxis::kLabelsVert);
    hall->GetXaxis()->SetLabelFont(42);
-   hall->GetXaxis()->SetLabelSize(0.03);
    hall->GetXaxis()->SetTitleSize(0.05);
    hall->GetXaxis()->SetTitleOffset(1.4);
    hall->GetXaxis()->SetTitleFont(42);
