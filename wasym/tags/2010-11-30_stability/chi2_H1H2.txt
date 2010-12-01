@@ -1,0 +1,12 @@
+chi2 | ndf | chi2_prob | W event yield     (total for period H1-H2)
+13.382 7.000 6.334% 4.148
+run_index | run | chi2 contribution from each run
+0 166466 1.372
+1 166658 0.031
+2 166786 4.045
+3 166850 1.170
+4 166856 0.001
+5 166924 0.485
+6 166927 2.435
+7 166964 3.842
+Sanity check: sum of contributions = 13.382

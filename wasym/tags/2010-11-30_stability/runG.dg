@@ -1,0 +1,66 @@
+#dgplot -q -b runG.dg periodG/periodG.root | grep '+' | awk 'NF>10{print $0}'
+down
+down
+down
+table e01_passes_truth!
+down RUNS
+
+down 165591
+asym d02_found_w_pos d03_found_w_neg
+up
+
+down 165632
+asym d02_found_w_pos d03_found_w_neg
+up
+
+down 165703
+asym d02_found_w_pos d03_found_w_neg
+up
+
+down 165732
+asym d02_found_w_pos d03_found_w_neg
+up
+
+down 165767
+asym d02_found_w_pos d03_found_w_neg
+up
+
+down 165815
+asym d02_found_w_pos d03_found_w_neg
+up
+
+down 165817
+asym d02_found_w_pos d03_found_w_neg
+up
+
+down 165818
+asym d02_found_w_pos d03_found_w_neg
+up
+
+down 165821
+asym d02_found_w_pos d03_found_w_neg
+up
+
+down 165954
+asym d02_found_w_pos d03_found_w_neg
+up
+
+down 165956
+asym d02_found_w_pos d03_found_w_neg
+up
+
+down 166097
+asym d02_found_w_pos d03_found_w_neg
+up
+
+down 166142
+asym d02_found_w_pos d03_found_w_neg
+up
+
+down 166143
+asym d02_found_w_pos d03_found_w_neg
+up
+
+down 166198
+asym d02_found_w_pos d03_found_w_neg
+up
