@@ -1,7 +1,10 @@
 #!/usr/bin/env python
-#import ROOT
+
+#TODO: separate fit into G2-I1 and I1-I2 (by trigger)
+
 import sys,math
 from array import array
+import ROOT
 
 from optparse import OptionParser
 parser = OptionParser()
@@ -23,7 +26,38 @@ period = opts.period
 print "MODE =",mode
 print "INPUT =",input
 
-def canvas():
+def SetStyle(styleMacro=''):
+    """ Global style settings for ROOT """
+    if styleMacro=='':
+        ROOT.gStyle.SetCanvasColor(0);
+        ROOT.gStyle.SetCanvasBorderMode(0);
+        ROOT.gStyle.SetPadColor(0);
+        ROOT.gStyle.SetPadBorderMode(0);
+        ROOT.gStyle.SetStatColor(0);
+        
+        #ROOT.gStyle.SetOptStat(111111);
+        ROOT.gStyle.SetOptStat(0);
+        ROOT.gStyle.SetOptFit(1111);
+        ROOT.gStyle.SetHistFillColor(0);
+        ROOT.gStyle.SetMarkerStyle(20);
+        ROOT.gStyle.SetMarkerSize(.4);
+        ROOT.gStyle.SetHistLineWidth(2);
+        ROOT.gStyle.SetErrorX(0);
+        
+        ROOT.gStyle.SetTitleStyle(0);
+        
+        ROOT.gStyle.SetStatBorderSize(1);
+        ROOT.gStyle.SetFrameFillColor(10);
+        ROOT.gStyle.SetTitleFillColor(0);
+        ROOT.gROOT.ForceStyle()
+    else:
+        ROOT.gROOT.LoadMacro(styleMacro);
+        ROOT.SetAtlasStyle()
+#SetStyle("AtlasStyle.C")
+SetStyle()
+
+
+def canvas_old():
     ROOT.gStyle.SetOptFit()
     ROOT.gStyle.SetStatX(0.9)
     ROOT.gStyle.SetStatY(0.9)
@@ -36,6 +70,11 @@ def canvas():
     c.SetGrid();
     c.GetFrame().SetFillColor(21);
     c.GetFrame().SetBorderSize(12);
+    c.cd()
+    return c
+
+def canvas():
+    c = ROOT.TCanvas("c1","c1",200,10,800,600)
     c.cd()
     return c
 
@@ -87,12 +126,14 @@ if mode==2:
     ex = []
     y = [[] for z in xrange(3)]
     ey = [[] for z in xrange(3)]
+    runs = []
     i = 0
     for line in f:
         l=line.split()
         #x.append(float(l[9]))
         x.append(i)
         ex.append(0.0)
+        runs.append(int(l[9]))
         y[0].append(float(l[16]))
         y[1].append(float(l[12]))
         y[2].append(float(l[14]))
@@ -104,22 +145,69 @@ if mode==2:
         i+=1
     import ROOT
     c = canvas()
+    # total graph
     z=0
     n=len(x)
+    print 'Loaded',n,'runs!'
     gall = graph(n,array('d',x),array('d',y[z]),array('d',ex),array('d',ey[z]))
     gall.SetMarkerColor(ROOT.kBlack)
-    gall.Fit('pol0')
-    st = gall.GetListOfFunctions().FindObject("stats")
+    # total histo
+    hall = ROOT.TH1F('hall','hall',n,0,n)
+    hall.SetLineColor(ROOT.kBlack)
+    hall.SetMarkerColor(ROOT.kBlack)
+    for i in range(n):
+        hall.SetBinContent(i+1,y[z][i])
+        hall.SetBinError(i+1,ey[z][i])
+    # w+ graph
     z=1
     gpos = graph(n,array('d',x),array('d',y[z]),array('d',ex),array('d',ey[z]))
     gpos.SetMarkerColor(ROOT.kRed)
+    # w+ histo
+    hpos = ROOT.TH1F('hpos','hpos',n,0,n)
+    hpos.SetLineColor(ROOT.kRed)
+    hpos.SetMarkerColor(ROOT.kRed)
+    for i in range(n):
+        hpos.SetBinContent(i+1,y[z][i])
+        hpos.SetBinError(i+1,ey[z][i])
+    # w- graph
     z=2
     gneg = graph(n,array('d',x),array('d',y[z]),array('d',ex),array('d',ey[z]))
     gneg.SetMarkerColor(ROOT.kBlue)
-    gall.Draw("ALP")
-    gall.GetYaxis().SetRangeUser(0.0,6.0);
-    gpos.Draw("PLsames")
-    gneg.Draw("PLsames")
+    # w- histo
+    hneg = ROOT.TH1F('hneg','hneg',n,0,n)
+    hneg.SetLineColor(ROOT.kBlue)
+    hneg.SetMarkerColor(ROOT.kBlue)
+    for i in range(n):
+        hneg.SetBinContent(i+1,y[z][i])
+        hneg.SetBinError(i+1,ey[z][i])
+
+    # draw
+    hall.Fit('pol0','','',0,15)
+    st = hall.GetListOfFunctions().FindObject("pol0")
+    st.SetLineColor(hall.GetLineColor())
+    hall.GetYaxis().SetRangeUser(0.0,6.0);
+    hall.SetLabelSize(0.03)
+    hpos.Fit('pol0','',"same")
+    st = hpos.GetListOfFunctions().FindObject("pol0")
+    st.SetLineColor(hpos.GetLineColor())
+    hneg.Fit('pol0','',"same")
+    st = hneg.GetListOfFunctions().FindObject("pol0")
+    st.SetLineColor(hneg.GetLineColor())
+    #gall.Draw("ALP")
+    #gall.GetYaxis().SetRangeUser(0.0,6.0);
+    #gpos.Draw("PLsames")
+    #gneg.Draw("PLsames")
+
+    # label x axis
+    if True:
+        ax = hall.GetXaxis()
+        for i in range(len(runs)):
+            try:
+                ax.SetBinLabel(i+1,str(runs[i]))
+                pass
+            except:
+                print 'ERROR: bin',i
+    hall.LabelsOption('v')
     bname = input.split('.')[0]
     c.SaveAs("_raw_yield_%s.png"%bname)
 
@@ -154,6 +242,7 @@ if mode==3:
     c = canvas()
     z=0
     n=len(x)
+    print 'Loaded',n,'runs!'
     gall = graph(n,array('d',x),array('d',y[z]),array('d',ex),array('d',ey[z]))
     gall.SetMarkerColor(ROOT.kBlack)
     gall.Fit('pol0')
