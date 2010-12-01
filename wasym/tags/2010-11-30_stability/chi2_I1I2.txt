@@ -1,0 +1,8 @@
+chi2 | ndf | chi2_prob | W event yield     (total for period I1-I2 with MU13_TIGHT)
+0.622 3.000 89.146% 4.053
+run_index | run | chi2 contribution from each run
+0 167607 0.277
+1 167661 0.119
+2 167680 0.224
+3 167776 0.002
+Sanity check: sum of contributions = 0.622
