@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-#TODO: separate fit into G2-I1 and I1-I2 (by trigger)
+mu13 = range(165703,165576+1)
+mu13_tight = range(167607,167844+1)
 
 import sys,math
 from array import array
@@ -53,8 +54,8 @@ def SetStyle(styleMacro=''):
     else:
         ROOT.gROOT.LoadMacro(styleMacro);
         ROOT.SetAtlasStyle()
-#SetStyle("AtlasStyle.C")
-SetStyle()
+SetStyle("AtlasStyle.C")
+#SetStyle()
 
 
 def canvas_old():
@@ -65,7 +66,7 @@ def canvas_old():
     ROOT.gStyle.SetStatH(0.07)
     ROOT.gStyle.SetStatColor(20)
     ROOT.gStyle.SetTitleFillColor(20)
-    c = ROOT.TCanvas("c1","c1",200,10,800,600)
+    c = ROOT.TCanvas("c1","c1",200,10,800,500)
     c.SetFillColor(42);
     c.SetGrid();
     c.GetFrame().SetFillColor(21);
@@ -74,7 +75,7 @@ def canvas_old():
     return c
 
 def canvas():
-    c = ROOT.TCanvas("c1","c1",200,10,800,600)
+    c = ROOT.TCanvas("c1","c1",200,10,800,500)
     c.cd()
     return c
 
@@ -155,7 +156,10 @@ if mode==2:
     hall = ROOT.TH1F('hall','hall',n,0,n)
     hall.SetLineColor(ROOT.kBlack)
     hall.SetMarkerColor(ROOT.kBlack)
+    rtight=None
     for i in range(n):
+        if runs[i] in mu13_tight and not rtight:
+            rtight=i
         hall.SetBinContent(i+1,y[z][i])
         hall.SetBinError(i+1,ey[z][i])
     # w+ graph
@@ -180,19 +184,59 @@ if mode==2:
     for i in range(n):
         hneg.SetBinContent(i+1,y[z][i])
         hneg.SetBinError(i+1,ey[z][i])
-
+    
     # draw
-    hall.Fit('pol0','','',0,15)
-    st = hall.GetListOfFunctions().FindObject("pol0")
-    st.SetLineColor(hall.GetLineColor())
-    hall.GetYaxis().SetRangeUser(0.0,6.0);
+    hall.Fit('pol0','','',0,rtight)
+    hall.Fit('pol0','+','',rtight,n)
+    fs = [v for v in hall.GetListOfFunctions()]
+    fs[0].SetLineColor(hall.GetLineColor())
+    fs[1].SetLineColor(hall.GetLineColor())
+    #range
+    ymin = 3.0
+    ymax = 8.0
+    hall.GetYaxis().SetRangeUser(ymin,ymax);
     hall.SetLabelSize(0.03)
-    hpos.Fit('pol0','',"same")
-    st = hpos.GetListOfFunctions().FindObject("pol0")
-    st.SetLineColor(hpos.GetLineColor())
-    hneg.Fit('pol0','',"same")
-    st = hneg.GetListOfFunctions().FindObject("pol0")
-    st.SetLineColor(hneg.GetLineColor())
+    # period-trigger separator
+    lsep = ROOT.TLine(rtight,ymin,rtight,ymax)
+    lsep.Draw()
+    # axis labels
+    hall.GetYaxis().SetTitle('W event yield per nb^{-1}');
+    hall.GetXaxis().SetTitle('Run Number');
+
+    # set pave text
+    p = ROOT.TPaveText(.2,.50 , (.2+.30),(.50+.40) ,"NDC")
+    p.SetTextAlign(11)
+    p.SetFillColor(0)
+    z=0
+    chi2 = fs[z].GetChisquare()
+    ndf = fs[z].GetNDF()
+    prob = fs[z].GetProb()
+    par = fs[z].GetParameter(0)
+    #p.AddText('Period G2-I1 (EF_mu13_MG): yield=%.1f chi2/ndof=%.1f/%d p-value=%.2f'%(par,chi2,ndf,prob))
+    p.AddText('Period G2-I1 (EF_mu13_MG):')
+    p.AddText('   yield     = %.2f'%par)
+    p.AddText('   chi2/ndof = %.1f/%d'%(chi2,ndf))
+    p.AddText('   p-value   = %.2f'%prob)
+    z=1
+    chi2 = fs[z].GetChisquare()
+    ndf = fs[z].GetNDF()
+    prob = fs[z].GetProb()
+    par = fs[z].GetParameter(0)
+    #p.AddText('Period I1-I2 (EF_mu13_MG_tight): yield=%.1f chi2/ndof=%.1f/%d, p-value=%.2f'%(par,chi2,ndf,prob))
+    p.AddText('Period I1-I2 (EF_mu13_MG_tight):')
+    p.AddText('   yield     = %.2f'%par)
+    p.AddText('   chi2/ndof = %.1f/%d'%(chi2,ndf))
+    p.AddText('   p-value   = %.2f'%prob)
+    p.Draw()
+
+    if False:
+        hall.GetYaxis().SetRangeUser(0.0,6.0);
+        hpos.Fit('pol0','',"same")
+        st = hpos.GetListOfFunctions().FindObject("pol0")
+        st.SetLineColor(hpos.GetLineColor())
+        hneg.Fit('pol0','',"same")
+        st = hneg.GetListOfFunctions().FindObject("pol0")
+        st.SetLineColor(hneg.GetLineColor())
     #gall.Draw("ALP")
     #gall.GetYaxis().SetRangeUser(0.0,6.0);
     #gpos.Draw("PLsames")
@@ -208,8 +252,119 @@ if mode==2:
             except:
                 print 'ERROR: bin',i
     hall.LabelsOption('v')
-    bname = input.split('.')[0]
-    c.SaveAs("_raw_yield_%s.png"%bname)
+    # save output
+    def save():
+        bname = input.split('.')[0]
+        for ext in ('png','ps','pdf','C'):
+            c.SaveAs("muon_run_yield_%s.%s"%(bname,ext))
+
+# W, W+, W- yields as a function of run number
+if mode==22:
+    #['0.2256', '+/-', '0.0410053', 'RAW:', '383', '+', '242', '=', '625;', '165591', '147.542', 'SCALED:', '2.59587', '+', '1.64021', '=', '4.23608']
+    title = "Per-run event yield per nb^{-1} for W(black), W^{+}(red), W^{-}(blue) for data periods %s"%period
+    f = open(input)
+    x = []
+    ex = []
+    y = [[] for z in xrange(3)]
+    ey = [[] for z in xrange(3)]
+    runs = []
+    i = 0
+    for line in f:
+        l=line.split()
+        #x.append(float(l[9]))
+        x.append(i)
+        ex.append(0.0)
+        runs.append(int(l[9]))
+        y[0].append(float(l[16]))
+        y[1].append(float(l[12]))
+        y[2].append(float(l[14]))
+        l[8] = l[8].replace(';','')
+        sf = float(l[8])/float(l[16])
+        ey[0].append(math.sqrt(float(l[8]))/sf)
+        ey[1].append(math.sqrt(float(l[4]))/sf)
+        ey[2].append(math.sqrt(float(l[6]))/sf)
+        i+=1
+    import ROOT
+    c = canvas()
+    # total graph
+    z=0
+    n=len(x)
+    print 'Loaded',n,'runs!'
+    gall = graph(n,array('d',x),array('d',y[z]),array('d',ex),array('d',ey[z]))
+    gall.SetMarkerColor(ROOT.kBlack)
+    # total histo
+    hall = ROOT.TH1F('hall','hall',n,0,n)
+    hall.SetLineColor(ROOT.kBlack)
+    hall.SetMarkerColor(ROOT.kBlack)
+    rtight=None
+    for i in range(n):
+        if runs[i] in mu13_tight and not rtight:
+            rtight=i
+        hall.SetBinContent(i+1,y[z][i])
+        hall.SetBinError(i+1,ey[z][i])
+    # w+ graph
+    z=1
+    gpos = graph(n,array('d',x),array('d',y[z]),array('d',ex),array('d',ey[z]))
+    gpos.SetMarkerColor(ROOT.kRed)
+    # w+ histo
+    hpos = ROOT.TH1F('hpos','hpos',n,0,n)
+    hpos.SetLineColor(ROOT.kRed)
+    hpos.SetMarkerColor(ROOT.kRed)
+    for i in range(n):
+        hpos.SetBinContent(i+1,y[z][i])
+        hpos.SetBinError(i+1,ey[z][i])
+    # w- graph
+    z=2
+    gneg = graph(n,array('d',x),array('d',y[z]),array('d',ex),array('d',ey[z]))
+    gneg.SetMarkerColor(ROOT.kBlue)
+    # w- histo
+    hneg = ROOT.TH1F('hneg','hneg',n,0,n)
+    hneg.SetLineColor(ROOT.kBlue)
+    hneg.SetMarkerColor(ROOT.kBlue)
+    for i in range(n):
+        hneg.SetBinContent(i+1,y[z][i])
+        hneg.SetBinError(i+1,ey[z][i])
+    
+    # draw
+    hall.Fit('pol0','','',0,rtight)
+    st = hall.GetListOfFunctions().FindObject("pol0")
+    st.SetLineColor(hall.GetLineColor())
+    hall.Fit('pol0','+','',rtight,n)
+    #st = hall.GetListOfFunctions().FindObject("pol0")
+    #st.SetLineColor(hall.GetLineColor())
+    ymin=0.0
+    ymax=6.0
+    hall.GetYaxis().SetRangeUser(ymin,ymax)
+    hall.SetLabelSize(0.03)
+    hpos.Fit('pol0','',"same",0,rtight)
+    hpos.Fit('pol0','+',"same",rtight,n)
+    [st.SetLineColor(hpos.GetLineColor()) for st in hpos.GetListOfFunctions()]
+    hneg.Fit('pol0','',"same",0,rtight)
+    hneg.Fit('pol0','+',"same",rtight,n)
+    [st.SetLineColor(hneg.GetLineColor()) for st in hneg.GetListOfFunctions()]
+
+    # period-trigger separator
+    lsep = ROOT.TLine(rtight,ymin,rtight,ymax)
+    lsep.Draw()
+    # axis labels
+    hall.GetYaxis().SetTitle('W event yield per nb^{-1}');
+    hall.GetXaxis().SetTitle('Run Number');
+
+    # label x axis
+    if True:
+        ax = hall.GetXaxis()
+        for i in range(len(runs)):
+            try:
+                ax.SetBinLabel(i+1,str(runs[i]))
+                pass
+            except:
+                print 'ERROR: bin',i
+    hall.LabelsOption('v')
+    # save output
+    def save():
+        bname = input.split('.')[0]
+        for ext in ('png','ps','pdf','C'):
+            c.SaveAs("muon_run_yield_%s_bycharge.%s"%(bname,ext))
 
 # same as mode=2 (yield), but getting contribution to chi2 from each run
 if mode==3:
