@@ -74,8 +74,9 @@ for iname in allnames:
         try:
             hmc[POS][iname]=ScaleToLumi(pos.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale,nevts)
         except:
-            pos.ls()
-            raise
+            print 'Error: could not find histogram %s in file %s'%(hname,iname)
+            po.Remove(iname)
+            continue
         hmc[POS][iname].Sumw2()
         hmc[NEG][iname]=ScaleToLumi(neg.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale,nevts)
         hmc[NEG][iname].Sumw2()
@@ -168,6 +169,7 @@ if mode==1: # total stack histo
     hd[0].SetMarkerSize(1.0)
     hd[0].Draw("Lsame")
     leg[0].Draw("same")
+    c.Modified()
 
 if mode==2: # total stack histo (eff-corrected from MC)
     c = canvas()
@@ -180,6 +182,7 @@ if mode==2: # total stack histo (eff-corrected from MC)
     hd_eff[0].SetMarkerSize(1.0)
     hd_eff[0].Draw("Lsame")
     leg_eff[0].Draw("same")
+    c.Modified()
 
 if mode==11: # asymmetry (not corrected for eff)
     c = canvas()
@@ -190,13 +193,37 @@ if mode==11: # asymmetry (not corrected for eff)
         hasym.Draw()
     hasym.GetYaxis().SetRangeUser(0.0,0.5);
     hasym.GetYaxis().SetTitle('Asymmetry');
+    if re.search('mod',hname):
+        hasym.GetXaxis().SetRangeUser(0.0,2.4);
+    c.Modified()
     if opts.root:
         f = ROOT.TFile.Open('plots.root','UPDATE')
         f.cd()
         hasym.Write('hasym_%s'%hname)
         f.Close()
 
-if mode==12: # asymmetry (fully corrected for eff)
+if mode==12: # asymmetry (not corrected for eff) -vs- truth
+    c = canvas()
+    hasym = WAsymmetry(hd_sig[0],hd_sig[1])
+    hasym.SetMarkerColor(ROOT.kBlue)
+    if re.search('phi',hname):
+        hasym.Fit("pol0")
+    else:
+        hasym.Draw()
+    htasym = WAsymmetry(htr[0],htr[1])
+    htasym.Draw("same")
+    hasym.GetYaxis().SetRangeUser(0.0,0.5);
+    hasym.GetYaxis().SetTitle('Asymmetry');
+    if re.search('mod',hname):
+        hasym.GetXaxis().SetRangeUser(0.0,2.4);
+    c.Modified()
+    if opts.root:
+        f = ROOT.TFile.Open('plots.root','UPDATE')
+        f.cd()
+        hasym.Write('hasym_%s'%hname)
+        f.Close()
+
+if mode==13: # asymmetry (fully corrected for eff)
     c = canvas()
     hasym = WAsymmetry(hd_sig_eff[0],hd_sig_eff[1])
     if re.search('phi',hname):
@@ -206,6 +233,8 @@ if mode==12: # asymmetry (fully corrected for eff)
     hasym.GetYaxis().SetRangeUser(0.0,0.5);
     hasym.GetYaxis().SetTitle('Asymmetry');
     hasym.GetXaxis().SetTitle('#eta_{#mu}');
+    if re.search('mod',hname):
+        hasym.GetXaxis().SetRangeUser(0.0,2.4);
     # for phi: print fit results
     if re.search('phi',hname) and False:
         hasym.GetYaxis().SetRangeUser(0.0,0.6);
@@ -224,6 +253,7 @@ if mode==12: # asymmetry (fully corrected for eff)
         p.AddText('   chi2/ndof = %.1f/%d'%(chi2,ndf))
         p.AddText('   p-value   = %.3f'%prob)
         p.Draw()
+    c.Modified()
     if opts.root:
         f = ROOT.TFile.Open('plots.root','UPDATE')
         f.cd()
@@ -231,3 +261,28 @@ if mode==12: # asymmetry (fully corrected for eff)
         f.Close()
     if opts.output:
         save(c,'muon_%s'%hname)
+
+if mode==14: # asymmetry (fully corrected for eff) -vs- truth
+    c = canvas()
+    hasym = WAsymmetry(hd_sig_eff[0],hd_sig_eff[1])
+    hasym.SetMarkerColor(ROOT.kBlue)
+    if re.search('phi',hname):
+        hasym.Fit("pol0")
+    else:
+        hasym.Draw()
+    htasym = WAsymmetry(htr[0],htr[1])
+    htasym.Draw("same")
+    hasym.GetYaxis().SetRangeUser(0.0,0.5);
+    if re.search('mod',hname):
+        hasym.GetXaxis().SetRangeUser(0.0,2.4);
+    hasym.GetYaxis().SetTitle('Asymmetry');
+    hasym.GetXaxis().SetTitle('#eta_{#mu}');
+    c.Modified()
+    if opts.root:
+        f = ROOT.TFile.Open('plots.root','UPDATE')
+        f.cd()
+        hasym.Write('hasym_%s'%hname)
+        f.Close()
+    if opts.output:
+        save(c,'muon_%s'%hname)
+
