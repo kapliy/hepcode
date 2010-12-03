@@ -44,7 +44,19 @@ class PlotOrder:
         else:
             s.mcg.append([samples])
         s.mcgc.append(color)
-
+    def Remove(s,name):
+        """ removes a particular plot from the stack """
+        mcgs = s.mcg[:]
+        for i,mcg in enumerate(mcgs):
+            if name in mcg:
+                idxs = [z for z in range(len(s.mcg[i])) if name==s.mcg[i][z]]
+                for idx in idxs:
+                    del s.mcg[i][idx]
+                if len(s.mcg[i])==0:
+                    del s.mcg[i]
+                    del s.mcgc[i]
+                    del s.mcg_name[i]
+        
 class MCR:
     """ dataset """
     def __init__(s,rnum,sample,tag,xsec,filteff,nevents,ntupleDS=None):
