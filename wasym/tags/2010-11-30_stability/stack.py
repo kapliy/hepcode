@@ -10,7 +10,7 @@ parser.add_option("--input",dest="input",
                   type="string", default='root_all.root',
                   help="Path to input root file with all histos")
 parser.add_option("--hname",dest="hname",
-                  type="string", default='asym_etav',
+                  type="string", default='lepton_etav',
                   help="Histogram name under consideration")
 parser.add_option("--lumi",dest="lumi",
                   type="float", default=31401.9,
@@ -82,7 +82,7 @@ for iname in allnames:
         hmc[NEG][iname].Sumw2()
         if re.search('wmunu',iname):
             # for signal MC, also get truth-level template for efficiency
-            g=f.GetDirectory(iname+'.root').GetDirectory('dg').GetDirectory('dg').GetDirectory('truth').GetDirectory('st_truth_mu')
+            g=f.GetDirectory(iname+'.root').GetDirectory('dg').GetDirectory('dg').GetDirectory('truth').GetDirectory('st_truth_reco_w')
             pos = g.GetDirectory('POS')
             neg = g.GetDirectory('NEG')
             htr[POS] = ScaleToLumi(pos.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale,nevts)
