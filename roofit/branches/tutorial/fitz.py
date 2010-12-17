@@ -1,3 +1,8 @@
+import sys
+_fin = 'zspectrum.root'
+if len(sys.argv)>=2:
+    _fin = sys.argv[1]
+
 import ROOT
 from ROOT import RooWorkspace,RooArgSet,RooArgList,RooDataHist,RooAbsData
 from ROOT import kTRUE,kDashed
@@ -31,7 +36,7 @@ def FitSIG(data):
 
 # getting data from histo
 if True:
-    f = TFile('zspectrum.root','r')
+    f = TFile(_fin,'r')
     hz = f.Get('z_m')
     hz.SetDirectory(0)
     print hz.GetEntries()
