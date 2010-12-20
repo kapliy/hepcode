@@ -12,19 +12,21 @@ from ROOT import RooFit as RF
 w = RooWorkspace('w',kTRUE)
 #w.factory('RooVoigtian::voig(x[60.0,120.0],mean[87,85,95],width[2.5],sigma[3,0,10])')
 w.factory('RooVoigtian::voig(x[84.0,97.0],mean[87,85,95],width[2.5],sigma[3,0,10])')
-w.factory('RooExponential::exp(x,expar[-0.1])')
-w.factory('SUM::sum(nsig[385000,0,400000]*voig,nbg[1,0,1000]*exp)')
+w.factory('RooExponential::exp(x,expar[-0.1,-1,0])')
+w.factory('SUM::sum(nsig[385000,0,400000]*voig,nbg[1,0,1000]*exp)')  # automatically extended likelihood!
 w.defineSet('X','x')
 w.defineSet('bg','exp')
 x = w.var('x')
 
 def Fit(data):
-    w.pdf('sum').fitTo(data)
-    mesframe = x.frame()
-    RooAbsData.plotOn(data,mesframe)
-    w.pdf('sum').plotOn(mesframe)
-    w.pdf('sum').plotOn(mesframe,RF.Components(w.set('bg')),RF.LineStyle(kDashed))
-    mesframe.Draw()
+    r = w.pdf('sum').fitTo(data)
+    frame = x.frame()
+    RooAbsData.plotOn(data,frame)
+    w.pdf('sum').plotOn(frame)
+    w.pdf('sum').plotOn(frame,RF.Components(w.set('bg')),RF.LineStyle(kDashed))
+    w.pdf('sum').plotOn(frame,RF.VisualizeError(r))
+    w.pdf('sum').paramOn(frame,data)
+    frame.Draw()
 
 def FitSIG(data):
     w.pdf('voig').fitTo(data) ;
