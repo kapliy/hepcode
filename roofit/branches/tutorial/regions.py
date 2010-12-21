@@ -23,7 +23,7 @@ x = w.var('x')
 
 def Fit(data):
     r = w.pdf('sum').fitTo(data)
-    frame = x.frame()
+    frame = x.frame(RF.Title("Detector region: %s"%reg))
     RooAbsData.plotOn(data,frame)
     w.pdf('sum').plotOn(frame)
     w.pdf('sum').plotOn(frame,RF.Components(w.set('bg')),RF.LineStyle(kDashed))
@@ -45,17 +45,18 @@ def FitHisto(hz):
     nsig=w.var('nsig').getVal()
     print 'mW = %.3f +\- %.3f'%(mean,emean)
     print 'nsig = %d, nbg = %d'%(nsig,nbg)
-    print 'reg',reg,n,'%.3f %.3f %.2f%%'%(mean,emean,(mean-mZ)/mZ*100.0)
+    print 'reg',reg,n,'%.3f +/- %.3f %.2f%% %.2f%%'%(mean,emean,(mean-mZ)/mZ*100.0,emean/mZ*100.0)
     return frame
 
 f = ROOT.TFile.Open(_fin,'r')
+c = ROOT.TCanvas('c','c',1024,768)
+c.Divide(3,3)
 g = f.GetDirectory('data.root').GetDirectory('dg').GetDirectory('dg').GetDirectory('st_z_final')
-#for reg in ('AA','AB','AC',):
-if True:
-    #hz = g.Get('%s/z_m_fine'%reg)
+regs = ('AA','AB','AC','BA','BB','BC','CA','CB','CC')
+for i,reg in enumerate(regs):
+    c.cd(i+1)
     hz = g.Get('%s/z_m'%reg)
     hz.SetDirectory(0)
     FitHisto(hz)
-    ROOT.gPad.SaveAs('reg%s.png'%reg)
-
+c.SaveAs('reg_all.png')
 f.Close()
