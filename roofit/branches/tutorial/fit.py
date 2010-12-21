@@ -1,18 +1,17 @@
-# fitz a single z peak
-
+# scale dependence
 import sys
-_fin = 'zspectrum.root'
+_fin = 'both.root'
+reg='AA'
 if len(sys.argv)>=2:
-    _fin = sys.argv[1]
+    reg = sys.argv[1]
+
+mZ = 91.1876
 
 import ROOT
 from ROOT import RooWorkspace,RooArgSet,RooArgList,RooDataHist,RooAbsData
 from ROOT import kTRUE,kDashed
 from ROOT import TFile,TH1,TH1F,TH1D
 from ROOT import RooFit as RF
-
-# formula for Z mass:
-formula = 'sqrt((E1+E2)^2-(pz1+pz2)^2-(pt1*cos(phi1)+pt2*cos(phi2))^2-(pt1*sin(phi1)+pt2*sin(phi2))^2)'
 
 w = RooWorkspace('w',kTRUE)
 #w.factory('RooVoigtian::voig(x[60.0,120.0],mean[87,85,95],width[2.5],sigma[3,0,10])')
@@ -25,31 +24,20 @@ x = w.var('x')
 
 def Fit(data):
     r = w.pdf('sum').fitTo(data)
-    frame = x.frame()
+    frame = x.frame(RF.Title("Scale factor: %s"%reg))
     RooAbsData.plotOn(data,frame)
     w.pdf('sum').plotOn(frame)
     w.pdf('sum').plotOn(frame,RF.Components(w.set('bg')),RF.LineStyle(kDashed))
     w.pdf('sum').plotOn(frame,RF.VisualizeError(r))
-    w.pdf('sum').paramOn(frame,data)
+    #w.pdf('sum').paramOn(frame,data)
     frame.Draw()
-
-def FitSIG(data):
-    w.pdf('voig').fitTo(data) ;
-    mesframe = x.frame()
-    RooAbsData.plotOn(data,mesframe)
-    w.pdf('voig').plotOn(mesframe)
-    w.pdf('voig').plotOn(mesframe,RF.Components(w.set('bg')),RF.LineStyle(kDashed))
-    mesframe.Draw()
+    return frame
 
 # getting data from histo
-if True:
-    f = TFile(_fin,'r')
-    hz = f.Get('z_m')
-    hz.SetDirectory(0)
-    print hz.GetEntries()
-    f.Close()
+def FitHisto(hz):
+    n = hz.GetEntries()
     data = RooDataHist('data','Zmumu MC',RooArgList(x),hz)
-    Fit(data)
+    frame = Fit(data)
     mean=w.var('mean').getVal()
     emean=w.var('mean').getError()
     width=w.var('width').getVal()
@@ -58,7 +46,18 @@ if True:
     nsig=w.var('nsig').getVal()
     print 'mW = %.3f +\- %.3f'%(mean,emean)
     print 'nsig = %d, nbg = %d'%(nsig,nbg)
+    print 'reg',reg,n,'%.3f +/- %.3f %.2f%% %.2f%%'%(mean,emean,(mean-mZ)/mZ*100.0,emean/mZ*100.0)
+    return frame
 
-if False:
-    data = w.pdf('sum').generate(w.set('X'),2000)
-    Fit(data)
+f = ROOT.TFile.Open(_fin,'r')
+c = ROOT.TCanvas('c','c',1024,768)
+c.Divide(3,2)
+regs = ('1.0','1.005','1.01','1.02','1.03')
+for i,reg in enumerate(regs):
+    c.cd(i+1)
+    g = f.GetDirectory('z_p%s_z_p%s.root'%(reg,reg)).GetDirectory('dg').GetDirectory('dg').GetDirectory('st_z_final')
+    hz = g.Get('z_m')
+    hz.SetDirectory(0)
+    FitHisto(hz)
+c.SaveAs('scale_both.png')
+f.Close()
