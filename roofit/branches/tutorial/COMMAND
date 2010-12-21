@@ -1,0 +1,1 @@
+for i in {AA,AB,AC,BA,BB,BC,CA,CB,CC}; do python regions.py $i 2>/dev/null | grep reg; done
