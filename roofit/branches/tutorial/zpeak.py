@@ -19,16 +19,16 @@ frange = (float(minZ),float(maxZ))
 
 # formula for Z mass:
 #formula = 'sqrt((E1+E2)^2-(pz1+pz2)^2-(pt1*cos(phi1)+pt2*cos(phi2))^2-(pt1*sin(phi1)+pt2*sin(phi2))^2)'
-#RooGenericPdf model_mean("model_mean","abs(mean)<a",RooArgList(mean,a))
-#w.factory("CEXPR::GC('x*sqrt(pos*neg)',{x,pox,neg})")
+
+voig = "RooVoigtian::voig(expr('x*%s',x[%s,%s],%s[1.0,0.9,1.1]),mean[%s],width[2.5],sigma[3,0,10])"  #s,minZ,maxZ,s,mZ
+exp  = "RooExponential::exp(expr('x*%s',x,%s),expar[-0.1,-1,0])" # s,s
 
 w = RooWorkspace('w',kTRUE)
-#w.factory('RooVoigtian::voig(x[84.0,97.0],mean[87,85,95],width[2.5],sigma[3,0,10])')
-w.factory("RooVoigtian::voig(expr('x*a0',x[%s,%s],a0[1.0,0.9,1.1]),mean[%s],width[2.5],sigma[3,0,10])"%(minZ,maxZ,mZ))
-w.factory("RooExponential::exp(expr('x*a0',x,a0),expar[-0.1,-1,0])")
 # since nfractions = npdfs, this is automatically an extended likelihood fit
-#w.factory('SUM::sum(nsig[385000,0,400000]*voig,nbg[1,0,1000]*exp)')
-w.factory('SUM::sum(nsig[1,0,1000000]*voig,nbg[0,0,1000000]*exp)')
+w.factory("SUM::sum(nsig[1,0,1000000]*%s,nbg[0,0,1000000]*%s)"%(voig%('a0',minZ,maxZ,'a0',mZ),exp%('a0','a0')))
+
+# make a joint pdf for various signal regions
+w.factory("")
 w.defineSet('X','x')
 model = w.pdf('sum')
 nsig = w.var('nsig')
