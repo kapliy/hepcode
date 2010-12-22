@@ -1,3 +1,5 @@
+# separating Z's into 9 detector regions
+
 import sys
 _fin = 'root_all.root'
 reg='AA'
