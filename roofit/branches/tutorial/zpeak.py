@@ -30,24 +30,32 @@ w.factory("RooExponential::exp(expr('x*a0',x,a0),expar[-0.1,-1,0])")
 #w.factory('SUM::sum(nsig[385000,0,400000]*voig,nbg[1,0,1000]*exp)')
 w.factory('SUM::sum(nsig[1,0,1000000]*voig,nbg[0,0,1000000]*exp)')
 w.defineSet('X','x')
+model = w.pdf('sum')
 nsig = w.var('nsig')
 nbg = w.var('nbg')
 mean = w.var('mean')
 mean.setConstant(kTRUE)
 x = w.var('x')
 
+def PrintVariables():
+    model.Print('t')
+    vars = model.getVariables()
+    vars.Print('v')
+
 def Fit(data):
     # set some default event fractions based on the histogram
     nsig.setVal(data.sumEntries())
     nbg.setVal(0)
-    r = w.pdf('sum').fitTo(data,RF.PrintLevel(-1),RF.Range(*frange),RF.Extended(kTRUE))
+    # named ranges can be used in RF.Range in a comma-separated list
+    x.setRange('named_range',85,95)
+    r = model.fitTo(data,RF.PrintLevel(-1),RF.Range(*frange),RF.Extended(kTRUE),RF.NumCPU(4))
     frame = x.frame()
     RooAbsData.plotOn(data,frame)
-    w.pdf('sum').plotOn(frame)
+    model.plotOn(frame)
     # wildcards or comma-separated components are allowed:
-    w.pdf('sum').plotOn(frame,RF.Components('exp*'),RF.LineStyle(kDashed))
-    w.pdf('sum').plotOn(frame,RF.VisualizeError(r))
-    w.pdf('sum').paramOn(frame,data)
+    model.plotOn(frame,RF.Components('exp*'),RF.LineStyle(kDashed))
+    model.plotOn(frame,RF.VisualizeError(r))
+    model.paramOn(frame,data)
     frame.Draw()
 
 # getting data from histo
@@ -59,6 +67,7 @@ if True:
     f.Close()
     data = RooDataHist('data','Zmumu MC',RooArgList(x),hz)
     Fit(data)
+    PrintVariables()
     mean=w.var('mean').getVal()
     emean=w.var('mean').getError()
     width=w.var('width').getVal()
@@ -69,5 +78,5 @@ if True:
     print 'nsig = %d, nbg = %d'%(nsig,nbg)
 
 if False:
-    data = w.pdf('sum').generate(w.set('X'),2000)
+    data = model.generate(w.set('X'),2000)
     Fit(data)
