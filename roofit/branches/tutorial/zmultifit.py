@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # fitz a single z peak
 
 import sys
@@ -20,12 +21,19 @@ frange = (float(minZ),float(maxZ))
 # formula for Z mass:
 #formula = 'sqrt((E1+E2)^2-(pz1+pz2)^2-(pt1*cos(phi1)+pt2*cos(phi2))^2-(pt1*sin(phi1)+pt2*sin(phi2))^2)'
 
-voig = "RooVoigtian::voig(expr('x*%s',x[%s,%s],%s[1.0,0.9,1.1]),mean[%s],width[0,0,5.0],sigma[1,0,5])"  #s,minZ,maxZ,s,mZ
-exp  = "RooExponential::exp(expr('x*%s',x,%s),expar[-0.1,-1,0])" # s,s
+voig = "RooVoigtian::voig%s(expr('x*sqrt(%s*%s)',x[%s,%s],%s[1.0,0.9,1.1],%s[1.0,0.9,1.1]),mean[%s],width[0,0,3],sigma[3,0,10])"  #name,s1,s2,minZ,maxZ,s1,s2,mZ
+exp  = "RooExponential::exp%s(expr('x*sqrt(%s*%s)',x,%s,%s),expar[-0.1,-1,0])" # name,s1,s2,s1,s2
 
 w = RooWorkspace('w',kTRUE)
 # since nfractions = npdfs, this is automatically an extended likelihood fit
-w.factory("SUM::sum(nsig[1,0,1000000]*%s,nbg[0,0,1000000]*%s)"%(voig%('a0',minZ,maxZ,'a0',mZ),exp%('a0','a0')))
+labels = ('AA','AB','BA','BB','BC','CB','CC')
+for lbl in labels:
+    p = 'p%s'%lbl[0]
+    n = 'n%s'%lbl[1]
+    cmd = "SUM::pdf%s(nsig%s[1,0,1000000]*%s,nbg%s[0,0,1000000]*%s)"%(lbl,lbl,voig%(lbl,p,n,minZ,maxZ,p,n,mZ),lbl,exp%(lbl,p,n,p,n))
+    print cmd
+    w.factory(cmd)
+sys.exit(0)
 
 # make a joint pdf for various signal regions
 w.factory("")
