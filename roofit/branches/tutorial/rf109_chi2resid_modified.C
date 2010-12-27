@@ -25,7 +25,7 @@
 using namespace RooFit ;
 
 
-void rf109_chi2residpull()
+void rf109_chi2resid_modified()
 {
 
   // S e t u p   m o d e l 
