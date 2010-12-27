@@ -1,1 +1,2 @@
-for i in {AA,AB,AC,BA,BB,BC,CA,CB,CC}; do python regions.py $i 2>/dev/null | grep reg; done
+python -i zpeak.py scales.root z_p1.05_n1.0_z_p1.05_n1.0.root/dg/dg/st_z_final/z_m
+
