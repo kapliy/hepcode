@@ -55,15 +55,16 @@ def Fit(data):
     nbg.setVal(0)
     # named ranges can be used in RF.Range in a comma-separated list
     x.setRange('named_range',85,95)
-    r = model.fitTo(data,RF.PrintLevel(-1),RF.Range(*frange),RF.Extended(kTRUE),RF.NumCPU(4))
+    r = model.fitTo(data,RF.PrintLevel(-1),RF.Range(*frange),RF.Extended(kTRUE),RF.NumCPU(4),RF.Save())
     frame = x.frame()
-    RooAbsData.plotOn(data,frame)
-    model.plotOn(frame)
+    RooAbsData.plotOn(data,frame,RF.Name('dataZ'))
+    model.plotOn(frame,RF.Name('modelZ'))
     # wildcards or comma-separated components are allowed:
     model.plotOn(frame,RF.Components('exp*'),RF.LineStyle(kDashed))
     model.plotOn(frame,RF.VisualizeError(r))
     model.paramOn(frame,data)
     frame.Draw()
+    return (r,frame)
 
 # getting data from histo
 if True:
@@ -73,8 +74,9 @@ if True:
     print hz.GetEntries()
     f.Close()
     data = RooDataHist('data','Zmumu MC',RooArgList(x),hz)
-    Fit(data)
+    r,frame = Fit(data)
     PrintVariables()
+    print frame.chiSquare('modelZ','dataZ',6)
     mean=w.var('mean').getVal()
     emean=w.var('mean').getError()
     width=w.var('width').getVal()
