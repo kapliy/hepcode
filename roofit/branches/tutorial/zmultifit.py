@@ -97,9 +97,10 @@ if True:
     # set some default event fractions based on the histogram
     for reg in regions:
         _nsig = hz[reg].GetEntries()
+        _nsig = hz[reg].Integral(hz[reg].FindBin(float(minZ)),hz[reg].FindBin(float(maxZ)))
         print 'Default nsig (%s): %s'%(reg,_nsig)
         w.var('nsig%s'%reg).setVal(_nsig)
-        w.var('nbg%s'%reg).setVal(0)
+        w.var('nbg%s'%reg).setVal(_nsig/20.0)
     c = Fit(data)
     c.Update()
     PrintVariables()
