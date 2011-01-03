@@ -22,7 +22,7 @@ frange = (float(minZ),float(maxZ))
 # formula for Z mass:
 #formula = 'sqrt((E1+E2)^2-(pz1+pz2)^2-(pt1*cos(phi1)+pt2*cos(phi2))^2-(pt1*sin(phi1)+pt2*sin(phi2))^2)'
 
-voig = "RooVoigtian::voig%s(expr('x*sqrt(%s*%s)',x[%s,%s],%s[1.0,0.9,1.1],%s[1.0,0.9,1.1]),mean[%s],width%s[3.4,0,6],sigma%s[1.5,0,5])"  #name,s1,s2,minZ,maxZ,s1,s2,mZ
+voig = "RooVoigtian::voig%s(expr('x*sqrt(%s*%s)',x[%s,%s],%s[1.0,0.9,1.1],%s[1.0,0.9,1.1]),mean[%s],width[3.4,0,6],sigma%s[2.0,0,5])"  #name,s1,s2,minZ,maxZ,s1,s2,mZ
 exp  = "RooExponential::exp%s(expr('x*sqrt(%s*%s)',x,%s,%s),expar[-0.05,-1.0,0])" # name,s1,s2,s1,s2
 
 w = RooWorkspace('w',kTRUE)
@@ -35,7 +35,7 @@ for reg in regions:
     p = 'p%s'%reg[0]
     n = 'n%s'%reg[1]
     # since nfractions = npdfs, this is automatically an extended likelihood fit
-    cmd = "SUM::pdf%s(nsig%s[1,0,1000000]*%s,nbg%s[0,0,1000000]*%s)"%(reg,reg,voig%(reg,p,n,minZ,maxZ,p,n,mZ,reg,reg),reg,exp%(reg,p,n,p,n))
+    cmd = "SUM::pdf%s(nsig%s[1,0,1000000]*%s,nbg%s[0,0,1000000]*%s)"%(reg,reg,voig%(reg,p,n,minZ,maxZ,p,n,mZ,reg),reg,exp%(reg,p,n,p,n))
     print cmd
     w.factory(cmd)
 # fix Z mass mean
@@ -50,8 +50,6 @@ gDirectory.Add(w)
 
 w.defineSet('X','x')
 model = w.pdf('model')
-nsig = w.var('nsig')
-nbg = w.var('nbg')
 x = w.var('x')
 
 def PrintVariables():
@@ -98,7 +96,9 @@ if True:
     data.Print()
     # set some default event fractions based on the histogram
     for reg in regions:
-        w.var('nsig%s'%reg).setVal(hz[reg].GetEntries())
+        _nsig = hz[reg].GetEntries()
+        print 'Default nsig (%s): %s'%(reg,_nsig)
+        w.var('nsig%s'%reg).setVal(_nsig)
         w.var('nbg%s'%reg).setVal(0)
     c = Fit(data)
     c.Update()
