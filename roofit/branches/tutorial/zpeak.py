@@ -1,8 +1,8 @@
 # fitz a single z peak
 
 import sys
-_fin = 'zspectrum.root'
-_hist = 'z_m'
+_fin = 'truthzmumu.root'
+_hist = 'mc_zmumu.root/dg/dg/st_z_final/z_m_fine'
 if len(sys.argv)>=2:
     _fin = sys.argv[1]
 if len(sys.argv)>=3:
@@ -20,6 +20,10 @@ from ROOT import RooFit as RF
 mZ = '91.1876'
 minZ = '70.0'
 maxZ = '104.0'
+
+#minZ = '87.0'
+#maxZ = '95.0'
+
 frange = (float(minZ),float(maxZ))
 
 # formula for Z mass:
@@ -43,6 +47,7 @@ nbg = w.var('nbg')
 mean = w.var('mean')
 #mean.setConstant(kTRUE)
 x = w.var('x')
+chi2 = []
 
 def PrintVariables():
     model.Print('t')
@@ -59,10 +64,14 @@ def Fit(data):
     frame = x.frame()
     RooAbsData.plotOn(data,frame,RF.Name('dataZ'))
     model.plotOn(frame,RF.Name('modelZ'))
+    ndf = r.floatParsFinal().getSize()
+    chi2.append(ndf)
+    chi2.append(frame.chiSquare(ndf))
     # wildcards or comma-separated components are allowed:
     model.plotOn(frame,RF.Components('exp*'),RF.LineStyle(kDashed))
-    model.plotOn(frame,RF.VisualizeError(r))
-    model.paramOn(frame,data)
+    if False:
+        model.plotOn(frame,RF.VisualizeError(r))
+        model.paramOn(frame,data)
     frame.Draw()
     return (r,frame)
 
@@ -76,7 +85,6 @@ if True:
     data = RooDataHist('data','Zmumu MC',RooArgList(x),hz)
     r,frame = Fit(data)
     PrintVariables()
-    print frame.chiSquare('modelZ','dataZ',6)
     mean=w.var('mean').getVal()
     emean=w.var('mean').getError()
     width=w.var('width').getVal()
@@ -85,6 +93,7 @@ if True:
     nsig=w.var('nsig').getVal()
     print 'mW = %.3f +/- %.3f %.2f%% %.2f%%'%(mean,emean,(mean-fmZ)/fmZ*100.0,emean/fmZ*100.0)
     print 'nsig = %d, nbg = %d'%(nsig,nbg)
+    print 'CHI2 = %.2f, NDF = %d'%(chi2[1],chi2[0])
 
 if False:
     data = model.generate(w.set('X'),2000)
