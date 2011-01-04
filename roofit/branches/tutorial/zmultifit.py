@@ -51,6 +51,7 @@ gDirectory.Add(w)
 w.defineSet('X','x')
 model = w.pdf('model')
 x = w.var('x')
+chi2s = {}
 
 def PrintVariables():
     #model.Print('t')
@@ -60,7 +61,8 @@ def PrintVariables():
 def Fit(data):
     # named ranges can be used in RF.Range in a comma-separated list
     x.setRange('named_range',85,95)
-    r = model.fitTo(data,RF.PrintLevel(-1),RF.Range(*frange),RF.Extended(kTRUE),RF.NumCPU(4))
+    # set print level to -1 for non-verbose
+    r = model.fitTo(data,RF.PrintLevel(1),RF.Range(*frange),RF.Extended(kTRUE),RF.NumCPU(4),RF.Save())
     c = ROOT.TCanvas('c','c',1024,768)
     c.Divide(3,3)
     k = w.cat('k')
@@ -74,13 +76,15 @@ def Fit(data):
         proj = RF.ProjWData(RooArgSet(k),data)
         nevt = w.var('nbg%s'%reg).getVal() + w.var('nsig%s'%reg).getVal()
         #norm = RF.Normalization(1.0,RooAbsReal.RelativeExpected)
-        norm = RF.Normalization(nevt,RooAbsReal.NumEvent)
+        #norm = RF.Normalization(nevt,RooAbsReal.NumEvent)
         model.plotOn(frame,slice,proj)
+        chi2s[reg] = frame.chiSquare(6)  #voig(3) + exp(1) + scale(1) + norm(1)
         model.plotOn(frame,slice,proj,RF.Components('exp%s*'%reg),RF.LineStyle(kDashed))
-        model.plotOn(frame,slice,proj,RF.VisualizeError(r))
-        #model.paramOn(frame,data)
+        if False:
+            model.plotOn(frame,slice,proj,RF.VisualizeError(r))
+            model.paramOn(frame,data)
         frame.Draw()
-    return c
+    return c,r
 
 if True:
     # getting histograms from file
@@ -101,6 +105,9 @@ if True:
         print 'Default nsig (%s): %s'%(reg,_nsig)
         w.var('nsig%s'%reg).setVal(_nsig)
         w.var('nbg%s'%reg).setVal(_nsig/20.0)
-    c = Fit(data)
+    c,r = Fit(data)
     c.Update()
+    print 'Fit status & cov quality & num invalid NLL & edm:',r.status(),r.covQual(),r.numInvalidNLL(),r.edm()
+    for reg in regions:
+        print 'CHI2[%s]=%s'%(reg,chi2s[reg])
     PrintVariables()
