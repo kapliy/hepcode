@@ -2,7 +2,7 @@
 
 import sys
 _fin = 'truthzmumu.root'
-_hist = 'mc_zmumu.root/dg/dg/st_z_final/z_m_fine'
+_hist = 'mc_zmumu.root/dg/dg/st_z_final/BB/z_m_fine'
 if len(sys.argv)>=2:
     _fin = sys.argv[1]
 if len(sys.argv)>=3:
@@ -15,28 +15,34 @@ from ROOT import RooWorkspace,RooArgSet,RooArgList,RooDataHist,RooAbsData,RooFor
 from ROOT import kTRUE,kFALSE,kDashed,gStyle,gPad
 from ROOT import TFile,TH1,TH1F,TH1D
 from ROOT import RooFit as RF
+w = RooWorkspace('w',kTRUE)
 
 # Z mass cannot float if we fit for scale
 mZ = '91.1876'
-minZ = '70.0'
-maxZ = '104.0'
-
-#minZ = '87.0'
-#maxZ = '95.0'
-
-frange = (float(minZ),float(maxZ))
-
 # formula for Z mass:
 #formula = 'sqrt((E1+E2)^2-(pz1+pz2)^2-(pt1*cos(phi1)+pt2*cos(phi2))^2-(pt1*sin(phi1)+pt2*sin(phi2))^2)'
 
-voig = "RooVoigtian::voig(x[%s,%s],mean[%s],width[0,0,5.0],sigma[1,0,5])"  #minZ,maxZ,mZ(or range)
-exp  = "RooExponential::exp(x,expar[-0.1,-1,0])"
+if True:
+    minZ = '70.0'
+    maxZ = '104.0'
+    voig = "RooVoigtian::voig(x[%s,%s],mean[%s],width[0,0,5.0],sigma[1,0,5])"  #minZ,maxZ,mZ(or range)
+    exp  = "RooExponential::exp(x,expar[-0.1,-1,0])"
+    # since nfractions = npdfs, this is automatically an extended likelihood fit
+    cmd = "SUM::sum(nsig[1,0,1000000]*%s,nbg[0,0,1000000]*%s)"%(voig%(minZ,maxZ,'%s,%s,%s'%(mZ,minZ,maxZ)),exp)
+    print cmd
+    w.factory(cmd)
+    #w.var('width').setConstant(kTRUE) if w.var('width') else None
+    isExt = kTRUE
 
-w = RooWorkspace('w',kTRUE)
-# since nfractions = npdfs, this is automatically an extended likelihood fit
-cmd = "SUM::sum(nsig[1,0,1000000]*%s,nbg[0,0,1000000]*%s)"%(voig%(minZ,maxZ,'%s,%s,%s'%(mZ,minZ,maxZ)),exp)
-print cmd
-w.factory(cmd)
+if False:
+    minZ = '88.0'
+    maxZ = '94.0'
+    cmd = "RooGaussian::sum(x[%s,%s],mean[%s],sigma[1,0,5])"%(minZ,maxZ,'%s,%s,%s'%(mZ,minZ,maxZ))
+    print cmd
+    w.factory(cmd)
+    isExt = kFALSE
+
+frange = (float(minZ),float(maxZ))
 
 # make a joint pdf for various signal regions
 w.factory("")
@@ -56,11 +62,12 @@ def PrintVariables():
 
 def Fit(data):
     # set some default event fractions based on the histogram
-    nsig.setVal(data.sumEntries())
-    nbg.setVal(0)
+    if nsig and nbg:
+        nsig.setVal(data.sumEntries())
+        nbg.setVal(0)
     # named ranges can be used in RF.Range in a comma-separated list
     x.setRange('named_range',85,95)
-    r = model.fitTo(data,RF.PrintLevel(-1),RF.Range(*frange),RF.Extended(kTRUE),RF.NumCPU(4),RF.Save())
+    r = model.fitTo(data,RF.PrintLevel(-1),RF.Range(*frange),RF.Extended(isExt),RF.NumCPU(4),RF.Save())
     frame = x.frame()
     RooAbsData.plotOn(data,frame,RF.Name('dataZ'))
     model.plotOn(frame,RF.Name('modelZ'))
@@ -68,7 +75,8 @@ def Fit(data):
     chi2.append(ndf)
     chi2.append(frame.chiSquare(ndf))
     # wildcards or comma-separated components are allowed:
-    model.plotOn(frame,RF.Components('exp*'),RF.LineStyle(kDashed))
+    if isExt:
+        model.plotOn(frame,RF.Components('exp*'),RF.LineStyle(kDashed))
     if False:
         model.plotOn(frame,RF.VisualizeError(r))
         model.paramOn(frame,data)
@@ -87,12 +95,10 @@ if True:
     PrintVariables()
     mean=w.var('mean').getVal()
     emean=w.var('mean').getError()
-    width=w.var('width').getVal()
     sigma=w.var('sigma').getVal()
-    nbg=w.var('nbg').getVal()
-    nsig=w.var('nsig').getVal()
     print 'mW = %.3f +/- %.3f %.2f%% %.2f%%'%(mean,emean,(mean-fmZ)/fmZ*100.0,emean/fmZ*100.0)
-    print 'nsig = %d, nbg = %d'%(nsig,nbg)
+    if nbg and nsig:
+        print 'nsig = %d, nbg = %d'%(nsig.getVal(),nbg.getVal())
     print 'CHI2 = %.2f, NDF = %d'%(chi2[1],chi2[0])
 
 if False:
