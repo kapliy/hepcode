@@ -1,2 +1,3 @@
 python -i zpeak.py scales.root z_p1.05_n1.0_z_p1.05_n1.0.root/dg/dg/st_z_final/z_m
-
+python -i zmultifit.py root_all.root 'mc_zmumu.root/dg/dg/st_z_final/%s/z_m_fine'
+python -i zmultifit.py root_all.root 'data.root/dg/dg/st_z_final/%s/z_m_fine'
