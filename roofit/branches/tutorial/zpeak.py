@@ -22,6 +22,7 @@ mZ = '91.1876'
 # formula for Z mass:
 #formula = 'sqrt((E1+E2)^2-(pz1+pz2)^2-(pt1*cos(phi1)+pt2*cos(phi2))^2-(pt1*sin(phi1)+pt2*sin(phi2))^2)'
 
+# Voigtian with exponential
 if True:
     minZ = '70.0'
     maxZ = '104.0'
@@ -34,6 +35,7 @@ if True:
     #w.var('width').setConstant(kTRUE) if w.var('width') else None
     isExt = kTRUE
 
+# Simple gaussian
 if False:
     minZ = '88.0'
     maxZ = '94.0'
@@ -103,4 +105,9 @@ if True:
 
 if False:
     data = model.generate(w.set('X'),2000)
-    Fit(data)
+    r,frame = Fit(data)
+
+if True:
+    frame = x.frame()
+    model.plotOn(frame)
+    frame.Draw()
