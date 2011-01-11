@@ -53,20 +53,6 @@ if True:
     w.factory(conv)
     w.var('m_r').setConstant(kTRUE) if w.var('m_r') else None
 
-# Manual convolution
-if False:
-    bw = "RooBreitWigner::bw(x[%s,%s],mean[%s],width[0,0,5.0])"
-    gaus = "RooGaussian::gaus(x,mean,sigma[0,0,5.0])"
-    voig = "NCONV::voig(x,%s,%s)"%(bw,gaus)
-    exp  = "RooExponential::exp(x,expar[-0.1,-1,0])"
-    # since nfractions = npdfs, this is automatically an extended likelihood fit
-    cmd = "SUM::sum(nsig[1,0,1000000]*%s,nbg[0,0,1000000]*%s)"%(voig%(minZ,maxZ,'%s,%s,%s'%(mZ,minZ,maxZ)),exp)
-    print cmd
-    w.factory(cmd)
-    ##w.var('x').setBins(10000,'cache')  #for FCONV only!
-    #w.var('width').setConstant(kTRUE) if w.var('width') else None
-    isExt = kTRUE
-
 # make a joint pdf for various signal regions
 frange = (float(minZ),float(maxZ))
 w.factory("")
