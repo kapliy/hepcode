@@ -13,6 +13,7 @@ from ROOT import RooWorkspace,RooArgSet,RooArgList,RooDataHist,RooAbsData,RooFor
 from ROOT import kTRUE,kFALSE,kDashed,gStyle,gPad
 from ROOT import TFile,TH1,TH1F,TH1D
 from ROOT import RooFit as RF
+w = RooWorkspace('w',kTRUE)
 
 # Z mass cannot float if we fit for scale
 mZ = '91.1876'
@@ -23,12 +24,17 @@ frange = (float(minZ),float(maxZ))
 # formula for Z mass:
 #formula = 'sqrt((E1+E2)^2-(pz1+pz2)^2-(pt1*cos(phi1)+pt2*cos(phi2))^2-(pt1*sin(phi1)+pt2*sin(phi2))^2)'
 
-voig = "RooVoigtian::voig(expr('x*%s',x[%s,%s],%s[1.0,0.9,1.1]),mean[%s],width[0,0,5.0],sigma[1,0,5])"  #s,minZ,maxZ,s,mZ
-exp  = "RooExponential::exp(expr('x*%s',x,%s),expar[-0.1,-1,0])" # s,s
+# scale factor part of mean
+if False:
+    voig = "RooVoigtian::voig(x[%s,%s],expr('mean*%s',mean[%s],%s[1.0,0.9,1.1]),width[0,0,5.0],sigma[1,0,5])"  #minZ,maxZ,s,mZ,s
+    exp  = "RooExponential::exp(x,expar[-0.1,-1,0])"
+    w.factory("SUM::sum(nsig[1,0,1000000]*%s,nbg[0,0,1000000]*%s)"%(voig%(minZ,maxZ,'a0',mZ,'a0'),exp))
 
-w = RooWorkspace('w',kTRUE)
-# since nfractions = npdfs, this is automatically an extended likelihood fit
-w.factory("SUM::sum(nsig[1,0,1000000]*%s,nbg[0,0,1000000]*%s)"%(voig%('a0',minZ,maxZ,'a0',mZ),exp%('a0','a0')))
+# scale factor part of x both in sig and bg
+if True:
+    voig = "RooVoigtian::voig(expr('x*%s',x[%s,%s],%s[1.0,0.9,1.1]),mean[%s],width[0,0,5.0],sigma[1,0,5])"  #s,minZ,maxZ,s,mZ
+    exp  = "RooExponential::exp(expr('x*%s',x,%s),expar[-0.1,-1,0])" # s,s
+    w.factory("SUM::sum(nsig[1,0,1000000]*%s,nbg[0,0,1000000]*%s)"%(voig%('a0',minZ,maxZ,'a0',mZ),exp%('a0','a0')))
 
 # make a joint pdf for various signal regions
 w.factory("")
