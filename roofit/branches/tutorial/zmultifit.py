@@ -29,7 +29,7 @@ regmap = {'AA':0,'AB':1,'AC':2,'BA':3,'BB':4,'BC':5,'CA':6,'CB':7,'CC':8}
 regions = ('AA','AB','AC','BA','BB','BC','CA','CB','CC')
 regions = ('AA','AB','BA','BB','BC','CB','CC')
 
-if True:  # fixed Z width
+if False:  # fixed Z width (optional)
     # default best range:
     minZ = '70.0'
     maxZ = '104.0'
@@ -55,9 +55,9 @@ if True:  # fixed Z width
     #w.var('width').setConstant(kTRUE) if w.var('width') else None
     isExt = kTRUE
 
-if False:  # simple gaussian
-    minZ = '86.0'
-    maxZ = '96.0'
+if True:  # simple gaussian
+    minZ = '88.0'
+    maxZ = '94.0'
     gaus = "RooGaussian::pdf%s(expr('x*sqrt(%s*%s)',x[%s,%s],%s[1.0,0.9,1.1],%s[1.0,0.9,1.1]),mean[%s],sigma%s[2.0,0,5])"  #name,s1,s2,minZ,maxZ,s1,s2,mZ
     # create PDFs for each region
     for reg in regions:
