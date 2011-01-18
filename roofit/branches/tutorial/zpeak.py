@@ -133,7 +133,7 @@ if False:
     data = model.generate(w.set('X'),2000)
     r,frame = Fit(data)
 
-if True:
+if False:
     frame = x.frame()
     model.plotOn(frame)
     frame.Draw()
