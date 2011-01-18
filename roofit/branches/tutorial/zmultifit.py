@@ -3,7 +3,7 @@
 
 import sys
 _fin = 'root_all.root'
-_hist = 'data.root/dg/dg/st_z_final/%s/z_m_fine'
+_hist = 'data_data.root/dg/dg/st_z_final/%s/z_m_fine'
 if len(sys.argv)>=2:
     _fin = sys.argv[1]
 if len(sys.argv)>=3:

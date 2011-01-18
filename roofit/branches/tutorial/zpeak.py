@@ -1,8 +1,8 @@
 # fitz a single z peak
 
 import sys
-_fin = 'truthzmumu.root'
-_hist = 'mc_zmumu.root/dg/dg/st_z_final/BB/z_m_fine'
+_fin = 'root_all.root'
+_hist = 'mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/BB/z_m_fine'
 if len(sys.argv)>=2:
     _fin = sys.argv[1]
 if len(sys.argv)>=3:
@@ -44,14 +44,35 @@ if False:
     w.factory(cmd)
     isExt = kFALSE
 
+# fancy shape with interference term, but no BG
+# TODO - RooRealSumPdf with amplitudes
+# see: http://root.cern.ch/root/html/tutorials/roofit/rf704_amplitudefit.C.html
+if False:
+    minZ='70.0'
+    maxZ='110.0'
+    A='1.0,0,1000000'
+    B='100.0,0,1000000'
+    C='10000.0,0,1000000'
+    # Prepare the Z lineshape
+    cmd = "EXPR::bw('A/(x*x)+B*(x*x-mean*mean)/((x*x-mean*mean)*(x*x-mean*mean)+width*width*mean*mean)+C*x*x/((x*x-mean*mean)*(x*x-mean*mean)+width*width*mean*mean)',x[{0},{1}],mean[91.18,{0},{1}],width[2.495,0.1,10],A[{2}],B[{3}],C[{4}])".format(minZ,maxZ,A,B,C)
+    w.factory(cmd)
+    # Prepare the Gaussian
+    cmd = "Gaussian::gaus(x,m_r[0.0],sigma[2.5,0.1,10])"
+    w.factory(cmd)
+    w.var('x').setBins(10000,'cache')
+    conv = 'FCONV::sum(x,bw,gaus)'
+    w.factory(conv)
+    w.var('m_r').setConstant(kTRUE) if w.var('m_r') else None
+    isExt = kFALSE
+
 frange = (float(minZ),float(maxZ))
 
 # make a joint pdf for various signal regions
 w.factory("")
 w.defineSet('X','x')
 model = w.pdf('sum')
-nsig = w.var('nsig')
-nbg = w.var('nbg')
+nsig,nbg = w.var('nsig'),w.var('nbg')
+A,B,C = w.var('A'),w.var('B'),w.var('C')
 mean = w.var('mean')
 #mean.setConstant(kTRUE)
 x = w.var('x')
@@ -67,9 +88,11 @@ def Fit(data):
     if nsig and nbg:
         nsig.setVal(data.sumEntries())
         nbg.setVal(0)
+    if C:
+        C.setVal(data.sumEntries())
     # named ranges can be used in RF.Range in a comma-separated list
     x.setRange('named_range',85,95)
-    r = model.fitTo(data,RF.PrintLevel(-1),RF.Range(*frange),RF.Extended(isExt),RF.NumCPU(4),RF.Save())
+    r = model.fitTo(data,RF.PrintLevel(1),RF.Range(*frange),RF.Extended(isExt),RF.NumCPU(4),RF.Save())
     frame = x.frame()
     RooAbsData.plotOn(data,frame,RF.Name('dataZ'))
     model.plotOn(frame,RF.Name('modelZ'))
@@ -82,11 +105,11 @@ def Fit(data):
     if False:
         model.plotOn(frame,RF.VisualizeError(r))
         model.paramOn(frame,data)
-    frame.Draw()
     return (r,frame)
 
 # getting data from histo
 if True:
+    c = ROOT.TCanvas('c','c'); c.cd()
     f = TFile(_fin,'r')
     hz = f.Get(_hist)
     hz.SetDirectory(0)
@@ -94,6 +117,9 @@ if True:
     f.Close()
     data = RooDataHist('data','Zmumu MC',RooArgList(x),hz)
     r,frame = Fit(data)
+    c.cd()
+    frame.Draw()
+    c.SaveAs('plot.png')
     PrintVariables()
     mean=w.var('mean').getVal()
     emean=w.var('mean').getError()
