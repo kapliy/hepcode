@@ -1,8 +1,8 @@
 # fitz a single z peak
 
 import sys
-_fin = 'zspectrum.root'
-_hist = 'z_m'
+_fin = 'root_all.root'
+_hist = 'mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/BB/z_m_fine'
 if len(sys.argv)>=2:
     _fin = sys.argv[1]
 if len(sys.argv)>=3:

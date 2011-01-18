@@ -1,10 +1,16 @@
+#!/usr/bin/env python
 # separating Z's into 9 detector regions
 
 import sys
 _fin = 'root_all.root'
-reg='AA'
+_hist = 'data_data.root/dg/dg/st_z_final/%s/z_m_fine'
 if len(sys.argv)>=2:
-    reg = sys.argv[1]
+    _fin = sys.argv[1]
+if len(sys.argv)>=3:
+    _hist = sys.argv[2]
+print 'INPUTS SETTINGS:'
+print _fin
+print _hist
 
 mZ = 91.1876
 
@@ -53,11 +59,10 @@ def FitHisto(hz):
 f = ROOT.TFile.Open(_fin,'r')
 c = ROOT.TCanvas('c','c',1024,768)
 c.Divide(3,3)
-g = f.GetDirectory('data.root').GetDirectory('dg').GetDirectory('dg').GetDirectory('st_z_final')
 regs = ('AA','AB','AC','BA','BB','BC','CA','CB','CC')
 for i,reg in enumerate(regs):
     c.cd(i+1)
-    hz = g.Get('%s/z_m'%reg)
+    hz = f.Get(_hist%reg)
     hz.SetDirectory(0)
     FitHisto(hz)
 c.SaveAs('reg_all.png')

@@ -3,8 +3,8 @@
 # playing with roofit convolution
 
 import sys
-_fin = 'truthzmumu.root'
-_hist = 'mc_zmumu.root/dg/dg/st_z_final/BB/z_m_fine'
+_fin = 'root_all.root'
+_hist = 'mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/BB/z_m_fine'
 if len(sys.argv)>=2:
     _fin = sys.argv[1]
 if len(sys.argv)>=3:
@@ -13,7 +13,7 @@ if len(sys.argv)>=3:
 fmZ = 91.1876
 
 import ROOT
-from ROOT import RooWorkspace,RooArgSet,RooArgList,RooDataHist,RooAbsData,RooFormulaVar
+from ROOT import RooWorkspace,RooArgSet,RooArgList,RooDataHist,RooAbsData,RooFormulaVar,RooRealSumPdf
 from ROOT import kTRUE,kFALSE,kDashed,gStyle,gPad
 from ROOT import TFile,TH1,TH1F,TH1D
 from ROOT import RooFit as RF
@@ -42,7 +42,7 @@ if True:
     A='1.0'
     B='100.0'
     C='10000.0'
-    # Prepare the Z lineshape
+    # Prepare the Z lineshape - TODO: this is not doing extended likelihood properly...
     cmd = "EXPR::bw('A/(x*x)+B*(x*x-mean*mean)/((x*x-mean*mean)*(x*x-mean*mean)+width*width*mean*mean)+C*x*x/((x*x-mean*mean)*(x*x-mean*mean)+width*width*mean*mean)',x[{0},{1}],mean[91.18,{0},{1}],width[2.495,0.1,10],A[{2}],B[{3}],C[{4}])".format(minZ,maxZ,A,B,C)
     w.factory(cmd)
     # Prepare the Gaussian
@@ -67,9 +67,9 @@ chi2 = []
 
 def pdf_components():
     cmds = []
-    cmds.append( "EXPR::z_rad('1/(x^2)',x[%s,%s])"%(minZ,maxZ))
-    cmds.append( "EXPR::z_int('(x^2-mean^2)/((x^2-mean^2)^2+width^2*mean^2)',x,mean[91.18,%s,%s],width[2.495,0.1,10])"%(minZ,maxZ) )
-    cmds.append( "EXPR::z_rbw('x^2/((x^2-mean^2)^2+width^2*mean^2)',x,mean,width)" )
+    cmds.append( "expr::z_rad('1/(x^2)',x[%s,%s])"%(minZ,maxZ))
+    cmds.append( "expr::z_int('(x^2-mean^2)/((x^2-mean^2)^2+width^2*mean^2)',x,mean[91.18,%s,%s],width[2.495,0.1,10])"%(minZ,maxZ) )
+    cmds.append( "expr::z_rbw('x^2/((x^2-mean^2)^2+width^2*mean^2)',x,mean,width)" )
     cmds.append( "SUM::bw(A[1.0]*z_rad,B[1.0]*z_int,C[10000]*z_rbw)" )
     # better way:
     minZ='70.0'
