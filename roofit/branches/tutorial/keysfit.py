@@ -3,6 +3,8 @@
 # fits a single z peak using RooKeysPDF
 
 import sys
+import SimpleProgressBar
+
 _fin = 'root_all.root'
 _hist = 'data_data.root/dg/dg/st_z_final/BB/graph_lpt_P_N'
 _hist_truth = 'mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/BB/graph_lpt_P_N'
@@ -33,7 +35,8 @@ mZ = '91.1876'
 
 # Load all datasets
 if True:
-    MAXLOAD=10000
+    MAXLOAD=1000
+    #MAXLOAD=-1
     SMOOTHNESS=2
     # variables and parameters
     w.factory('x[%s,%s]'%(minZ,maxZ)); x = w.var('x')
@@ -51,14 +54,17 @@ if True:
     # make truth(x) for positive and negative muons
     truthP = RooDataSet('truthP','Zmumu mu+ MC',RooArgSet(x))
     truthN = RooDataSet('truthN','Zmumu mu- MC',RooArgSet(x))
+    bar = SimpleProgressBar.SimpleProgressBar(20,N)
     for i in range(0,N):
         if MAXLOAD>0 and i>=MAXLOAD: break
+        if i%(int(N/20))==0:
+            print bar.show(i)
         x.setVal(1.0/pos[i])
         truthP.add(RooArgSet(x))
         x.setVal(1.0/neg[i])
         truthN.add(RooArgSet(x))
-    getattr(w,'import')(truthP)
-    getattr(w,'import')(truthN)
+    getattr(w,'import')(truthP,RF.Rename('truthP'))
+    getattr(w,'import')(truthN,RF.Rename('truthN'))
     #################################################
     # data datasets
     #################################################
@@ -72,23 +78,29 @@ if True:
     # make truth(x) for positive and negative muons
     dataP = RooDataSet('dataP','Zmumu mu+ data',RooArgSet(x))
     dataN = RooDataSet('dataN','Zmumu mu- data',RooArgSet(x))
+    bar = SimpleProgressBar.SimpleProgressBar(20,N)
     for i in range(0,N):
         if MAXLOAD>0 and i>=MAXLOAD: break
+        if i%(int(N/20))==0:
+            print bar.show(i)
         x.setVal(1.0/pos[i])
         dataP.add(RooArgSet(x))
         x.setVal(1.0/neg[i])
         dataN.add(RooArgSet(x))
-    getattr(w,'import')(dataP)
-    getattr(w,'import')(dataN)
+    getattr(w,'import')(dataP,RF.Rename('dataP'))
+    getattr(w,'import')(dataN,RF.Rename('dataN'))
     # make truth(x*b)
     w.factory("expr::xf('x*1.0/b',x,b)")
-    xf = w.function('xf')
-    data = truthP
-    model = RooKeysPdf('model','model from truth',x,data,RooKeysPdf.NoMirror,SMOOTHNESS)
-    #model = RooHistPdf('model','model from truth',RooArgSet(w.var('x')),truth,2)
-    #model = RooHistPdf('model','model from truth',RooArgList(xf),RooArgList(w.var('x')),truth,4)
-    getattr(w,'import')(model)
-    w.writeToFile('workspace.root')
+    w.factory("KeysPdf::model(x,dataP,MirrorBoth,2)")
+    #w.factory("KeysPdf::model(expr('x*1.0/b',x,b),dataP,MirrorBoth,2)")
+    if False:
+        data = truthP
+        xf = w.function('xf')
+        model = RooKeysPdf('model','model from truth',x,data,RooKeysPdf.NoMirror,SMOOTHNESS)
+        model = RooNDKeysPdf('model','model',RooArgList(x),data,'a')
+        model = RooHistPdf('model','model',RooArgList(xf),RooArgList(w.var('x')),truth,4)
+        getattr(w,'import')(model,RF.Rename('model'))
+    #w.writeToFile('workspace.root')
     isExt = kFALSE
 
 frange = (float(minZ),float(maxZ))
@@ -107,6 +119,7 @@ def PrintVariables():
 
 def Fit(data):
     # named ranges can be used in RF.Range in a comma-separated list
+    #RF.Binning
     r = model.fitTo(data,RF.PrintLevel(1),RF.Range(*frange),RF.Extended(isExt),RF.NumCPU(4),RF.Save())
     frame = x.frame()
     RooAbsData.plotOn(data,frame,RF.Name('dataZ'))
