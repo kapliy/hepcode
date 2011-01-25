@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# fits a single z peak
+# fits a single z peak using a histogram template
 
 import sys
 _fin = 'root_all.root'

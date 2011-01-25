@@ -4,3 +4,5 @@ python -i zmultifit.py root_all.root 'data.root/dg/dg/st_z_final/%s/z_m_fine'
 
 s=data_data
 python -i histfit.py root_all.root ${s}.root/dg/dg/st_z_final/BB/leptonP_invp ${s}.root/dg/dg/st_z_final/BB/leptonM_invp
+
+python -i keysfit.py root_all.root data_data.root/dg/dg/st_z_final/BB/graph_lpt_P_N mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/BB/graph_lpt_P_N scalescan_BB.png

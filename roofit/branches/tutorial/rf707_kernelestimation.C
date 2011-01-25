@@ -14,6 +14,7 @@
 #include "RooGlobalFunc.h"
 #endif
 #include "RooRealVar.h"
+#include "RooFormulaVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
 #include "RooConstVar.h"
@@ -35,12 +36,13 @@ void rf707_kernelestimation()
 
   // Create a toy pdf for sampling
   RooRealVar x("x","x",0,20) ;
+  RooRealVar b("b","b",1.0,0.9,1.1) ;
   RooPolynomial p("p","p",x,RooArgList(RooConst(0.01),RooConst(-0.01),RooConst(0.0004))) ;
+
+  RooFormulaVar xf("xf","x*b",RooArgSet(x,b));
 
   // Sample 500 events from p
   RooDataSet* data1 = p.generate(x,200) ;
-
-
 
   // C r e a t e   1 - D   k e r n e l   e s t i m a t i o n   p d f
   // ---------------------------------------------------------------
@@ -49,6 +51,10 @@ void rf707_kernelestimation()
   // is mirrored over the boundaries to minimize edge effects in distribution
   // that do not fall to zero towards the edges
   RooKeysPdf kest1("kest1","kest1",x,*data1,RooKeysPdf::MirrorBoth) ;
+  RooNDKeysPdf ndest1("ndest1","ndest1",RooArgSet(x),*data1,"am");
+  RooNDKeysPdf ndest2("ndest1","ndest1",RooArgSet(xf),*data1,"am");
+
+  exit(0);
 
   // An adaptive kernel estimation pdf on the same data without mirroring option
   // for comparison
@@ -102,15 +108,15 @@ void rf707_kernelestimation()
   TH1* hh_pdf2 = kest5.createHistogram("hh_pdf2",x,Binning(25),YVar(y,Binning(25))) ;
   hh_pdf->SetLineColor(kBlue) ;
   hh_pdf2->SetLineColor(kMagenta) ;
-  
 
 
-  TCanvas* c = new TCanvas("rf707_kernelestimation","rf707_kernelestimation",800,800) ;
-  c->Divide(2,2) ;
-  c->cd(1) ; gPad->SetLeftMargin(0.15) ; frame->GetYaxis()->SetTitleOffset(1.4) ; frame->Draw() ;
-  c->cd(2) ; gPad->SetLeftMargin(0.15) ; frame2->GetYaxis()->SetTitleOffset(1.8) ; frame2->Draw() ;
-  c->cd(3) ; gPad->SetLeftMargin(0.15) ; hh_data->GetZaxis()->SetTitleOffset(1.4) ; hh_data->Draw("lego") ;
-  c->cd(4) ; gPad->SetLeftMargin(0.20) ; hh_pdf->GetZaxis()->SetTitleOffset(2.4) ; hh_pdf->Draw("surf") ; hh_pdf2->Draw("surfsame") ;
-	        
+  if(false) {
+    TCanvas* c = new TCanvas("rf707_kernelestimation","rf707_kernelestimation",800,800) ;
+    c->Divide(2,2) ;
+    c->cd(1) ; gPad->SetLeftMargin(0.15) ; frame->GetYaxis()->SetTitleOffset(1.4) ; frame->Draw() ;
+    c->cd(2) ; gPad->SetLeftMargin(0.15) ; frame2->GetYaxis()->SetTitleOffset(1.8) ; frame2->Draw() ;
+    c->cd(3) ; gPad->SetLeftMargin(0.15) ; hh_data->GetZaxis()->SetTitleOffset(1.4) ; hh_data->Draw("lego") ;
+    c->cd(4) ; gPad->SetLeftMargin(0.20) ; hh_pdf->GetZaxis()->SetTitleOffset(2.4) ; hh_pdf->Draw("surf") ; hh_pdf2->Draw("surfsame") ;
+  }  
 
 }

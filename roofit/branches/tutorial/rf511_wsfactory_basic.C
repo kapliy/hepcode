@@ -80,6 +80,8 @@ void rf511_wsfactory_basic(Bool_t compact=kFALSE)
   // mirroring strategy
   w->factory("KeysPdf::k(x,data,NoMirror,0.2)") ;
 
+  //w->factory("Gaussian::k3(expr('x*b',x,b[1.0,0.95,0.99]),mean,1)") ;
+  //w->factory("KeysPdf::k2(expr('x*b',x,b[1.0,0.95,0.99]),data,NoMirror,0.2)") ;
 
   // Print workspace contents
   w->Print() ;
