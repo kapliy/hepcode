@@ -208,3 +208,14 @@ if True:
     c.SaveAs(_plotname)
     for z in range(9):
         print scale[z],chi2[z]
+
+# compare Keys-smoothed pdf shapes from truth
+if False:
+    c = ROOT.TCanvas('c','c',640,480)
+    modelP = RooKeysPdf('modelP','modelP from truth',x,truthP,RooKeysPdf.MirrorBoth,SMOOTHNESS)
+    modelN = RooKeysPdf('modelN','modelN from truth',x,truthN,RooKeysPdf.MirrorBoth,SMOOTHNESS)
+    frame = x.frame()
+    modelP.plotOn(frame,RF.LineColor(ROOT.kRed))
+    modelN.plotOn(frame,RF.LineColor(ROOT.kBlue))
+    frame.Draw()
+    c.SaveAs(_plotname)
