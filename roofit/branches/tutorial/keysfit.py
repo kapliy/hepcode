@@ -16,6 +16,8 @@ if len(sys.argv)>=3:
     _hist = sys.argv[2]
 if len(sys.argv)>=4:
     _hist_truth = sys.argv[3]
+if len(sys.argv)>=5:
+    _plotname = sys.argv[4]
 
 fmZ = 91.1876
 minZ = 0.005
