@@ -8,7 +8,8 @@ import SimpleProgressBar
 _fin = 'root_all.root'
 _hist = 'data_data.root/dg/dg/st_z_final/BB/graph_lpt_P_N'
 _hist_truth = 'mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/BB/graph_lpt_P_N'
-_hist = _hist_truth
+_plotname = 'plot.png'
+#_hist = _hist_truth
 if len(sys.argv)>=2:
     _fin = sys.argv[1]
 if len(sys.argv)>=3:
@@ -30,12 +31,13 @@ w = RooWorkspace('w',kTRUE)
 
 # Z mass cannot float if we fit for scale
 mZ = '91.1876'
+scale = [0.96,0.97,0.98,0.99,1.0,1.01,1.02,1.03,1.04]
 # formula for Z mass:
 #formula = 'sqrt((E1+E2)^2-(pz1+pz2)^2-(pt1*cos(phi1)+pt2*cos(phi2))^2-(pt1*sin(phi1)+pt2*sin(phi2))^2)'
 
 # Load all datasets
 if True:
-    MAXLOAD=1000
+    MAXLOAD=10000
     #MAXLOAD=-1
     SMOOTHNESS=2
     # variables and parameters
@@ -56,6 +58,7 @@ if True:
     truthN = RooDataSet('truthN','Zmumu mu- MC',RooArgSet(x))
     bar = SimpleProgressBar.SimpleProgressBar(20,N)
     for i in range(0,N):
+        break #FIXME
         if MAXLOAD>0 and i>=MAXLOAD: break
         if i%(int(N/20))==0:
             print bar.show(i)
@@ -75,9 +78,11 @@ if True:
     print 'Loaded data graph',_hist,'with',N,'entries'
     pos = hz.GetX()
     neg = hz.GetY()
-    # make truth(x) for positive and negative muons
+    # make data(x) for positive and negative muons
     dataP = RooDataSet('dataP','Zmumu mu+ data',RooArgSet(x))
     dataN = RooDataSet('dataN','Zmumu mu- data',RooArgSet(x))
+    datasP = [RooDataSet('datasP%s'%i,'Zmumu mu+ data bin %s'%i,RooArgSet(x)) for i in range(9)]
+    datasN = [RooDataSet('datasN%s'%i,'Zmumu mu- data bin %s'%i,RooArgSet(x)) for i in range(9)]
     bar = SimpleProgressBar.SimpleProgressBar(20,N)
     for i in range(0,N):
         if MAXLOAD>0 and i>=MAXLOAD: break
@@ -87,22 +92,28 @@ if True:
         dataP.add(RooArgSet(x))
         x.setVal(1.0/neg[i])
         dataN.add(RooArgSet(x))
+        if True: # scaled versions +/- 3%
+            for z in range(9):
+                x.setVal(scale[z]*1.0/pos[i])
+                datasP[z].add(RooArgSet(x))
+                x.setVal(scale[z]*1.0/neg[i])
+                datasN[z].add(RooArgSet(x))
     getattr(w,'import')(dataP,RF.Rename('dataP'))
     getattr(w,'import')(dataN,RF.Rename('dataN'))
     # make truth(x*b)
     w.factory("expr::xf('x*1.0/b',x,b)")
-    w.factory("KeysPdf::model(x,dataP,MirrorBoth,2)")
+    #w.factory("KeysPdf::model(x,dataP,MirrorBoth,2)")
     #w.factory("KeysPdf::model(expr('x*1.0/b',x,b),dataP,MirrorBoth,2)")
-    if False:
-        data = truthP
+    if True:
+        data_model = dataP
         xf = w.function('xf')
-        model = RooKeysPdf('model','model from truth',x,data,RooKeysPdf.NoMirror,SMOOTHNESS)
-        model = RooNDKeysPdf('model','model',RooArgList(x),data,'a')
-        model = RooHistPdf('model','model',RooArgList(xf),RooArgList(w.var('x')),truth,4)
-        getattr(w,'import')(model,RF.Rename('model'))
+        model = RooKeysPdf('model','model from truth',x,data_model,RooKeysPdf.MirrorBoth,SMOOTHNESS)
+        #model = RooNDKeysPdf('model','model',RooArgList(x),data_model,'am')
+        #model = RooNDKeysPdf('model','model',RooArgList(xf),data_model,'am')
+        #model = RooHistPdf('model','model',RooArgList(xf),RooArgList(w.var('x')),truth,4)
+        getattr(w,'import')(model)
     #w.writeToFile('workspace.root')
     isExt = kFALSE
-
 frange = (float(minZ),float(maxZ))
 
 # make a joint pdf for various signal regions
@@ -166,7 +177,32 @@ if False:
     data = model.generate(w.set('X'),2000)
     r,frame = Fit(data)
 
-if True:
+def plot_data(data,color=ROOT.kBlack):
     frame = x.frame()
+    RooAbsData.plotOn(data,frame,RF.LineColor(color),RF.MarkerColor(color))
     model.plotOn(frame)
+    #model.paramOn(frame,data)
     frame.Draw()
+    chi = frame.chiSquare(1)
+    chi2.append(chi)
+    print chi
+    return frame
+
+if True:
+    c = ROOT.TCanvas('c','c',1024,768)
+    c.Divide(3,3)
+    ps = []
+    for z in range(9):
+        c.cd(z+1)
+        frame = plot_data(datasN[z])
+        # set pave text
+        p = ROOT.TPaveText(.6,.70 , (.6+.30),(.70+.20) ,"NDC")
+        p.SetTextAlign(11)
+        p.SetFillColor(0)
+        p.AddText('Scale=%.2f, chi2=%.2f'%(scale[z],chi2[z]))
+        p.Draw()
+        ps.append(p)
+    c.Update()
+    c.SaveAs(_plotname)
+    for z in range(9):
+        print scale[z],chi2[z]
