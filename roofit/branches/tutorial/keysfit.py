@@ -132,7 +132,6 @@ def PrintVariables():
 
 def Fit(data):
     # named ranges can be used in RF.Range in a comma-separated list
-    #RF.Binning
     r = model.fitTo(data,RF.PrintLevel(1),RF.Range(*frange),RF.Extended(isExt),RF.NumCPU(4),RF.Save())
     frame = x.frame()
     RooAbsData.plotOn(data,frame,RF.Name('dataZ'))
@@ -179,9 +178,9 @@ if False:
     data = model.generate(w.set('X'),2000)
     r,frame = Fit(data)
 
-def plot_data(data,color=ROOT.kBlack):
-    frame = x.frame()
-    RooAbsData.plotOn(data,frame,RF.LineColor(color),RF.MarkerColor(color))
+def plot_data(data,color=ROOT.kBlack,nbins=10):
+    frame = x.frame(RF.Title('1/p_{T}'))
+    RooAbsData.plotOn(data,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(nbins))
     model.plotOn(frame)
     #model.paramOn(frame,data)
     frame.Draw()
@@ -190,13 +189,14 @@ def plot_data(data,color=ROOT.kBlack):
     print chi
     return frame
 
+# Print all scanned (b*x) data points and compute their chi2
 if True:
     c = ROOT.TCanvas('c','c',1024,768)
     c.Divide(3,3)
     ps = []
     for z in range(9):
         c.cd(z+1)
-        frame = plot_data(datasN[z])
+        frame = plot_data(datasN[z],nbins=10)
         # set pave text
         p = ROOT.TPaveText(.6,.70 , (.6+.30),(.70+.20) ,"NDC")
         p.SetTextAlign(11)
