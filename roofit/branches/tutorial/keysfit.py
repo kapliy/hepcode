@@ -2,13 +2,13 @@
 
 # fits a single z peak using RooKeysPDF
 
-import sys
+import sys,array
 import SimpleProgressBar
 
 _fin = 'root_all.root'
 _hist = 'data_data.root/dg/dg/st_z_final/BB/graph_lpt_P_N'
 _hist_truth = 'mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/BB/graph_lpt_P_N'
-_plotname = 'plot.png'
+_tag = 'plot'
 #_hist = _hist_truth
 if len(sys.argv)>=2:
     _fin = sys.argv[1]
@@ -17,7 +17,7 @@ if len(sys.argv)>=3:
 if len(sys.argv)>=4:
     _hist_truth = sys.argv[3]
 if len(sys.argv)>=5:
-    _plotname = sys.argv[4]
+    _tag = sys.argv[4]
 
 fmZ = 91.1876
 minZ = 0.005
@@ -33,14 +33,17 @@ w = RooWorkspace('w',kTRUE)
 
 # Z mass cannot float if we fit for scale
 mZ = '91.1876'
+NSCALE = 20
 scale = [0.96,0.97,0.98,0.99,1.0,1.01,1.02,1.03,1.04]
-# formula for Z mass:
-#formula = 'sqrt((E1+E2)^2-(pz1+pz2)^2-(pt1*cos(phi1)+pt2*cos(phi2))^2-(pt1*sin(phi1)+pt2*sin(phi2))^2)'
+scale = [(0.95 + 0.1*zz/NSCALE) for zz in xrange(NSCALE)]
+print ['%.2f'%z for z in scale[5:]]
+print ['%.2f'%z for z in scale[:5]]
 
 # Load all datasets
 if True:
     MAXLOAD=10000
-    #MAXLOAD=-1
+    #SMOOTHNESS2: value = 0.996 +0.011 -0.011; chi2 = 1.42
+    #SMOOTHNESS4: value = 0.995 +0.013 -0.013; chi2 = 15.26
     SMOOTHNESS=2
     # variables and parameters
     w.factory('x[%s,%s]'%(minZ,maxZ)); x = w.var('x')
@@ -83,8 +86,8 @@ if True:
     # make data(x) for positive and negative muons
     dataP = RooDataSet('dataP','Zmumu mu+ data',RooArgSet(x))
     dataN = RooDataSet('dataN','Zmumu mu- data',RooArgSet(x))
-    datasP = [RooDataSet('datasP%s'%i,'Zmumu mu+ data bin %s'%i,RooArgSet(x)) for i in range(9)]
-    datasN = [RooDataSet('datasN%s'%i,'Zmumu mu- data bin %s'%i,RooArgSet(x)) for i in range(9)]
+    datasP = [RooDataSet('datasP%s'%i,'Zmumu mu+ data bin %s'%i,RooArgSet(x)) for i in range(NSCALE)]
+    datasN = [RooDataSet('datasN%s'%i,'Zmumu mu- data bin %s'%i,RooArgSet(x)) for i in range(NSCALE)]
     bar = SimpleProgressBar.SimpleProgressBar(20,N)
     for i in range(0,N):
         if MAXLOAD>0 and i>=MAXLOAD: break
@@ -94,8 +97,8 @@ if True:
         dataP.add(RooArgSet(x))
         x.setVal(1.0/neg[i])
         dataN.add(RooArgSet(x))
-        if True: # scaled versions +/- 3%
-            for z in range(9):
+        if True: # scaled versions +/- 5%
+            for z in range(NSCALE):
                 x.setVal(scale[z]*1.0/pos[i])
                 datasP[z].add(RooArgSet(x))
                 x.setVal(scale[z]*1.0/neg[i])
@@ -108,8 +111,8 @@ if True:
     #w.factory("KeysPdf::model(expr('x*1.0/b',x,b),dataP,MirrorBoth,2)")
     if True:
         data_model = dataP
-        xf = w.function('xf')
         model = RooKeysPdf('model','model from truth',x,data_model,RooKeysPdf.MirrorBoth,SMOOTHNESS)
+        xf = w.function('xf')
         #model = RooNDKeysPdf('model','model',RooArgList(x),data_model,'am')
         #model = RooNDKeysPdf('model','model',RooArgList(xf),data_model,'am')
         #model = RooHistPdf('model','model',RooArgList(xf),RooArgList(w.var('x')),truth,4)
@@ -146,76 +149,78 @@ def Fit(data):
         #model.plotOn(frame,RF.VisualizeError(r))
         model.paramOn(frame,data)
     return (r,frame)
-
-# getting data from histo
-if False:
-    f = TFile(_fin,'r')
-    hz = f.Get(_hist_truth)
-    f.Close()
-    N = hz.GetN()
-    print 'Loaded graph',_hist_truth,'with',N,'entries'
-    pos = hz.GetX()
-    neg = hz.GetY()
-    dataP = RooDataSet('truth_dataP','Zmumu mu+ MC',RooArgSet(x))
-    dataN = RooDataSet('truth_dataN','Zmumu mu- MC',RooArgSet(x))
-    for i in range(0,N):
-        if i==10000: break
-        x.setVal(1.0/pos[i])
-        truthP.add(RooArgSet(x))
-        x.setVal(1.0/neg[i])
-        truthN.add(RooArgSet(x))
-
-    data = RooDataHist('data','Data histo',RooArgList(x),hz)
-    r,frame = Fit(data)
-    c = ROOT.TCanvas('c','c',800,600)
-    c.cd()
-    frame.Draw()
-    c.SaveAs('plot.png')
-    PrintVariables()
-    print 'CHI2 = %.2f, NDF = %d'%(chi2[1],chi2[0])
-
 if False:
     data = model.generate(w.set('X'),2000)
     r,frame = Fit(data)
+
+# plot template shape
+if True:
+    c3 = ROOT.TCanvas('c3','c3',640,480); c3.cd()
+    frame = x.frame()
+    color=ROOT.kBlue
+    RooAbsData.plotOn(data_model,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(20))
+    model.plotOn(frame,RF.LineColor(color))
+    frame.Draw()
+    c3.SaveAs('%s_template.png'%_tag)
 
 def plot_data(data,color=ROOT.kBlack,nbins=10):
     frame = x.frame(RF.Title('1/p_{T}'))
     RooAbsData.plotOn(data,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(nbins))
     model.plotOn(frame)
     #model.paramOn(frame,data)
-    frame.Draw()
-    chi = frame.chiSquare(1)
-    chi2.append(chi)
-    print chi
     return frame
 
-# Print all scanned (b*x) data points and compute their chi2
+# Scan the parameter space and determine best value & error
 if True:
     c = ROOT.TCanvas('c','c',1024,768)
     c.Divide(3,3)
-    ps = []
-    for z in range(9):
-        c.cd(z+1)
-        frame = plot_data(datasN[z],nbins=10)
-        # set pave text
-        p = ROOT.TPaveText(.6,.70 , (.6+.30),(.70+.20) ,"NDC")
-        p.SetTextAlign(11)
-        p.SetFillColor(0)
-        p.AddText('Scale=%.2f, chi2=%.2f'%(scale[z],chi2[z]))
-        p.Draw()
-        ps.append(p)
+    ps = [] # garbage collector
+    zplot = 1
+    for z in xrange(NSCALE):
+        frame = plot_data(datasN[z],nbins=10); ps.append(frame)
+        chi = frame.chiSquare(1)
+        chi2.append(chi)
+        step = NSCALE/9 or 1
+        if z%step==0:
+            # plot
+            c.cd(zplot)
+            zplot+=1
+            frame.Draw()
+            # set pave text
+            p = ROOT.TPaveText(.6,.70 , (.6+.30),(.70+.20) ,"NDC")
+            p.SetTextAlign(11)
+            p.SetFillColor(0)
+            p.AddText('Scale=%.2f, chi2=%.2f'%(scale[z],chi2[z]))
+            p.Draw()
+            ps.append(p)
     c.Update()
-    c.SaveAs(_plotname)
-    for z in range(9):
-        print scale[z],chi2[z]
-
-# compare Keys-smoothed pdf shapes from truth
-if False:
-    c = ROOT.TCanvas('c','c',640,480)
-    modelP = RooKeysPdf('modelP','modelP from truth',x,truthP,RooKeysPdf.MirrorBoth,SMOOTHNESS)
-    modelN = RooKeysPdf('modelN','modelN from truth',x,truthN,RooKeysPdf.MirrorBoth,SMOOTHNESS)
-    frame = x.frame()
-    modelP.plotOn(frame,RF.LineColor(ROOT.kRed))
-    modelN.plotOn(frame,RF.LineColor(ROOT.kBlue))
-    frame.Draw()
-    c.SaveAs(_plotname)
+    c.SaveAs('%s_scan.png'%_tag)
+    c2 = ROOT.TCanvas('c2','c2',800,600); c2.cd()
+    h = ROOT.TGraph(NSCALE)
+    h.SetMarkerColor(4);
+    h.SetMarkerSize(1.5);
+    h.SetMarkerStyle(21);
+    h.SetTitle('Scale fit and its error (%s)'%_tag)
+    for z in xrange(NSCALE):
+        h.SetPoint(z,scale[z],chi2[z])
+        #print scale[z],chi2[z]
+    h.Draw('ACP')
+    FITMIN=0.97
+    FITMAX=1.03
+    fr = h.Fit('pol2','S','',FITMIN,FITMAX)
+    f = h.GetFunction('pol2')
+    chimin = f.GetMinimum(FITMIN,FITMAX)
+    xmin = f.GetMinimumX(FITMIN,FITMAX)
+    xleft = f.GetX(chimin+1,FITMIN,xmin)
+    xright = f.GetX(chimin+1,xmin,FITMAX)
+    line = ROOT.TGraph(2)
+    line.SetPoint(0,xleft,chimin+1)
+    line.SetPoint(1,xright,chimin+1)
+    line.SetLineWidth(2)
+    line.SetLineColor(ROOT.kRed)
+    line.Draw('l')
+    c2.SaveAs('%s_chi2.png'%_tag)
+    print 'value = %.3f +%.3f -%.3f; chi2 = %.2f'%(xmin,xmin-xleft,xright-xmin,chimin)
+    fout = open('%s_results.rtxt'%_tag,'w')
+    print >>fout,'value = %.3f +%.3f -%.3f; chi2 = %.2f'%(xmin,xmin-xleft,xright-xmin,chimin)
+    fout.close()
