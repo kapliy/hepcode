@@ -5,10 +5,16 @@
 import sys,array
 import SimpleProgressBar
 
+def func_SCALE(xx,par):
+    return par*1.0/xx
+def func_SHIFT(xx,par):
+    return 1.0/xx + par
+
 _fin = 'root_all.root'
 _hist = 'data_data.root/dg/dg/st_z_final/BB/graph_lpt_P_N'
 _hist_truth = 'mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/BB/graph_lpt_P_N'
 _tag = 'plot'
+SS=0
 #_hist = _hist_truth
 if len(sys.argv)>=2:
     _fin = sys.argv[1]
@@ -18,12 +24,15 @@ if len(sys.argv)>=4:
     _hist_truth = sys.argv[3]
 if len(sys.argv)>=5:
     _tag = sys.argv[4]
+if len(sys.argv)>=6:
+    SS=1
 
 fmZ = 91.1876
 minZ = 0.005
 maxZ = 0.05
 
 import ROOT
+ROOT.gROOT.SetBatch(1)
 from ROOT import RooWorkspace,RooArgSet,RooArgList,RooDataHist,RooDataSet,RooAbsData,RooFormulaVar
 from ROOT import RooHistPdf,RooKeysPdf,RooNDKeysPdf
 from ROOT import kTRUE,kFALSE,kDashed,gStyle,gPad
@@ -33,17 +42,24 @@ w = RooWorkspace('w',kTRUE)
 
 # Z mass cannot float if we fit for scale
 mZ = '91.1876'
-NSCALE = 20
-scale = [0.96,0.97,0.98,0.99,1.0,1.01,1.02,1.03,1.04]
-scale = [(0.95 + 0.1*zz/NSCALE) for zz in xrange(NSCALE)]
-print ['%.2f'%z for z in scale[5:]]
-print ['%.2f'%z for z in scale[:5]]
+if SS==0:
+    NSCALE = 20
+    func = func_SCALE
+    scale = [(0.95 + 0.1*zz/NSCALE) for zz in xrange(NSCALE)]
+    FITMIN=0.97
+    FITMAX=1.03
+else:
+    NSCALE = 20
+    func = func_SHIFT
+    scale = [(-0.002 + 0.004*zz/NSCALE) for zz in xrange(NSCALE)]
+    FITMIN = -0.001
+    FITMAX =  0.001
+print ['%.2f'%(z*100) for z in scale[5:]]
+print ['%.2f'%(z*100) for z in scale[:5]]
 
 # Load all datasets
 if True:
     MAXLOAD=10000
-    #SMOOTHNESS2: value = 0.996 +0.011 -0.011; chi2 = 1.42
-    #SMOOTHNESS4: value = 0.995 +0.013 -0.013; chi2 = 15.26
     SMOOTHNESS=2
     # variables and parameters
     w.factory('x[%s,%s]'%(minZ,maxZ)); x = w.var('x')
@@ -97,11 +113,11 @@ if True:
         dataP.add(RooArgSet(x))
         x.setVal(1.0/neg[i])
         dataN.add(RooArgSet(x))
-        if True: # scaled versions +/- 5%
+        if True: # scaled or shifted versions
             for z in range(NSCALE):
-                x.setVal(scale[z]*1.0/pos[i])
+                x.setVal(func(pos[i],scale[z]))
                 datasP[z].add(RooArgSet(x))
-                x.setVal(scale[z]*1.0/neg[i])
+                x.setVal(func(neg[i],scale[z]))
                 datasN[z].add(RooArgSet(x))
     getattr(w,'import')(dataP,RF.Rename('dataP'))
     getattr(w,'import')(dataN,RF.Rename('dataN'))
@@ -128,32 +144,7 @@ model = w.pdf('model')
 x = w.var('x')
 chi2 = []
 
-def PrintVariables():
-    #model.Print('t')
-    vars = model.getVariables()
-    vars.Print('v')
-
-def Fit(data):
-    # named ranges can be used in RF.Range in a comma-separated list
-    r = model.fitTo(data,RF.PrintLevel(1),RF.Range(*frange),RF.Extended(isExt),RF.NumCPU(4),RF.Save())
-    frame = x.frame()
-    RooAbsData.plotOn(data,frame,RF.Name('dataZ'))
-    model.plotOn(frame,RF.Name('modelZ'))
-    ndf = r.floatParsFinal().getSize()
-    chi2.append(ndf)
-    chi2.append(frame.chiSquare(ndf))
-    # wildcards or comma-separated components are allowed:
-    if isExt:
-        model.plotOn(frame,RF.Components('exp*'),RF.LineStyle(kDashed))
-    if True:
-        #model.plotOn(frame,RF.VisualizeError(r))
-        model.paramOn(frame,data)
-    return (r,frame)
-if False:
-    data = model.generate(w.set('X'),2000)
-    r,frame = Fit(data)
-
-# plot template shape
+# Plot template shape
 if True:
     c3 = ROOT.TCanvas('c3','c3',640,480); c3.cd()
     frame = x.frame()
@@ -163,14 +154,13 @@ if True:
     frame.Draw()
     c3.SaveAs('%s_template.png'%_tag)
 
+# Scan the parameter space and determine best value & error
 def plot_data(data,color=ROOT.kBlack,nbins=10):
     frame = x.frame(RF.Title('1/p_{T}'))
     RooAbsData.plotOn(data,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(nbins))
     model.plotOn(frame)
     #model.paramOn(frame,data)
     return frame
-
-# Scan the parameter space and determine best value & error
 if True:
     c = ROOT.TCanvas('c','c',1024,768)
     c.Divide(3,3)
@@ -200,25 +190,29 @@ if True:
     h.SetMarkerColor(4);
     h.SetMarkerSize(1.5);
     h.SetMarkerStyle(21);
-    h.SetTitle('Scale fit and its error (%s)'%_tag)
+    h.SetTitle('Momentum %s: best value and error (%s)'%('scale' if SS==0 else 'shift',_tag))
     for z in xrange(NSCALE):
         h.SetPoint(z,scale[z],chi2[z])
         #print scale[z],chi2[z]
     h.Draw('ACP')
-    FITMIN=0.97
-    FITMAX=1.03
     fr = h.Fit('pol2','S','',FITMIN,FITMAX)
     f = h.GetFunction('pol2')
     chimin = f.GetMinimum(FITMIN,FITMAX)
     xmin = f.GetMinimumX(FITMIN,FITMAX)
     xleft = f.GetX(chimin+1,FITMIN,xmin)
     xright = f.GetX(chimin+1,xmin,FITMAX)
+    err = 0.5*((xmin-xleft)+(xright-xmin))
     line = ROOT.TGraph(2)
     line.SetPoint(0,xleft,chimin+1)
     line.SetPoint(1,xright,chimin+1)
     line.SetLineWidth(2)
     line.SetLineColor(ROOT.kRed)
     line.Draw('l')
+    p = ROOT.TPaveText(.35,.80 , (.35+.30),(.80+.10) ,"NDC")
+    p.SetTextAlign(11)
+    p.SetFillColor(0)
+    p.AddText('Best value = %.3f +/- %.3f'%(xmin,err))
+    p.Draw()
     c2.SaveAs('%s_chi2.png'%_tag)
     print 'value = %.3f +%.3f -%.3f; chi2 = %.2f'%(xmin,xmin-xleft,xright-xmin,chimin)
     fout = open('%s_results.rtxt'%_tag,'w')
