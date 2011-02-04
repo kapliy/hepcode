@@ -45,9 +45,9 @@ mZ = '91.1876'
 if SS==0:
     NSCALE = 20
     func = func_SCALE
-    scale = [(0.95 + 0.1*zz/NSCALE) for zz in xrange(NSCALE)]
-    FITMIN=0.97
-    FITMAX=1.03
+    scale = [(0.93 + 0.14*zz/NSCALE) for zz in xrange(NSCALE)]
+    FITMIN=0.95
+    FITMAX=1.05
 else:
     NSCALE = 20
     func = func_SHIFT
