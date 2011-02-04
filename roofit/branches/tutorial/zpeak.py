@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # fitz a single z peak
 
 import sys
@@ -11,7 +12,8 @@ if len(sys.argv)>=3:
 fmZ = 91.1876
 
 import ROOT
-from ROOT import RooWorkspace,RooArgSet,RooArgList,RooDataHist,RooAbsData,RooFormulaVar
+from ROOT import RooWorkspace,RooArgSet,RooArgList,RooDataHist,RooAbsData,RooFormulaVar,RooRealSumPdf
+from ROOT import RooGaussModel,RooAddModel,RooRealVar
 from ROOT import kTRUE,kFALSE,kDashed,gStyle,gPad
 from ROOT import TFile,TH1,TH1F,TH1D
 from ROOT import RooFit as RF
@@ -23,7 +25,7 @@ mZ = '91.1876'
 #formula = 'sqrt((E1+E2)^2-(pz1+pz2)^2-(pt1*cos(phi1)+pt2*cos(phi2))^2-(pt1*sin(phi1)+pt2*sin(phi2))^2)'
 
 # Voigtian with exponential
-if True:
+if False:
     minZ = '70.0'
     maxZ = '104.0'
     voig = "RooVoigtian::voig(x[%s,%s],mean[%s],width[0,0,5.0],sigma[1,0,5])"  #minZ,maxZ,mZ(or range)
@@ -62,6 +64,42 @@ if False:
     w.var('x').setBins(10000,'cache')
     conv = 'FCONV::sum(x,bw,gaus)'
     w.factory(conv)
+    w.var('m_r').setConstant(kTRUE) if w.var('m_r') else None
+    isExt = kFALSE
+
+# fancy shape with interference term, but no BG - via AmplitudeFit
+if True:
+    minZ='70.0'
+    maxZ='110.0'
+    A='1000.0,0,1000000'
+    B='1000.0,0,1000000'
+    C='10000.0,0,1000000'
+    # Prepare the Z lineshape
+    cmds = []
+    cmds.append( "expr::z_rad('1/(x^2)',x[%s,%s])"%(minZ,maxZ))
+    cmds.append( "expr::z_int('(x^2-mean^2)/((x^2-mean^2)^2+width^2*mean^2)',x,mean[91.18,%s,%s],width[2.495,0.1,10])"%(minZ,maxZ) )
+    cmds.append( "expr::z_rbw('x^2/((x^2-mean^2)^2+width^2*mean^2)',x,mean,width)" )
+    cmds.append( "A[%s]"%A )
+    cmds.append( "B[%s]"%B )
+    cmds.append( "C[%s]"%C )
+    cmds.append( "Gaussian::gaus(x,m_r[0.0],sigma[2.5,0.1,10])" )
+    [w.factory(cmd) for cmd in cmds]
+    lshape = RooRealSumPdf('lshape','lshape',RooArgList(w.function('z_rad'),w.function('z_int'),w.function('z_rbw')),RooArgList(w.var('A'),w.var('B'),w.var('C')))
+    getattr(w,'import')(lshape)
+    if True:  # double-gaussian
+        x = w.var('x')
+        m_r = w.var('m_r')
+        sigma_core = RooRealVar("sigma_core","sigma core",1) ;
+        gaussm_core = RooGaussModel("gaussm_core","core gauss",x,m_r,sigma_core) ;
+        sigma_tail = RooRealVar("sigma_tail","sigma tail",5) ;
+        gaussm_tail = RooGaussModel("gaussm_tail","tail gauss",x,m_r,sigma_tail) ;
+        frac_core = RooRealVar("frac_core","core fraction",0.85) ;
+        gaussm = RooAddModel("gaussm","core+tail gauss", RooArgList(gaussm_core,gaussm_tail),RooArgList(frac_core)) ; 
+        getattr(w,'import')(gaussm)
+    w.var('x').setBins(10000,'cache')
+    cmd = 'FCONV::sum(x,lshape,gaus)'
+    cmd = 'FCONV::sum(x,lshape,gaussm)'
+    w.factory(cmd)
     w.var('m_r').setConstant(kTRUE) if w.var('m_r') else None
     isExt = kFALSE
 
