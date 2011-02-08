@@ -21,6 +21,12 @@ parser.add_option("--data",dest="data",
 parser.add_option("--ndata",dest="ndata",
                   type="int", default=10000,
                   help="Number of unbinned data points to load")
+parser.add_option("--nskip",dest="nskip",
+                  type="int", default=0,
+                  help="Number of data points to skip load")
+parser.add_option("--forcescale",dest="forcescale",
+                  type="float", default=1.0,
+                  help="Force a particular scale factor on positive muons")
 parser.add_option("--mc",dest="mc",
                   type="string", default='mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/BB/graph_lpt_P_N',
                   help="TGraph containing MC histograms")
@@ -62,6 +68,9 @@ parser.add_option("--scan", default=False,
 parser.add_option("--kolmogorov", default=False,
                   action="store_true",dest="kolmogorov",
                   help="Perform unbinned KS comparison of two spectra")
+parser.add_option("--ngroups", dest="ngroups",
+                  type="int", default=0,
+                  help="Split the sample into ngroups subsamples of size ndata and study variations of fitted mean")
 
 (opts, args) = parser.parse_args()
 
@@ -131,7 +140,10 @@ if True:
     hz = f.Get(opts.data)
     f.Close()
     N = hz.GetN()
-    print 'Loaded data graph',opts.data,'with',N,'entries'
+    nmax = min(N,opts.nskip+opts.ndata)
+    nstep = nmax-opts.nskip if nmax-opts.nskip>10 else 10
+    ngroups = opts.ngroups if opts.ngroups < int(N/nmax) else int(N/nmax)
+    print 'Loaded data graph',opts.data,'with',N,'entries','in',ngroups,'groups'
     pos = hz.GetX()
     neg = hz.GetY()
     # make data(x) for positive and negative muons
@@ -139,21 +151,40 @@ if True:
     dataN = RooDataSet('dataN','Zmumu mu- data',RooArgSet(x))
     datasP = [RooDataSet('datasP%s'%i,'Zmumu mu+ data bin %s'%i,RooArgSet(x)) for i in range(opts.nscan)]
     datasN = [RooDataSet('datasN%s'%i,'Zmumu mu- data bin %s'%i,RooArgSet(x)) for i in range(opts.nscan)]
-    nmax = min(N,opts.ndata); nmaxp10 = nmax if nmax>10 else 10
+    datasNsp = []
+    for j in range(ngroups):
+        datasNsp.append([])
+        for i in range(opts.nscan):
+            datasNsp[j].append(RooDataSet('datasNsp%s_%s'%(i,j),'Zmumu mu- data bin %s %s'%(i,j),RooArgSet(x)))
+    # default dataP and dataN
     bar = SimpleProgressBar.SimpleProgressBar(10,nmax)
-    for i in range(0,nmax):
-        if i%(int(nmaxp10/10))==0 and i>0:
-            print bar.show(i)
-        x.setVal(1.0/pos[i])
+    print 'Loading default data...'
+    for i in range(opts.nskip,nmax):
+        x.setVal(1.0/pos[i]*opts.forcescale)
         dataP.add(RooArgSet(x))
         x.setVal(1.0/neg[i])
         dataN.add(RooArgSet(x))
-        if True: # scaled or shifted versions
+    # scaled shifted versions for manual scans
+    if opts.ngroups==0:
+        print 'Loading scaled data arrays...'
+        for i in range(opts.nskip,nmax):
+            if (i-opts.nskip)%(int(nstep/10))==0 and i-opts.nskip>0:
+                print bar.show(i)
             for z in range(opts.nscan):
-                x.setVal(func(pos[i],scale[z]))
-                datasP[z].add(RooArgSet(x))
                 x.setVal(func(neg[i],scale[z]))
                 datasN[z].add(RooArgSet(x))
+    # scaled / shifted versions in multiple splits
+    else:
+        print 'Loading scaled data arrays in %s chunks...'%ngroups
+        for j in range(ngroups):
+            print 'Loading range %s/%s'%(j,ngroups)
+            for i in range(nmax*j,nmax*(j+1)):
+                if i>=N: continue
+                if (i)%(int(nstep/10))==0 and i>0:
+                    print bar.show(i-nmax*j)
+                for z in range(opts.nscan):
+                    x.setVal(func(neg[i],scale[z]))
+                    datasNsp[j][z].add(RooArgSet(x))
     getattr(w,'import')(dataP,RF.Rename('dataP'))
     getattr(w,'import')(dataN,RF.Rename('dataN'))
     # make truth(x*b)
@@ -206,7 +237,7 @@ def p_value(dP,dN):
     assert len(arrayP)==len(arrayN),'ERROR: different array sizes'
     pval = ROOT.TMath.KolmogorovTest(len(arrayP),arrayP,len(arrayN),arrayN,'')
     return pval
-if opts.kolmogorov:
+if False:
     print 'Entering Kolmogorov studies'
     print p_value(dataP,dataN)
 
@@ -218,6 +249,45 @@ def plot_data(data,color=ROOT.kBlack,nbins=10):
     chi = frame.chiSquare(1)
     #model.paramOn(frame,data)
     return frame,chi
+def make_graph(n,xs,ys):
+    h = ROOT.TGraph(n)
+    h.SetMarkerColor(4);
+    h.SetMarkerSize(1.5);
+    h.SetMarkerStyle(21);
+    for z in xrange(n):
+        h.SetPoint(z,xs[z],ys[z])
+    return h
+def fitgraph(h,is_kolmogorov,FITMIN,FITMAX):
+    if is_kolmogorov:
+        # fit gaussian core
+        rms,mean=h.GetRMS(),h.GetMean()
+        rms,pc=h.GetRMS(),max([(h.GetY()[i],h.GetX()[i]) for i in xrange(h.GetN())])
+        peak,chimean = pc[1],pc[0]
+        print 'peak and rms:',peak,rms
+        FITMIN=peak-rms
+        FITMAX=peak+rms
+        print 'Fitting range:',FITMIN,FITMAX
+        fr = h.Fit('gaus','S','',FITMIN,FITMAX)
+        f = h.GetFunction('gaus')
+        chimin = f.GetMaximum(FITMIN,FITMAX)
+        xmin = f.GetParameter(1)
+        err = f.GetParameter(2)
+        xleft,xright = xmin-err,xmin+err
+        lbl_xmin = 0.55
+        xtra='max=%.2f%%'%(peak*100.0)
+    else:
+        # fit parabola
+        fr = h.Fit('pol2','S','',FITMIN,FITMAX)
+        f = h.GetFunction('pol2')
+        chimin = f.GetMinimum(FITMIN,FITMAX)
+        xmin = f.GetMinimumX(FITMIN,FITMAX)
+        xleft = f.GetX(chimin+1,FITMIN,xmin)
+        xright = f.GetX(chimin+1,xmin,FITMAX)
+        err = 0.5*((xmin-xleft)+(xright-xmin))
+        lbl_xmin = 0.35
+        xtra=''
+    return xmin,err,xleft,xright,xtra,lbl_xmin,chimin
+    
 if opts.scan:
     print 'Entering parameter scan studies'
     if not opts.kolmogorov:
@@ -248,48 +318,17 @@ if opts.scan:
         c.Update()
         c.SaveAs('%s_scan.png'%opts.tag)
     c2 = ROOT.TCanvas('c2','c2',800,600); c2.cd()
-    h = ROOT.TGraph(opts.nscan)
-    h.SetMarkerColor(4);
-    h.SetMarkerSize(1.5);
-    h.SetMarkerStyle(21);
+    h = make_graph(opts.nscan,scale,chi2)
     h.SetTitle('Momentum %s: best value and error (%s)'%('scale' if not opts.shift else 'shift',opts.tag))
-    for z in xrange(opts.nscan):
-        h.SetPoint(z,scale[z],chi2[z])
-        #print scale[z],chi2[z]
     h.Draw('ACP')
-    xtra=''
-    if opts.kolmogorov:
-        # fit gaussian core
-        rms,mean=h.GetRMS(),h.GetMean()
-        rms,pc=h.GetRMS(),max([(h.GetY()[i],h.GetX()[i]) for i in xrange(h.GetN())])
-        peak,chimean = pc[1],pc[0]
-        print 'peak and rms:',peak,rms
-        FITMIN=peak-rms
-        FITMAX=peak+rms
-        print 'Fitting range:',FITMIN,FITMAX
-        fr = h.Fit('gaus','S','',FITMIN,FITMAX)
-        f = h.GetFunction('gaus')
-        chimin = f.GetMaximum(FITMIN,FITMAX)
-        xmin = f.GetParameter(1)
-        err = f.GetParameter(2)
-        lbl_xmin = 0.55
-        xtra='max=%.2f%%'%(peak*100.0)
-    else:
-        # fit parabola
-        fr = h.Fit('pol2','S','',FITMIN,FITMAX)
-        f = h.GetFunction('pol2')
-        chimin = f.GetMinimum(FITMIN,FITMAX)
-        xmin = f.GetMinimumX(FITMIN,FITMAX)
-        xleft = f.GetX(chimin+1,FITMIN,xmin)
-        xright = f.GetX(chimin+1,xmin,FITMAX)
-        err = 0.5*((xmin-xleft)+(xright-xmin))
+    xmin,err,xleft,xright,xtra,lbl_xmin,chimin=fitgraph(h,opts.kolmogorov,FITMIN,FITMAX)
+    if not opts.kolmogorov:
         line = ROOT.TGraph(2)
         line.SetPoint(0,xleft,chimin+1)
         line.SetPoint(1,xright,chimin+1)
         line.SetLineWidth(4)
         line.SetLineColor(ROOT.kRed)
         line.Draw('l')
-        lbl_xmin = 0.35
     p = ROOT.TPaveText(lbl_xmin,.80 , (lbl_xmin+.35),(.80+.10) ,"NDC")
     p.SetTextAlign(11)
     p.SetFillColor(0)
@@ -305,3 +344,31 @@ if opts.scan:
     fout = open('%s_results.rtxt'%opts.tag,'w')
     print >>fout,'value = %.10f +/- %.10f ; chi2 = %.10f %s'%(xmin,err,chimin,xtra)
     fout.close()
+
+# study statistical stability of distributions
+def runscan(j):
+    """ Extract chi2 scan results for data group j """
+    res = []
+    for z in xrange(opts.nscan):
+        if opts.kolmogorov:
+            frame,chi = None,p_value(dataP,datasNsp[j][z])
+        else:
+            frame,chi = plot_data(datasNsp[j][z],nbins=opts.nbins);
+        res.append(chi)
+    return res
+if opts.ngroups>0:
+    print 'Entering splitted-sample studies in %s groups'%ngroups
+    means = []
+    errors = []
+    for j in range(ngroups):
+        h = make_graph(opts.nscan,scale,runscan(j))
+        xmin,err,xleft,xright,xtra,lbl_xmin,chimin=fitgraph(h,opts.kolmogorov,FITMIN,FITMAX)
+        means.append(xmin)
+        errors.append(err)
+    mean = sum(means)/len(means)
+    err = sum(errors)/len(errors)
+    c2 = ROOT.TCanvas('c2','c2',800,600); c2.cd()
+    h = ROOT.TH1F('h','h',20,mean-err,mean+err)
+    [h.Fill(m) for m in means]
+    h.Draw()
+    c2.SaveAs('%s_statcheck.png'%opts.tag)
