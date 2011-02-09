@@ -33,6 +33,9 @@ parser.add_option("--mc",dest="mc",
 parser.add_option("--nmc",dest="nmc",
                   type="int", default=1,
                   help="Number of unbinned MC points to load")
+parser.add_option("--rookeys",dest="rookeys",
+                  type="string", default=None,
+                  help="ROOT file containing cached RooKeysPdf")
 parser.add_option('-t',"--tag",dest="tag",
                   type="string", default='plot',
                   help="A tag to append to all output plots")
@@ -71,6 +74,9 @@ parser.add_option("--kolmogorov", default=False,
 parser.add_option("--ngroups", dest="ngroups",
                   type="int", default=0,
                   help="Split the sample into ngroups subsamples of size ndata and study variations of fitted mean")
+parser.add_option("--varbins", default=False,
+                  action="store_true",dest="varbins",
+                  help="Study systematic effect of bin variation")
 
 (opts, args) = parser.parse_args()
 
@@ -191,11 +197,19 @@ if True:
     w.factory("expr::xf('x*1.0/b',x,b)")
     #w.factory("KeysPdf::model(x,dataP,MirrorBoth,2)")
     #w.factory("KeysPdf::model(expr('x*1.0/b',x,b),dataP,MirrorBoth,2)")
-    if not opts.kolmogorov:
-        data_model = dataP
+    data_model = dataP
+    if opts.rookeys:
+        fkeys = ROOT.TFile.Open(opts.rookeys)
+        assert fkeys.IsOpen(),'Failed to open RooKeysPdf cache file: %s'%opts.rookeys
+        model = fkeys.wsave.pdf('model')
+        getattr(w,'import')(model)
+        fkeys.Close()
+    elif not opts.kolmogorov:
         print 'Making RooKeysPdf. Please wait...'
-        # todo - caching mechanism!
         model = RooKeysPdf('model','model from truth',x,data_model,RooKeysPdf.MirrorBoth,opts.smooth)
+        wsave = RooWorkspace('wsave',kTRUE)
+        getattr(wsave,'import')(model)
+        wsave.writeToFile('workspace.root')
         xf = w.function('xf')
         #model = RooNDKeysPdf('model','model',RooArgList(x),data_model,'am')
         #model = RooNDKeysPdf('model','model',RooArgList(xf),data_model,'am')
@@ -274,7 +288,7 @@ def fitgraph(h,is_kolmogorov,FITMIN,FITMAX):
         err = f.GetParameter(2)
         xleft,xright = xmin-err,xmin+err
         lbl_xmin = 0.55
-        xtra='max=%.2f%%'%(peak*100.0)
+        xtra='peak=%.2f%%'%(peak*100.0)
     else:
         # fit parabola
         fr = h.Fit('pol2','S','',FITMIN,FITMAX)
@@ -346,14 +360,14 @@ if opts.scan:
     fout.close()
 
 # study statistical stability of distributions
-def runscan(j):
+def runscan(data,nbins=opts.nbins):
     """ Extract chi2 scan results for data group j """
     res = []
     for z in xrange(opts.nscan):
         if opts.kolmogorov:
-            frame,chi = None,p_value(dataP,datasNsp[j][z])
+            frame,chi = None,p_value(dataP,data[z])
         else:
-            frame,chi = plot_data(datasNsp[j][z],nbins=opts.nbins);
+            frame,chi = plot_data(data[z],nbins=nbins);
         res.append(chi)
     return res
 if opts.ngroups>0:
@@ -361,7 +375,7 @@ if opts.ngroups>0:
     means = []
     errors = []
     for j in range(ngroups):
-        h = make_graph(opts.nscan,scale,runscan(j))
+        h = make_graph(opts.nscan,scale,runscan(datasNsp[j]))
         xmin,err,xleft,xright,xtra,lbl_xmin,chimin=fitgraph(h,opts.kolmogorov,FITMIN,FITMAX)
         means.append(xmin)
         errors.append(err)
@@ -372,3 +386,25 @@ if opts.ngroups>0:
     [h.Fill(m) for m in means]
     h.Draw()
     c2.SaveAs('%s_statcheck.png'%opts.tag)
+
+if opts.varbins:
+    print 'Entering splitted-sample studies in %s groups'%ngroups
+    means = []
+    errors = []
+    bins = range(2,opts.nbins)
+    for ibins in bins:
+        h = make_graph(opts.nscan,scale,runscan(datasN,ibins))
+        xmin,err,xleft,xright,xtra,lbl_xmin,chimin=fitgraph(h,False,FITMIN,FITMAX)
+        means.append(xmin)
+        errors.append(err)
+    c2 = ROOT.TCanvas('c2','c2',800,600); c2.cd()
+    h = ROOT.TGraphErrors(len(bins))
+    h.SetMarkerColor(4);
+    h.SetMarkerSize(1.5);
+    h.SetMarkerStyle(21);
+    for z in xrange(len(bins)):
+        h.SetPoint(z,bins[z],means[z])
+        h.SetPointError(z,0,errors[z])
+    h.Draw('A*')
+    #ROOT.gPad.SetLogy(ROOT.kTRUE)
+    c2.SaveAs('%s_varbins.png'%opts.tag)
