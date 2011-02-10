@@ -13,10 +13,10 @@ parser.add_option("--forcescale",dest="forcescale",
                   type="float", default=1.0,
                   help="Force a particular scale factor on positive muons")
 parser.add_option("--fitmin",dest="fitmin",
-                  type="float", default=0.98,
+                  type="float", default=0.99,
                   help="Minimum bound of fit range")
 parser.add_option("--fitmax",dest="fitmax",
-                  type="float", default=1.02,
+                  type="float", default=1.01,
                   help="Maximum bound of fit range")
 parser.add_option("--maxbins",dest="maxbins",
                   type="int", default=20,
@@ -56,6 +56,7 @@ w.factory("Gaussian::gaus2(expr('x*sf',x,sf),mean,sigma)")
 model = w.pdf('gaus')
 model_s = w.pdf('gaus2')
 x = w.var('x')
+sf = w.var('sf')
 xset = RooArgSet(x)
 
 #generate data
@@ -81,7 +82,7 @@ def plot_data(data,color=ROOT.kBlack,nbins=10):
     frame = x.frame(RF.Title('1/p_{T}'))
     RooAbsData.plotOn(data,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(nbins),RF.DataError(RooAbsData.SumW2))
     model.plotOn(frame)
-    chi = frame.chiSquare(1)
+    chi = frame.chiSquare(1)*(nbins-1.0)
     #model.paramOn(frame,data)
     return frame,chi
 def make_graph(n,xs,ys):
@@ -107,21 +108,29 @@ def fitgraph(h,FITMIN,FITMAX):
     lbl_xmin = 0.35
     xtra=''
     return xmin,err,xleft,xright,xtra,lbl_xmin,chimin
+def runscan(data,nbins):
+    """ Extract chi2 scan array """
+    res = []
+    frames = []
+    for z in xrange(opts.nscan):
+        frame,chi = plot_data(data[z],nbins=nbins);
+        res.append(chi)
+        frames.append(frame)
+    return res,frames
 
+# parameter scan and manual mean + error determination
 if True:
-    chi2s = []
     c0 = ROOT.TCanvas('c0','c0',1024,768)
     c0.Divide(3,3)
     zplot=1
+    chi2s,frames = runscan(datas,opts.maxbins)
     for z in xrange(opts.nscan):
-        frame,chi = plot_data(datas[z],nbins=opts.maxbins); g.append(frame)
-        chi2s.append(chi)
-        if z%step==0 and frame:
+        if z%step==0 and frames[z]:
             print 'Plotting',zplot
             # plot
             c0.cd(zplot)
             zplot+=1
-            frame.Draw()
+            frames[z].Draw()
             # set pave text
             p = ROOT.TPaveText(.6,.70 , (.6+.30),(.70+.20) ,"NDC")
             p.SetTextAlign(11)
@@ -134,7 +143,7 @@ if True:
     c1 = make_canvas('cscan')
     h = make_graph(opts.nscan,scale,chi2s)
     h.Draw('A*'); g.append(h)
-    h.GetYaxis().SetRangeUser(-5,20.0);
+    #h.GetYaxis().SetRangeUser(-5,20.0);
     xmin,err,xleft,xright,xtra,lbl_xmin,chimin=fitgraph(h,opts.fitmin,opts.fitmax)
     if True:
         line = ROOT.TGraph(2)
@@ -152,7 +161,7 @@ if True:
         p.Draw()
     c1.Modified(); c1.Update()
     
-if True:
+if True:  #roofit-based single fit example
     c2 = make_canvas('cfit')
     data.get().find("x").setBins(opts.maxbins)
     data_binned = data.binnedClone()
@@ -163,5 +172,29 @@ if True:
     RooAbsData.plotOn(data_binned,frame,RF.MarkerColor(color),RF.Name('bins%d'%opts.maxbins))
     model.plotOn(frame,RF.Name('model_ren'))
     frame.Draw()
-    print frame.chiSquare(1)
+    print 'Chi2 =',frame.chiSquare(1)*(opts.maxbins-1)
     c2.Modified(); c2.Update()
+
+if False:  #ROOT-based single-fit example
+    c3 = make_canvas('cfit3')
+    data.get().find("x").setBins(opts.maxbins)
+    data_binned = data.binnedClone()
+    h1 = data_binned.createHistogram('nameh',x);
+    h1.Fit('gaus')
+    res = h1.GetFunction('gaus')
+    print 'Chi2 =',res.GetChisquare();
+    print 'NDF =',res.GetNDF();
+    c3.Modified(); c3.Update()
+
+if False: #ROOT-based full chi2 scan  (not doing anything, since it refits scaled gauss to gauss)
+    #           FIXME - arrange for the TF to be fixed, and just get chi2 value with respect to new TH1
+    chi2s = []
+    for i in xrange(opts.nscan):
+        datas[i].get().find("x").setBins(opts.maxbins)
+        data_binned = datas[i].binnedClone()
+        h1 = data_binned.createHistogram('hder%d'%i,x);
+        h1.Fit('gaus')
+        res = h1.GetFunction('gaus')
+        chi2 = res.GetChisquare()
+        chi2s.append(chi2)
+        print 'Chi2 =',chi2
