@@ -35,7 +35,10 @@ parser.add_option("--nmc",dest="nmc",
                   help="Number of unbinned MC points to load")
 parser.add_option("--rookeys",dest="rookeys",
                   type="string", default=None,
-                  help="ROOT file containing cached RooKeysPdf")
+                  help="ROOT file from which we load a cached RooKeysPdf")
+parser.add_option("--rookeysout",dest="rookeysout",
+                  type="string", default='workspace.root',
+                  help="ROOT file into which we will save a cached RooKeysPdf")
 parser.add_option('-t',"--tag",dest="tag",
                   type="string", default='plot',
                   help="A tag to append to all output plots")
@@ -209,13 +212,12 @@ if True:
         model = RooKeysPdf('model','model from truth',x,data_model,RooKeysPdf.MirrorBoth,opts.smooth)
         wsave = RooWorkspace('wsave',kTRUE)
         getattr(wsave,'import')(model)
-        wsave.writeToFile('workspace.root')
+        wsave.writeToFile(opts.rookeysout)
         xf = w.function('xf')
         #model = RooNDKeysPdf('model','model',RooArgList(x),data_model,'am')
         #model = RooNDKeysPdf('model','model',RooArgList(xf),data_model,'am')
         #model = RooHistPdf('model','model',RooArgList(xf),RooArgList(w.var('x')),truth,4)
         getattr(w,'import')(model)
-    #w.writeToFile('workspace.root')
     isExt = kFALSE
 
 # make a joint pdf for various signal regions
@@ -255,15 +257,28 @@ if False:
     print 'Entering Kolmogorov studies'
     print p_value(dataP,dataN)
 
-# Scan the parameter space and determine best value & error
 def plot_data(data,color=ROOT.kBlack,nbins=10):
+    """ Plot data and model for a particular parameter value, and return chi2 """
     frame = x.frame(RF.Title('1/p_{T}'))
     RooAbsData.plotOn(data,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(nbins))
     model.plotOn(frame)
-    chi = frame.chiSquare(1)
+    chi = frame.chiSquare(1)*(nbins-1.0)
     #model.paramOn(frame,data)
     return frame,chi
+def runscan(data,is_kolmogorov,nbins=opts.nbins):
+    """ Scan through parameter space and compute chi2 for each parameter value """
+    res = []
+    frames = []
+    for z in xrange(opts.nscan):
+        if is_kolmogorov:
+            frame,chi = None,p_value(dataP,data[z])
+        else:
+            frame,chi = plot_data(data[z],nbins=nbins);
+        res.append(chi)
+        frames.append(frame)
+    return res,frames
 def make_graph(n,xs,ys):
+    """ Make a TGraph for scanned_parameters -vs- chi2"""
     h = ROOT.TGraph(n)
     h.SetMarkerColor(4);
     h.SetMarkerSize(1.5);
@@ -272,8 +287,9 @@ def make_graph(n,xs,ys):
         h.SetPoint(z,xs[z],ys[z])
     return h
 def fitgraph(h,is_kolmogorov,FITMIN,FITMAX):
+    """ Fit chi2 TGraph to a parabola and extract chi2 minimum and error band around (chi2-1) """
     if is_kolmogorov:
-        # fit gaussian core
+        # fit gaussian core as an approximation for KS probability distribution
         rms,mean=h.GetRMS(),h.GetMean()
         rms,pc=h.GetRMS(),max([(h.GetY()[i],h.GetX()[i]) for i in xrange(h.GetN())])
         peak,chimean = pc[1],pc[0]
@@ -302,6 +318,7 @@ def fitgraph(h,is_kolmogorov,FITMIN,FITMAX):
         xtra=''
     return xmin,err,xleft,xright,xtra,lbl_xmin,chimin
     
+# Scan the parameter space and determine best value & error
 if opts.scan:
     print 'Entering parameter scan studies'
     if not opts.kolmogorov:
@@ -309,18 +326,14 @@ if opts.scan:
         c.Divide(3,3)
     ps = [] # garbage collector
     zplot = 1
+    chi2,frames = runscan(datasN,opts.kolmogorov,nbins=opts.nbins)
     for z in xrange(opts.nscan):
-        if opts.kolmogorov:
-            frame,chi = None,p_value(dataP,datasN[z])
-        else:
-            frame,chi = plot_data(datasN[z],nbins=opts.nbins); ps.append(frame)
-        chi2.append(chi)
         step = opts.nscan/9 or 1
-        if z%step==0 and frame:
+        if z%step==0 and frames[z]:
             # plot
             c.cd(zplot)
             zplot+=1
-            frame.Draw()
+            frames[z].Draw()
             # set pave text
             p = ROOT.TPaveText(.6,.70 , (.6+.30),(.70+.20) ,"NDC")
             p.SetTextAlign(11)
@@ -360,22 +373,12 @@ if opts.scan:
     fout.close()
 
 # study statistical stability of distributions
-def runscan(data,nbins=opts.nbins):
-    """ Extract chi2 scan results for data group j """
-    res = []
-    for z in xrange(opts.nscan):
-        if opts.kolmogorov:
-            frame,chi = None,p_value(dataP,data[z])
-        else:
-            frame,chi = plot_data(data[z],nbins=nbins);
-        res.append(chi)
-    return res
 if opts.ngroups>0:
     print 'Entering splitted-sample studies in %s groups'%ngroups
     means = []
     errors = []
     for j in range(ngroups):
-        h = make_graph(opts.nscan,scale,runscan(datasNsp[j]))
+        h = make_graph(opts.nscan,scale,runscan(datasNsp[j],opts.kolmogorov)[0])
         xmin,err,xleft,xright,xtra,lbl_xmin,chimin=fitgraph(h,opts.kolmogorov,FITMIN,FITMAX)
         means.append(xmin)
         errors.append(err)
@@ -393,7 +396,7 @@ if opts.varbins:
     errors = []
     bins = range(2,opts.nbins)
     for ibins in bins:
-        h = make_graph(opts.nscan,scale,runscan(datasN,ibins))
+        h = make_graph(opts.nscan,scale,runscan(datasN,opts.kolmogorov,ibins)[0])
         xmin,err,xleft,xright,xtra,lbl_xmin,chimin=fitgraph(h,False,FITMIN,FITMAX)
         means.append(xmin)
         errors.append(err)
