@@ -49,6 +49,12 @@ parser.add_option("--xmin",dest="xmin",
 parser.add_option("--xmax",dest="xmax",
                   type="string", default='0.05',
                   help="Maximum value for 1/pt spectrum")
+parser.add_option("--fitmin",dest="fitmin",
+                  type="float", default=0.98,
+                  help="Minimum bound of fit range")
+parser.add_option("--fitmax",dest="fitmax",
+                  type="float", default=1.02,
+                  help="Maximum bound of fit range")
 parser.add_option("--shift", default=False,
                   action="store_true",dest="shift",
                   help="Fit for shift, rather than scale")
@@ -102,9 +108,9 @@ except ImportError:
 mZ = '91.1876'
 if not opts.shift:
     func = func_SCALE
-    scale = [(0.93 + 0.14*zz/opts.nscan) for zz in xrange(opts.nscan)]
-    FITMIN=0.95  #parameter fitting minimum
-    FITMAX=1.05
+    scale = [(opts.fitmin + (opts.fitmax-opts.fitmin)*zz/opts.nscan) for zz in xrange(opts.nscan)]
+    FITMIN=opts.fitmin  #parameter fitting minimum
+    FITMAX=opts.fitmax
 else:
     func = func_SHIFT
     scale = [(-0.002 + 0.004*zz/opts.nscan) for zz in xrange(opts.nscan)]
@@ -260,11 +266,17 @@ if False:
 def plot_data(data,color=ROOT.kBlack,nbins=10):
     """ Plot data and model for a particular parameter value, and return chi2 """
     frame = x.frame(RF.Title('1/p_{T}'))
+    frame_ret = x.frame(RF.Title('1/p_{T}'))
+    # chi2 frame
+    derr = RF.DataError(RooAbsData.SumW2)
     RooAbsData.plotOn(data,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(nbins))
     model.plotOn(frame)
     chi = frame.chiSquare(1)*(nbins-1.0)
+    # plotting frame (errors removed)
+    RooAbsData.plotOn(data,frame_ret,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(nbins),RF.XErrorSize(0))
+    model.plotOn(frame_ret)
     #model.paramOn(frame,data)
-    return frame,chi
+    return frame_ret,chi
 def runscan(data,is_kolmogorov,nbins=opts.nbins):
     """ Scan through parameter space and compute chi2 for each parameter value """
     res = []
@@ -300,11 +312,12 @@ def fitgraph(h,is_kolmogorov,FITMIN,FITMAX):
         fr = h.Fit('gaus','S','',FITMIN,FITMAX)
         f = h.GetFunction('gaus')
         chimin = f.GetMaximum(FITMIN,FITMAX)
-        xmin = f.GetParameter(1)
+        xmin = peak
+        fitted_xmin = f.GetParameter(1)
         err = f.GetParameter(2)
         xleft,xright = xmin-err,xmin+err
         lbl_xmin = 0.55
-        xtra='peak=%.2f%%'%(peak*100.0)
+        xtra='fitmean=%.10f%%'%(fitted_xmin*100.0)
     else:
         # fit parabola
         fr = h.Fit('pol2','S','',FITMIN,FITMAX)
@@ -360,9 +373,9 @@ if opts.scan:
     p.SetTextAlign(11)
     p.SetFillColor(0)
     if not opts.shift:
-        lbl = 'Best value (scale) = %.2f%% +/- %.2f%% %s'%(xmin*100.0,err*100.0,xtra)
+        lbl = 'Best value (scale) = %.2f%% +/- %.2f%%'%(xmin*100.0,err*100.0)
     else:
-        lbl = 'Best value (shift) = %.3f +/- %.3f (1000/GeV) %s'%(xmin*1000.0,err*1000.0,xtra)
+        lbl = 'Best value (shift) = %.3f +/- %.3f (1000/GeV)'%(xmin*1000.0,err*1000.0)
     p.AddText(lbl)
     p.Draw()
     c2.SaveAs('%s_chi2.png'%opts.tag)
