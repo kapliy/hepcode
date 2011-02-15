@@ -4,8 +4,10 @@
 import sys,array
 import SimpleProgressBar
 
-def func_SCALE(xx,par):
+def func_SCALE_old(xx,par):
     return par*1.0/xx
+def func_SCALE(xx,par):
+    return 1.0/par*1.0/xx
 def func_SHIFT(xx,par):
     return 1.0/xx + par
 
