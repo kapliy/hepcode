@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# fitz a single z peak
+# fits a single z peak
 
 """
 mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/BB/graph_Z_m_eta
@@ -12,10 +12,10 @@ mc_zmumu_mc_zmumu.root/dg/dg/truth/st_truth_reco_z/BB/graph_Z_m_eta
 mc_zmumu_mc_zmumu.root/dg/dg/truth/st_truth_reco_z/BB/z_m_fine
 """
 
-import sys,re,array
+import sys,re,array,math
+from math import sqrt
 import SimpleProgressBar
 
-mZ = 91.1876
 def func_SCALE(xx,par):
     return par*xx
 
@@ -53,6 +53,28 @@ parser.add_option("--fixw", default=False,
 parser.add_option("--rookeys",dest="rookeys",
                   type="string", default=None,
                   help="ROOT file from which we load a cached RooKeysPdf")
+# for scale fit
+parser.add_option("--mz0",dest="mz0",
+                  type="float", default=91.1876,
+                  help="Nominal value of z mass")
+parser.add_option("--R",dest="R",
+                  type="float", default=None,
+                  help="Value of R=k+/k- scale factor")
+parser.add_option("--eR",dest="eR",
+                  type="float", default=None,
+                  help="Error on the value of R=k+/k- scale factor")
+parser.add_option("--kp",dest="kp",
+                  type="float", default=None,
+                  help="Value of k+ scale factor")
+parser.add_option("--km",dest="km",
+                  type="float", default=None,
+                  help="Value of k- scale factor")
+parser.add_option("--ekp",dest="ekp",
+                  type="float", default=None,
+                  help="Error of k+ scale factor")
+parser.add_option("--ekm",dest="ekm",
+                  type="float", default=None,
+                  help="Error of k- scale factor")
 # choose what to run
 parser.add_option('-t',"--tag",dest="tag",
                   type="string", default='plot',
@@ -66,6 +88,9 @@ parser.add_option("--gaus", default=False,
 parser.add_option("--egge", default=False,
                   action="store_true",dest="egge",
                   help="Fit egge function - similar to bw, but no x^2 in denominator")
+parser.add_option("--voig", default=False,
+                  action="store_true",dest="voig",
+                  help="Fit voigtian without BG")
 parser.add_option("--voigbg", default=False,
                   action="store_true",dest="voigbg",
                   help="Fit voigtian with exponential BG")
@@ -80,6 +105,7 @@ parser.add_option("--res",dest="res",
                   help="Resolution model: 0=none, 1=gaus, 2=double-gaus, 3=crystal-ball")
 
 (opts, args) = parser.parse_args()
+mz0 = opts.mz0
 
 import ROOT
 ROOT.gROOT.SetBatch(opts.batch)
@@ -88,7 +114,7 @@ from ROOT import RooGaussModel,RooAddModel,RooRealVar,RooRealSumPdf
 from ROOT import kTRUE,kFALSE,kDashed,gStyle,gPad
 from ROOT import TFile,TH1,TH1F,TH1D
 from ROOT import RooFit as RF
-gbg = []
+gbg = []; COUT = []
 w = RooWorkspace('w',kTRUE)
 
 def cmd_none():
@@ -115,7 +141,8 @@ def cmd_dgaus():
 def cmd_cb():
     """ Crystal Ball resolution shape """
     cmds = []
-    cmds.append("r_m[0.0,-1,1]")
+    #cmds.append("r_m[0.0,-1,1]")
+    cmds.append("r_m[0.0]")
     cmds.append('r_a[1.7,0,10]')
     cmds.append('r_n[1.5,0,10]')
     cmds.append("r_s[2.5,0,10]")
@@ -129,10 +156,10 @@ gam['CC'] = -1.16
 gam['AA'] = 1.10
 
 # Voigtian with exponential
-def make_voigbg(minZ,maxZ,m=mZ,fixw=False):
+def make_voigbg(minZ,maxZ,m=mz0,fixw=False):
     """ Returns PDF and YES/NO whether it is an extended likelihood fit"""
     cmds = []
-    cmds.append('m[%s]'%m)
+    cmds.append('m[%s,%s,%s]'%(m,minZ,maxZ))
     cmds.append('width[2.49,0,5.0]')
     cmds.append('sigma[1,0,5.0]')
     cmds.append('expar[-0.1,-1,0]')
@@ -146,19 +173,31 @@ def make_voigbg(minZ,maxZ,m=mZ,fixw=False):
         w.var('width').setConstant(kTRUE) if w.var('width') else None
     return w.pdf('voigbg'), kTRUE
 
+# Simple voigtian
+def make_voig(minZ,maxZ,m=mz0,fixw=False):
+    """ Returns PDF and YES/NO whether it is an extended likelihood fit"""
+    cmds = []
+    cmds.append('m[%s,%s,%s]'%(m,minZ,maxZ))
+    cmds.append('width[2.49,0,5.0]')
+    cmds.append('sigma[1,0,5.0]')
+    cmds.append("RooVoigtian::voig(x,m,width,sigma)")
+    [w.factory(cmd) for cmd in cmds]
+    if fixw:
+        w.var('width').setConstant(kTRUE) if w.var('width') else None
+    return w.pdf('voig'), kFALSE
+
 # Simple gaussian
-def make_gaus(minZ,maxZ,m=mZ):
+def make_gaus(minZ,maxZ,m=mz0):
     cmds = []
     cmds.append('m[%s,%s,%s]'%(m,minZ,maxZ))
     cmds.append('s[1.0,0,5.0]')
     cmds.append("RooGaussian::gaus(x,m,s)")
-    print cmds
     [w.factory(cmd) for cmd in cmds]
     return w.pdf('gaus'), kFALSE
 
 # fancy shape with interference term, but no BG - via AmplitudeFit
 #https://kyoko.web.cern.ch/KYOKO/DiffZ/KyokoYamamoto_DiffZ_20101217.pdf
-def make_egge(minZ,maxZ,ires=1,m=mZ):
+def make_egge(minZ,maxZ,ires=1,m=mz0):
     """ Dimuon mass spectrum before FSR - includes photon and interference terms """
     cmds = []
     # coefficients for the amplitudes
@@ -188,7 +227,7 @@ def make_egge(minZ,maxZ,ires=1,m=mZ):
     return pdf, kFALSE
 
 # fancy shape with interference term, but no BG - via AmplitudeFit
-def make_bwfull(minZ,maxZ,ires=1,fixw=False,m=mZ):
+def make_bwfull(minZ,maxZ,ires=1,fixw=False,m=mz0):
     """ isDouble enabled a double-gaussian resolution model """
     cmds = []
     # coefficients for the amplitudes
@@ -223,7 +262,7 @@ def make_bwfull(minZ,maxZ,ires=1,fixw=False,m=mZ):
     return pdf, kFALSE
 
 # Just clear bw with gaussian
-def make_bw(minZ,maxZ,ires=0,m=mZ):
+def make_bw(minZ,maxZ,ires=0,m=mz0):
     cmds = []
     # amplitudes
     cmds.append('m[%s,%s,%s]'%(m,minZ,maxZ))
@@ -329,6 +368,8 @@ if True:
         model,isExt = make_egge(opts.min,opts.max,opts.res)
     elif opts.bwfull:
         model,isExt = make_bwfull(opts.min,opts.max,opts.res)
+    elif opts.voig:
+        model,isExt = make_voig(opts.min,opts.max)
     elif opts.voigbg:
         model,isExt = make_voigbg(opts.min,opts.max)
     else:
@@ -353,13 +394,43 @@ if True:
         p = ROOT.TPaveText(.7,.8 , (.7+.2),(.8+.1) ,"NDC")
         p.SetTextAlign(11)
         p.SetFillColor(0)
-        p.AddText('mZ = %.3f +/- =%.3f'%(m.getVal(),m.getError()))
+        p.AddText('mz = %.3f +/- %.3f'%(m.getVal(),m.getError()))
         p.AddText('chi2/dof = %.1f'%(chi2ndf))
         p.Draw()
         gbg.append(p)
     c.SaveAs('%s_fit.png'%opts.tag)
     PrintVariables()
-    m=w.var('m').getVal()
-    em=w.var('m').getError()
-    print 'mz = %.3f +/- %.3f'%(m,em)
-    print 'CHI2/NDF = %.2f, NDF = %d'%(chi2ndf,ndf)
+    mz=w.var('m').getVal()
+    emz=w.var('m').getError()
+    COUT.append( 'mz0 = %.3f'%(mz0) )
+    COUT.append( 'mz = %.3f +/- %.3f'%(mz,emz) )
+    COUT.append( 'CHI2/NDF = %.2f, NDF = %d'%(chi2ndf,ndf) )
+    # Solve for scales given a ratio factor and one detector region
+    if opts.R and opts.eR:
+        R,eR = opts.R,opts.eR
+        km = mz/(mz0*sqrt(R))
+        kp = mz*sqrt(R)/(mz0)
+        ekp = sqrt( emz**2 * 1/(mz0*sqrt(R))**2 + eR**2 * (mz/mz0)**2 / (4 * R**3) )
+        ekm = sqrt( emz**2 * (sqrt(R)/mz0)**2 + eR**2 * (mz/mz0)**2 / (4 * R) )
+        COUT.append( 'k+ = %.3f +/- %.3f'%(kp*100.0,ekp*100.0) )
+        COUT.append( 'k- = %.3f +/- %.3f'%(km*100.0,ekm*100.0) )
+    # Solve for k-, given k+ (e.g., one leg in barrel, another leg in endcap) 
+    if opts.kp and opts.ekp:
+        kp,ekp = opts.kp,opts.ekp
+        km = (mz/mz0)**2/kp
+        ekm = sqrt( emz**2 * (2*mz/(mz0**2*kp))**2 + ekp**2 * ((mz/mz0)**2/kp**2)**2 )
+        COUT.append( 'k- = %.3f +/- %.3f'%(km*100.0,ekm*100.0) )
+    # Solve for k+, given k- (e.g., one leg in barrel, another leg in endcap) 
+    if opts.km and opts.ekm:
+        km,ekm = opts.km,opts.ekm
+        kp = (mz/mz0)**2/km
+        ekp = sqrt( emz**2 * (2*mz/(mz0**2*km))**2 + ekm**2 * ((mz/mz0)**2/km**2)**2 )
+        COUT.append( 'k+ = %.3f +/- %.3f'%(kp*100.0,ekp*100.0) )
+
+# save to text file
+if len(COUT)>0:
+    fout = open('%s_results.rtxt'%opts.tag,'w')
+    for l in COUT:
+        print l
+        print >>fout,l
+    fout.close()

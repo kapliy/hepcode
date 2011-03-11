@@ -1,0 +1,11 @@
+* Adaptive kernel
+* Z template mass fit from MC
+
+* zpeak.py:
+** Verify consistency. Can use ID as a cross-check since it has largest deviations!
+* Introduce 2% inefficiency for mu+, linear with pt - see if MC still works fine.
+* Repeat a study to verify sqrt(A*B) works if one leg in barrel, another in endcap
+
+
+expand range for better QCD estimate (60..100 GeV, or higher)
+use new function from Peter

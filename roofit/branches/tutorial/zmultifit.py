@@ -58,13 +58,24 @@ if False:  # fixed Z width (optional)
 if True:  # simple gaussian
     minZ = '88.0'
     maxZ = '94.0'
-    gaus = "RooGaussian::pdf%s(expr('x*sqrt(%s*%s)',x[%s,%s],%s[1.0,0.9,1.1],%s[1.0,0.9,1.1]),mean[%s],sigma%s[2.0,0,5])"  #name,s1,s2,minZ,maxZ,s1,s2,mZ
+    mean = mZ
+    mean = '90.95'
+    gam = 0.9963  # ratio of scale factors k+/k-
+    cmds = []
+    cmds.append('x[%s,%s]'%(minZ,maxZ))
+    cmds.append('mean[%s]'%mean)
+    [w.factory(cmd) for cmd in cmds]
     # create PDFs for each region
+    gaus = "RooGaussian::pdf%s(expr('x*sqrt(1.0/%s*1.0/%s)',x,%s[1.0,0.9,1.1],%s[1.0,0.9,1.1]),mean,sigma%s[2.0,0,5])"  #name,s1,s2,s1,s2
     for reg in regions:
         p = 'p%s'%reg[0]
         n = 'n%s'%reg[1]
-        # since nfractions = npdfs, this is automatically an extended likelihood fit
-        cmd = gaus%(reg,p,n,minZ,maxZ,p,n,mZ,reg)
+        cmd = gaus%(reg,p,n,p,n,reg)
+        if p=='pB':
+            # replace pB with nB*gam
+            cmd = "RooGaussian::pdf%s(expr('x*sqrt(1.0/(nB*%s)*1.0/%s)',x,nB[1.0,0.9,1.1],%s[1.0,0.9,1.1]),mean,sigma%s[2.0,0,5])"%(reg,gam,n,n,reg)
+            if n=='nB':
+                cmd = "RooGaussian::pdf%s(expr('x*sqrt(1.0/(nB*%s)*1.0/%s)',x,nB[1.0,0.9,1.1]),mean,sigma%s[2.0,0,5])"%(reg,gam,n,reg)
         print cmd
         w.factory(cmd)
     # fix Z mass mean
@@ -148,3 +159,9 @@ if True:
     for reg in regions:
         print 'CHI2[%s]=%s'%(reg,chi2s[reg])
     PrintVariables()
+    #Final results
+    if True:
+        for vv in ('nB','nC','nA','pA','pC'):
+            v = w.var(vv).getVal()
+            print vv,v*100.0 - 100.0
+        

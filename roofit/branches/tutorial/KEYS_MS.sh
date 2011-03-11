@@ -23,20 +23,20 @@ for np in $wfiles; do
     nevt=`echo $np | awk 'BEGIN{FS="_"}{print $3}' | sed -e 's#.root##g' -e 's#mc##g' -e 's#data##g'`
     subfile=mc_zmumu_mc_zmumu.root; evtype="mc"
     echo $np | awk 'BEGIN{FS="_"}{print $3}' | grep -q data && { subfile=data_data.root; evtype="data"; }
-    #if [ ! "$evtype" == "data" ]; then continue; fi;
+    if [ ! "$evtype" == "data" ]; then continue; fi;
     m=1.0
     d=0.02
     # data range corrections
     if [ "$reg" == "BB" -a "$evtype" == "data" ]; then
-	m=1.0
+	m=1.005
 	d=0.05
     fi
     if [ "$reg" == "CC" -a "$evtype" == "data" ]; then
-	m=1.0
+	m=0.98
 	d=0.05
     fi
     if [ "$reg" == "AA" -a "$evtype" == "data" ]; then
-	m=1.0
+	m=1.01
 	d=0.05
     fi
     xtra="--fitmin `echo \"${m}-${d}\" | bc -l` --fitmax `echo \"${m}+${d}\" | bc -l`"

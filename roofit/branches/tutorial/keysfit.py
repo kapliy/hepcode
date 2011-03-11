@@ -70,7 +70,7 @@ parser.add_option("--nscan",dest="nscan",
                   type="int", default=20,
                   help="Number of parameter values to scan")
 # enable modules
-parser.add_option("--batch", default=False,
+parser.add_option('-b', "--batch", default=False,
                   action="store_true",dest="batch",
                   help="Enable batch mode (all output directly to filesystem)")
 parser.add_option("--template", default=False,
@@ -177,7 +177,7 @@ if True:
     bar = SimpleProgressBar.SimpleProgressBar(10,nmax)
     print 'Loading default data...'
     for i in range(opts.nskip,nmax):
-        x.setVal(1.0/pos[i]*opts.forcescale)
+        x.setVal(1.0/pos[i])
         dataP.add(RooArgSet(x))
         x.setVal(1.0/neg[i])
         dataN.add(RooArgSet(x))
@@ -188,7 +188,7 @@ if True:
             if (i-opts.nskip)%(int(nstep/10))==0 and i-opts.nskip>0:
                 print bar.show(i)
             for z in range(opts.nscan):
-                x.setVal(func(neg[i],scale[z]))
+                x.setVal(func(neg[i]*opts.forcescale,scale[z]))
                 datasN[z].add(RooArgSet(x))
     # scaled / shifted versions in multiple splits
     else:
