@@ -44,7 +44,7 @@ fi;
 
 
 #BARREL-ENDCAP CROSS:
-if [ "1" -eq "1" ]; then
+if [ "0" -eq "1" ]; then
     func=egge
     reg=BA
     ./zpeak.py -b --res 3 --${func} --mz0 90.963 --kp 1.00114 --ekp 0.00191 --data data_data.root/dg/dg/st_z_final/$reg/graph_Z_m_eta --ndata 10000 -t data_${reg}_${func}

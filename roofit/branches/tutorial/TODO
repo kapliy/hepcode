@@ -1,5 +1,7 @@
-* Adaptive kernel
-* Z template mass fit from MC
+*regions: 1.05-1.7, 1.7-2.0, 2.0-2.5, 1.7-2.5 integrated
+* Adaptive kernel (need C++ version?)
+* Z template mass fit from MC (plus check out Peter's email about Z fit function)
+* Try to fit 1/pt spectrum to a functional form -> single integrated fit.
 
 * zpeak.py:
 ** Verify consistency. Can use ID as a cross-check since it has largest deviations!

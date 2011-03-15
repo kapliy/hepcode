@@ -35,6 +35,9 @@ parser.add_option("--mc",dest="mc",
 parser.add_option("--nmc",dest="nmc",
                   type="int", default=1,
                   help="Number of unbinned MC points to load")
+parser.add_option("--roomodel",dest="roomodel",
+                  type="int", default=2,
+                  help="Which model to use: 1=RooHist, 2=RooKeys, 3=RooNDKeys")
 parser.add_option("--rookeys",dest="rookeys",
                   type="string", default=None,
                   help="ROOT file from which we load a cached RooKeysPdf")
@@ -61,8 +64,8 @@ parser.add_option("--shift", default=False,
                   action="store_true",dest="shift",
                   help="Fit for shift, rather than scale")
 parser.add_option("--smooth",dest="smooth",
-                  type="int", default=2,
-                  help="Smoothing factor for kernel estimation")
+                  type="float", default=2.0,
+                  help="Smoothing factor (aka bandwidth) for kernel estimation")
 parser.add_option("--nbins",dest="nbins",
                   type="int", default=10,
                   help="Binning for chi2 calculation")
@@ -206,8 +209,7 @@ if True:
     getattr(w,'import')(dataN,RF.Rename('dataN'))
     # make truth(x*b)
     w.factory("expr::xf('x*1.0/b',x,b)")
-    #w.factory("KeysPdf::model(x,dataP,MirrorBoth,2)")
-    #w.factory("KeysPdf::model(expr('x*1.0/b',x,b),dataP,MirrorBoth,2)")
+    xf = w.function('xf')
     data_model = dataP
     if opts.rookeys:
         fkeys = ROOT.TFile.Open(opts.rookeys)
@@ -216,22 +218,30 @@ if True:
         getattr(w,'import')(model)
         fkeys.Close()
     elif not opts.kolmogorov:
-        print 'Making RooKeysPdf. Please wait...'
-        model = RooKeysPdf('model','model from truth',x,data_model,RooKeysPdf.MirrorBoth,opts.smooth)
-        wsave = RooWorkspace('wsave',kTRUE)
-        getattr(wsave,'import')(model)
-        wsave.writeToFile(opts.rookeysout)
-        xf = w.function('xf')
+        print 'Making model PDF. Please wait...'
+        if opts.roomodel==1:
+            model = RooHistPdf('model','model',RooArgList(xf),RooArgList(w.var('x')),data_model,opts.smooth)
+        elif opts.roomodel==2:
+            model = RooKeysPdf('model','model from truth',x,data_model,RooKeysPdf.MirrorBoth,opts.smooth)
+        elif opts.roomodel==3:
+            model = RooNDKeysPdf('model','model',RooArgList(x),data_model,'am',opts.smooth)
+        w.model = model
+        cname = model.ClassName()
+        print 'Made model PDF of type:',cname
+        if not cname=='RooNDKeysPdf':
+            wsave = RooWorkspace('wsave',kTRUE)
+            getattr(wsave,'import')(model)
+            wsave.writeToFile(opts.rookeysout)
+            getattr(w,'import')(model)
         #model = RooNDKeysPdf('model','model',RooArgList(x),data_model,'am')
         #model = RooNDKeysPdf('model','model',RooArgList(xf),data_model,'am')
         #model = RooHistPdf('model','model',RooArgList(xf),RooArgList(w.var('x')),truth,4)
-        getattr(w,'import')(model)
     isExt = kFALSE
 
 # make a joint pdf for various signal regions
 w.factory("")
 w.defineSet('X','x')
-model = w.pdf('model')
+model = w.model
 x = w.var('x')
 chi2 = []
 
