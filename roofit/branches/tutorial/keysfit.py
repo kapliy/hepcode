@@ -101,7 +101,7 @@ from ROOT import RooHistPdf,RooKeysPdf,RooNDKeysPdf
 from ROOT import kTRUE,kFALSE,kDashed,gStyle,gPad
 from ROOT import TFile,TH1,TH1F,TH1D
 from ROOT import RooFit as RF
-w = RooWorkspace('w',kTRUE)
+w = RooWorkspace('w',kTRUE); w.model = None
 
 try:
     import psyco
@@ -216,6 +216,7 @@ if True:
         assert fkeys.IsOpen(),'Failed to open RooKeysPdf cache file: %s'%opts.rookeys
         model = fkeys.wsave.pdf('model')
         getattr(w,'import')(model)
+        w.model = model
         fkeys.Close()
     elif not opts.kolmogorov:
         print 'Making model PDF. Please wait...'
@@ -244,16 +245,6 @@ w.defineSet('X','x')
 model = w.model
 x = w.var('x')
 chi2 = []
-
-# Plot template shape
-if opts.template:
-    c3 = ROOT.TCanvas('c3','c3',640,480); c3.cd()
-    frame = x.frame()
-    color=ROOT.kBlue
-    RooAbsData.plotOn(data_model,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(20))
-    model.plotOn(frame,RF.LineColor(color))
-    frame.Draw()
-    c3.SaveAs('%s_template.png'%opts.tag)
 
 # Perform unbinned Kolmogorov comparison
 def make_array_sorted(data,var='x'):
@@ -436,3 +427,13 @@ if opts.varbins:
     h.Draw('A*')
     #ROOT.gPad.SetLogy(ROOT.kTRUE)
     c2.SaveAs('%s_varbins.png'%opts.tag)
+
+# Plot template shape
+if opts.template:
+    c3 = ROOT.TCanvas('c3','c3',640,480); c3.cd()
+    frame = x.frame()
+    color=ROOT.kBlue
+    RooAbsData.plotOn(data_model,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(20))
+    model.plotOn(frame,RF.LineColor(color))
+    frame.Draw()
+    c3.SaveAs('%s_template.png'%opts.tag)
