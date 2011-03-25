@@ -17,7 +17,7 @@ wspace_CC_mc12000.root
 wspace_CC_mc43000.root
 "
 
-rfile=root_data_v19.root
+rfile=root_all_0323.root
 
 for np in $wfiles; do
     xtra=""

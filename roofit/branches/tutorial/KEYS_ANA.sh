@@ -3,12 +3,15 @@
 # gaus and egge yield consistent results!
 # but looks out for the non pos-def egge error matrices.
 
-rfile=root_all_v19.root
+#2011-03-16 private muon repro:
+#https://svnweb.cern.ch/trac/msd/browser/skim_repro/tags/20110316
+
+rfile=root_all_0323.root
 
 # truth on full dataset, egge fit
 if [ "0" -eq "1" ]; then
     for func in egge; do
-	for reg in AA BB CC; do #BA BC AB CB; do
+	for reg in AA BB CC BA BC AB CB; do
 	    ./zpeak.py -b --root ${rfile} --res 3 --${func} --data mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/$reg/graph_Z_m_eta --ndata 100000 -t mc_${reg}_${func}
 	done
     done
@@ -26,11 +29,11 @@ fi;
 if [ "1" -eq "1" ]; then
     func=egge
     reg=AA
-    ./zpeak.py -b --root ${rfile} --res 3 --${func} --mz0 91.046 --R 1.005 --eR 0.0054 --data data_data.root/dg/dg/st_z_final/$reg/graph_Z_m_eta --ndata 10000 -t data_${reg}_${func}
+    ./zpeak.py -b --root ${rfile} --res 3 --${func} --mz0 91.046 --R 1.002 --eR 0.0062 --data data_data.root/dg/dg/st_z_final/$reg/graph_Z_m_eta --ndata 10000 -t data_${reg}_${func}
     reg=BB
-    ./zpeak.py -b --root ${rfile} --res 3 --${func} --mz0 90.842 --R 1.003 --eR 0.0038 --data data_data.root/dg/dg/st_z_final/$reg/graph_Z_m_eta --ndata 10000 -t data_${reg}_${func}
+    ./zpeak.py -b --root ${rfile} --res 3 --${func} --mz0 90.842 --R 0.999 --eR 0.0042 --data data_data.root/dg/dg/st_z_final/$reg/graph_Z_m_eta --ndata 10000 -t data_${reg}_${func}
     reg=CC
-    ./zpeak.py -b --root ${rfile} --res 3 --${func} --mz0 91.066 --R 1.017 --eR 0.006 --data data_data.root/dg/dg/st_z_final/$reg/graph_Z_m_eta --ndata 10000 -t data_${reg}_${func}
+    ./zpeak.py -b --root ${rfile} --res 3 --${func} --mz0 91.066 --R 1.019 --eR 0.006 --data data_data.root/dg/dg/st_z_final/$reg/graph_Z_m_eta --ndata 10000 -t data_${reg}_${func}
 fi;
 
 # AA BB CC [COMBINED], gaussian core fit
