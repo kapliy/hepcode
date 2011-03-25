@@ -1,11 +1,13 @@
+Code:
+* Enable zmumu tag and probe studies: trigger and reconstruction efficiency
+
 Check if rho can be chosen smartly - Jahred's thesis.
 Check error variation due to binning.
 
 
 
 *regions: 1.05-1.7, 1.7-2.0, 2.0-2.5, 1.7-2.5 integrated
-* Adaptive kernel (need C++ version?)
-* Z template mass fit from MC (plus check out Peter's email about Z fit function)
+* Z template mass fit from MC
 * Try to fit 1/pt spectrum to a functional form -> single integrated fit.
 
 * zpeak.py:
