@@ -2,9 +2,11 @@
 # fits a single z peak
 
 """
+mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/ntuple
 mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/BB/graph_Z_m_eta
 mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/BB/z_m_fine
 
+data_data.root/dg/dg/st_z_final/ntuple
 data_data.root/dg/dg/st_z_final/BB/graph_Z_m_eta
 data_data.root/dg/dg/st_z_final/BB/z_m_fine
 
@@ -12,9 +14,16 @@ mc_zmumu_mc_zmumu.root/dg/dg/truth/st_truth_reco_z/BB/graph_Z_m_eta
 mc_zmumu_mc_zmumu.root/dg/dg/truth/st_truth_reco_z/BB/z_m_fine
 """
 
+try:
+    import psyco
+    psyco.full()
+except ImportError:
+    pass
+
 import sys,re,array,math
 from math import sqrt
 import SimpleProgressBar
+from load_data import *
 
 def func_SCALE(xx,par):
     return par*xx
@@ -25,8 +34,11 @@ parser = OptionParser()
 parser.add_option("--root",dest="root",
                   type="string", default='root_all.root',
                   help="Input ROOT file with all histograms")
+parser.add_option("--region",dest="region",
+                  type="string", default='BB',
+                  help="Where each leg of a Z must fall")
 parser.add_option("--data",dest="data",
-                  type="string", default='mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/BB/graph_Z_m_eta',
+                  type="string", default='data_data.root/dg/dg/st_z_final/ntuple',
                   help="TGraph or TH1F containing reconstructed z mass")
 parser.add_option("--ndata",dest="ndata",
                   type="int", default=1000000,
@@ -307,23 +319,23 @@ def Fit(data,isExt,bins,extras=False):
         model.paramOn(frame,data)
     return (r,frame,chi2ndf,ndf)
 
-def load_graph(hz,xmin,xmax,auto=None,scale=1.0):
+def load_unbinned(hz,name,xmin,xmax,auto=None,scale=1.0):
     """ Load TGraph from a file. Note that we manually drop the points outside [xmin,xmax] range """
-    N = hz.GetN()
-    print 'Loading graph with',N,'entries'
-    v1 = hz.GetX()
-    v2 = hz.GetY()
-    if auto:
-        mean,width = hz.GetMean(),hz.GetRMS()
-        xmin = mean-width*auto
-        xmax = mean+width*auto
-        print 'Limiting range to:',xmin,xmax
+    if hz.ClassName() == 'TGraph':
+        N,v1 = graph_to_array1(hz,opts.ndata)
+    elif hz.ClassName() == 'TNtuple':
+        N,v1 = ntuple_to_array1(hz,name,xmin,xmax,opts.ndata)
+    else:
+        print 'Problem loading class',hz.ClassName()
+        sys.exit(0)
+    print 'Loaded raw unbinned data with',N,'entries'
     w.factory('x[%s,%s]'%(xmin,xmax))
     ds1 = RooDataSet('ds1','ds1',RooArgSet(w.var('x')))
     ds2 = RooDataSet('ds2','ds2',RooArgSet(w.var('x')))
     nmax = min(N,opts.ndata); nmaxp10 = nmax if nmax>10 else 10
     bar = SimpleProgressBar.SimpleProgressBar(10,nmax)
     x = w.var('x')
+    nf=0
     for i in range(0,nmax):
         if i%(int(nmaxp10/10))==0 and i>0:
             print bar.show(i)
@@ -331,6 +343,8 @@ def load_graph(hz,xmin,xmax,auto=None,scale=1.0):
         if xmin < xv < xmax:
             x.setVal(xv)
             ds1.add(RooArgSet(x))
+            nf+=1
+    print 'Final count of unbinned data:',nf
     getattr(w,'import')(ds1,RF.Rename('ds1'))
     getattr(w,'import')(ds2,RF.Rename('ds2'))
     return ds1,ds2
@@ -352,9 +366,10 @@ if True:
     # load the data
     f = TFile(opts.root,'r')
     hz = f.Get(opts.data)
+    assert hz, 'Error loading data object %s from file %s'%(opts.data,opts.root)
     cname = hz.ClassName()
-    if cname == 'TGraph':
-        data,crap = load_graph(hz,opts.min,opts.max,opts.auto,opts.scale)
+    if cname in ('TGraph','TNtuple','TTree','TChain'):
+        data,crap = load_unbinned(hz,opts.region,opts.min,opts.max,opts.scale)
     elif re.search('TH',cname):
         hz.SetDirectory(0)
         data = load_histo(hz,opts.min,opts.max,opts.auto)

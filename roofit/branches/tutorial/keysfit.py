@@ -1,8 +1,18 @@
 #!/usr/bin/env python
 
+try:
+    import psyco
+    psyco.full()
+except ImportError:
+    pass
+
 # study muon momentum scale using z->mumu muon spectra
 import sys,array
 import SimpleProgressBar
+from load_data import *
+
+# new data load wrappers:
+#from zpeak import ntuple_to_array2,graph_to_array2
 
 def func_SCALE_old(xx,par):
     return par*1.0/xx
@@ -20,6 +30,9 @@ parser.add_option("--root",dest="root",
 parser.add_option("--data",dest="data",
                   type="string", default='data_data.root/dg/dg/st_z_final/BB/graph_lpt_P_N',
                   help="TGraph containing data histograms")
+parser.add_option("--region",dest="region",
+                  type="string", default='BB',
+                  help="Where each leg of a Z must fall")
 parser.add_option("--ndata",dest="ndata",
                   type="int", default=10000,
                   help="Number of unbinned data points to load")
@@ -29,12 +42,6 @@ parser.add_option("--nskip",dest="nskip",
 parser.add_option("--forcescale",dest="forcescale",
                   type="float", default=1.0,
                   help="Force a particular scale factor on positive muons")
-parser.add_option("--mc",dest="mc",
-                  type="string", default='mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/BB/graph_lpt_P_N',
-                  help="TGraph containing MC histograms")
-parser.add_option("--nmc",dest="nmc",
-                  type="int", default=1,
-                  help="Number of unbinned MC points to load")
 parser.add_option("--roomodel",dest="roomodel",
                   type="int", default=2,
                   help="Which model to use: 1=RooHist, 2=RooKeys, 3=RooNDKeys")
@@ -48,6 +55,12 @@ parser.add_option('-t',"--tag",dest="tag",
                   type="string", default='plot',
                   help="A tag to append to all output plots")
 # parameters
+parser.add_option("--zmin",dest="zmin",
+                  type="float", default=66.0,
+                  help="Minimum value for z mass window")
+parser.add_option("--zmax",dest="zmax",
+                  type="float", default=116.0,
+                  help="Maximum value for z mass window")
 parser.add_option("--xmin",dest="xmin",
                   type="string", default='0.005',
                   help="Minimum value for 1/pt spectrum")
@@ -103,12 +116,6 @@ from ROOT import TFile,TH1,TH1F,TH1D
 from ROOT import RooFit as RF
 w = RooWorkspace('w',kTRUE); w.model = None
 
-try:
-    import psyco
-    psyco.full()
-except ImportError:
-    pass
-
 # Z mass cannot float if we fit for scale
 mZ = '91.1876'
 if not opts.shift:
@@ -130,42 +137,23 @@ if True:
     w.factory('x[%s,%s]'%(opts.xmin,opts.xmax)); x = w.var('x')
     w.factory('b[1.0,0.9,1.1]')
     #################################################
-    # truth datasets
-    #################################################
-    f = TFile(opts.root,'r')
-    hz = f.Get(opts.mc)
-    f.Close()
-    N = hz.GetN()
-    print 'Loaded truth graph',opts.mc,'with',N,'entries'
-    pos = hz.GetX()
-    neg = hz.GetY()
-    # make truth(x) for positive and negative muons
-    truthP = RooDataSet('truthP','Zmumu mu+ MC',RooArgSet(x))
-    truthN = RooDataSet('truthN','Zmumu mu- MC',RooArgSet(x))
-    nmax = min(N,opts.nmc); nmaxp10 = nmax if nmax>10 else 10
-    bar = SimpleProgressBar.SimpleProgressBar(10,nmax)
-    for i in range(0,nmax):
-        if i%(int(nmaxp10/10))==0 and i>0:
-            print bar.show(i)
-        x.setVal(1.0/pos[i])
-        truthP.add(RooArgSet(x))
-        x.setVal(1.0/neg[i])
-        truthN.add(RooArgSet(x))
-    getattr(w,'import')(truthP,RF.Rename('truthP'))
-    getattr(w,'import')(truthN,RF.Rename('truthN'))
-    #################################################
     # data datasets
     #################################################
     f = TFile(opts.root,'r')
     hz = f.Get(opts.data)
+    assert hz, 'Error loading data object %s from file %s'%(opts.data,opts.root)
+    if hz.ClassName() == 'TGraph':
+        N,pos,neg = graph_to_array2(hz,opts.region)
+    elif hz.ClassName() == 'TNtuple':
+        N,pos,neg = ntuple_to_array2(hz,opts.region,opts.zmin,opts.zmax)
+    else:
+        print 'Problem loading class',hz.ClassName()
+        sys.exit(0)
     f.Close()
-    N = hz.GetN()
     nmax = min(N,opts.nskip+opts.ndata)
     nstep = nmax-opts.nskip if nmax-opts.nskip>10 else 10
     ngroups = opts.ngroups if opts.ngroups < int(N/nmax) else int(N/nmax)
-    print 'Loaded data graph',opts.data,'with',N,'entries','in',ngroups,'groups'
-    pos = hz.GetX()
-    neg = hz.GetY()
+    print 'Loaded data object',opts.data,'with',N,'entries','in',ngroups,'groups'
     # make data(x) for positive and negative muons
     dataP = RooDataSet('dataP','Zmumu mu+ data',RooArgSet(x))
     dataN = RooDataSet('dataN','Zmumu mu- data',RooArgSet(x))
@@ -256,7 +244,7 @@ def make_array_sorted(data,var='x'):
         out.append( aset.getRealValue(var) )
     return array.array('d',sorted(out))
 def p_value(dP,dN):
-    """ KS p-value for two RooDataSets """ 
+    """ KS p-value for two RooDataSets """
     arrayP = make_array_sorted(dP)
     arrayN = make_array_sorted(dN)
     assert len(arrayP)==len(arrayN),'ERROR: different array sizes'
@@ -309,8 +297,9 @@ def fitgraph(h,is_kolmogorov,FITMIN,FITMAX):
         rms,pc=h.GetRMS(),max([(h.GetY()[i],h.GetX()[i]) for i in xrange(h.GetN())])
         peak,chimean = pc[1],pc[0]
         print 'peak and rms:',peak,rms
-        FITMIN=peak-rms
-        FITMAX=peak+rms
+        rms_scale=0.33
+        FITMIN=peak-rms*rms_scale
+        FITMAX=peak+rms*rms_scale
         print 'Fitting range:',FITMIN,FITMAX
         fr = h.Fit('gaus','S','',FITMIN,FITMAX)
         f = h.GetFunction('gaus')
@@ -320,9 +309,26 @@ def fitgraph(h,is_kolmogorov,FITMIN,FITMAX):
         err = f.GetParameter(2)
         xleft,xright = xmin-err,xmin+err
         lbl_xmin = 0.55
-        xtra='fitmean=%.10f%%'%(fitted_xmin*100.0)
+        xtra=fitted_xmin
     else:
         # fit parabola
+        pc=min([(h.GetY()[i],h.GetX()[i]) for i in xrange(h.GetN())])
+        peak,chimean = pc[1],pc[0]
+        # first, rough fit (to get an estimate of sigma)
+        print 'Original fit range:',FITMIN,FITMAX
+        fr = h.Fit('pol2','S0','',FITMIN,FITMAX)
+        f = h.GetFunction('pol2')
+        chimin = f.GetMinimum(FITMIN,FITMAX)
+        xmin = f.GetMinimumX(FITMIN,FITMAX)
+        chirange=40 #20
+        xleft = f.GetX(chimin+chirange,FITMIN,xmin)
+        xright = f.GetX(chimin+chirange,xmin,FITMAX)
+        err = 0.5*((xmin-xleft)+(xright-xmin))
+        del fr; del f;
+        # second, refined fit
+        FITMIN=xmin-err
+        FITMAX=xmin+err
+        print 'Refined fit range:',FITMIN,FITMAX
         fr = h.Fit('pol2','S','',FITMIN,FITMAX)
         f = h.GetFunction('pol2')
         chimin = f.GetMinimum(FITMIN,FITMAX)
@@ -331,7 +337,7 @@ def fitgraph(h,is_kolmogorov,FITMIN,FITMAX):
         xright = f.GetX(chimin+1,xmin,FITMAX)
         err = 0.5*((xmin-xleft)+(xright-xmin))
         lbl_xmin = 0.35
-        xtra=''
+        xtra=xmin
     return xmin,err,xleft,xright,xtra,lbl_xmin,chimin
     
 # Scan the parameter space and determine best value & error
@@ -376,7 +382,10 @@ if opts.scan:
     p.SetTextAlign(11)
     p.SetFillColor(0)
     if not opts.shift:
-        lbl = 'Best value (scale) = %.2f%% +/- %.2f%%'%(xmin*100.0,err*100.0)
+        if not opts.kolmogorov:
+            lbl = 'Best value = %.2f%% +/- %.2f%%'%(xmin*100.0,err*100.0)
+        else:
+            lbl = 'Peak value = %.2f%% +/- %.2f%%. Fit value = %.2f%%'%(xmin*100.0,err*100.0,xtra*100.0)
     else:
         lbl = 'Best value (shift) = %.3f +/- %.3f (1000/GeV)'%(xmin*1000.0,err*1000.0)
     p.AddText(lbl)
@@ -385,7 +394,7 @@ if opts.scan:
     print lbl,'chi2 = %.2f'%chimin
     # save in the output file
     fout = open('%s_results.rtxt'%opts.tag,'w')
-    print >>fout,'value = %.10f +/- %.10f ; chi2 = %.10f %s'%(xmin,err,chimin,xtra)
+    print >>fout,'value = %.10f +/- %.10f ; chi2 = %.10f ; fitted_mean = %.10f'%(xmin,err,chimin,xtra)
     fout.close()
 
 # study statistical stability of distributions
