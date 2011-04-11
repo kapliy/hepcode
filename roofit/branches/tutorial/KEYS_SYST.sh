@@ -31,8 +31,15 @@ xtra="--fitmin `echo \"${m}-${d}\" | bc -l` --fitmax `echo \"${m}+${d}\" | bc -l
 gr=${subfile}/dg/dg/st_z_final/$reg/graph_lpt_P_N
 
 # Study the effect of various Keys PDFs: adaptive vs non-adaptive, and different bandwidth smoothing parameters
-./keysfit.py --root ${rfile} --batch --tag sys_ks --data ${gr} --mc ${gr} --ndata $nevt --nscan 100 --scan ${xtra} --kolmogorov
-for sm in 1.0 1.5 2.0 2.5; do
-    ./keysfit.py --root ${rfile} --batch --template --roomodel 2 --smooth ${sm} --tag sys_chi_KE${sm} --data ${gr} --mc ${gr} --ndata $nevt --nscan 100 --scan ${xtra}
-    ./keysfit.py --root ${rfile} --batch --template --roomodel 3 --smooth ${sm} --tag sys_chi_ND${sm} --data ${gr} --mc ${gr} --ndata $nevt --nscan 100 --scan ${xtra}
-done
+if [ "0" -eq "1" ]; then
+    ./keysfit.py --root ${rfile} --batch --tag sys_ks --data ${gr} --mc ${gr} --ndata $nevt --nscan 100 --scan ${xtra} --kolmogorov
+    for sm in 1.0 1.5 2.0 2.5; do
+	./keysfit.py --root ${rfile} --batch --template --roomodel 2 --smooth ${sm} --tag sys_chi_KE${sm} --data ${gr} --mc ${gr} --ndata $nevt --nscan 100 --scan ${xtra}
+	./keysfit.py --root ${rfile} --batch --template --roomodel 3 --smooth ${sm} --tag sys_chi_ND${sm} --data ${gr} --mc ${gr} --ndata $nevt --nscan 100 --scan ${xtra}
+    done
+fi;
+
+# Study the effect of fit ranges
+if [ "1" -eq "1" ]; then
+    echo ./keysfit.py --root ${rfile} --batch --tag sys_chi_KE${sm} --data ${gr} --mc ${gr} --ndata $nevt --nscan 100 --scan ${xtra}
+fi

@@ -1,0 +1,28 @@
+root_all.root, root_all_v1.root
+Flatntupler release 16 (athena version 15) - first results.
+This had been verified with cutflows long time ago (via python version of analysis code)
+About 10k Z events in total.
+This (_v1 version) was used for my 03/01 MCP talk
+
+scales_03012011.root
+Changing scales for mu+ and mu- to test sqrt(k+*k-) assumption
+
+root_all_v19.root -> root_all_0311.root
+First version of v19 (athena release 16) processing.
+Cuts marginally copied from Jordan for jets and muon quality - cutflow not verified yet.
+
+root_all_0323.root
+Added private muon reprocessed with geometry resembling 2011 data
+
+root_all_0328.root
+After large updates by Antonio, including changes to definition of is_staco_combined.
+First attempt to use a TNtuple (in addition to TGraph, for now)
+Verified that compatible with 0311. Also processing reprocess-2010 and early 2011 (two runs)
+(missing mc10a).
+This was used for my 03/30 MCP talk
+
+root_all_0331.root
+Update after talking to Peter:
+* changed z0 to zb for muon-z0 - vertex cut.
+* removed muon MS and MS-ID matching cuts in release 16 analysis
+* Only saving ntuples now, also saving ID,MS,EXMS separately (note that Z selection is still based on MS!)

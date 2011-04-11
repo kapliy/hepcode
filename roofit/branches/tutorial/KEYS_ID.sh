@@ -17,7 +17,8 @@ wspace_CC_mc12000.root
 wspace_CC_mc43000.root
 "
 
-rfile=root_all_0323.root
+rfile=root_all_0328.root
+
 
 for np in $wfiles; do
     xtra=""
@@ -25,6 +26,7 @@ for np in $wfiles; do
     nevt=`echo $np | awk 'BEGIN{FS="_"}{print $3}' | sed -e 's#.root##g' -e 's#mc##g' -e 's#data##g'`
     subfile=mc_zmumu_mc_zmumu.root; evtype="mc"
     echo $np | awk 'BEGIN{FS="_"}{print $3}' | grep -q data && { subfile=data_data.root; evtype="data"; }
+    echo $np | awk 'BEGIN{FS="_"}{print $3}' | grep -q data && { subfile=data_20110329_data_20110329.root; evtype="data"; }
     if [ ! "$evtype" == "data" ]; then continue; fi;
     m=1.0
     d=0.02
@@ -41,11 +43,13 @@ for np in $wfiles; do
 	m=0.985
 	d=0.05
     fi
+    d=0.1
     xtra="--fitmin `echo \"${m}-${d}\" | bc -l` --fitmax `echo \"${m}+${d}\" | bc -l`"
     gr=${subfile}/dg/dg/st_z_final/$reg/graph_lptid_P_N
-    ./keysfit.py --root ${rfile} --batch --tag id_${evtype}_${reg}_${nevt} --data ${gr} --mc ${gr} --ndata $nevt --rookeysout wspace/id_${reg}_${evtype}${nevt}.root --nscan 100 --scan ${xtra}
+    gr=${subfile}/dg/dg/st_z_final/ntuple_id
+    ./keysfit.py --region ${reg} --template --root ${rfile} --batch --tag id_${evtype}_${reg}_${nevt} --data ${gr} --ndata $nevt --rookeysout wspace/id_${reg}_${evtype}${nevt}.root --nscan 200 --scan ${xtra}
     if [ "$evtype" == "data" -o "$evtype" == "mc" ]; then
-	./keysfit.py --root ${rfile} --batch --tag id_${evtype}_${reg}_${nevt}_ks --data ${gr} --mc ${gr} --ndata $nevt --nscan 100 --scan ${xtra} --kolmogorov
+	./keysfit.py --region ${reg} --root ${rfile} --batch --tag id_${evtype}_${reg}_${nevt}_ks --data ${gr} --ndata $nevt --nscan 200 --scan ${xtra} --kolmogorov
     fi;
 done
 
