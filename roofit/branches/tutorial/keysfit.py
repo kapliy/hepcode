@@ -11,15 +11,12 @@ import sys,array
 import SimpleProgressBar
 from load_data import *
 
-# new data load wrappers:
-#from zpeak import ntuple_to_array2,graph_to_array2
-
 def func_SCALE_old(xx,par):
     return par*1.0/xx
 def func_SCALE(xx,par):
-    return 1.0/par*1.0/xx
+    return 1.0/(par*1.0*xx)
 def func_SHIFT(xx,par):
-    return 1.0/xx + par
+    return 1.0/(xx) + par
 
 from optparse import OptionParser
 parser = OptionParser()
@@ -387,7 +384,10 @@ if opts.scan:
         else:
             lbl = 'Peak value = %.2f%% +/- %.2f%%. Fit value = %.2f%%'%(xmin*100.0,err*100.0,xtra*100.0)
     else:
-        lbl = 'Best value (shift) = %.3f +/- %.3f (1000/GeV)'%(xmin*1000.0,err*1000.0)
+        if not opts.kolmogorov:
+            lbl = 'Best value = %.2f +/- %.2f (1/KeV)'%(xmin*1e6,err*1e6)
+        else:
+            lbl = 'Best value = %.2f +/- %.2f (1/KeV). Fit value = %.2f (1/KeV)'%(xmin*1e6,err*1e6,xtra*1e6)
     p.AddText(lbl)
     p.Draw()
     c2.SaveAs('%s_chi2.png'%opts.tag)
