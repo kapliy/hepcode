@@ -1,54 +1,55 @@
 #!/bin/bash
 
-# gaus and egge yield consistent results!
-# but looks out for the non pos-def egge error matrices.
+rfile=$1
+lbl_data=$2
+lbl_mc=$3
+tt=$4
 
-#2011-03-16 private muon repro:
-#https://svnweb.cern.ch/trac/msd/browser/skim_repro/tags/20110316
+ntlbl="_${tt}"
+if [ "$tt" == "cmb" ]; then ntlbl=""; fi;
 
-rfile=root_all_0323.root
+nmc=100000
+func=egge   #gaus
 
-# truth on full dataset, egge fit
-if [ "0" -eq "1" ]; then
-    for func in egge; do
-	for reg in AA BB CC BA BC AB CB; do
-	    ./zpeak.py -b --root ${rfile} --res 3 --${func} --data mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/$reg/graph_Z_m_eta --ndata 100000 -t mc_${reg}_${func}
-	done
-    done
-fi;
-# truth on full dataset, gaussian core fit
-if [ "0" -eq "1" ]; then
-    func=gaus
-    for reg in AA BB CC BA BC AB CB; do
-	./zpeak.py -b --root ${rfile} --res 3 --${func} --data mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/$reg/graph_Z_m_eta --ndata 100000 -t mc_${reg}_${func} --min 88 --max 94
-    done
-fi;
+sfx="_results.rtxt"
 
-
-# AA BB CC [COMBINED], egge fit
+# truth on full dataset
 if [ "1" -eq "1" ]; then
-    func=egge
-    reg=AA
-    ./zpeak.py -b --root ${rfile} --res 3 --${func} --mz0 91.046 --R 1.002 --eR 0.0062 --data data_data.root/dg/dg/st_z_final/$reg/graph_Z_m_eta --ndata 10000 -t data_${reg}_${func}
-    reg=BB
-    ./zpeak.py -b --root ${rfile} --res 3 --${func} --mz0 90.842 --R 0.999 --eR 0.0042 --data data_data.root/dg/dg/st_z_final/$reg/graph_Z_m_eta --ndata 10000 -t data_${reg}_${func}
-    reg=CC
-    ./zpeak.py -b --root ${rfile} --res 3 --${func} --mz0 91.066 --R 1.019 --eR 0.006 --data data_data.root/dg/dg/st_z_final/$reg/graph_Z_m_eta --ndata 10000 -t data_${reg}_${func}
+    for reg in AA BB CC; do
+	subfile=${lbl_mc}_${lbl_mc}.root;
+	gr=${subfile}/dg/dg/st_z_final/ntuple${ntlbl}
+	tag="ZMC_${rfile}_${lbl_mc}_${tt}_${reg}"
+	xtra=""
+	if [ "${func}" == "gaus" ]; then xtra="--min 88 --max 94"; fi
+	./zpeak.py -b --root ${rfile} --res 3 --${func} --region ${reg} --data ${gr} --ndata ${nmc} -t ${tag} ${xtra}
+    done
 fi;
 
-# AA BB CC [COMBINED], gaussian core fit
-if [ "0" -eq "1" ]; then
-    func=gaus
-    reg=AA
-    ./zpeak.py -b --root ${rfile} --res 3 --${func} --mz0 91.06 --R 0.990 --eR 0.0052 --data data_data.root/dg/dg/st_z_final/$reg/graph_Z_m_eta --ndata 10000 -t data_${reg}_${func} --min 86 --max 96
-    reg=BB
-    ./zpeak.py -b --root ${rfile} --res 3 --${func} --mz0 90.86 --R 1.005 --eR 0.0036 --data data_data.root/dg/dg/st_z_final/$reg/graph_Z_m_eta --ndata 10000 -t data_${reg}_${func} --min 86 --max 96
-    reg=CC
-    ./zpeak.py -b --root ${rfile} --res 3 --${func} --mz0 91.04 --R 1.013 --eR 0.0051 --data data_data.root/dg/dg/st_z_final/$reg/graph_Z_m_eta --ndata 10000 -t data_${reg}_${func} --min 86 --max 96
+# data, using MC fitted value from truth and relative scale (R0/eR0) from keysfit.py
+if [ "1" -eq "1" ]; then
+    for reg in AA BB CC; do
+	subfile=${lbl_data}_${lbl_data}.root;
+	gr=${subfile}/dg/dg/st_z_final/ntuple${ntlbl}
+	RZ=ZMC_${rfile}_${lbl_mc}_${tt}_${reg}${sfx}
+	mz0=`tail -n2 ${RZ} | head -n1 | cut -d ' ' -f 3`
+	RKS=${rfile}_data_${tt}_data_${reg}_10000_ks${sfx}
+	RCHI=${rfile}_data_${tt}_data_${reg}_10000${sfx}
+	R=`cut -d ' ' -f 13 ${RKS}`
+	eR=`cut -d ' ' -f 5 ${RCHI}`
+	tag="ZDATA_${rfile}_${lbl_data}_${tt}_${reg}"
+	echo "Printing contents of input files for region ${reg}:"
+	echo ${RZ} ${RKS} ${RCHI}
+	cat ${RZ} ${RKS} ${RCHI} /dev/null
+	if [ -z "${R}" -o -z "${eR}" -o -z "${mz0}" ]; then
+	    echo "Skipping region ${reg} - missing some inputs"
+	    echo "R=|${R}| eR=|${eR}| mz0=|${mz0}|"
+	    continue
+	fi;
+	./zpeak.py -b --root ${rfile} --res 3 --${func} --region ${reg} --mz0 ${mz0} --R ${R} --eR ${eR} --data ${gr} --ndata 10000 -t ${tag}
+    done;
 fi;
 
-
-#BARREL-ENDCAP CROSS:
+#BARREL-ENDCAP CROSS (CROSS-CHECK):
 if [ "0" -eq "1" ]; then
     func=egge
     reg=BA
