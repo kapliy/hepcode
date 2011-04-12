@@ -427,6 +427,7 @@ if True:
         kp = mz*sqrt(R)/(mz0)
         ekp = sqrt( emz**2 * 1/(mz0*sqrt(R))**2 + eR**2 * (mz/mz0)**2 / (4 * R**3) )
         ekm = sqrt( emz**2 * (sqrt(R)/mz0)**2 + eR**2 * (mz/mz0)**2 / (4 * R) )
+        COUT.append( 'R = %.3f +/- %.3f'%(R,eR) )
         COUT.append( 'k+ = %.3f +/- %.3f'%(kp*100.0,ekp*100.0) )
         COUT.append( 'k- = %.3f +/- %.3f'%(km*100.0,ekm*100.0) )
     # Solve for k-, given k+ (e.g., one leg in barrel, another leg in endcap) 
