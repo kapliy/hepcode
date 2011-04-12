@@ -15,6 +15,7 @@ tt=cmb
 rfile=$1
 lbl=$2
 tt=$3
+shf=$4
 
 ntlbl="_${tt}"
 if [ "$tt" == "cmb" ]; then ntlbl=""; fi;
@@ -32,8 +33,13 @@ for np in $wfiles; do
     xtra="--fitmin `echo \"${m}-${d}\" | bc -l` --fitmax `echo \"${m}+${d}\" | bc -l`"
     gr=${subfile}/dg/dg/st_z_final/$reg/graph_lpt_P_N
     gr=${subfile}/dg/dg/st_z_final/ntuple${ntlbl}
-    ./keysfit.py --template --region ${reg} --zmin 70 --zmax 110 --root ${rfile} --batch --tag ${rfile}_${lbl}_${tt}_${evtype}_${reg}_${nevt} --data ${gr} --ndata $nevt --rookeysout wspace/$np --nscan 400 --scan ${xtra}
+    if [ -z "${shf}" ]; then
+	tag="${rfile}_${lbl}_${tt}_${evtype}_${reg}_${nevt}"
+    else
+	tag="shift_${rfile}_${lbl}_${tt}_${evtype}_${reg}_${nevt}"
+    fi;
+    ./keysfit.py --template --region ${reg} --zmin 70 --zmax 110 --root ${rfile} --batch --tag ${tag} --data ${gr} --ndata $nevt --rookeysout wspace/$np --nscan 500 --scan ${xtra} ${shf}
     if [ "$evtype" == "data" -o "$evtype" == "mc" ]; then
-	./keysfit.py --region ${reg} --zmin 70 --zmax 110 --root ${rfile} --batch --tag ${rfile}_${lbl}_${tt}_${evtype}_${reg}_${nevt}_ks --data ${gr} --ndata $nevt --nscan 400 --scan ${xtra} --kolmogorov
+	./keysfit.py --region ${reg} --zmin 70 --zmax 110 --root ${rfile} --batch --tag ${tag}_ks --data ${gr} --ndata $nevt --nscan 500 --scan ${xtra} --kolmogorov ${shf}
     fi;
 done

@@ -13,6 +13,17 @@ i=0
 wait
 echo "Done up to ${i}"
 
+./KEYS_CMB.sh root_all_0331.root data cmb --shift &> LOG${i} &
+((i++))
+./KEYS_CMB.sh root_all_0331.root data id --shift &> LOG${i} &
+((i++))
+./KEYS_CMB.sh root_all_0331.root data ms --shift &> LOG${i} &
+((i++))
+./KEYS_CMB.sh root_all_0331.root data exms --shift &> LOG${i} &
+((i++))
+wait
+echo "Done up to ${i}"
+
 
 # old stuff: first run over 2011 data
 if [ "0" -eq "1" ]; then
@@ -56,3 +67,5 @@ echo "Done up to ${i}"
 wait
 echo "Done up to ${i}"
 fi;
+
+echo "Completely done!"
