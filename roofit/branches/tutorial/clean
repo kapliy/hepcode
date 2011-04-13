@@ -1,0 +1,3 @@
+echo "Cleaning up png, rtxt, and LOG* files"
+ls *.png *.rtxt LOG*
+rm *.png *.rtxt LOG*
