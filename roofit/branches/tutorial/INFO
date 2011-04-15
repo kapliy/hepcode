@@ -31,3 +31,9 @@ After a few updates (root file was remade), this was made in April 01 - April 15
 root_all_0312graph.root
 root_all_0312msid.root
 This is trying to reproduce old numbers
+Results in Peter email - multiple effects contirbute a little.
+Difference between graph and ntuple due to mz window narrowing to 70..100 GeV
+
+root_apr13.root
+Peter asked to verify 2011 data problems in MS (C-side endcap).
+What's done here: graph of (ptms-ptid)/pt vs eta
