@@ -34,6 +34,14 @@ def eranges(name):
     """ Converts a string like /BB/ into a range of etas """
     if len(name)==2:
         return erange(name[0]),erange(name[1])
+    elif name == 'FWC':
+        return ((-10.0,-2.0),(-10.0,-2.0))
+    elif name == 'FWA':
+        return ((2.0,10.0),(2.0,10.0))
+    elif name == 'MWC':
+        return ((-2.0,-1.05),(-2.0,-1.05))
+    elif name == 'MWA':
+        return ((1.05,2.0),(1.05,2.0))
     elif name == 'Bcc':
         return ((-1.05,0.0),(-1.05,0.0))
     elif name == 'Baa':
@@ -66,14 +74,15 @@ def ntuple_to_array1(t,name,xmin,xmax,maxdata=1000000):
         nl+=1
         if nl>maxdata: break
     return len(res),array.array('f',res)
+
 def ntuple_to_array2(t,name,xmin,xmax,maxdata=1000000):
-    """ Load TNtuple from a file """
+    """ Load TNtuple from a file, ensure both muons are in the same eta region """
     ep_name,en_name = 'lP_eta','lN_eta'
     pp_name,pn_name = 'lP_pt','lN_pt'
     mz_name = 'Z_m'
     rp,rn = get_eranges(name)
     N = t.GetEntries()
-    print 'Reading tree with',N,'entries'
+    print 'Reading tree with',N,'entries via default method'
     resp = []
     resn = []
     nl=0
@@ -90,5 +99,37 @@ def ntuple_to_array2(t,name,xmin,xmax,maxdata=1000000):
         resn.append(pn)
         nl+=1
         if nl>maxdata: break
+    assert len(resp)==len(resn)
+    return len(resp),array.array('f',resp),array.array('f',resn)
+
+def ntuple_to_array3(t,name,xmin,xmax,maxdata=1000000):
+    """ Load TNtuple from a file; don't care that BOTH muons from a Z are in the given fiducial range """
+    ep_name,en_name = 'lP_eta','lN_eta'
+    pp_name,pn_name = 'lP_pt','lN_pt'
+    mz_name = 'Z_m'
+    rp,rn = get_eranges(name)
+    N = t.GetEntries()
+    print 'Reading tree with',N,'entries via Kluit method'
+    resp = []
+    resn = []
+    for i in range(N):
+        t.GetEntry(i)
+        ep = getattr(t,ep_name)
+        en = getattr(t,en_name)
+        pp = getattr(t,pp_name)
+        pn = getattr(t,pn_name)
+        mz = getattr(t,mz_name)
+        goodP = rp[0] < ep < rp[1] and xmin < mz < xmax
+        goodN = rn[0] < en < rn[1] and xmin < mz < xmax
+        if goodP:
+            resp.append(pp)
+        if goodN:
+            resn.append(pn)
+        nl=min(len(resp),len(resn))
+        if nl>maxdata: break
+    # truncate to the min(mu+,mu-)
+    nl=min(len(resp),len(resn))
+    print 'Read out %d mu+ and %d mu- - truncating to %d'%(len(resp),len(resn),nl)
+    resp,resn = resp[0:nl],resn[0:nl]
     assert len(resp)==len(resn)
     return len(resp),array.array('f',resp),array.array('f',resn)

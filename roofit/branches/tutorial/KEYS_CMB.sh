@@ -1,11 +1,15 @@
 #!/bin/bash
 
 wfiles="
-wspace_AA_data10000.root
-wspace_BB_data10000.root
-wspace_CC_data10000.root
-wspace_Bcc_data10000.root
-wspace_Baa_data10000.root
+wspace_AA_data100000.root
+wspace_BB_data100000.root
+wspace_CC_data100000.root
+wspace_Bcc_data100000.root
+wspace_Baa_data100000.root
+wspace_FWC_data100000.root
+wspace_FWA_data100000.root
+wspace_MWC_data100000.root
+wspace_MWA_data100000.root
 "
 
 rfile=root_all_0328.root
@@ -29,7 +33,7 @@ for np in $wfiles; do
     echo $np | awk 'BEGIN{FS="_"}{print $3}' | grep -q data && { subfile=${lbl}_${lbl}.root; evtype="data"; }
     if [ ! "$evtype" == "data" ]; then continue; fi;
     m=1.0
-    d=0.10
+    d=0.12
     xtra="--fitmin `echo \"${m}-${d}\" | bc -l` --fitmax `echo \"${m}+${d}\" | bc -l`"
     gr=${subfile}/dg/dg/st_z_final/$reg/graph_lpt_P_N
     gr=${subfile}/dg/dg/st_z_final/ntuple${ntlbl}
@@ -38,8 +42,10 @@ for np in $wfiles; do
     else
 	tag="shift_${rfile}_${lbl}_${tt}_${evtype}_${reg}_${nevt}"
     fi;
-    ./keysfit.py --template --region ${reg} --zmin 70 --zmax 110 --root ${rfile} --batch --tag ${tag} --data ${gr} --ndata $nevt --rookeysout wspace/$np --nscan 500 --scan ${xtra} ${shf}
+    ./keysfit.py --template --region ${reg} --zmin 70 --zmax 110 --root ${rfile} --batch --tag ${tag} --data ${gr} --ndata $nevt --rookeysout wspace/$np --nscan 1000 --scan ${xtra} ${shf}
+    ./keysfit.py --kluit --template --region ${reg} --zmin 70 --zmax 110 --root ${rfile} --batch --tag KLU_${tag} --data ${gr} --ndata $nevt --rookeysout wspace/$np --nscan 1000 --scan ${xtra} ${shf}
     if [ "$evtype" == "data" -o "$evtype" == "mc" ]; then
-	./keysfit.py --region ${reg} --zmin 70 --zmax 110 --root ${rfile} --batch --tag ${tag}_ks --data ${gr} --ndata $nevt --nscan 500 --scan ${xtra} --kolmogorov ${shf}
+	./keysfit.py --region ${reg} --zmin 70 --zmax 110 --root ${rfile} --batch --tag ${tag}_ks --data ${gr} --ndata $nevt --nscan 1000 --scan ${xtra} --kolmogorov ${shf}
+	./keysfit.py --kluit --region ${reg} --zmin 70 --zmax 110 --root ${rfile} --batch --tag KLU_${tag}_ks --data ${gr} --ndata $nevt --nscan 1000 --scan ${xtra} --kolmogorov ${shf}
     fi;
 done

@@ -1,6 +1,16 @@
-TODO:
-Automate zpeak to automatically pick the result of R0
+TODO
+Differences from F. Cerutti:
+* HE: |delta-z0| < 5 mm
+* HE: ptid, ptexms > 10 GeV
+* HE: ptcb > 10 GeV (we use > 20 GeV)
+* TODO: fit egge convolved with simple gaussian; range = 80..100;
+* TODO: add |eta|<1.7 region!
 
+MC: r2230
+Study new MC for systematics!!!
+* Add eta sum
+Add relative et cone 0.2 < 1.5
+* change binning 1.7 - 2.0; 2.0 - 2.4 OR 1.7 - 2.4
 
 Code:
 * Enable zmumu tag and probe studies: trigger and reconstruction efficiency

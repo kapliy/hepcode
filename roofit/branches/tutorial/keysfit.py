@@ -82,6 +82,9 @@ parser.add_option("--nbins",dest="nbins",
 parser.add_option("--nscan",dest="nscan",
                   type="int", default=20,
                   help="Number of parameter values to scan")
+parser.add_option("--kluit", default=False,
+                  action="store_true",dest="kluit",
+                  help="If kluit is enabled, muons are not required to be both in the same detector region")
 # enable modules
 parser.add_option('-b', "--batch", default=False,
                   action="store_true",dest="batch",
@@ -142,7 +145,10 @@ if True:
     if hz.ClassName() == 'TGraph':
         N,pos,neg = graph_to_array2(hz,opts.region)
     elif hz.ClassName() == 'TNtuple':
-        N,pos,neg = ntuple_to_array2(hz,opts.region,opts.zmin,opts.zmax)
+        if opts.kluit:
+            N,pos,neg = ntuple_to_array3(hz,opts.region,opts.zmin,opts.zmax)
+        else:
+            N,pos,neg = ntuple_to_array2(hz,opts.region,opts.zmin,opts.zmax)
     else:
         print 'Problem loading class',hz.ClassName()
         sys.exit(0)
