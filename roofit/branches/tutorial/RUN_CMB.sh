@@ -2,6 +2,7 @@
 
 i=0
 
+# 2010 old - sanity check
 ./KEYS_CMB.sh root_all_0331.root data cmb &> LOG${i} &
 ((i++))
 ./KEYS_CMB.sh root_all_0331.root data id &> LOG${i} &
@@ -13,59 +14,19 @@ i=0
 wait
 echo "Done up to ${i}"
 
-./KEYS_CMB.sh root_all_0331.root data cmb --shift &> LOG${i} &
-((i++))
-./KEYS_CMB.sh root_all_0331.root data id --shift &> LOG${i} &
-((i++))
-./KEYS_CMB.sh root_all_0331.root data ms --shift &> LOG${i} &
-((i++))
-./KEYS_CMB.sh root_all_0331.root data exms --shift &> LOG${i} &
-((i++))
-wait
-echo "Done up to ${i}"
-
-
-# old stuff: first run over 2011 data
-if [ "0" -eq "1" ]; then
-./KEYS_CMB.sh root_all_0331.root data_20110329L1 cmb &> LOG${i} &
-((i++))
-./KEYS_CMB.sh root_all_0331.root data_20110329L1 id &> LOG${i} &
-((i++))
-./KEYS_CMB.sh root_all_0331.root data_20110329L1 ms &> LOG${i} &
-((i++))
-wait
-echo "Done up to ${i}"
-
-./KEYS_CMB.sh root_all_0331.root data_20110329 cmb &> LOG${i} &
-((i++))
-./KEYS_CMB.sh root_all_0331.root data_20110329 id &> LOG${i} &
-((i++))
-./KEYS_CMB.sh root_all_0331.root data_20110329 ms &> LOG${i} &
-((i++))
-wait
-echo "Done up to ${i}"
-
-./KEYS_CMB.sh root_all_0331.root data_20110331 cmb &> LOG${i} &
-((i++))
-./KEYS_CMB.sh root_all_0331.root data_20110331 id &> LOG${i} &
-((i++))
-./KEYS_CMB.sh root_all_0331.root data_20110331 ms &> LOG${i} &
-((i++))
-./KEYS_CMB.sh root_all_0331.root data_20110331 exms &> LOG${i} &
-((i++))
-wait
-echo "Done up to ${i}"
-
-./KEYS_CMB.sh root_all_0331.root data cmb &> LOG${i} &
-((i++))
-./KEYS_CMB.sh root_all_0331.root data id &> LOG${i} &
-((i++))
-./KEYS_CMB.sh root_all_0331.root data ms &> LOG${i} &
-((i++))
-./KEYS_CMB.sh root_all_0331.root data exms &> LOG${i} &
-((i++))
-wait
-echo "Done up to ${i}"
-fi;
-
-echo "Completely done!"
+# 2011 (and latest rerun of 2010)
+fname=root_all_apr26data2011BD3.root
+folders="data_2010repro  data_20110331  data_20110425  data_20110425B  data_20110425D"
+for fold in $folders; do 
+    echo "STATUS: $fold"
+    ./KEYS_CMB.sh ${fname} ${fold} cmb &> LOG${i} &
+    ((i++))
+    ./KEYS_CMB.sh ${fname} ${fold} id &> LOG${i} &
+    ((i++))
+    ./KEYS_CMB.sh ${fname} ${fold} ms &> LOG${i} &
+    ((i++))
+    ./KEYS_CMB.sh ${fname} ${fold} exms &> LOG${i} &
+    ((i++))
+    wait
+    echo "Done up to ${i}"
+done
