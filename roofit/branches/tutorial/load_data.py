@@ -42,6 +42,14 @@ def eranges(name):
         return ((-2.0,-1.05),(-2.0,-1.05))
     elif name == 'MWA':
         return ((1.05,2.0),(1.05,2.0))
+    elif name == 'TRFWC':
+        return ((-2.0,-1.7),(-2.0,-1.7))
+    elif name == 'TRFWA':
+        return ((1.7,2.0),(1.7,2.0))
+    elif name == 'TRMWC':
+        return ((-1.7,-1.05),(-1.7,-1.05))
+    elif name == 'TRMWA':
+        return ((1.05,1.7),(1.05,1.7))
     elif name == 'Bcc':
         return ((-1.05,0.0),(-1.05,0.0))
     elif name == 'Baa':
