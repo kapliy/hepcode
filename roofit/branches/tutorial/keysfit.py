@@ -391,9 +391,9 @@ if opts.scan:
             lbl = 'Peak value = %.2f%% +/- %.2f%%. Fit value = %.2f%%'%(xmin*100.0,err*100.0,xtra*100.0)
     else:
         if not opts.kolmogorov:
-            lbl = 'Best value = %.2f +/- %.2f (1/KeV)'%(xmin*1e6,err*1e6)
+            lbl = 'Best value = %.2f +/- %.2f (1/PeV)'%(xmin*1e6,err*1e6)
         else:
-            lbl = 'Best value = %.2f +/- %.2f (1/KeV). Fit value = %.2f (1/KeV)'%(xmin*1e6,err*1e6,xtra*1e6)
+            lbl = 'Best value = %.2f +/- %.2f (1/PeV). Fit value = %.2f (1/PeV)'%(xmin*1e6,err*1e6,xtra*1e6)
     p.AddText(lbl)
     p.Draw()
     c2.SaveAs('%s_chi2.png'%opts.tag)
