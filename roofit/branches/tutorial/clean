@@ -1,2 +1,2 @@
 echo "Cleaning up png, rtxt, and LOG* files"
-find . -maxdepth 1 -type f -name \*.png -o -name \*.rtxt -o -name LOG\* -o -name JOB\*.sh | xargs rm
+find . -maxdepth 1 -type f \( -name \*.png -o -name \*.rtxt -o -name LOG\* -o -name JOB\*.sh \) | xargs rm -f
