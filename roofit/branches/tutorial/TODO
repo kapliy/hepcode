@@ -1,3 +1,22 @@
+Make Z fits with gaus res; feed back scales into code.
+
+Systematic effects from MC:
+Update ngroups to plot mean/error in TErrorGraph and print on label fitted mean and maximum spread
+- repeat for several values of statistics, for KLU and non-KLU
+
+
+Split by phi:
+ID muons in endcap A - great shift (~6%), dependent on phi region (1,2 worst)
+MS muons in endcap C - bad shift
+
+KLU vs non-KLU
+
+Add simple-mean version for 1/pt spectra (i.e. what everybody else is doing)
+
+
+
+
+
 TODO
 Differences from F. Cerutti:
 * HE: |delta-z0| < 5 mm
@@ -11,6 +30,8 @@ Study new MC for systematics!!!
 * Add eta sum
 Add relative et cone 0.2 < 1.5
 * change binning 1.7 - 2.0; 2.0 - 2.4 OR 1.7 - 2.4
+
+
 
 Code:
 * Enable zmumu tag and probe studies: trigger and reconstruction efficiency

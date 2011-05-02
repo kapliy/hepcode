@@ -31,14 +31,14 @@ parser.add_option("--region",dest="region",
                   type="string", default='BB',
                   help="Where each leg of a Z must fall")
 parser.add_option("--ndata",dest="ndata",
-                  type="int", default=10000,
+                  type="int", default=1000000,
                   help="Number of unbinned data points to load")
 parser.add_option("--nskip",dest="nskip",
                   type="int", default=0,
                   help="Number of data points to skip load")
 parser.add_option("--forcescale",dest="forcescale",
                   type="float", default=1.0,
-                  help="Force a particular scale factor on positive muons")
+                  help="Force a particular scale factor on negative muons")
 parser.add_option("--roomodel",dest="roomodel",
                   type="int", default=2,
                   help="Which model to use: 1=RooHist, 2=RooKeys, 3=RooNDKeys")
@@ -46,7 +46,7 @@ parser.add_option("--rookeys",dest="rookeys",
                   type="string", default=None,
                   help="ROOT file from which we load a cached RooKeysPdf")
 parser.add_option("--rookeysout",dest="rookeysout",
-                  type="string", default='workspace.root',
+                  type="string", default='',
                   help="ROOT file into which we will save a cached RooKeysPdf")
 parser.add_option('-t',"--tag",dest="tag",
                   type="string", default='plot',
@@ -85,6 +85,9 @@ parser.add_option("--nscan",dest="nscan",
 parser.add_option("--kluit", default=False,
                   action="store_true",dest="kluit",
                   help="If kluit is enabled, muons are not required to be both in the same detector region")
+parser.add_option("--akluit", default=False,
+                  action="store_true",dest="akluit",
+                  help="If akluit is enabled, muons are required to NOT be both in the same detector region")
 # enable modules
 parser.add_option('-b', "--batch", default=False,
                   action="store_true",dest="batch",
@@ -95,12 +98,12 @@ parser.add_option("--template", default=False,
 parser.add_option("--scan", default=False,
                   action="store_true",dest="scan",
                   help="Scan through parameter space and determine best value and error")
-parser.add_option("--kolmogorov", default=False,
-                  action="store_true",dest="kolmogorov",
+parser.add_option("--ks", default=False,
+                  action="store_true",dest="ks",
                   help="Perform unbinned KS comparison of two spectra")
-parser.add_option("--ngroups", dest="ngroups",
+parser.add_option("--npergroup", dest="npergroup",
                   type="int", default=0,
-                  help="Split the sample into ngroups subsamples of size ndata and study variations of fitted mean")
+                  help="Split the sample into several subsamples with npergroup in each")
 parser.add_option("--varbins", default=False,
                   action="store_true",dest="varbins",
                   help="Study systematic effect of bin variation")
@@ -115,6 +118,7 @@ from ROOT import kTRUE,kFALSE,kDashed,gStyle,gPad
 from ROOT import TFile,TH1,TH1F,TH1D
 from ROOT import RooFit as RF
 w = RooWorkspace('w',kTRUE); w.model = None
+gbg = []; COUT = []
 
 # Z mass cannot float if we fit for scale
 mZ = '91.1876'
@@ -146,40 +150,50 @@ if True:
         N,pos,neg = graph_to_array2(hz,opts.region)
     elif hz.ClassName() == 'TNtuple':
         if opts.kluit:
-            N,pos,neg = ntuple_to_array3(hz,opts.region,opts.zmin,opts.zmax)
+            Np,Nn,N,pos,neg = ntuple_to_array_kluit(hz,opts.region,opts.zmin,opts.zmax,opts.ndata,opts.nskip)
+        elif opts.akluit:
+            Np,Nn,N,pos,neg = ntuple_to_array_akluit(hz,opts.region,opts.zmin,opts.zmax,opts.ndata,opts.nskip)
         else:
-            N,pos,neg = ntuple_to_array2(hz,opts.region,opts.zmin,opts.zmax)
+            Np,Nn,N,pos,neg = ntuple_to_array_etalim(hz,opts.region,opts.zmin,opts.zmax,opts.ndata,opts.nskip)
     else:
         print 'Problem loading class',hz.ClassName()
         sys.exit(0)
     f.Close()
-    nmax = min(N,opts.nskip+opts.ndata)
-    nstep = nmax-opts.nskip if nmax-opts.nskip>10 else 10
-    ngroups = opts.ngroups if opts.ngroups < int(N/nmax) else int(N/nmax)
+    avg_pos = sum(pos)/len(pos)
+    avg_neg = sum(neg)/len(neg)
+    nmax = min(N,opts.ndata)
+    if nmax == 0:
+        print 'Error: no data passed the cuts'
+        sys.exit(0)
+    nstep = nmax if nmax>10 else 10
+    ngroups = int(nmax/opts.npergroup) if opts.npergroup>0 else 0
     print 'Loaded data object',opts.data,'with',N,'entries','in',ngroups,'groups'
     # make data(x) for positive and negative muons
     dataP = RooDataSet('dataP','Zmumu mu+ data',RooArgSet(x))
     dataN = RooDataSet('dataN','Zmumu mu- data',RooArgSet(x))
     datasP = [RooDataSet('datasP%s'%i,'Zmumu mu+ data bin %s'%i,RooArgSet(x)) for i in range(opts.nscan)]
     datasN = [RooDataSet('datasN%s'%i,'Zmumu mu- data bin %s'%i,RooArgSet(x)) for i in range(opts.nscan)]
+    # reserve arrays of ngroups scans
     datasNsp = []
+    datasPsp = []
     for j in range(ngroups):
         datasNsp.append([])
+        datasPsp.append(RooDataSet('datasPsp%s'%(j),'Zmumu mu+ data bin %s'%(j),RooArgSet(x)))
         for i in range(opts.nscan):
             datasNsp[j].append(RooDataSet('datasNsp%s_%s'%(i,j),'Zmumu mu- data bin %s %s'%(i,j),RooArgSet(x)))
     # default dataP and dataN
     bar = SimpleProgressBar.SimpleProgressBar(10,nmax)
     print 'Loading default data...'
-    for i in range(opts.nskip,nmax):
+    for i in range(0,nmax):
         x.setVal(1.0/pos[i])
         dataP.add(RooArgSet(x))
         x.setVal(1.0/neg[i])
         dataN.add(RooArgSet(x))
-    # scaled shifted versions for manual scans
-    if opts.ngroups==0:
+    # scaled / shifted versions for manual scans
+    if ngroups==0:
         print 'Loading scaled data arrays...'
-        for i in range(opts.nskip,nmax):
-            if (i-opts.nskip)%(int(nstep/10))==0 and i-opts.nskip>0:
+        for i in range(0,nmax):
+            if (i)%(int(nstep/10))==0 and i>0:
                 print bar.show(i)
             for z in range(opts.nscan):
                 x.setVal(func(neg[i]*opts.forcescale,scale[z]))
@@ -189,10 +203,11 @@ if True:
         print 'Loading scaled data arrays in %s chunks...'%ngroups
         for j in range(ngroups):
             print 'Loading range %s/%s'%(j,ngroups)
-            for i in range(nmax*j,nmax*(j+1)):
-                if i>=N: continue
+            for i in range(opts.npergroup*j,opts.npergroup*(j+1)):
                 if (i)%(int(nstep/10))==0 and i>0:
-                    print bar.show(i-nmax*j)
+                    print bar.show(i-opts.npergroup*j)
+                x.setVal(1.0/pos[i])
+                datasPsp[j].add(RooArgSet(x))
                 for z in range(opts.nscan):
                     x.setVal(func(neg[i],scale[z]))
                     datasNsp[j][z].add(RooArgSet(x))
@@ -202,25 +217,39 @@ if True:
     w.factory("expr::xf('x*1.0/b',x,b)")
     xf = w.function('xf')
     data_model = dataP
-    if opts.rookeys:
+    models = []
+    if opts.rookeys and opts.npergroup==0:
         fkeys = ROOT.TFile.Open(opts.rookeys)
         assert fkeys.IsOpen(),'Failed to open RooKeysPdf cache file: %s'%opts.rookeys
         model = fkeys.wsave.pdf('model')
         getattr(w,'import')(model)
         w.model = model
         fkeys.Close()
-    elif not opts.kolmogorov:
-        print 'Making model PDF. Please wait...'
-        if opts.roomodel==1:
-            model = RooHistPdf('model','model',RooArgList(xf),RooArgList(w.var('x')),data_model,opts.smooth)
-        elif opts.roomodel==2:
-            model = RooKeysPdf('model','model from truth',x,data_model,RooKeysPdf.MirrorBoth,opts.smooth)
-        elif opts.roomodel==3:
-            model = RooNDKeysPdf('model','model',RooArgList(x),data_model,'am',opts.smooth)
+    else:
+        if opts.npergroup==0: #otherwise too time consuming!
+            print 'Making model PDF. Please wait...'
+            # default (all data in one group)
+            if opts.roomodel==1:
+                model = RooHistPdf('model','model',RooArgList(xf),RooArgList(w.var('x')),data_model,opts.smooth)
+            elif opts.roomodel==2:
+                model = RooKeysPdf('model','model from truth',x,data_model,RooKeysPdf.MirrorBoth,opts.smooth)
+            elif opts.roomodel==3:
+                model = RooNDKeysPdf('model','model',RooArgList(x),data_model,'am',opts.smooth)
+        else:
+            model = None
+        # multiple groups
+        for j in range(ngroups):
+            print 'Making model PDF for group',j,'/',ngroups
+            if opts.roomodel==1:
+                models.append(RooHistPdf('model','model',RooArgList(xf),RooArgList(w.var('x')),datasPsp[j],opts.smooth))
+            elif opts.roomodel==2:
+                models.append(RooKeysPdf('model','model from truth',x,datasPsp[j],RooKeysPdf.MirrorBoth,opts.smooth))
+            elif opts.roomodel==3:
+                models.append(RooNDKeysPdf('model','model',RooArgList(x),datasPsp[j],'am',opts.smooth))           
         w.model = model
-        cname = model.ClassName()
+        cname = model.ClassName() if model else None
         print 'Made model PDF of type:',cname
-        if not cname=='RooNDKeysPdf':
+        if not cname=='RooNDKeysPdf' and opts.rookeysout:
             wsave = RooWorkspace('wsave',kTRUE)
             getattr(wsave,'import')(model)
             wsave.writeToFile(opts.rookeysout)
@@ -237,7 +266,7 @@ model = w.model
 x = w.var('x')
 chi2 = []
 
-# Perform unbinned Kolmogorov comparison
+# Perform unbinned Ks comparison
 def make_array_sorted(data,var='x'):
     """ Converts RooDataSet to python array"""
     out = []
@@ -250,14 +279,11 @@ def p_value(dP,dN):
     """ KS p-value for two RooDataSets """
     arrayP = make_array_sorted(dP)
     arrayN = make_array_sorted(dN)
-    assert len(arrayP)==len(arrayN),'ERROR: different array sizes'
+    assert len(arrayP)==len(arrayN),'ERROR: different array sizes: %d %d'%(len(arrayP),len(arrayN))
     pval = ROOT.TMath.KolmogorovTest(len(arrayP),arrayP,len(arrayN),arrayN,'')
     return pval
-if False:
-    print 'Entering Kolmogorov studies'
-    print p_value(dataP,dataN)
 
-def plot_data(data,color=ROOT.kBlack,nbins=10):
+def plot_data(model,data,color=ROOT.kBlack,nbins=10):
     """ Plot data and model for a particular parameter value, and return chi2 """
     frame = x.frame(RF.Title('1/p_{T}'))
     frame_ret = x.frame(RF.Title('1/p_{T}'))
@@ -271,34 +297,36 @@ def plot_data(data,color=ROOT.kBlack,nbins=10):
     model.plotOn(frame_ret)
     #model.paramOn(frame,data)
     return frame_ret,chi
-def runscan(data,is_kolmogorov,nbins=opts.nbins):
+def runscan(model,dataP,data,ks,nbins=opts.nbins):
     """ Scan through parameter space and compute chi2 for each parameter value """
     res = []
     frames = []
     for z in xrange(opts.nscan):
-        if is_kolmogorov:
+        if ks:
             frame,chi = None,p_value(dataP,data[z])
         else:
-            frame,chi = plot_data(data[z],nbins=nbins);
+            frame,chi = plot_data(model,data[z],nbins=nbins);
         res.append(chi)
         frames.append(frame)
     return res,frames
 def make_graph(n,xs,ys):
     """ Make a TGraph for scanned_parameters -vs- chi2"""
     h = ROOT.TGraph(n)
+    #h.SetName(rand_name())
     h.SetMarkerColor(4);
     h.SetMarkerSize(1.5);
     h.SetMarkerStyle(21);
     for z in xrange(n):
         h.SetPoint(z,xs[z],ys[z])
     return h
-def fitgraph(h,is_kolmogorov,FITMIN,FITMAX):
+def fitgraph(h,ks,FITMIN,FITMAX):
     """ Fit chi2 TGraph to a parabola and extract chi2 minimum and error band around (chi2-1) """
-    if is_kolmogorov:
+    if ks:
         # fit gaussian core as an approximation for KS probability distribution
         rms,mean=h.GetRMS(),h.GetMean()
         rms,pc=h.GetRMS(),max([(h.GetY()[i],h.GetX()[i]) for i in xrange(h.GetN())])
         peak,chimean = pc[1],pc[0]
+        xmin = peak
         print 'peak and rms:',peak,rms
         rms_scale=0.33
         FITMIN=peak-rms*rms_scale
@@ -307,148 +335,229 @@ def fitgraph(h,is_kolmogorov,FITMIN,FITMAX):
         fr = h.Fit('gaus','S','',FITMIN,FITMAX)
         f = h.GetFunction('gaus')
         chimin = f.GetMaximum(FITMIN,FITMAX)
-        xmin = peak
         fitted_xmin = f.GetParameter(1)
         err = f.GetParameter(2)
         xleft,xright = xmin-err,xmin+err
         lbl_xmin = 0.55
-        xtra=fitted_xmin
     else:
         # fit parabola
         pc=min([(h.GetY()[i],h.GetX()[i]) for i in xrange(h.GetN())])
         peak,chimean = pc[1],pc[0]
+        xmin = peak
         # first, rough fit (to get an estimate of sigma)
         print 'Original fit range:',FITMIN,FITMAX
         fr = h.Fit('pol2','S0','',FITMIN,FITMAX)
         f = h.GetFunction('pol2')
         chimin = f.GetMinimum(FITMIN,FITMAX)
-        xmin = f.GetMinimumX(FITMIN,FITMAX)
-        chirange=40 #20
-        xleft = f.GetX(chimin+chirange,FITMIN,xmin)
-        xright = f.GetX(chimin+chirange,xmin,FITMAX)
-        err = 0.5*((xmin-xleft)+(xright-xmin))
+        fitted_xmin = f.GetMinimumX(FITMIN,FITMAX)
+        chirange=20 #40
+        xleft = f.GetX(chimin+chirange,FITMIN,fitted_xmin)
+        xright = f.GetX(chimin+chirange,fitted_xmin,FITMAX)
+        err = 0.5*((fitted_xmin-xleft)+(xright-fitted_xmin))
         del fr; del f;
         # second, refined fit
-        FITMIN=xmin-err
-        FITMAX=xmin+err
+        FITMIN=fitted_xmin-err
+        FITMAX=fitted_xmin+err
         print 'Refined fit range:',FITMIN,FITMAX
         fr = h.Fit('pol2','S','',FITMIN,FITMAX)
         f = h.GetFunction('pol2')
         chimin = f.GetMinimum(FITMIN,FITMAX)
-        xmin = f.GetMinimumX(FITMIN,FITMAX)
-        xleft = f.GetX(chimin+1,FITMIN,xmin)
-        xright = f.GetX(chimin+1,xmin,FITMAX)
-        err = 0.5*((xmin-xleft)+(xright-xmin))
+        fitted_xmin = f.GetMinimumX(FITMIN,FITMAX)
+        xleft = f.GetX(chimin+1,FITMIN,fitted_xmin)
+        xright = f.GetX(chimin+1,fitted_xmin,FITMAX)
+        err = 0.5*((fitted_xmin-xleft)+(xright-fitted_xmin))
         lbl_xmin = 0.35
-        xtra=xmin
-    return xmin,err,xleft,xright,xtra,lbl_xmin,chimin
-    
+    return xmin,err,xleft,xright,fitted_xmin,lbl_xmin,chimin
+
 # Scan the parameter space and determine best value & error
-if opts.scan:
-    print 'Entering parameter scan studies'
-    if not opts.kolmogorov:
-        c = ROOT.TCanvas('c','c',1024,768)
-        c.Divide(3,3)
-    ps = [] # garbage collector
+def create_scan_graph(model,datasN,nbins,ks,nscan,shift,tag,c2):
+    global gbg
+    c1 = None
+    if not ks:
+        c1 = ROOT.TCanvas(rand_name(),rand_name(),1024,768)
+        c1.Divide(3,3)
     zplot = 1
-    chi2,frames = runscan(datasN,opts.kolmogorov,nbins=opts.nbins)
-    for z in xrange(opts.nscan):
-        step = opts.nscan/9 or 1
+    chi2,frames = runscan(model,dataP,datasN,ks,nbins=nbins)
+    for z in xrange(nscan):
+        step = nscan/9 or 1
         if z%step==0 and frames[z]:
             # plot
-            c.cd(zplot)
+            c1.cd(zplot)
             zplot+=1
             frames[z].Draw()
             # set pave text
-            p = ROOT.TPaveText(.6,.70 , (.6+.30),(.70+.20) ,"NDC")
+            p = ROOT.TPaveText(.6,.70 , (.6+.40),(.70+.20) ,"NDC")
+            p.SetName(rand_name())
             p.SetTextAlign(11)
             p.SetFillColor(0)
             p.AddText('Scale=%.2f, chi2=%.2f'%(scale[z],chi2[z]))
             p.Draw()
-            ps.append(p)
-    if not opts.kolmogorov:
-        c.Update()
-        c.SaveAs('%s_scan.png'%opts.tag)
-    c2 = ROOT.TCanvas('c2','c2',800,600); c2.cd()
-    h = make_graph(opts.nscan,scale,chi2)
-    h.SetTitle('Momentum %s: best value and error (%s)'%('scale' if not opts.shift else 'shift',opts.tag))
+            gbg.append(p)
+    gbg += frames
+    if not ks:
+        c1.Update()
+    c2.cd()
+    h = make_graph(nscan,scale,chi2)
+    h.SetTitle('Momentum %s: best value and error (%s)'%('scale' if not shift else 'shift',tag))
     h.Draw('ACP')
-    xmin,err,xleft,xright,xtra,lbl_xmin,chimin=fitgraph(h,opts.kolmogorov,FITMIN,FITMAX)
-    if not opts.kolmogorov:
+    if ks:
+        h.GetYaxis().SetRangeUser(0,1.3)
+    gbg.append(h)
+    xmin,err,xleft,xright,fitted_xmin,lbl_xmin,chimin=fitgraph(h,ks,FITMIN,FITMAX)
+    if not ks:
         line = ROOT.TGraph(2)
         line.SetPoint(0,xleft,chimin+1)
         line.SetPoint(1,xright,chimin+1)
         line.SetLineWidth(4)
         line.SetLineColor(ROOT.kRed)
         line.Draw('l')
-    p = ROOT.TPaveText(lbl_xmin,.80 , (lbl_xmin+.35),(.80+.10) ,"NDC")
+        gbg.append(line)
+    p = ROOT.TPaveText(lbl_xmin,.79 , (lbl_xmin+.35),(.79+.10) ,"NDC")
     p.SetTextAlign(11)
     p.SetFillColor(0)
-    if not opts.shift:
-        if not opts.kolmogorov:
-            lbl = 'Best value = %.2f%% +/- %.2f%%'%(xmin*100.0,err*100.0)
-        else:
-            lbl = 'Peak value = %.2f%% +/- %.2f%%. Fit value = %.2f%%'%(xmin*100.0,err*100.0,xtra*100.0)
+    if not shift:
+        lbl = 'R0 = %.2f%% +/- %.2f%%. Fit = %.2f%%'%(xmin*100.0,err*100.0,fitted_xmin*100.0)
     else:
-        if not opts.kolmogorov:
-            lbl = 'Best value = %.2f +/- %.2f (1/PeV)'%(xmin*1e6,err*1e6)
-        else:
-            lbl = 'Best value = %.2f +/- %.2f (1/PeV). Fit value = %.2f (1/PeV)'%(xmin*1e6,err*1e6,xtra*1e6)
+        lbl = 'S0 = %.2f +/- %.2f (1e-6/GeV). Fit = %.2f'%(xmin*1e6,err*1e6,fitted_xmin*1e6)
     p.AddText(lbl)
+    p.AddText('N = %d (%d & %d). dN=%d sqrt=%d'%(nmax,Np,Nn,Np-Nn,int(math.sqrt(nmax))))
+    p.SetName(rand_name())
     p.Draw()
-    c2.SaveAs('%s_chi2.png'%opts.tag)
-    print lbl,'chi2 = %.2f'%chimin
-    # save in the output file
-    fout = open('%s_results.rtxt'%opts.tag,'w')
-    print >>fout,'value = %.10f +/- %.10f ; chi2 = %.10f ; fitted_mean = %.10f'%(xmin,err,chimin,xtra)
-    fout.close()
+    c2.Update()
+    gbg.append(p); gbg.append(c2)
+    COUT.append('%d value = %.10f +/- %.10f ; chi2 = %.10f ; fitted_mean = %.10f ; nmax = %d ; npos = %d ; nneg = %d'%(ks,xmin,err,chimin,fitted_xmin,nmax,Np,Nn))
+    return c1,fitted_xmin
 
-# study statistical stability of distributions
-if opts.ngroups>0:
+if opts.scan:
+    print 'Entering parameter scan studies'
+    c = ROOT.TCanvas(rand_name(),rand_name(),600,800); c.Divide(1,2)
+    crap, fitted_xmin_ks  = create_scan_graph(model,datasN,opts.nbins,True,opts.nscan,opts.shift,opts.tag,c.cd(1))
+    cscan,fitted_xmin_chi = create_scan_graph(model,datasN,opts.nbins,False,opts.nscan,opts.shift,opts.tag,c.cd(2))
+    c.Update()
+    c.SaveAs('%s_fit.png'%opts.tag)
+
+# study statistical stability of distributions in subsamples
+if opts.npergroup>0:
     print 'Entering splitted-sample studies in %s groups'%ngroups
-    means = []
-    errors = []
+    # chi2 method:
+    ks = False
+    chi_means = []
+    chi_fitted = []
+    chi_errors = []
     for j in range(ngroups):
-        h = make_graph(opts.nscan,scale,runscan(datasNsp[j],opts.kolmogorov)[0])
-        xmin,err,xleft,xright,xtra,lbl_xmin,chimin=fitgraph(h,opts.kolmogorov,FITMIN,FITMAX)
-        means.append(xmin)
-        errors.append(err)
-    mean = sum(means)/len(means)
-    err = sum(errors)/len(errors)
-    c2 = ROOT.TCanvas('c2','c2',800,600); c2.cd()
-    h = ROOT.TH1F('h','h',20,mean-err,mean+err)
-    [h.Fill(m) for m in means]
-    h.Draw()
-    c2.SaveAs('%s_statcheck.png'%opts.tag)
+        h = make_graph(opts.nscan,scale,runscan(models[j],datasPsp[j],datasNsp[j],ks)[0])
+        xmin,err,xleft,xright,fitted_xmin,lbl_xmin,chimin=fitgraph(h,ks,FITMIN,FITMAX)
+        chi_means.append(xmin)
+        chi_fitted.append(fitted_xmin)
+        chi_errors.append(err)
+    # KS method:
+    ks = True
+    ks_means = []
+    ks_fitted = []
+    ks_errors = []
+    for j in range(ngroups):
+        h = make_graph(opts.nscan,scale,runscan(models[j],datasPsp[j],datasNsp[j],ks)[0])
+        xmin,err,xleft,xright,fitted_xmin,lbl_xmin,chimin=fitgraph(h,ks,FITMIN,FITMAX)
+        ks_means.append(xmin)
+        ks_fitted.append(fitted_xmin)
+        ks_errors.append(err)
+    # plot
+    cgroup = ROOT.TCanvas(rand_name(),rand_name(),600,800); cgroup.Divide(1,2)
+    cgroup.cd(1)
+    h_chi_mean = ROOT.TGraphErrors(len(chi_means))
+    h_chi_mean.SetTitle("Chi2 method: %d subsamples of size %d"%(ngroups,opts.npergroup))
+    h_chi_mean.SetMarkerColor(ROOT.kRed);
+    h_chi_mean.SetLineColor(ROOT.kRed);
+    h_chi_mean.SetMarkerSize(1.5);
+    h_chi_mean.SetMarkerStyle(21);
+    h_chi_fitted = ROOT.TGraphErrors(len(chi_fitted))
+    h_chi_fitted.SetTitle("Chi2 method: %d subsamples of size %d"%(ngroups,opts.npergroup))
+    h_chi_fitted.SetMarkerColor(ROOT.kBlue);
+    h_chi_fitted.SetLineColor(ROOT.kBlue);
+    h_chi_fitted.SetMarkerSize(1.0);
+    h_chi_fitted.SetMarkerStyle(21);
+    for z in xrange(len(chi_means)):
+        h_chi_mean.SetPoint(z,z+1,chi_means[z])
+        h_chi_mean.SetPointError(z,0,chi_errors[z])
+        h_chi_fitted.SetPoint(z,z+1,chi_fitted[z])
+        h_chi_fitted.SetPointError(z,0,chi_errors[z])
+    oldf = ROOT.gStyle.GetOptFit()
+    ROOT.gStyle.SetOptFit(1111);
+    h_chi_mean.Fit("pol0")
+    h_chi_mean.Draw('A*')
+    h_chi_fitted.Draw('*SAMES')
+    #h_chi_fitted.Draw('A*SAMES')
+    cgroup.SaveAs('%s_statcheck.png'%opts.tag)
+    ROOT.gStyle.SetOptFit(oldf);
 
 if opts.varbins:
-    print 'Entering splitted-sample studies in %s groups'%ngroups
+    print 'Studying variation of results on number of bins'
     means = []
     errors = []
-    bins = range(2,opts.nbins)
+    bins = range(3,opts.nbins)
     for ibins in bins:
-        h = make_graph(opts.nscan,scale,runscan(datasN,opts.kolmogorov,ibins)[0])
+        h = make_graph(opts.nscan,scale,runscan(model,dataP,datasN,opts.ks,ibins)[0])
         xmin,err,xleft,xright,xtra,lbl_xmin,chimin=fitgraph(h,False,FITMIN,FITMAX)
         means.append(xmin)
         errors.append(err)
-    c2 = ROOT.TCanvas('c2','c2',800,600); c2.cd()
+    cvarbins = ROOT.TCanvas(rand_name(),rand_name(),800,600); cvarbins.cd()
     h = ROOT.TGraphErrors(len(bins))
+    h.SetTitle("Effect of chi2 binning")
     h.SetMarkerColor(4);
     h.SetMarkerSize(1.5);
     h.SetMarkerStyle(21);
     for z in xrange(len(bins)):
         h.SetPoint(z,bins[z],means[z])
         h.SetPointError(z,0,errors[z])
+    oldf = ROOT.gStyle.GetOptFit()
+    ROOT.gStyle.SetOptFit(1111);
+    h.Fit("pol0")
     h.Draw('A*')
     #ROOT.gPad.SetLogy(ROOT.kTRUE)
-    c2.SaveAs('%s_varbins.png'%opts.tag)
+    cvarbins.SaveAs('%s_varbins.png'%opts.tag)
+    ROOT.gStyle.SetOptFit(oldf);
 
 # Plot template shape
 if opts.template:
-    c3 = ROOT.TCanvas('c3','c3',640,480); c3.cd()
-    frame = x.frame()
-    color=ROOT.kBlue
-    RooAbsData.plotOn(data_model,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(20))
-    model.plotOn(frame,RF.LineColor(color))
-    frame.Draw()
-    c3.SaveAs('%s_template.png'%opts.tag)
+    # plot model for POS and data for POS
+    if not opts.ks:
+        cmodel = ROOT.TCanvas(rand_name(),rand_name(),640,480); cmodel.cd()
+        frame = x.frame()
+        color=ROOT.kBlue
+        RooAbsData.plotOn(data_model,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(20))
+        model.plotOn(frame,RF.LineColor(color))
+        frame.SetTitle('mu+ 1/pt and the derived smooth PDF')
+        frame.Draw()
+        cmodel.SaveAs('%s_template.png'%opts.tag)
+    # plot default and best-fitted spectra on top of each other
+    if opts.scan:
+        # create dataN shifted by "best-fitted" value
+        dataN_chi = RooDataSet('dataN','Zmumu mu- data',RooArgSet(x))
+        dataN_ks  = RooDataSet('dataN','Zmumu mu- data',RooArgSet(x))
+        for i in range(0,nmax):
+            x.setVal(func(neg[i]*opts.forcescale,fitted_xmin_chi))
+            dataN_chi.add(RooArgSet(x))
+            x.setVal(func(neg[i]*opts.forcescale,fitted_xmin_ks))
+            dataN_ks.add(RooArgSet(x))
+        # make the plot with 3 histograms overlayed
+        coverlay = ROOT.TCanvas(rand_name(),rand_name(),640,480); coverlay.cd()
+        frame = x.frame()
+        color=ROOT.kRed
+        RooAbsData.plotOn(dataP,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(20),RF.MarkerSize(2))
+        color=ROOT.kBlue
+        RooAbsData.plotOn(dataN,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(20),RF.MarkerSize(1.5))
+        color=8
+        RooAbsData.plotOn(dataN_ks,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(20),RF.MarkerSize(1.0))
+        color=5
+        RooAbsData.plotOn(dataN_ks,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(20),RF.MarkerSize(0.5))
+        frame.SetTitle('Green = KS scale (%.2f%%). Yellow = chi scale (%.2f%%)'%(fitted_xmin_ks,fitted_xmin_chi))
+        frame.Draw()
+        coverlay.SaveAs('%s_ptspectra.png'%(opts.tag))
+
+# save to text file
+if len(COUT)>0:
+    fout = open('%s_results.rtxt'%opts.tag,'w')
+    for l in COUT:
+        print l
+        print >>fout,l
+    fout.close()
