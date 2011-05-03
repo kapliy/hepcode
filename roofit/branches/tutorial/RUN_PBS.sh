@@ -13,7 +13,7 @@ okl[2]="--akluit"
 xtra="--template"
 
 fnames="ROOT/root_all_0428.root"
-regs="AA BB CC Bcc Baa FWC FWA MWC MWA FWC0 FWC1 FWC2 FWC3 FWC4 FWA0 FWA1 FWA2 FWA3 FWA4"
+regs="AA BB CC Bcc Baa FWC FWA MWC MWA" # "FWC0 FWC1 FWC2 FWC3 FWA0 FWA1 FWA2 FWA3"
 folders="data data_20110425"
 tts="cmb id exms"
 for fname in $fnames; do
@@ -31,7 +31,7 @@ for fname in $fnames; do
 			echo "source ~/.bashrc" >> $J
 			echo "anaquick2" >> $J
 			echo "cd ${ROOTDIR}" >> $J
-			echo ./KEYS_CMB.sh ${fname} ${fold} ${tt} data ${reg} $ift $ikl ${template} >> $J
+			echo ./KEYS_CMB.sh ${fname} ${fold} ${tt} data ${reg} $ift $ikl ${xtra} >> $J
 			qsub -N keys${i} -o LOG${i}.out -e LOG${i}.err ${J}
 			((i++))
 		    done

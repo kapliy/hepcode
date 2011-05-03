@@ -107,6 +107,9 @@ parser.add_option("--npergroup", dest="npergroup",
 parser.add_option("--varbins", default=False,
                   action="store_true",dest="varbins",
                   help="Study systematic effect of bin variation")
+parser.add_option("--savegrid", default=False,
+                  action="store_true",dest="savegrid",
+                  help="Plot the grid of 9 scanned parameter values")
 
 (opts, args) = parser.parse_args()
 
@@ -161,6 +164,11 @@ if True:
     f.Close()
     avg_pos = sum(pos)/len(pos)
     avg_neg = sum(neg)/len(neg)
+    if opts.shift:
+        avg_pos = sum([1/z for z in pos])/len(pos)
+        avg_neg = sum([1/z for z in neg])/len(neg)
+    avg_scale = avg_pos/avg_neg
+    avg_shift = avg_pos - avg_neg
     nmax = min(N,opts.ndata)
     if nmax == 0:
         print 'Error: no data passed the cuts'
@@ -338,7 +346,7 @@ def fitgraph(h,ks,FITMIN,FITMAX):
         fitted_xmin = f.GetParameter(1)
         err = f.GetParameter(2)
         xleft,xright = xmin-err,xmin+err
-        lbl_xmin = 0.55
+        lbl_xmin = 0.50
     else:
         # fit parabola
         pc=min([(h.GetY()[i],h.GetX()[i]) for i in xrange(h.GetN())])
@@ -350,7 +358,7 @@ def fitgraph(h,ks,FITMIN,FITMAX):
         f = h.GetFunction('pol2')
         chimin = f.GetMinimum(FITMIN,FITMAX)
         fitted_xmin = f.GetMinimumX(FITMIN,FITMAX)
-        chirange=20 #40
+        chirange=50 #20
         xleft = f.GetX(chimin+chirange,FITMIN,fitted_xmin)
         xright = f.GetX(chimin+chirange,fitted_xmin,FITMAX)
         err = 0.5*((fitted_xmin-xleft)+(xright-fitted_xmin))
@@ -363,10 +371,23 @@ def fitgraph(h,ks,FITMIN,FITMAX):
         f = h.GetFunction('pol2')
         chimin = f.GetMinimum(FITMIN,FITMAX)
         fitted_xmin = f.GetMinimumX(FITMIN,FITMAX)
+        chirange=20 #20
+        xleft = f.GetX(chimin+chirange,FITMIN,fitted_xmin)
+        xright = f.GetX(chimin+chirange,fitted_xmin,FITMAX)
+        err = 0.5*((fitted_xmin-xleft)+(xright-fitted_xmin))
+        del fr; del f;
+        # third, final fit
+        FITMIN=fitted_xmin-err
+        FITMAX=fitted_xmin+err
+        print 'Re-refined fit range:',FITMIN,FITMAX
+        fr = h.Fit('pol2','S','',FITMIN,FITMAX)
+        f = h.GetFunction('pol2')
+        chimin = f.GetMinimum(FITMIN,FITMAX)
+        fitted_xmin = f.GetMinimumX(FITMIN,FITMAX)
         xleft = f.GetX(chimin+1,FITMIN,fitted_xmin)
         xright = f.GetX(chimin+1,fitted_xmin,FITMAX)
         err = 0.5*((fitted_xmin-xleft)+(xright-fitted_xmin))
-        lbl_xmin = 0.35
+        lbl_xmin = 0.30
     return xmin,err,xleft,xright,fitted_xmin,lbl_xmin,chimin
 
 # Scan the parameter space and determine best value & error
@@ -412,20 +433,20 @@ def create_scan_graph(model,datasN,nbins,ks,nscan,shift,tag,c2):
         line.SetLineColor(ROOT.kRed)
         line.Draw('l')
         gbg.append(line)
-    p = ROOT.TPaveText(lbl_xmin,.79 , (lbl_xmin+.35),(.79+.10) ,"NDC")
+    p = ROOT.TPaveText(lbl_xmin,.79 , (lbl_xmin+.40),(.79+.10) ,"NDC")
     p.SetTextAlign(11)
     p.SetFillColor(0)
     if not shift:
-        lbl = 'R0 = %.2f%% +/- %.2f%%. Fit = %.2f%%'%(xmin*100.0,err*100.0,fitted_xmin*100.0)
+        lbl = 'R0=%.2f%%+/-%.2f%%. Fit=%.2f%%. Avg=%.2f%%'%(xmin*100.0,err*100.0,fitted_xmin*100.0,avg_scale*100.0)
     else:
-        lbl = 'S0 = %.2f +/- %.2f (1e-6/GeV). Fit = %.2f'%(xmin*1e6,err*1e6,fitted_xmin*1e6)
+        lbl = 'S0=%.2f+/-%.2f(1e-6/GeV). Fit = %.2f. Avg=%.2f%%'%(xmin*1e6,err*1e6,fitted_xmin*1e6,avg_shift*1e6)
     p.AddText(lbl)
     p.AddText('N = %d (%d & %d). dN=%d sqrt=%d'%(nmax,Np,Nn,Np-Nn,int(math.sqrt(nmax))))
     p.SetName(rand_name())
     p.Draw()
     c2.Update()
     gbg.append(p); gbg.append(c2)
-    COUT.append('%d value = %.10f +/- %.10f ; chi2 = %.10f ; fitted_mean = %.10f ; nmax = %d ; npos = %d ; nneg = %d'%(ks,xmin,err,chimin,fitted_xmin,nmax,Np,Nn))
+    COUT.append('%d peak = %.10f +/- %.10f ; chi2 = %.10f ; fitted_mean = %.10f ; avg_scale = %.10f ; avg_shift = %.10f ; nmax = %d ; npos = %d ; nneg = %d'%(ks,xmin,err,chimin,fitted_xmin,avg_scale,avg_shift,nmax,Np,Nn))
     return c1,fitted_xmin
 
 if opts.scan:
@@ -435,6 +456,8 @@ if opts.scan:
     cscan,fitted_xmin_chi = create_scan_graph(model,datasN,opts.nbins,False,opts.nscan,opts.shift,opts.tag,c.cd(2))
     c.Update()
     c.SaveAs('%s_fit.png'%opts.tag)
+    if opts.savegrid:
+        cscan.SaveAs('%s_scan.png'%opts.tag)
 
 # study statistical stability of distributions in subsamples
 if opts.npergroup>0:
@@ -520,17 +543,20 @@ if opts.varbins:
 # Plot template shape
 if opts.template:
     # plot model for POS and data for POS
+    cmodel = ROOT.TCanvas(rand_name(),rand_name(),600,800)
+    cmodel.Divide(1,2)
     if not opts.ks:
-        cmodel = ROOT.TCanvas(rand_name(),rand_name(),640,480); cmodel.cd()
+        cmodel.cd(1)
         frame = x.frame()
         color=ROOT.kBlue
         RooAbsData.plotOn(data_model,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(20))
         model.plotOn(frame,RF.LineColor(color))
         frame.SetTitle('mu+ 1/pt and the derived smooth PDF')
         frame.Draw()
-        cmodel.SaveAs('%s_template.png'%opts.tag)
+        gbg.append(frame)
     # plot default and best-fitted spectra on top of each other
     if opts.scan:
+        cmodel.cd(2)
         # create dataN shifted by "best-fitted" value
         dataN_chi = RooDataSet('dataN','Zmumu mu- data',RooArgSet(x))
         dataN_ks  = RooDataSet('dataN','Zmumu mu- data',RooArgSet(x))
@@ -540,7 +566,6 @@ if opts.template:
             x.setVal(func(neg[i]*opts.forcescale,fitted_xmin_ks))
             dataN_ks.add(RooArgSet(x))
         # make the plot with 3 histograms overlayed
-        coverlay = ROOT.TCanvas(rand_name(),rand_name(),640,480); coverlay.cd()
         frame = x.frame()
         color=ROOT.kRed
         RooAbsData.plotOn(dataP,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(20),RF.MarkerSize(2))
@@ -550,9 +575,9 @@ if opts.template:
         RooAbsData.plotOn(dataN_ks,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(20),RF.MarkerSize(1.0))
         color=5
         RooAbsData.plotOn(dataN_ks,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(20),RF.MarkerSize(0.5))
-        frame.SetTitle('Green = KS scale (%.2f%%). Yellow = chi scale (%.2f%%)'%(fitted_xmin_ks,fitted_xmin_chi))
+        frame.SetTitle('Green = KS scale (%.2f%%). Yellow = chi scale (%.2f%%)'%(fitted_xmin_ks*100.0,fitted_xmin_chi*100.0))
         frame.Draw()
-        coverlay.SaveAs('%s_ptspectra.png'%(opts.tag))
+    cmodel.SaveAs('%s_template.png'%(opts.tag))
 
 # save to text file
 if len(COUT)>0:

@@ -205,7 +205,7 @@ def ntuple_to_array_akluit(t,name,xmin,xmax,maxdata=1000000,nskip=0):
     rp,rn = get_eranges(name)
     rf = get_prange(name)
     N = t.GetEntries()
-    print 'Reading tree with',N,'entries via Kluit method'
+    print 'Reading tree with',N,'entries via Anti-Kluit method'
     resp = []
     resn = []
     for i in range(N):

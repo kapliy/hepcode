@@ -4,16 +4,12 @@ Systematic effects from MC:
 Update ngroups to plot mean/error in TErrorGraph and print on label fitted mean and maximum spread
 - repeat for several values of statistics, for KLU and non-KLU
 
-
-Split by phi:
-ID muons in endcap A - great shift (~6%), dependent on phi region (1,2 worst)
-MS muons in endcap C - bad shift
-
-KLU vs non-KLU
-
 Add simple-mean version for 1/pt spectra (i.e. what everybody else is doing)
+Save in rtxt?
 
-
+For tomorrow:
+Given event counts in 2010, study stat variation in MC.
+Study variation with chi2 binning
 
 
 
