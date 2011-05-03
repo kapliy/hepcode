@@ -98,8 +98,10 @@ def get_prange(name):
 def ntuple_to_array1(t,name,xmin,xmax,maxdata=1000000):
     """ Load TNtuple from a file: only load mZ """
     ep_name,en_name = 'lP_eta','lN_eta'
+    fp_name,fn_name = 'lP_phi','lN_phi'
     mz_name = 'Z_m'
     rp,rn = get_eranges(name)
+    rf = get_prange(name)
     N = t.GetEntries()
     print 'Reading tree with',N,'entries'
     res = []
@@ -108,6 +110,8 @@ def ntuple_to_array1(t,name,xmin,xmax,maxdata=1000000):
         t.GetEntry(i)
         ep = getattr(t,ep_name)
         en = getattr(t,en_name)
+        fp = getattr(t,fp_name)
+        fn = getattr(t,fn_name)
         mz = getattr(t,mz_name)
         good = rp[0] < ep < rp[1] and rn[0] < en < rn[1] and xmin < mz < xmax
         if not good: continue

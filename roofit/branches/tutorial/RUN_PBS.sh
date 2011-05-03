@@ -32,7 +32,7 @@ for fname in $fnames; do
 			echo "anaquick2" >> $J
 			echo "cd ${ROOTDIR}" >> $J
 			echo ./KEYS_CMB.sh ${fname} ${fold} ${tt} data ${reg} $ift $ikl ${xtra} >> $J
-			qsub -N keys${i} -o LOG${i}.out -e LOG${i}.err ${J}
+			qsub -N keys${i} -o LOG.keys.${i}.out -e LOG.keys.${i}.err ${J}
 			((i++))
 		    done
 		done
