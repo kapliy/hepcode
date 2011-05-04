@@ -5,7 +5,13 @@ import sys,os
 klus = ['','KLU_','AKLU_']
 dets = ['cmb','id','exms']
 regs = ["BB","Baa","Bcc","AA","MWA","FWA","CC","MWC","FWC"]  #["FWC0","FWC1","FWC2","FWC3","FWA0","FWA1","FWA2","FWA3"]
+fname_pat='root_all_0428.root'
+folder_pat='data'
+if len(sys.argv)==3:
+    fname_pat=sys.argv[1]
+    folder_pat=sys.argv[2]
 pattern = '%sroot_all_0428.root_data_%s_data_%s_%s'
+pattern = '%s%s_%s_%s_data_%s_%s'
 
 dets_map = {'cmb' : 'Combined muons', 'id' : 'Inner Detector muons', 'exms' : 'Muon Spectrometer muons'}
 regs_map = {'AA' : 'Endcap A-side', 'BB' : 'Barrel', 'CC' : 'Endcap C-side', 'Bcc' : 'Barrel C-side', 'Baa' : 'Barrel A-side', 'FWC' : 'Endcap C-side (-2.4 < eta < -2.0)', 'FWA' : 'Endcap A-side (2.0 < eta < 2.4)', 'MWC' : 'Endcap C-side (-2.0 < eta < -1.05)', 'MWA' : 'Endcap A-side (1.05 < eta < 2.0)'}
@@ -29,7 +35,7 @@ for det in dets:
         res[det][reg] = {}
         for klu in klus:
             res[det][reg][klu] = None
-            fname = pattern%(klu,det,reg,'results.rtxt')
+            fname = pattern%(klu,fname_pat,folder_pat,det,reg,'results.rtxt')
             good = os.path.isfile(fname)
             if good:
                 f = open(fname,'r')
@@ -62,7 +68,7 @@ for det in dets:
                 print '<td>%d</td>'%(int(v[0]))
                 print '<td>%.2f%%</td>'%(float(v[1])*100.0)
                 for z in range(2,NCOLS):
-                    fname = pattern%(klu,det,reg,'fit.png')
+                    fname = pattern%(klu,fname_pat,folder_pat,det,reg,'fit.png')
                     print '<td><a href="%s">%.2f%%</a></td>'%(fname,float(v[z])*100.0)
                 print '</tr>'
     print '</table>'
