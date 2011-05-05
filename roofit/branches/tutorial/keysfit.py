@@ -88,6 +88,9 @@ parser.add_option("--kluit", default=False,
 parser.add_option("--akluit", default=False,
                   action="store_true",dest="akluit",
                   help="If akluit is enabled, muons are required to NOT be both in the same detector region")
+parser.add_option("--debug", default=False,
+                  action="store_true",dest="debug",
+                  help="General-use flag to assist with debugging")
 # enable modules
 parser.add_option('-b', "--batch", default=False,
                   action="store_true",dest="batch",
@@ -152,7 +155,9 @@ if True:
     if hz.ClassName() == 'TGraph':
         N,pos,neg = graph_to_array2(hz,opts.region)
     elif hz.ClassName() == 'TNtuple':
-        if opts.kluit:
+        if opts.debug:
+            Np,Nn,N,pos,neg = ntuple_to_array_debug(hz,opts.region,opts.zmin,opts.zmax,opts.ndata,opts.nskip)
+        elif opts.kluit:
             Np,Nn,N,pos,neg = ntuple_to_array_kluit(hz,opts.region,opts.zmin,opts.zmax,opts.ndata,opts.nskip)
         elif opts.akluit:
             Np,Nn,N,pos,neg = ntuple_to_array_akluit(hz,opts.region,opts.zmin,opts.zmax,opts.ndata,opts.nskip)

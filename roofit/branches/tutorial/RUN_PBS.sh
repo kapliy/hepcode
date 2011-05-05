@@ -8,13 +8,14 @@ oft[0]=" "
 
 okl[0]=" "
 okl[1]="--kluit"
-okl[2]="--akluit"
+#okl[2]="--akluit"
 
 xtra="--template"
-
-fnames="ROOT/root_all_0428.root"
 regs="AA BB CC Bcc Baa FWC FWA MWC MWA" # "FWC0 FWC1 FWC2 FWC3 FWA0 FWA1 FWA2 FWA3"
-folders="data data_20110425"
+
+fnames="ROOT/root_0505_closure.root"
+folders="data data_scaled_00 data_scaled_11 data_scaled_99 data_20110425 data_20110425_scaled_00 data_20110425_scaled_01 data_20110425_scaled_11"
+
 tts="cmb id exms"
 for fname in $fnames; do
     for fold in $folders; do
@@ -22,7 +23,7 @@ for fname in $fnames; do
 	    for reg in $regs; do
 		for ift in "${oft[@]}"; do
 		    for ikl in "${okl[@]}"; do
-			J=JOB$i.sh
+			J=JOB.PBS.$i.sh
 			rm -f $J; touch $J; chmod +x $J
 			echo "#!/bin/bash" >> $J
 			echo "#PBS -q uct3" >> $J
