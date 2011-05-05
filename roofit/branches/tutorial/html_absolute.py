@@ -3,8 +3,8 @@
 import sys,os
 
 klus = ['','KLU_','AKLU_']
-dets = ['cmb','id','exms']
-regs = ["BB","Baa","Bcc","AA","MWA","FWA","CC","MWC","FWC"]  #["FWC0","FWC1","FWC2","FWC3","FWA0","FWA1","FWA2","FWA3"]
+dets = ['cmb','exms','id']
+regs = ["AA","BB","CC","Baa","Bcc","MWA","FWA","MWC","FWC"]  #["FWC0","FWC1","FWC2","FWC3","FWA0","FWA1","FWA2","FWA3"]
 fname_pat='root_all_0428.root'
 folder_pat='data'
 if len(sys.argv)==3:
@@ -82,3 +82,36 @@ for det in dets:
                     print '<td><a href="%s">%.2f%%</a></td>'%(fname,float(v[z]))
                 print '</tr>'
     print '</table>'
+
+# create c++ array of scales
+klu=''
+coarse,fine = [],[]
+for det in dets:
+    for reg in ('AA','BB','CC'):
+        v = res[det][reg][klu]
+        if v:
+            coarse.append('%.2f'%float(v[5]))
+            coarse.append('%.2f'%float(v[5]))
+for det in dets:
+    for reg in ('FWA','MWA','Baa','Bcc','MWC','FWC'):
+        v = res[det][reg][klu]
+        if v:
+            fine.append('%.2f'%float(v[5]))
+            fine.append('%.2f'%float(v[5]))
+print '<BR>Coarse binning:<pre>'
+for i,j in enumerate(coarse):
+    print j,
+    if i%2!=0:
+        print ' , '
+    else:
+        print ' , ',
+print '</pre>'
+
+print '<BR>Fine binning:<pre>'
+for i,j in enumerate(fine):
+    print j,
+    if i%2!=0:
+        print ' , '
+    else:
+        print ' , ',
+print '</pre>'

@@ -3,8 +3,8 @@
 import sys,os
 
 klus = ['','KLU_','AKLU_']
-dets = ['cmb','id','exms']
-regs = ["BB","Baa","Bcc","AA","MWA","FWA","CC","MWC","FWC"]  #["FWC0","FWC1","FWC2","FWC3","FWA0","FWA1","FWA2","FWA3"]
+dets = ['cmb','exms','id']
+regs = ["AA","BB","CC","Baa","Bcc","MWA","FWA","MWC","FWC"]  #["FWC0","FWC1","FWC2","FWC3","FWA0","FWA1","FWA2","FWA3"]
 fname_pat='root_all_0428.root'
 folder_pat='data'
 if len(sys.argv)==3:
