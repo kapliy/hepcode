@@ -7,11 +7,17 @@ dets = ['cmb','exms','id']
 regs = ["AA","BB","CC","Baa","Bcc","MWA","FWA","MWC","FWC"]  #["FWC0","FWC1","FWC2","FWC3","FWA0","FWA1","FWA2","FWA3"]
 fname_pat='root_all_0428.root'
 folder_pat='data'
-if len(sys.argv)==3:
+if len(sys.argv)>=4:
     fname_pat=sys.argv[1]
     folder_pat=sys.argv[2]
+    mc_pat=sys.argv[3]
+else:
+    print >> sys.stderr, 'Not enough arguments!'
+    sys.exit(0)
 pattern = 'ZDATA_%sroot_all_0428.root_data_20110425_%s_%s_%s'
 pattern = 'ZDATA_%s%s_%s_%s_%s_%s'
+mc_pattern = 'ZMC_KLU_root_0505_closure.root_mc_zmumu_exms_MWC_fit.png'
+mc_pattern = 'ZMC_%s%s_%s_%s_%s_%s'
 
 dets_map = {'cmb' : 'Combined muons', 'id' : 'Inner Detector muons', 'exms' : 'Muon Spectrometer muons'}
 regs_map = {'AA' : 'Endcap A-side', 'BB' : 'Barrel', 'CC' : 'Endcap C-side', 'Bcc' : 'Barrel C-side', 'Baa' : 'Barrel A-side', 'FWC' : 'Endcap C-side (-2.4 < eta < -2.0)', 'FWA' : 'Endcap A-side (2.0 < eta < 2.4)', 'MWC' : 'Endcap C-side (-2.0 < eta < -1.05)', 'MWA' : 'Endcap A-side (1.05 < eta < 2.0)'}
@@ -72,32 +78,80 @@ for det in dets:
         for klu in klus:
             v = res[det][reg][klu]
             if v:
+                fname = pattern%(klu,fname_pat,folder_pat,det,reg,'fit.png')
+                mcfname = mc_pattern%(klu,fname_pat,mc_pat,det,reg,'fit.png')
                 print '<tr>'
                 print '<td>%s</td>'%(klus_map[klu])
-                print '<td>%.2f</td>'%(v[0])
-                print '<td>%.2f</td>'%(v[1])
+                print '<td><a href="%s">%.2f</a></td>'%(mcfname,v[0])
+                print '<td><a href="%s">%.2f</a></td>'%(fname,v[1])
                 print '<td>%.3f</td>'%(v[2])
                 for z in range(3,NCOLS):
-                    fname = pattern%(klu,fname_pat,folder_pat,det,reg,'fit.png')
-                    print '<td><a href="%s">%.2f%%</a></td>'%(fname,float(v[z]))
+                    print '<td>%.2f%%</td>'%(float(v[z]))
                 print '</tr>'
     print '</table>'
 
 # create c++ array of scales
+print '<BR>Default (low-stats) version<BR>'
 klu=''
 coarse,fine = [],[]
 for det in dets:
     for reg in ('AA','BB','CC'):
         v = res[det][reg][klu]
+        fname = pattern%(klu,fname_pat,folder_pat,det,reg,'fit.png')
         if v:
+            coarse.append('%.2f'%float(v[3]))
             coarse.append('%.2f'%float(v[5]))
-            coarse.append('%.2f'%float(v[5]))
+        else:
+            print >> sys.stderr, 'Missing:',fname
 for det in dets:
     for reg in ('FWA','MWA','Baa','Bcc','MWC','FWC'):
         v = res[det][reg][klu]
+        fname = pattern%(klu,fname_pat,folder_pat,det,reg,'fit.png')
         if v:
+            fine.append('%.2f'%float(v[3]))
             fine.append('%.2f'%float(v[5]))
+        else:
+            print >> sys.stderr, 'Missing:',fname
+print '<BR>Coarse binning:<pre>'
+for i,j in enumerate(coarse):
+    print j,
+    if i%2!=0:
+        print ' , '
+    else:
+        print ' , ',
+print '</pre>'
+
+print '<BR>Fine binning:<pre>'
+for i,j in enumerate(fine):
+    print j,
+    if i%2!=0:
+        print ' , '
+    else:
+        print ' , ',
+print '</pre>'
+
+# create c++ array of scales
+print '<BR>KLUIT (high-stats) version<BR>'
+klu='KLU_'
+coarse,fine = [],[]
+for det in dets:
+    for reg in ('AA','BB','CC'):
+        v = res[det][reg][klu]
+        fname = pattern%(klu,fname_pat,folder_pat,det,reg,'fit.png')
+        if v:
+            coarse.append('%.2f'%float(v[3]))
+            coarse.append('%.2f'%float(v[5]))
+        else:
+            print >> sys.stderr, 'Missing:',fname
+for det in dets:
+    for reg in ('FWA','MWA','Baa','Bcc','MWC','FWC'):
+        v = res[det][reg][klu]
+        fname = pattern%(klu,fname_pat,folder_pat,det,reg,'fit.png')
+        if v:
+            fine.append('%.2f'%float(v[3]))
             fine.append('%.2f'%float(v[5]))
+        else:
+            print >> sys.stderr, 'Missing:',fname
 print '<BR>Coarse binning:<pre>'
 for i,j in enumerate(coarse):
     print j,

@@ -62,6 +62,9 @@ parser.add_option("--scale",dest="scale",
 parser.add_option("--fixw", default=False,
                   action="store_true",dest="fixw",
                   help="Fix width of W")
+parser.add_option("--ncpus",dest="ncpus",
+                  type="int", default=4,
+                  help="Number of CPUs to use in fitting")
 parser.add_option("--rookeys",dest="rookeys",
                   type="string", default=None,
                   help="ROOT file from which we load a cached RooKeysPdf")
@@ -298,11 +301,11 @@ def PrintVariables():
     vars = model.getVariables()
     vars.Print('v')
 
-def Fit(data,isExt,bins,extras=False):
+def Fit(data,isExt,bins,ncpus=4,extras=False):
     # named ranges can be used in RF.Range in a comma-separated list
     x = w.var('x')
     RF.Hesse(kTRUE)
-    r = model.fitTo(data,RF.PrintLevel(1),RF.Extended(isExt),RF.NumCPU(4),RF.Save())
+    r = model.fitTo(data,RF.PrintLevel(1),RF.Extended(isExt),RF.NumCPU(ncpus),RF.Save())
     frame = x.frame()
     if data.ClassName()=='RooDataSet':
         RooAbsData.plotOn( data,frame,RF.Name('dataZ'),RF.Binning(int((bins[1]-bins[0])/0.5)) )
@@ -398,7 +401,7 @@ if True:
         w.var('C').setVal(data.sumEntries())
     # perform the fit
     bins = (opts.min,opts.max)
-    r,frame,chi2ndf,ndf = Fit(data,isExt,bins)
+    r,frame,chi2ndf,ndf = Fit(data,isExt,bins,opts.ncpus)
     frame.SetTitle(opts.tag)
     # make the plots
     c = ROOT.TCanvas('c','c'); c.cd()

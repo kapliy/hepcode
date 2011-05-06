@@ -124,6 +124,7 @@ def ntuple_to_array_debug(t,name,xmin,xmax,maxdata=1000000,nskip=0):
     """ Load TNtuple from a file; both Z muons in the same eta range, but phi cut is applied on integrated spectra
     This is a debug version with scale corrections applied by-hand
     """
+    assert False,'DEBUG!'
     s = [ 100.25 , 100.25 ,
           100.01 , 99.77  ,
           100.82 , 99.36  ,
