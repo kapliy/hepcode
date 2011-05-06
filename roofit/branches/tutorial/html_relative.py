@@ -10,6 +10,9 @@ folder_pat='data'
 if len(sys.argv)==3:
     fname_pat=sys.argv[1]
     folder_pat=sys.argv[2]
+else:
+    print >> sys.stderr, 'Not enough arguments!'
+    sys.exit(0)
 pattern = '%sroot_all_0428.root_data_%s_data_%s_%s'
 pattern = '%s%s_%s_%s_data_%s_%s'
 
