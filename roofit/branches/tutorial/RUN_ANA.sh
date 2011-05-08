@@ -32,8 +32,8 @@ for fname in $fnames; do
 		    rm -f $J; touch $J; chmod +x $J
 		    echo "#!/bin/bash" >> $J
 		    echo "#PBS -q uct3" >> $J
-		    echo "#PBS -l cput=24:00:00" >> $J
-		    echo "#PBS -l walltime=24:00:00" >> $J
+		    echo "#PBS -l cput=8:00:00" >> $J
+		    echo "#PBS -l walltime=8:00:00" >> $J
 		    echo "source ~/.bashrc" >> $J
 		    echo "anaquick2" >> $J
 		    echo "cd ${ROOTDIR}" >> $J

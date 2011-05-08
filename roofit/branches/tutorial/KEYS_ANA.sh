@@ -12,7 +12,7 @@ if [ "$tt" == "cmb" ]; then ntlbl=""; fi;
 
 nmc=100000
 func=egge   #gaus
-res=1 # FIXME: was 3
+res=3
 
 sfx="_results.rtxt"
 
