@@ -94,6 +94,9 @@ parser.add_option("--ekm",dest="ekm",
 parser.add_option('-t',"--tag",dest="tag",
                   type="string", default='plot',
                   help="A tag to append to all output plots")
+parser.add_option("--ext",dest="ext",
+                  type="string", default='png',
+                  help="Extension for all output")
 parser.add_option('-b', "--batch", default=False,
                   action="store_true",dest="batch",
                   help="Enable batch mode (all output directly to filesystem)")
@@ -416,7 +419,7 @@ if True:
         p.AddText('chi2/dof = %.1f'%(chi2ndf))
         p.Draw()
         gbg.append(p)
-    c.SaveAs('%s_fit.png'%opts.tag)
+    c.SaveAs('%s_fit.%s'%(opts.tag,opts.ext))
     PrintVariables()
     mz=w.var('m').getVal()
     emz=w.var('m').getError()

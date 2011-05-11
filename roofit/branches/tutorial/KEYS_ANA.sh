@@ -24,7 +24,7 @@ if [ "1" -eq "1" ]; then
     xtra=""
     if [ "${res}" == "1" ]; then xtra="--min 80 --max 100"; fi
     if [ "${func}" == "gaus" ]; then xtra="--min 88 --max 94"; fi
-    ./zpeak.py -b --root ${rfile} --res ${res} --${func} --region ${reg} --data ${gr} --ndata ${nmc} -t ${tag} ${xtra}
+    ./zpeak.py -b --root ${rfile} --res ${res} --${func} --region ${reg} --data ${gr} --ndata ${nmc} -t ${tag} ${xtra} --ext eps
 fi;
 
 # data, using MC fitted value from truth and relative scale (R0/eR0) from keysfit.py
@@ -47,7 +47,7 @@ if [ "1" -eq "1" ]; then
 	xtra=""
 	if [ "${res}" == "1" ]; then xtra="--min 80 --max 100"; fi
 	if [ "${func}" == "gaus" ]; then xtra="--min 88 --max 94"; fi
-	./zpeak.py -b --root ${rfile} --res ${res} --${func} --region ${reg} --mz0 ${mz0} --R ${R} --eR ${eR} --data ${gr} ${xtra} -t ${tag}
+	./zpeak.py -b --root ${rfile} --res ${res} --${func} --region ${reg} --mz0 ${mz0} --R ${R} --eR ${eR} --data ${gr} ${xtra} -t ${tag} --ext eps
     fi;
 fi;
 

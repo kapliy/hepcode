@@ -51,6 +51,9 @@ parser.add_option("--rookeysout",dest="rookeysout",
 parser.add_option('-t',"--tag",dest="tag",
                   type="string", default='plot',
                   help="A tag to append to all output plots")
+parser.add_option("--ext",dest="ext",
+                  type="string", default='png',
+                  help="Extension for all output")
 # parameters
 parser.add_option("--zmin",dest="zmin",
                   type="float", default=66.0,
@@ -460,9 +463,9 @@ if opts.scan:
     crap, fitted_xmin_ks  = create_scan_graph(model,datasN,opts.nbins,True,opts.nscan,opts.shift,opts.tag,c.cd(1))
     cscan,fitted_xmin_chi = create_scan_graph(model,datasN,opts.nbins,False,opts.nscan,opts.shift,opts.tag,c.cd(2))
     c.Update()
-    c.SaveAs('%s_fit.png'%opts.tag)
+    c.SaveAs('%s_fit.%s'%(opts.tag,opts.ext))
     if opts.savegrid:
-        cscan.SaveAs('%s_scan.png'%opts.tag)
+        cscan.SaveAs('%s_scan.%s'%(opts.tag,opts.ext))
 
 # study statistical stability of distributions in subsamples
 if opts.npergroup>0:
@@ -515,7 +518,7 @@ if opts.npergroup>0:
     h_chi_mean.Draw('A*')
     h_chi_fitted.Draw('*SAMES')
     #h_chi_fitted.Draw('A*SAMES')
-    cgroup.SaveAs('%s_statcheck.png'%opts.tag)
+    cgroup.SaveAs('%s_statcheck.%s'%(opts.tag,opts.ext))
     ROOT.gStyle.SetOptFit(oldf);
 
 if opts.varbins:
@@ -542,7 +545,7 @@ if opts.varbins:
     h.Fit("pol0")
     h.Draw('A*')
     #ROOT.gPad.SetLogy(ROOT.kTRUE)
-    cvarbins.SaveAs('%s_varbins.png'%opts.tag)
+    cvarbins.SaveAs('%s_varbins.%s'%(opts.tag,opts.ext))
     ROOT.gStyle.SetOptFit(oldf);
 
 # Plot template shape
@@ -582,7 +585,7 @@ if opts.template:
         RooAbsData.plotOn(dataN_ks,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(20),RF.MarkerSize(0.5))
         frame.SetTitle('Green = KS scale (%.2f%%). Yellow = chi scale (%.2f%%)'%(fitted_xmin_ks*100.0,fitted_xmin_chi*100.0))
         frame.Draw()
-    cmodel.SaveAs('%s_template.png'%(opts.tag))
+    cmodel.SaveAs('%s_template.%s'%(opts.tag,opts.ext))
 
 # save to text file
 if len(COUT)>0:
