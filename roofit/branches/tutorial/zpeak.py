@@ -127,6 +127,8 @@ mz0 = opts.mz0
 
 import ROOT
 ROOT.gROOT.SetBatch(opts.batch)
+ROOT.gROOT.LoadMacro("AtlasStyle.C")
+ROOT.SetAtlasStyle()
 from ROOT import RooWorkspace,RooArgSet,RooArgList,RooDataHist,RooAbsData,RooDataSet,RooFormulaVar
 from ROOT import RooGaussModel,RooAddModel,RooRealVar,RooRealSumPdf
 from ROOT import kTRUE,kFALSE,kDashed,gStyle,gPad
@@ -335,6 +337,20 @@ def load_unbinned(hz,name,xmin,xmax,auto=None,scale=1.0):
         print 'Problem loading class',hz.ClassName()
         sys.exit(0)
     print 'Loaded raw unbinned data with',N,'entries'
+    if opts.gaus:
+        # make a histogram and do a quick gaussian fit to determine the central peak
+        xr = (80,100)
+        dGeV= 4.0  # window around fitted Z (in each direction)
+        h = ROOT.TH1F('htmp','htmp',int((xr[1]-xr[0])/0.5),xr[0],xr[1])
+        [h.Fill(v) for v in v1 if xr[0] < v < xr[1]]
+        fr = h.Fit('gaus','S0','',xr[0],xr[1])
+        f = h.GetFunction('gaus')
+        peak = f.GetMaximumX(xr[0],xr[1])
+        del fr; del f;
+        print 'INFO: Adjusting the range for Gaussian core fit. Mean / fitted peak =',h.GetMean(),peak
+        print 'OLD RANGE:',xmin,xmax
+        xmin,xmax = peak - dGeV, peak + dGeV
+        print 'NEW RANGE:',xmin,xmax
     w.factory('x[%s,%s]'%(xmin,xmax))
     ds1 = RooDataSet('ds1','ds1',RooArgSet(w.var('x')))
     ds2 = RooDataSet('ds2','ds2',RooArgSet(w.var('x')))
@@ -375,7 +391,7 @@ if True:
     assert hz, 'Error loading data object %s from file %s'%(opts.data,opts.root)
     cname = hz.ClassName()
     if cname in ('TGraph','TNtuple','TTree','TChain'):
-        data,crap = load_unbinned(hz,opts.region,opts.min,opts.max,opts.scale)
+        data,crap = load_unbinned(hz,opts.region,opts.min,opts.max,opts.auto,opts.scale)
     elif re.search('TH',cname):
         hz.SetDirectory(0)
         data = load_histo(hz,opts.min,opts.max,opts.auto)
@@ -416,10 +432,10 @@ if True:
         p.SetTextAlign(11)
         p.SetFillColor(0)
         p.AddText('mz = %.3f +/- %.3f'%(m.getVal(),m.getError()))
-        p.AddText('chi2/dof = %.1f'%(chi2ndf))
+        p.AddText('chi2/dof = %.1f. N=%d'%(chi2ndf,data.sumEntries()))
         p.Draw()
         gbg.append(p)
-    c.SaveAs('%s_fit.%s'%(opts.tag,opts.ext))
+    SaveAs(c,'%s_fit'%opts.tag,opts.ext)
     PrintVariables()
     mz=w.var('m').getVal()
     emz=w.var('m').getError()

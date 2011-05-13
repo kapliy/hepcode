@@ -121,6 +121,8 @@ parser.add_option("--savegrid", default=False,
 
 import ROOT
 ROOT.gROOT.SetBatch(opts.batch)
+ROOT.gROOT.LoadMacro("AtlasStyle.C")
+ROOT.SetAtlasStyle()
 from ROOT import RooWorkspace,RooArgSet,RooArgList,RooDataHist,RooDataSet,RooAbsData,RooFormulaVar
 from ROOT import RooHistPdf,RooKeysPdf,RooNDKeysPdf
 from ROOT import kTRUE,kFALSE,kDashed,gStyle,gPad
@@ -463,9 +465,9 @@ if opts.scan:
     crap, fitted_xmin_ks  = create_scan_graph(model,datasN,opts.nbins,True,opts.nscan,opts.shift,opts.tag,c.cd(1))
     cscan,fitted_xmin_chi = create_scan_graph(model,datasN,opts.nbins,False,opts.nscan,opts.shift,opts.tag,c.cd(2))
     c.Update()
-    c.SaveAs('%s_fit.%s'%(opts.tag,opts.ext))
+    SaveAs(c,'%s_fit'%opts.tag,opts.ext)
     if opts.savegrid:
-        cscan.SaveAs('%s_scan.%s'%(opts.tag,opts.ext))
+        SaveAs(cscan,'%s_scan'%opts.tag,opts.ext)
 
 # study statistical stability of distributions in subsamples
 if opts.npergroup>0:
@@ -518,7 +520,7 @@ if opts.npergroup>0:
     h_chi_mean.Draw('A*')
     h_chi_fitted.Draw('*SAMES')
     #h_chi_fitted.Draw('A*SAMES')
-    cgroup.SaveAs('%s_statcheck.%s'%(opts.tag,opts.ext))
+    SaveAs(cgroup,'%s_statcheck'%opts.tag,opts.ext)
     ROOT.gStyle.SetOptFit(oldf);
 
 if opts.varbins:
@@ -545,14 +547,18 @@ if opts.varbins:
     h.Fit("pol0")
     h.Draw('A*')
     #ROOT.gPad.SetLogy(ROOT.kTRUE)
-    cvarbins.SaveAs('%s_varbins.%s'%(opts.tag,opts.ext))
+    SaveAs(cvarbins,'%s_varbins'%opts.tag,opts.ext)
     ROOT.gStyle.SetOptFit(oldf);
 
 # Plot template shape
 if opts.template:
+    tmponly = False  # for making plots
     # plot model for POS and data for POS
-    cmodel = ROOT.TCanvas(rand_name(),rand_name(),600,800)
-    cmodel.Divide(1,2)
+    if not tmponly:
+        cmodel = ROOT.TCanvas(rand_name(),rand_name(),600,800)
+        cmodel.Divide(1,2)
+    else:
+        cmodel = ROOT.TCanvas(rand_name(),rand_name(),640,480)
     if not opts.ks:
         cmodel.cd(1)
         frame = x.frame()
@@ -563,7 +569,7 @@ if opts.template:
         frame.Draw()
         gbg.append(frame)
     # plot default and best-fitted spectra on top of each other
-    if opts.scan:
+    if opts.scan and not tmponly:
         cmodel.cd(2)
         # create dataN shifted by "best-fitted" value
         dataN_chi = RooDataSet('dataN','Zmumu mu- data',RooArgSet(x))
@@ -585,7 +591,7 @@ if opts.template:
         RooAbsData.plotOn(dataN_ks,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(20),RF.MarkerSize(0.5))
         frame.SetTitle('Green = KS scale (%.2f%%). Yellow = chi scale (%.2f%%)'%(fitted_xmin_ks*100.0,fitted_xmin_chi*100.0))
         frame.Draw()
-    cmodel.SaveAs('%s_template.%s'%(opts.tag,opts.ext))
+    SaveAs(cmodel,'%s_template'%opts.tag,opts.ext)
 
 # save to text file
 if len(COUT)>0:

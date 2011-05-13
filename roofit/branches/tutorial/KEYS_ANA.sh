@@ -5,25 +5,24 @@ lbl_data=$2
 lbl_mc=$3
 tt=$4
 reg=$5
-pfx=$6
+func=$6
+res=$7
+pfx=$8
 
 ntlbl="_${tt}"
 if [ "$tt" == "cmb" ]; then ntlbl=""; fi;
 
 nmc=100000
-func=egge   #gaus
-res=3
-
 sfx="_results.rtxt"
 
 # truth on full dataset
 if [ "1" -eq "1" ]; then
     subfile=${lbl_mc}_${lbl_mc}.root;
     gr=${subfile}/dg/dg/st_z_final/ntuple${ntlbl}
-    tag="ZMC_${pfx}`basename ${rfile}`_${lbl_mc}_${tt}_${reg}"
+    tag="ZMC_${pfx}`basename ${rfile}`_${lbl_mc}_${tt}_${reg}_${func}${res}"
     xtra=""
     if [ "${res}" == "1" ]; then xtra="--min 80 --max 100"; fi
-    if [ "${func}" == "gaus" ]; then xtra="--min 88 --max 94"; fi
+    if [ "${func}" == "gaus" ]; then xtra="--min 85 --max 97"; fi
     ./zpeak.py -b --root ${rfile} --res ${res} --${func} --region ${reg} --data ${gr} --ndata ${nmc} -t ${tag} ${xtra} --ext eps
 fi;
 
@@ -31,12 +30,15 @@ fi;
 if [ "1" -eq "1" ]; then
     subfile=${lbl_data}_${lbl_data}.root;
     gr=${subfile}/dg/dg/st_z_final/ntuple${ntlbl}
-    RZ=ZMC_${pfx}`basename ${rfile}`_${lbl_mc}_${tt}_${reg}${sfx}
+    RZ=ZMC_${pfx}`basename ${rfile}`_${lbl_mc}_${tt}_${reg}_${func}${res}${sfx}
     mz0=`tail -n2 ${RZ} | head -n1 | cut -d ' ' -f 3`
     RTXT=${pfx}`basename ${rfile}`_${lbl_data}_${tt}_data_${reg}${sfx}
-    R=`head -n1 ${RTXT} | cut -d ' ' -f 14`
+    R=`head -n1 ${RTXT} | cut -d ' ' -f 4`  # KS peak
+    R=`tail -n1 ${RTXT} | cut -d ' ' -f 4`  # chi peak
+    R=`tail -n1 ${RTXT} | cut -d ' ' -f 14`  # chi fitted
+    R=`head -n1 ${RTXT} | cut -d ' ' -f 14`  # KS fitted (default)
     eR=`tail -n1 ${RTXT} | cut -d ' ' -f 6`
-    tag="ZDATA_${pfx}`basename ${rfile}`_${lbl_data}_${tt}_${reg}"
+    tag="ZDATA_${pfx}`basename ${rfile}`_${lbl_data}_${tt}_${reg}_${func}${res}"
     echo "Printing contents of input files for region ${reg}:"
     echo ${RZ} ${RTXT}
     cat ${RZ} ${RTXT} /dev/null
