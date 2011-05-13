@@ -2,6 +2,7 @@
 * Add table with z central values in data and MC and error in data
 * Study independently the effect of Z window on gaussian fit.
 
+* Get degree of variation within smaller eta bins via KLU method only
 
 
 Make Z fits with gaus res; feed back scales into code.
