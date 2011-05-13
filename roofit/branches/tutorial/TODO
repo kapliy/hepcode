@@ -1,3 +1,9 @@
+* Add paragraph about z fit: both gaussian and full lineshape. Say full lineshape 
+* Add table with z central values in data and MC and error in data
+* Study independently the effect of Z window on gaussian fit.
+
+
+
 Make Z fits with gaus res; feed back scales into code.
 
 Systematic effects from MC:

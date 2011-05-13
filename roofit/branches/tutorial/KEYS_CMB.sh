@@ -37,6 +37,6 @@ echo $xtra | grep -q akluit && tag="AKLU_${tag}"
 echo $xtra | grep -q shift && tag="SHF_${tag}"
 
 set -x
-./keysfit.py --region ${reg} --zmin 80 --zmax 100 --root ${rfile} --batch --tag ${tag} --data ${gr} --ndata $nevt --nscan ${nscan} --scan ${frange} ${xtra}
-#./keysfit.py --region ${reg} --zmin 70 --zmax 110 --root ${rfile} --batch --tag ${tag} --data ${gr} --ndata $nevt --nscan ${nscan} --scan ${frange} ${xtra}
+#./keysfit.py --region ${reg} --zmin 80 --zmax 100 --root ${rfile} --batch --tag ${tag} --data ${gr} --ndata $nevt --nscan ${nscan} --scan ${frange} ${xtra}
+./keysfit.py --region ${reg} --zmin 70 --zmax 110 --root ${rfile} --batch --tag ${tag} --data ${gr} --ndata $nevt --nscan ${nscan} --scan ${frange} ${xtra}
 set +x

@@ -11,7 +11,7 @@ okl[1]="--kluit"
 #okl[2]="--akluit"
 
 xtra="--template --ext eps"
-regs="AA BB CC Bcc Baa" # FWC FWA MWC MWA" # "FWC0 FWC1 FWC2 FWC3 FWA0 FWA1 FWA2 FWA3"
+regs="AA BB CC" # Bcc Baa FWC FWA MWC MWA # "FWC0 FWC1 FWC2 FWC3 FWA0 FWA1 FWA2 FWA3"
 
 fnames="ROOT/root_0505_closure.root"
 folders="data data_scaled_00"

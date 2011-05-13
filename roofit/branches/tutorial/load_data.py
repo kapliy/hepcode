@@ -6,6 +6,11 @@ A few modules to load data from TGraphs or TNtuples into python array.array's
 
 import array,math,random,string
 
+def SaveAs(c,name,ext):
+    c.SaveAs('%s.%s'%(name,ext))
+    if ext=='eps':
+        c.SaveAs('%s.%s'%(name,'png'))
+
 def rand_name(ln=10):
     return ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(ln))
 
