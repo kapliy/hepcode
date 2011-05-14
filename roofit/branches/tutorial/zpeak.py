@@ -130,7 +130,7 @@ ROOT.gROOT.SetBatch(opts.batch)
 ROOT.gROOT.LoadMacro("AtlasStyle.C")
 ROOT.SetAtlasStyle()
 from ROOT import RooWorkspace,RooArgSet,RooArgList,RooDataHist,RooAbsData,RooDataSet,RooFormulaVar
-from ROOT import RooGaussModel,RooAddModel,RooRealVar,RooRealSumPdf
+from ROOT import RooGaussModel,RooAddModel,RooRealVar,RooAbsReal,RooRealSumPdf
 from ROOT import kTRUE,kFALSE,kDashed,gStyle,gPad
 from ROOT import TFile,TH1,TH1F,TH1D
 from ROOT import RooFit as RF
@@ -306,17 +306,29 @@ def PrintVariables():
     vars = model.getVariables()
     vars.Print('v')
 
-def Fit(data,isExt,bins,ncpus=4,extras=False):
-    # named ranges can be used in RF.Range in a comma-separated list
-    x = w.var('x')
-    RF.Hesse(kTRUE)
-    r = model.fitTo(data,RF.PrintLevel(1),RF.Extended(isExt),RF.NumCPU(ncpus),RF.Save())
-    frame = x.frame()
+def Fit(data,isExt,fullbins,fitbins,ncpus=4,extras=False,gaus=False):
+    # plot the data first
+    x = w.var('x'); xtra = None
+    frame = x.frame(RF.Title('Invariant mass fit using'))
     if data.ClassName()=='RooDataSet':
-        RooAbsData.plotOn( data,frame,RF.Name('dataZ'),RF.Binning(int((bins[1]-bins[0])/0.5)) )
+        RooAbsData.plotOn(data,frame,RF.Name('dataZ'),RF.Binning(int((fullbins[1]-fullbins[0])/0.5)) )
     else:
         RooAbsData.plotOn(data,frame,RF.Name('dataZ'))
-    model.plotOn(frame,RF.Name('modelZ'))
+    x.setRange('it1',fitbins[0],fitbins[1])
+    RF.Hesse(kTRUE)
+    r = model.fitTo(data,RF.PrintLevel(1),RF.Extended(isExt),RF.NumCPU(ncpus),RF.Save(),RF.Range('it1'))
+    model.plotOn(frame,RF.Name('mit1'),RF.Range('it1'),RF.NormRange('it1'))
+    if gaus:
+        nsc = 1.0  #1.25
+        mean=w.var('m').getVal()
+        sigma=w.var('s').getVal()
+        xtra = 'mz(1st) = %.3f +/- %.3f'%(w.var('m').getVal(),w.var('m').getError())
+        ndf = r.floatParsFinal().getSize()
+        chi2ndf = frame.chiSquare(ndf)
+        print 'SECOND ITERATION: mean =',mean,'sigma =',sigma,'chi2dof =',chi2ndf
+        x.setRange('it2',mean-sigma*nsc,mean+sigma*nsc)
+        r = model.fitTo(data,RF.LineColor(ROOT.kRed),RF.PrintLevel(1),RF.Extended(isExt),RF.NumCPU(ncpus),RF.Save(),RF.Range('it2'))
+        model.plotOn(frame,RF.Name('mit2'),RF.Range('it2'),RF.NormRange('it2'),RF.LineColor(ROOT.kRed))
     ndf = r.floatParsFinal().getSize()
     chi2ndf = frame.chiSquare(ndf)
     # wildcards or comma-separated components are allowed:
@@ -325,9 +337,9 @@ def Fit(data,isExt,bins,ncpus=4,extras=False):
     if extras:
         model.plotOn(frame,RF.VisualizeError(r))
         model.paramOn(frame,data)
-    return (r,frame,chi2ndf,ndf)
+    return (r,frame,chi2ndf,ndf,xtra)
 
-def load_unbinned(hz,name,xmin,xmax,auto=None,scale=1.0):
+def load_unbinned(hz,name,xmin,xmax,scale=1.0):
     """ Load TGraph from a file. Note that we manually drop the points outside [xmin,xmax] range """
     if hz.ClassName() == 'TGraph':
         N,v1 = graph_to_array1(hz,opts.ndata)
@@ -337,20 +349,6 @@ def load_unbinned(hz,name,xmin,xmax,auto=None,scale=1.0):
         print 'Problem loading class',hz.ClassName()
         sys.exit(0)
     print 'Loaded raw unbinned data with',N,'entries'
-    if opts.gaus:
-        # make a histogram and do a quick gaussian fit to determine the central peak
-        xr = (80,100)
-        dGeV= 4.0  # window around fitted Z (in each direction)
-        h = ROOT.TH1F('htmp','htmp',int((xr[1]-xr[0])/0.5),xr[0],xr[1])
-        [h.Fill(v) for v in v1 if xr[0] < v < xr[1]]
-        fr = h.Fit('gaus','S0','',xr[0],xr[1])
-        f = h.GetFunction('gaus')
-        peak = f.GetMaximumX(xr[0],xr[1])
-        del fr; del f;
-        print 'INFO: Adjusting the range for Gaussian core fit. Mean / fitted peak =',h.GetMean(),peak
-        print 'OLD RANGE:',xmin,xmax
-        xmin,xmax = peak - dGeV, peak + dGeV
-        print 'NEW RANGE:',xmin,xmax
     w.factory('x[%s,%s]'%(xmin,xmax))
     ds1 = RooDataSet('ds1','ds1',RooArgSet(w.var('x')))
     ds2 = RooDataSet('ds2','ds2',RooArgSet(w.var('x')))
@@ -391,7 +389,7 @@ if True:
     assert hz, 'Error loading data object %s from file %s'%(opts.data,opts.root)
     cname = hz.ClassName()
     if cname in ('TGraph','TNtuple','TTree','TChain'):
-        data,crap = load_unbinned(hz,opts.region,opts.min,opts.max,opts.auto,opts.scale)
+        data,crap = load_unbinned(hz,opts.region,opts.min,opts.max,opts.scale)
     elif re.search('TH',cname):
         hz.SetDirectory(0)
         data = load_histo(hz,opts.min,opts.max,opts.auto)
@@ -418,9 +416,17 @@ if True:
         w.var('nbg').setVal(0)
     if w.var('C'):
         w.var('C').setVal(data.sumEntries())
+    # Define fit range. Constrained to the core if using simple Gaussian
+    fullbins = (opts.min,opts.max)
+    fitbins = fullbins
+    if opts.gaus:
+        dGeV = opts.auto if opts.auto else 6.0  # 4.0
+        peak = data.mean(w.var('x'))
+        print 'OLD FIT RANGE:',opts.min,opts.max,'; MEAN:',peak
+        fitbins = [peak - dGeV, peak + dGeV]
+        print 'NEW FIT RANGE:',fitbins[0],fitbins[1]
     # perform the fit
-    bins = (opts.min,opts.max)
-    r,frame,chi2ndf,ndf = Fit(data,isExt,bins,opts.ncpus)
+    r,frame,chi2ndf,ndf,xtra = Fit(data,isExt,fullbins,fitbins,ncpus=opts.ncpus,gaus=opts.gaus)
     frame.SetTitle(opts.tag)
     # make the plots
     c = ROOT.TCanvas('c','c'); c.cd()
@@ -428,10 +434,12 @@ if True:
     # print fitted value on canvas
     if w.var('m'):
         m = w.var('m')
-        p = ROOT.TPaveText(.7,.8 , (.7+.2),(.8+.1) ,"NDC")
+        p = ROOT.TPaveText(.7,.78 , (.7+.2),(.78+.12) ,"NDC")
         p.SetTextAlign(11)
         p.SetFillColor(0)
         p.AddText('mz = %.3f +/- %.3f'%(m.getVal(),m.getError()))
+        if xtra:
+            p.AddText(xtra)
         p.AddText('chi2/dof = %.1f. N=%d'%(chi2ndf,data.sumEntries()))
         p.Draw()
         gbg.append(p)
