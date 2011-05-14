@@ -15,14 +15,15 @@ if [ "$tt" == "cmb" ]; then ntlbl=""; fi;
 nmc=100000
 sfx="_results.rtxt"
 
+xtra=""
+if [ "${res}" == "1" ]; then xtra="--min 80 --max 100"; fi
+#if [ "${func}" == "gaus" ]; then xtra="--min 80 --max 100"; fi
+
 # truth on full dataset
 if [ "1" -eq "1" ]; then
     subfile=${lbl_mc}_${lbl_mc}.root;
     gr=${subfile}/dg/dg/st_z_final/ntuple${ntlbl}
     tag="ZMC_${pfx}`basename ${rfile}`_${lbl_mc}_${tt}_${reg}_${func}${res}"
-    xtra=""
-    if [ "${res}" == "1" ]; then xtra="--min 80 --max 100"; fi
-    if [ "${func}" == "gaus" ]; then xtra="--min 85 --max 97"; fi
     ./zpeak.py -b --root ${rfile} --res ${res} --${func} --region ${reg} --data ${gr} --ndata ${nmc} -t ${tag} ${xtra} --ext eps
 fi;
 
@@ -46,9 +47,6 @@ if [ "1" -eq "1" ]; then
 	echo "Skipping region ${reg} - missing some inputs"
 	echo "R=|${R}| eR=|${eR}| mz0=|${mz0}|"
     else
-	xtra=""
-	if [ "${res}" == "1" ]; then xtra="--min 80 --max 100"; fi
-	if [ "${func}" == "gaus" ]; then xtra="--min 88 --max 94"; fi
 	./zpeak.py -b --root ${rfile} --res ${res} --${func} --region ${reg} --mz0 ${mz0} --R ${R} --eR ${eR} --data ${gr} ${xtra} -t ${tag} --ext eps
     fi;
 fi;

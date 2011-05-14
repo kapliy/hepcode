@@ -59,7 +59,7 @@ void rf203_ranges()
   // ----------------------------------
 
   // Define "signal" range in x as [-3,3]
-  x.setRange("signal",-3,3) ;  
+  x.setRange("signal",-0.5,0.5) ;  
 
   // Fit p.d.f only to data in "signal" range
   RooFitResult* r_sig = model.fitTo(*modelData,Save(kTRUE),Range("signal")) ;
