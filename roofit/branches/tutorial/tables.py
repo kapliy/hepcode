@@ -5,6 +5,7 @@ import sys,os,math
 klus = ['','KLU_']
 dets = ['cmb','exms','id']
 regs = ["AA","BB","CC"]
+regs = ["AA","BB","CC","Baa","Bcc","MWA","FWA","MWC","FWC"]
 fname_pat='root_0505_closure.root'
 resmodel='gaus0'  #egge3
 folder_pat='data' 
@@ -18,7 +19,7 @@ dchi='70to110/chi/'
 dnarrow='80to100/ks/'
 
 dets_map = {'cmb' : 'Combined muons', 'id' : 'ID muons', 'exms' : 'MS muons'}
-regs_map = {'AA' : 'Endcap-A', 'BB' : 'Barrel', 'CC' : 'Endcap-C', 'Bcc' : 'Barrel C-side', 'Baa' : 'Barrel A-side', 'FWC' : 'Endcap C-side (-2.4 < eta < -2.0)', 'FWA' : 'Endcap A-side (2.0 < eta < 2.4)', 'MWC' : 'Endcap C-side (-2.0 < eta < -1.05)', 'MWA' : 'Endcap A-side (1.05 < eta < 2.0)'}
+regs_map = {'AA' : 'Endcap-A', 'BB' : 'Barrel', 'CC' : 'Endcap-C', 'Bcc' : 'Barrel C-side ($-1.05 < \eta < 0.0$)', 'Baa' : 'Barrel A-side ($0.0 < \eta < 1.05$)', 'FWC' : r'Endcap C-side ($-2.4 < \eta < -2.0$)', 'FWA' : r'Endcap A-side ($2.0 < \eta < 2.4$)', 'MWC' : r'Endcap C-side ($-2.0 < \eta < -1.05$)', 'MWA' : r'Endcap A-side ($1.05 < \eta < 2.0$)'}
 
 
 def get_means(lines):
@@ -45,7 +46,9 @@ def get_means(lines):
         ekn1,ekn2 = float(lines[5][6]),float(lines[5][7])
     except:
         ekp1,ekp2,ekn1,ekn2 = [None]*4
-    return mz0,mz,R,kp,ekp,kn,ekn, ekp1,ekp2,ekn1,ekn2 #7,8,9,10
+    eR,emz = float(lines[3][4]),float(lines[1][4])
+                                        #7,8,9,10
+    return mz0,mz,R,kp,ekp,kn,ekn, ekp1,ekp2,ekn1,ekn2,  eR,emz
 
 def max_pair(s):
     s1,s2=s[0],s[1]
@@ -158,4 +161,30 @@ print 'Z mass fit function & ' + ' & '.join(['%.2f'%s for s in max_pair(sys4)])+
 print
 print r'     Correlated (constant $k_+/k_-$) & ' + ' & '.join(['%.2f'%s for s in sumsq([max_pair(stat1),max_pair(sys4)])]) + r'\\'
 print r'Anti-correlated (constant $k_+ k_-$) & ' + ' & '.join(['%.2f'%s for s in sumsq([max_pair(stat2),max_pair(sys1),max_pair(sys2),max_pair(sys3)])]) + r'\\'
+
+print
+print 'SUBSTRUCTURE: variation of results in narrower bins'
+klu='KLU_'
+zpmap = {'Baa' : 'BB', 'Bcc' : 'BB', 'MWA' : 'AA' , 'FWA' : 'AA' , 'MWC' : 'CC' , 'FWC' : 'CC'}
+def get_R(mz0,mz,emz,R,eR):
+    km = mz/(mz0*math.sqrt(R))
+    kp = mz*math.sqrt(R)/(mz0)
+    ekm = math.sqrt( emz**2 * 1/(mz0*math.sqrt(R))**2 + eR**2 * (mz/mz0)**2 / (4 * R**3) )
+    ekp = math.sqrt( emz**2 * (math.sqrt(R)/mz0)**2 + eR**2 * (mz/mz0)**2 / (4 * R) )
+    ekm1,ekm2 = math.sqrt(emz**2 * 1/(mz0*math.sqrt(R))**2),math.sqrt(eR**2 * (mz/mz0)**2 / (4 * R**3))
+    ekp1,ekp2 = math.sqrt(emz**2 * (math.sqrt(R)/mz0)**2), math.sqrt(eR**2 * (mz/mz0)**2 / (4 * R))
+    return kp*100.0,km*100.0,ekp*100.0,ekm*100.0
+
+if True:
+    #calculate
+    for det in dets:
+        print r'\multicolumn{4}{|c|}{'+'%s'%dets_map[det]+r'}     \\ \hline'
+        for reg in ["MWA","FWA","Baa","Bcc","MWC","FWC"]:
+            sR=default[det][reg][klu]
+            sZ=default[det][zpmap[reg]][klu]
+            s =  get_R(sZ[0],sZ[1],sZ[12],sR[2],sR[11])
+            pho1='    ' #if s[0]>100.0 else '\pho '
+            pho2='    ' #if s[2]>100.0 else '\pho '
+            print '%s'%regs_map[reg]+r'  &   $' + '%s%.2f'%(pho1,s[0]-sZ[3])+r'\%$  &  $    '+'%s%.2f'%(pho2,s[1]-sZ[5])+r'\%$ & $' + '%.2f'%(s[2]) + r'\%$     \\ \hline'
+        print r'\hline'
 
