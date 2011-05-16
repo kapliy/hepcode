@@ -51,6 +51,7 @@ for fname in $fnames; do
 			echo "source ~/.bashrc" >> $J
 			echo "anaquick2" >> $J
 			echo "cd ${ROOTDIR}" >> $J
+			echo "which python" >> $J
 			echo ./KEYS_ANA.sh ${fname} ${fold} ${tt} ${reg} ${func} ${ikl} >> $J
 			qsub -N ANA${i} -o LOG.ANA.${i}.$tag.out -e LOG.ANA.${i}.$tag.err ${J}
 			((i++))
