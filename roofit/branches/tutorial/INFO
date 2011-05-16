@@ -44,3 +44,10 @@ Reran old-2011 version, but with 25 GeV cut.
 
 root_data2011_0426.root
 Save as above, but running 2011 data with correct GRL. Separately period B (pro07) and D1-D3 (pro08).
+
+root_0505_closure.root
+Major version - final scales for the first note on 2010 data. This also includes closure tests on 2010 and 2011 data!
+(closure tests are wrong - they use "old" scales, not final scales, and they were applied to data, not MC).
+
+root_all_0516_2010clos.root
+An update - checking closure using the "proper" method of applying to MC!
