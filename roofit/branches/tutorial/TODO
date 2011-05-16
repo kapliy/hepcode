@@ -1,3 +1,7 @@
+* Add example of fit in data (in addition to MC)
+* Change eta bound to 1.95
+
+
 * Add paragraph about z fit: both gaussian and full lineshape. Say full lineshape 
 * Add table with z central values in data and MC and error in data
 * Study independently the effect of Z window on gaussian fit.
