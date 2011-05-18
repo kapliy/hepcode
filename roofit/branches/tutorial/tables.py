@@ -179,12 +179,19 @@ if True:
     #calculate
     for det in dets:
         print r'\multicolumn{4}{|c|}{'+'%s'%dets_map[det]+r'}     \\ \hline'
-        for reg in ["MWA","FWA","Baa","Bcc","MWC","FWC"]:
-            sR=default[det][reg][klu]
-            sZ=default[det][zpmap[reg]][klu]
+        for reg in ["FWA","MWA","Baa","Bcc","MWC","FWC"]:
+            sR=default[det][reg][klu]         # very narrow eta bins (to get R and dR)
+            sZ=default[det][zpmap[reg]][klu]  # original large eta bins (to get Z mass constraint and old scale factors)
             s =  get_R(sZ[0],sZ[1],sZ[12],sR[2],sR[11])
             pho1='    ' #if s[0]>100.0 else '\pho '
             pho2='    ' #if s[2]>100.0 else '\pho '
-            print '%s'%regs_map[reg]+r'  &   $' + '%s%.2f'%(pho1,s[0]-sZ[3])+r'\%$  &  $    '+'%s%.2f'%(pho2,s[1]-sZ[5])+r'\%$ & $' + '%.2f'%(s[2]) + r'\%$     \\ \hline'
+            olderr = max(sZ[4],sZ[6])
+            newerr = max(s[2],s[3])
+            dsq = newerr**2-olderr**2
+            try:
+                errd = math.sqrt(dsq)
+            except:
+                errd = 0.2
+            print '%s'%regs_map[reg]+r' & $' + '%s%.2f'%(pho1,s[0]-sZ[3])+r'\%$ & $'+'%s%.2f'%(pho2,s[1]-sZ[5])+r'\%$ & $' + '%.2f'%(errd) + r'\%$     \\ \hline'
         print r'\hline'
 
