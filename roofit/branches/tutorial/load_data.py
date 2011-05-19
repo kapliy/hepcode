@@ -52,6 +52,8 @@ def eranges(name):
     """ Converts a string like /BB/ into a range of etas """
     if islen2(name):
         return erange(name[0]),erange(name[1])
+    elif name[:3] == 'ALL':
+        return ((-10.0,10.0),(-10.0,10.0))
     elif name[:3] == 'FWC':
         return ((-10.0,-2.0),(-10.0,-2.0))
     elif name[:3] == 'FWA':

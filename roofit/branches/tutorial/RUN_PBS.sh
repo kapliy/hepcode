@@ -18,6 +18,9 @@ folders="data"
 #folders="data data_20110425 data_scaled_00 data_scaled_11 data_20110425_scaled_00 data_20110425_scaled_11"
 #folders="data_20110505BE1 data_20110505D5E1 data_20110505D5E1_scaled_00 data_20110505D5E1_scaled_11"
 
+fnames="ROOT/root_all_0516_2010clos.root"
+folders="data"
+
 tts="cmb id exms"
 for fname in $fnames; do
     for fold in $folders; do

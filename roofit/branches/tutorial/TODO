@@ -1,3 +1,4 @@
+* in zpeak.py: automatically apply defaults depending on region and type of muon!
 * Change eta bound to 1.95 - for later!
 
 
