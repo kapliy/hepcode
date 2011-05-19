@@ -52,3 +52,6 @@ Major version - final scales for the first note on 2010 data. This also includes
 root_all_0516_2010clos.root
 An update - checking closure using the "proper" method of applying to MC.
 This basically checks that MC z peak location aligns with data.
+
+root_all_0519_dataMCclosure.root
+Repeats the above, but adds: smeared MC version; smeared + scaled MC version; scaled data version.
