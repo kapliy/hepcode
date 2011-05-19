@@ -22,6 +22,11 @@ fnames="ROOT/root_0505_closure.root"
 folders[0]="data mc_zmumu"
 #folders[2]="data_scaled_00 mc_zmumu"
 
+fnames="ROOT/root_all_0516_2010clos.root"
+folders[0]="data mc_zmumu"
+folders[1]="data mc_zmumu_00"
+
+
 #folders[0]="data mc_zmumu"
 #folders[1]="data_20110425 mc_20110425zmumu"
 #folders[2]="data_scaled_00 mc_zmumu"

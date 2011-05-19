@@ -15,9 +15,8 @@ if len(sys.argv)>=5:
 else:
     print >> sys.stderr, 'Not enough arguments!'
     sys.exit(0)
-pattern = 'ZDATA_%s%s_%s_%s_%s_%s_%s'
-mc_pattern = 'ZMC_KLU_root_0505_closure.root_mc_zmumu_exms_MWC_egge4_fit.png'
-mc_pattern = 'ZMC_%s%s_%s_%s_%s_%s_%s'
+pattern = 'ZDATA_%s%s_%s_%s_%s_%s_%s_%s'
+mc_pattern = 'ZMC_%s%s_%s_%s_%s_%s_%s_%s'
 
 dets_map = {'cmb' : 'Combined muons', 'id' : 'Inner Detector muons', 'exms' : 'Muon Spectrometer muons'}
 regs_map = {'AA' : 'Endcap A-side', 'BB' : 'Barrel', 'CC' : 'Endcap C-side', 'Bcc' : 'Barrel C-side', 'Baa' : 'Barrel A-side', 'FWC' : 'Endcap C-side (-2.4 < eta < -2.0)', 'FWA' : 'Endcap A-side (2.0 < eta < 2.4)', 'MWC' : 'Endcap C-side (-2.0 < eta < -1.05)', 'MWA' : 'Endcap A-side (1.05 < eta < 2.0)'}
@@ -50,7 +49,7 @@ for det in dets:
         res[det][reg] = {}
         for klu in klus:
             res[det][reg][klu] = None
-            fname = pattern%(klu,fname_pat,folder_pat,det,reg,resmodel,'results.rtxt')
+            fname = pattern%(klu,fname_pat,folder_pat,mc_pat,det,reg,resmodel,'results.rtxt')
             good = os.path.isfile(fname)
             if good:
                 f = open(fname,'r')
@@ -77,8 +76,8 @@ for det in dets:
         for klu in klus:
             v = res[det][reg][klu]
             if v:
-                fname = pattern%(klu,fname_pat,folder_pat,det,reg,resmodel,'fit.png')
-                mcfname = mc_pattern%(klu,fname_pat,mc_pat,det,reg,resmodel,'fit.png')
+                fname = pattern%(klu,fname_pat,folder_pat,mc_pat,det,reg,resmodel,'fit.png')
+                mcfname = mc_pattern%(klu,fname_pat,folder_pat,mc_pat,det,reg,resmodel,'fit.png')
                 print '<tr>'
                 print '<td>%s</td>'%(klus_map[klu])
                 print '<td><a href="%s">%.2f</a></td>'%(mcfname,v[0])
@@ -96,7 +95,7 @@ coarse,fine = [],[]
 for det in dets:
     for reg in ('AA','BB','CC'):
         v = res[det][reg][klu]
-        fname = pattern%(klu,fname_pat,folder_pat,det,reg,resmodel,'fit.png')
+        fname = pattern%(klu,fname_pat,folder_pat,mc_pat,det,reg,resmodel,'fit.png')
         if v:
             coarse.append('%.2f'%float(v[3]))
             coarse.append('%.2f'%float(v[5]))
@@ -105,7 +104,7 @@ for det in dets:
 for det in dets:
     for reg in ('FWA','MWA','Baa','Bcc','MWC','FWC'):
         v = res[det][reg][klu]
-        fname = pattern%(klu,fname_pat,folder_pat,det,reg,resmodel,'fit.png')
+        fname = pattern%(klu,fname_pat,folder_pat,mc_pat,det,reg,resmodel,'fit.png')
         if v:
             fine.append('%.2f'%float(v[3]))
             fine.append('%.2f'%float(v[5]))
@@ -136,7 +135,7 @@ coarse,fine = [],[]
 for det in dets:
     for reg in ('AA','BB','CC'):
         v = res[det][reg][klu]
-        fname = pattern%(klu,fname_pat,folder_pat,det,reg,resmodel,'fit.png')
+        fname = pattern%(klu,fname_pat,folder_pat,mc_pat,det,reg,resmodel,'fit.png')
         if v:
             coarse.append('%.2f'%float(v[3]))
             coarse.append('%.2f'%float(v[5]))
@@ -145,7 +144,7 @@ for det in dets:
 for det in dets:
     for reg in ('FWA','MWA','Baa','Bcc','MWC','FWC'):
         v = res[det][reg][klu]
-        fname = pattern%(klu,fname_pat,folder_pat,det,reg,resmodel,'fit.png')
+        fname = pattern%(klu,fname_pat,folder_pat,mc_pat,det,reg,resmodel,'fit.png')
         if v:
             fine.append('%.2f'%float(v[3]))
             fine.append('%.2f'%float(v[5]))

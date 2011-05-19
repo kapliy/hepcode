@@ -23,7 +23,7 @@ if [ "${res}" == "1" ]; then xtra="--min 80 --max 100"; fi
 if [ "1" -eq "1" ]; then
     subfile=${lbl_mc}_${lbl_mc}.root;
     gr=${subfile}/dg/dg/st_z_final/ntuple${ntlbl}
-    tag="ZMC_${pfx}`basename ${rfile}`_${lbl_mc}_${tt}_${reg}_${func}${res}"
+    tag="ZMC_${pfx}`basename ${rfile}`_${lbl_data}_${lbl_mc}_${tt}_${reg}_${func}${res}"
     ./zpeak.py -b --root ${rfile} --res ${res} --${func} --region ${reg} --data ${gr} --ndata ${nmc} -t ${tag} ${xtra} --ext eps
 fi;
 
@@ -31,7 +31,7 @@ fi;
 if [ "1" -eq "1" ]; then
     subfile=${lbl_data}_${lbl_data}.root;
     gr=${subfile}/dg/dg/st_z_final/ntuple${ntlbl}
-    RZ=ZMC_${pfx}`basename ${rfile}`_${lbl_mc}_${tt}_${reg}_${func}${res}${sfx}
+    RZ=ZMC_${pfx}`basename ${rfile}`_${lbl_data}_${lbl_mc}_${tt}_${reg}_${func}${res}${sfx}
     mz0=`tail -n2 ${RZ} | head -n1 | cut -d ' ' -f 3`
     RTXT=${pfx}`basename ${rfile}`_${lbl_data}_${tt}_data_${reg}${sfx}
     R=`head -n1 ${RTXT} | cut -d ' ' -f 4`  # KS peak
@@ -39,7 +39,7 @@ if [ "1" -eq "1" ]; then
     R=`tail -n1 ${RTXT} | cut -d ' ' -f 14`  # chi fitted
     R=`head -n1 ${RTXT} | cut -d ' ' -f 14`  # KS fitted (default)
     eR=`tail -n1 ${RTXT} | cut -d ' ' -f 6`
-    tag="ZDATA_${pfx}`basename ${rfile}`_${lbl_data}_${tt}_${reg}_${func}${res}"
+    tag="ZDATA_${pfx}`basename ${rfile}`_${lbl_data}_${lbl_mc}_${tt}_${reg}_${func}${res}"
     echo "Printing contents of input files for region ${reg}:"
     echo ${RZ} ${RTXT}
     cat ${RZ} ${RTXT} /dev/null

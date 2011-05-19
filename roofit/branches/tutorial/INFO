@@ -50,4 +50,5 @@ Major version - final scales for the first note on 2010 data. This also includes
 (closure tests are wrong - they use "old" scales, not final scales, and they were applied to data, not MC).
 
 root_all_0516_2010clos.root
-An update - checking closure using the "proper" method of applying to MC!
+An update - checking closure using the "proper" method of applying to MC.
+This basically checks that MC z peak location aligns with data.
