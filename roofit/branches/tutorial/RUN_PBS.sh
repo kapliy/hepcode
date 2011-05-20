@@ -13,13 +13,11 @@ okl[1]="--kluit"
 xtra="--template --ext eps"
 regs="AA BB CC Bcc Baa FWC FWA MWC MWA" # "FWC0 FWC1 FWC2 FWC3 FWA0 FWA1 FWA2 FWA3"
 
-fnames="ROOT/root_0505_closure.root"
-folders="data"
-#folders="data data_20110425 data_scaled_00 data_scaled_11 data_20110425_scaled_00 data_20110425_scaled_11"
-#folders="data_20110505BE1 data_20110505D5E1 data_20110505D5E1_scaled_00 data_20110505D5E1_scaled_11"
-
 fnames="ROOT/root_all_0516_2010clos.root"
 folders="data"
+
+fnames="ROOT/root_all_0519_dataMCclosure.root"
+folders="data data_00"
 
 tts="cmb id exms"
 for fname in $fnames; do

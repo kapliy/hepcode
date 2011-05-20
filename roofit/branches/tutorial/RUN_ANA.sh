@@ -17,28 +17,19 @@ tts="cmb id exms"
 
 regs="AA BB CC Bcc Baa FWC FWA MWC MWA" # "FWC0 FWC1 FWC2 FWC3 FWA0 FWA1 FWA2 FWA3"
 
-fnames="ROOT/root_0505_closure.root"
-
-folders[0]="data mc_zmumu"
-#folders[2]="data_scaled_00 mc_zmumu"
-
 fnames="ROOT/root_all_0516_2010clos.root"
 folders[0]="data mc_zmumu"
 folders[1]="data mc_zmumu_00"
 
+fnames="ROOT/root_all_0519_dataMCclosure.root"
+folders[((i++))]="data_00 mc_zmumu"
+folders[((i++))]="data_00 mc_zmumuO"
+folders[((i++))]="data mc_zmumu"
+folders[((i++))]="data mc_zmumuO"
+folders[((i++))]="data mc_zmumu_00"
+folders[((i++))]="data mc_zmumuO_00"
 
-#folders[0]="data mc_zmumu"
-#folders[1]="data_20110425 mc_20110425zmumu"
-#folders[2]="data_scaled_00 mc_zmumu"
-#folders[3]="data_scaled_11 mc_zmumu"
-#folders[4]="data_20110425_scaled_00 mc_20110425zmumu"
-#folders[5]="data_20110425_scaled_11 mc_20110425zmumu"
-
-#folders[0]="data_20110505BE1 mc_20110425zmumu"
-#folders[1]="data_20110505D5E1 mc_20110425zmumu"
-#folders[2]="data_20110505D5E1_scaled_00 mc_20110425zmumu"
-#folders[3]="data_20110505D5E1_scaled_11 mc_20110425zmumu"
-
+i=0
 for fname in $fnames; do
     for fold in "${folders[@]}"; do
  	for tt in $tts; do
