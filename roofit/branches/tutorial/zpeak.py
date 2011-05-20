@@ -24,6 +24,7 @@ import sys,re,array,math
 from math import sqrt
 import SimpleProgressBar
 from load_data import *
+from fit_defaults import *
 
 def func_SCALE(xx,par):
     return par*xx
