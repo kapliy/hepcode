@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys,os
+import sys,os,math
 
 klus = ['','KLU_','AKLU_']
 dets = ['cmb','exms','id']
@@ -158,7 +158,46 @@ for i,j in enumerate(coarse):
     else:
         print ' , ',
 print '</pre>'
+print '<BR>Fine binning:<pre>'
+for i,j in enumerate(fine):
+    print j,
+    if i%2!=0:
+        print ' , '
+    else:
+        print ' , ',
+print '</pre>'
 
+
+# create c++ array of scales
+print '<BR>Version without Z mass constraint (assuming k+ * k- = 1.0)<BR>'
+klu=''
+coarse,fine = [],[]
+for det in dets:
+    for reg in ('AA','BB','CC'):
+        v = res[det][reg][klu]
+        fname = pattern%(klu,fname_pat,folder_pat,mc_pat,det,reg,resmodel,'fit.png')
+        if v:
+            coarse.append('%.2f'%(100.0*math.sqrt(float(v[2]))))
+            coarse.append('%.2f'%(100.0/math.sqrt(float(v[2]))))
+        else:
+            print >> sys.stderr, 'Missing:',fname
+for det in dets:
+    for reg in ('FWA','MWA','Baa','Bcc','MWC','FWC'):
+        v = res[det][reg][klu]
+        fname = pattern%(klu,fname_pat,folder_pat,mc_pat,det,reg,resmodel,'fit.png')
+        if v:
+            fine.append('%.2f'%(100.0*math.sqrt(float(v[2]))))
+            fine.append('%.2f'%(100.0/math.sqrt(float(v[2]))))
+        else:
+            print >> sys.stderr, 'Missing:',fname
+print '<BR>Coarse binning:<pre>'
+for i,j in enumerate(coarse):
+    print j,
+    if i%2!=0:
+        print ' , '
+    else:
+        print ' , ',
+print '</pre>'
 print '<BR>Fine binning:<pre>'
 for i,j in enumerate(fine):
     print j,

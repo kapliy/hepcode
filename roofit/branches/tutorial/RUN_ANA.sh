@@ -21,13 +21,14 @@ fnames="ROOT/root_all_0516_2010clos.root"
 folders[0]="data mc_zmumu"
 folders[1]="data mc_zmumu_00"
 
-fnames="ROOT/root_all_0519_dataMCclosure.root"
+fnames="ROOT/root_all_0522_dataMCclosure.root"
 folders[((i++))]="data_00 mc_zmumu"
 folders[((i++))]="data_00 mc_zmumuO"
 folders[((i++))]="data mc_zmumu"
 folders[((i++))]="data mc_zmumuO"
 folders[((i++))]="data mc_zmumu_00"
 folders[((i++))]="data mc_zmumuO_00"
+folders[((i++))]="data mc_zmumuO_22"
 
 i=0
 for fname in $fnames; do

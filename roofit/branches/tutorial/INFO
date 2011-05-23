@@ -54,4 +54,8 @@ An update - checking closure using the "proper" method of applying to MC.
 This basically checks that MC z peak location aligns with data.
 
 root_all_0519_dataMCclosure.root
+root_all_0520_dataMCclosure.root
+root_all_0522_dataMCclosure.root
 Repeats the above, but adds: smeared MC version; smeared + scaled MC version; scaled data version.
+Version 20 fixes the bug in smearing code - now applied to extrapolated
+Version 22 is a repeat, but includes scale_22, which are scaled calculated using smeared MC.
