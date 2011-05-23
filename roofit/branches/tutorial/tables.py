@@ -188,6 +188,7 @@ if True:
             olderr = max(sZ[4],sZ[6])
             newerr = max(s[2],s[3])
             dsq = newerr**2-olderr**2
+            #FIXME!
             try:
                 errd = math.sqrt(dsq)
             except:

@@ -16,7 +16,7 @@ regs="AA BB CC Bcc Baa FWC FWA MWC MWA" # "FWC0 FWC1 FWC2 FWC3 FWA0 FWA1 FWA2 FW
 fnames="ROOT/root_all_0516_2010clos.root"
 folders="data"
 
-fnames="ROOT/root_all_0519_dataMCclosure.root"
+fnames="ROOT/root_all_0522_dataMCclosure.root"
 folders="data data_00"
 
 tts="cmb id exms"

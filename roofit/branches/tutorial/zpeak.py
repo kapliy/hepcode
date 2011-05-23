@@ -435,10 +435,14 @@ if True:
     # print fitted value on canvas
     if w.var('m'):
         m = w.var('m')
-        p = ROOT.TPaveText(.7,.78 , (.7+.2),(.78+.12) ,"NDC")
+        p = ROOT.TPaveText(.7,.75 , (.7+.2),(.75+.15) ,"NDC")
         p.SetTextAlign(11)
         p.SetFillColor(0)
         p.AddText('mz = %.3f +/- %.3f'%(m.getVal(),m.getError()))
+        if opts.gaus:
+            p.AddText('sigma = %.3f +/- %.3f'%(w.var('s').getVal(),w.var('s').getError()))
+        if opts.egge:
+            p.AddText('gamma = %.3f +/- %.3f'%(w.var('g').getVal(),w.var('g').getError()))
         if xtra:
             p.AddText(xtra)
         p.AddText('chi2/dof = %.1f. N=%d'%(chi2ndf,data.sumEntries()))
