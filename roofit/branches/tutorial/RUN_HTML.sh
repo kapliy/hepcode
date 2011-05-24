@@ -7,9 +7,10 @@ folders[1]="data mc_zmumu_00"
 
 fnames="root_all_0522_dataMCclosure.root"
 i=0
+folders[((i++))]="data mc_zmumu"
 folders[((i++))]="data_00 mc_zmumu"
 folders[((i++))]="data_00 mc_zmumuO"
-folders[((i++))]="data mc_zmumu"
+folders[((i++))]="data_33 mc_zmumuO"
 folders[((i++))]="data mc_zmumuO"
 folders[((i++))]="data mc_zmumu_00"
 folders[((i++))]="data mc_zmumuO_00"
