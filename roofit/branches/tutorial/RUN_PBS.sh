@@ -17,7 +17,7 @@ fnames="ROOT/root_all_0516_2010clos.root"
 folders="data"
 
 fnames="ROOT/root_all_0522_dataMCclosure.root"
-folders="data data_00"
+folders="data data_00 data_33"
 
 tts="cmb id exms"
 for fname in $fnames; do

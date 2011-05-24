@@ -1,34 +1,10 @@
 Peter:
-* Look at resolution in addition to central value
-* Try a version of corrections assuming k+*k- = 1.0
 * Add KS feature to dgplot
 
 
 * in zpeak.py: automatically apply defaults depending on region and type of muon!
 * Change eta bound to 1.95 - for later!
-
-
-* Add paragraph about z fit: both gaussian and full lineshape. Say full lineshape 
-* Add table with z central values in data and MC and error in data
-* Study independently the effect of Z window on gaussian fit.
-
-* Get degree of variation within smaller eta bins via KLU method only
-
-
 Make Z fits with gaus res; feed back scales into code.
-
-Systematic effects from MC:
-Update ngroups to plot mean/error in TErrorGraph and print on label fitted mean and maximum spread
-- repeat for several values of statistics, for KLU and non-KLU
-
-Add simple-mean version for 1/pt spectra (i.e. what everybody else is doing)
-Save in rtxt?
-
-For tomorrow:
-Given event counts in 2010, study stat variation in MC.
-Study variation with chi2 binning
-
-
 
 TODO
 Differences from F. Cerutti:
@@ -45,13 +21,11 @@ Add relative et cone 0.2 < 1.5
 * change binning 1.7 - 2.0; 2.0 - 2.4 OR 1.7 - 2.4
 
 
-
 Code:
 * Enable zmumu tag and probe studies: trigger and reconstruction efficiency
 
 Check if rho can be chosen smartly - Jahred's thesis.
 Check error variation due to binning.
-
 
 
 *regions: 1.05-1.7, 1.7-2.0, 2.0-2.5, 1.7-2.5 integrated
