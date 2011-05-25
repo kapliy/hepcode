@@ -164,7 +164,7 @@ if True:
     neg = [neg0,neg1]
     N = [N0,N1]
     f.Close()
-    assert N0 == N1
+    print N0,N1
     nmax = min(N0,N1,opts.ndata)
     if nmax == 0:
         print 'Error: no data passed the cuts'
@@ -203,17 +203,17 @@ def p_value(dP,dN):
     pval = ROOT.TMath.KolmogorovTest(len(arrayP),arrayP,len(arrayN),arrayN,'')
     return pval
 
-if True:
-    c = ROOT.TCanvas(rand_name(),rand_name(),1024,480)
-    c.Divide(2,1)
-    frame = [x.frame(),x.frame()]
+if opts.scan:
+    c = ROOT.TCanvas(rand_name(),rand_name(),1024,768)
+    c.Divide(2,2)
+    frame = [x.frame(RF.Title('Data 1/p_{T} (uncorrected)')),x.frame(RF.Title('Data 1/p_{T} (scaled)'))]
     # plot raw data
     for i in (0,1):
         c.cd(i+1)
         color=ROOT.kRed
-        RooAbsData.plotOn(dataP[i],frame[i],RF.LineColor(color),RF.MarkerColor(color),RF.Binning(opts.nbins),RF.MarkerSize(1.5)) #,RF.DrawOption('C'))
+        RooAbsData.plotOn(dataP[i],frame[i],RF.LineColor(color),RF.MarkerColor(color),RF.Binning(opts.nbins),RF.MarkerSize(1.0)) #,RF.DrawOption('C'))
         color=ROOT.kBlue
-        RooAbsData.plotOn(dataN[i],frame[i],RF.LineColor(color),RF.MarkerColor(color),RF.Binning(opts.nbins),RF.MarkerSize(1.5))
+        RooAbsData.plotOn(dataN[i],frame[i],RF.LineColor(color),RF.MarkerColor(color),RF.Binning(opts.nbins),RF.MarkerSize(0.75))
         frame[i].Draw()
         p = ROOT.TPaveText(.7,.78 , (.7+.23),(.78+.12) ,"NDC")
         p.SetTextAlign(11)
@@ -222,10 +222,41 @@ if True:
         p.AddText('# of events = %d'%(nmax))
         p.AddText('KS probability = %.2f%%'%(pval*100.0))
         p.Draw()
-        gbg.append(p)
+        gbg.append((p,frame[i]))
+    # plot the CDFs
+    x.setBins(opts.nbins)
+    dataP_b = [dataP[i].binnedClone() for i in (0,1)]
+    dataN_b = [dataN[i].binnedClone() for i in (0,1)]
+    histP = [RooHistPdf('histP%d'%i,'histP%d'%i,RooArgSet(x),dataP_b[i],2) for i in (0,1)]
+    histN = [RooHistPdf('histN%d'%i,'histN%d'%i,RooArgSet(x),dataN_b[i],2) for i in (0,1)]
+    for i in (0,1):
+        c.cd(i+3)
+        frame = x.frame(RF.Title('cdf (%s)'%('uncorrected' if i==0 else 'scaled')))
+        cdfP = histP[i].createCdf(RooArgSet(x))
+        cdfN = histN[i].createCdf(RooArgSet(x))
+        cdfP.plotOn(frame,RF.LineColor(ROOT.kRed))
+        cdfN.plotOn(frame,RF.LineColor(ROOT.kBlue)) #,RF.LineStyle(ROOT.kDashed))
+        frame.Draw()
     # save
     SaveAs(c,'%s_ptspectra'%opts.tag,opts.ext)
-    
+
+# study statistical properties of KS statistic
+if opts.ks:
+    x.setBins(opts.nbins)
+    data = dataP[0].binnedClone()
+    pdf = RooHistPdf('hist','hist',RooArgSet(x),data,2)
+    h = ROOT.TH1F('h','h',50,0.0,1.0)
+    for i in range(2000):
+        if i%10 == 0:
+            print i
+        ds1 = pdf.generate(RooArgSet(x),N0)
+        ds2 = pdf.generate(RooArgSet(x),N0)
+        pval = p_value(ds1,ds2)
+        h.Fill( pval )
+    c = ROOT.TCanvas(rand_name(),rand_name(),640,480)
+    h.Draw()
+    h.GetYaxis().SetRangeUser(0,100)
+    SaveAs(c,'%s_ksstudy'%opts.tag,opts.ext)
 
 # save to text file
 if len(COUT)>0:
