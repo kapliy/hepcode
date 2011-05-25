@@ -1,4 +1,6 @@
-fnames="ROOT/root_all_0516_2010clos.root"
+#!/bin/bash
+# Reconstructs Z peak for ALL Z's (full fiducial eta range)
+
 fnames="ROOT/root_all_0522_dataMCclosure.root"
 funcs="gaus"
 folders="data data_00 data_33 mc_zmumu mc_zmumu_00 mc_zmumuO mc_zmumuO_00 mc_zmumuO_22"

@@ -1,3 +1,6 @@
+#!/bin/bash
+# KS comparison of 1/pt in data and mc for various scale corrections
+
 fnames="ROOT/root_all_0522_dataMCclosure.root"
 funcs="gaus"
 regs="ALL AA BB CC"
