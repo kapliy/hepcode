@@ -126,7 +126,7 @@ ROOT.gROOT.SetBatch(opts.batch)
 ROOT.gROOT.LoadMacro("AtlasStyle.C")
 ROOT.SetAtlasStyle()
 from ROOT import RooWorkspace,RooArgSet,RooArgList,RooDataHist,RooAbsData,RooDataSet,RooFormulaVar
-from ROOT import RooGaussModel,RooAddModel,RooRealVar,RooAbsReal,RooRealSumPdf
+from ROOT import RooGaussModel,RooAddModel,RooRealVar,RooAbsReal,RooRealSumPdf,RooHistPdf
 from ROOT import kTRUE,kFALSE,kDashed,gStyle,gPad
 from ROOT import TFile,TH1,TH1F,TH1D
 from ROOT import RooFit as RF
@@ -193,10 +193,14 @@ if True:
     mc,nmc = load_unbinned(hmc,opts.region,opts.min,opts.max,scale=opts.scale,nmaxT=ndata)
     assert ndata == nmc, 'Error: ndata=%d not equal to nmc=%d'%(ndata,nmc)
     x = w.var('x')
+    # save plot
+    c = ROOT.TCanvas('c','c',480,768)
+    c.Divide(1,2)
+    # plot histos
+    c.cd(1)
     frame = x.frame(RF.Title('Dimuon invariant mass'))
     fullbins = (opts.min,opts.max)
-    # save plot
-    c = ROOT.TCanvas('c','c'); c.cd()
+    nbins = int((fullbins[1]-fullbins[0])/0.5)
     RooAbsData.plotOn(data,frame,RF.Name('dataZ'),RF.Binning(int((fullbins[1]-fullbins[0])/0.5)) , RF.MarkerColor(ROOT.kRed) )
     RooAbsData.plotOn(mc,frame,RF.Name('mcZ'),RF.Binning(int((fullbins[1]-fullbins[0])/0.5)) , RF.MarkerColor(ROOT.kBlue) )
     frame.Draw()
@@ -207,6 +211,19 @@ if True:
     p.AddText('# of events = %d'%(ndata))
     p.AddText('KS probability = %.2f%%'%(pval*100.0))
     p.Draw()
+    # plot cdf
+    c.cd(2)
+    frame = x.frame(RF.Title('cdf'))
+    x.setBins(nbins)
+    data_b = data.binnedClone()
+    mc_b = mc.binnedClone()
+    hdata = RooHistPdf('histdata','histdata',RooArgSet(x),data_b,2)
+    hmc = RooHistPdf('histmc','histmc',RooArgSet(x),mc_b,2)
+    cdfdata = hdata.createCdf(RooArgSet(x))
+    cdfmc = hmc.createCdf(RooArgSet(x))
+    cdfdata.plotOn(frame,RF.LineColor(ROOT.kRed))
+    cdfmc.plotOn(frame,RF.LineColor(ROOT.kBlue))
+    frame.Draw()
     SaveAs(c,'%s_kshape'%opts.tag,opts.ext)
 
 # save to text file

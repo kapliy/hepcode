@@ -1,6 +1,9 @@
+#!/bin/bash
+# KS comparison of data and mc for various scale corrections
+
 fnames="ROOT/root_all_0522_dataMCclosure.root"
 funcs="gaus"
-regs="AB BA CB BC BB AA CC"
+regs="AB BA CB BC BB AA CC ALL"
 tts="cmb id exms"
 
 i=0
