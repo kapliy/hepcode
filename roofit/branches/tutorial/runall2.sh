@@ -1,5 +1,6 @@
 #!/bin/bash
 # KS comparison of data and mc for various scale corrections
+# MC is always default + smeared. Data is default, versus scaled with different scale versions
 
 fnames="ROOT/root_all_0522_dataMCclosure.root"
 funcs="gaus"
@@ -7,11 +8,10 @@ regs="AB BA CB BC BB AA CC ALL"
 tts="cmb id exms"
 
 i=0
-#folders[((i++))]="data mc_zmumu"
-folders[((i++))]="data mc_zmumuO"
-folders[((i++))]="data mc_zmumuO_00"
-folders[((i++))]="data mc_zmumuO_22"
-folders[((i++))]="data mc_zmumuO_33"
+folders[((i++))]="data    mc_zmumuO"
+folders[((i++))]="data_00 mc_zmumuO"
+folders[((i++))]="data_22 mc_zmumuO"
+folders[((i++))]="data_33 mc_zmumuO"
 
 for tt in $tts; do
     ntlbl="_${tt}"
