@@ -1,3 +1,5 @@
+* Applying absolute scale: perhaps going about it the wrong way? Use the KS statistic between data and MC
+  to find the location of the peak?
 * Think if we are doing the wrong thing in R0 scan by cutting around the edges, and THEN applying a scale
   We should first apply the scale to an array and THEN put it into a roodataset
 

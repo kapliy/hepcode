@@ -101,6 +101,29 @@ def get_prange(name):
         pass
     print 'Phi range for muons:', rp
     return rp
+
+def ntuple_to_4vectors(t,name,xmin,xmax,maxdata=1000000):
+    """ Load TNtuple from a file: load two Z->mumu 4vectors """
+    pos_names = ('lP_pt','lP_eta','lP_phi','lP_m')
+    neg_names = ('lN_pt','lN_eta','lN_phi','lN_m')
+    mz_name = 'Z_m'
+    t.lP_m = t.lN_m = 105.658367/1000.0
+    rp,rn = get_eranges(name)
+    N = t.GetEntries()
+    print 'Reading tree with',N,'entries'
+    res = []
+    nl=0
+    for i in range(N):
+        t.GetEntry(i)
+        pos = [getattr(t,n) for n in pos_names]
+        neg = [getattr(t,n) for n in neg_names]
+        mz = getattr(t,mz_name)
+        good = rp[0] < pos[1] < rp[1] and rn[0] < neg[1] < rn[1] and xmin < mz < xmax
+        if not good: continue
+        res.append((pos,neg,mz))
+        nl+=1
+        if nl>=maxdata: break
+    return len(res),res
     
 def ntuple_to_array1(t,name,xmin,xmax,maxdata=1000000):
     """ Load TNtuple from a file: only load mZ """
