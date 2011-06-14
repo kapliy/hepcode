@@ -402,10 +402,18 @@ if True:
     line.SetLineWidth(4)
     line.SetLineColor(ROOT.kRed)
     line.Draw('l')
+    # label
+    p = ROOT.TPaveText(.7,.75 , (.7+.2),(.75+.15) ,"NDC")
+    p.SetTextAlign(11)
+    p.SetFillColor(0)
+    p.AddText('pt,#eta=(%.1f,%.1f)(%.1f,%.1f)'%(ptPOS,etaPOS,ptNEG,etaNEG))
+    p.AddText('Old mz =%.2f'%(M0))
+    print 'Max bin =',h.GetMaximumBin(),'/',100
+    p.AddText('New mz = %.2f'%(M0-0.5 + 1.0*h.GetMaximumBin()/100.0))
+    p.Draw()
     c.Modified()
     c.Update()
-
-
+    SaveAs(c,'%s_fit'%opts.tag,opts.ext)
 
 if False:
     data = load_unbinned(N, array.array('f',ms), opts.min , opts.max)
@@ -481,7 +489,7 @@ if False:
         COUT.append( 'R = %.3f +/- %.3f'%(R,eR) )
         COUT.append( 'k+ = %.3f +/- %.3f ( %.3f %.3f )'%(kp*100.0,ekp*100.0,ekp1*100.0,ekp2*100.0) )
         COUT.append( 'k- = %.3f +/- %.3f ( %.3f %.3f )'%(km*100.0,ekm*100.0,ekm1*100.0,ekm2*100.0) )
-    # Solve for k-, given k+ (e.g., one leg in barrel, another leg in endcap) 
+    # Solve for k-, given k+ (e.g., one leg in barrel, another leg in endcap)
     if opts.kp and opts.ekp:
         kp,ekp = opts.kp,opts.ekp
         km = (mz/mz0)**2/kp
