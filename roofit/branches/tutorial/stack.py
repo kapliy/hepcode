@@ -11,7 +11,7 @@ parser.add_option("--type",dest="type",
                   type="int", default=1,
                   help="Type = 2 applies pileup weights")
 parser.add_option("--input",dest="input",
-                  type="string", default='ROOT/root_all_0612',
+                  type="string", default='ROOT/root_all_0616_loose',
                   help="Path to input root file with all histos")
 parser.add_option("--var",dest="var",
                   type="string", default='l_eta',
@@ -20,10 +20,11 @@ parser.add_option("--bin",dest="bin",
                   type="string", default='100,-2.5,2.5',
                   help="Binning for var")
 parser.add_option("--cut",dest="cut",
-                  type="string", default='1==1',
+                  type="string", default='weight',
                   help="Additional cut to select events")
-#329602.0 up to F3 (182519)
-#490814.0 up to G3 (183021)
+#329602.0 up to F3 (182519) EF_mu18_MG
+#490814.0 up to G3 (183021) EF_mu18_MG
+#689279.0 up to G5 (183347) EF_mu20_MG
 parser.add_option("--lumi",dest="lumi",
                   type="float", default=490814.0,
                   help="Integrated luminosity for data (in nb^-1)")
@@ -56,25 +57,19 @@ def save(c,name):
     for ext in ('png','ps','pdf','C'):
         c.SaveAs("%s.%s"%(name,ext))
 
+# MC stack order
 po = PlotOrder()
-if opts.type==1:
-    po.Add(name='t#bar{t}',samples='mc_ttbar',color=ROOT.kGreen)
-    po.Add(name='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta)
-    po.Add(name='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow)
-    po.Add(name='Z#rightarrow#mu#mu',samples='mc_zmumu',color=ROOT.kRed)
-    po.Add(name='bbmu15X/ccmu15X',samples=['mc_bbmu15x','mc_ccmu15x'],color=ROOT.kCyan)
-    po.Add(name='W#rightarrow#mu#nu',samples='mc_wmunu',color=10)
-if opts.type==2:
-    po.Add(name='t#bar{t}',samples='mc2_ttbar',color=ROOT.kGreen)
-    po.Add(name='Z#rightarrow#tau#tau',samples='mc2_ztautau',color=ROOT.kMagenta)
-    po.Add(name='W#rightarrow#tau#nu',samples='mc2_wtaunu',color=ROOT.kYellow)
-    po.Add(name='Z#rightarrow#mu#mu',samples='mc2_zmumu',color=ROOT.kRed)
-    po.Add(name='bbmu15X/ccmu15X',samples=['mc2_bbmu15x','mc2_ccmu15x'],color=ROOT.kCyan)
-    po.Add(name='W#rightarrow#mu#nu',samples='mc2_wmunu',color=10)
+po.Add(name='t#bar{t}',samples='mc_ttbar',color=ROOT.kGreen)
+po.Add(name='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta)
+po.Add(name='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow)
+po.Add(name='Z#rightarrow#mu#mu',samples='mc_zmumu',color=ROOT.kRed)
+po.Add(name='bbmu15X/ccmu15X',samples=['mc_bbmu15x','mc_ccmu15x'],color=ROOT.kCyan)
+#po.Add(name='W#rightarrow#mu#nu',samples=['mc_wminmunu','mc_wplusmunu'],color=10)
+po.Add(name='W#rightarrow#mu#nu',samples='mc_wmunu',color=10)
+
 # Determine which data periods to plot
-data = ['data']
-#data = [ 'period%s'%s for s in ('B','D','E','F','G1','G2','G3') ]
-data = [ 'period%s'%s for s in ('B','D','E','F') ]
+data = [ 'period%s'%s for s in ('B','D','E','F','G1','G2','G3') ]
+#data = [ 'period%s'%s for s in ('B','D','E','F') ]
 mc = list(xflatten(po.mcg))
 # All histo files that we need to get
 allnames = data + mc
@@ -101,11 +96,11 @@ for iname in allnames:
     if re.match('mc',iname):
         try:
             hname = 'h%sPOS'%iname
-            nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'l_q>0 && (%s)'%(opts.cut,),'goff')
+            nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(l_q>0) * (%s)'%(opts.cut,),'goff')
             hmc[POS][iname]=ScaleToLumi(ROOT.gDirectory.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale,nevts)
             hmc[POS][iname].Sumw2()
             hname = 'h%sNEG'%iname
-            nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'l_q<0 && (%s)'%(opts.cut,),'goff')
+            nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(l_q<0) * (%s)'%(opts.cut,),'goff')
             hmc[NEG][iname]=ScaleToLumi(ROOT.gDirectory.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale,nevts)
             hmc[NEG][iname].Sumw2()
         except:
@@ -116,20 +111,20 @@ for iname in allnames:
             # for signal MC, also get truth-level template for efficiency
             nt2 = f.Get('dg/truth/st_truth_reco_w/ntuple')
             hname='htr%sPOS'%iname
-            nt2.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'l_q>0 && (%s)'%(opts.cut,),'goff')
+            nt2.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(l_q>0) * (%s)'%(opts.cut,),'goff')
             htr[POS] = ScaleToLumi(ROOT.gDirectory.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale,nevts)
             htr[POS].Sumw2()
             hname='htr%sNEG'%iname
-            nt2.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'l_q<0 && (%s)'%(opts.cut,),'goff')
+            nt2.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(l_q<0) * (%s)'%(opts.cut,),'goff')
             htr[NEG] = ScaleToLumi(ROOT.gDirectory.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale,nevts)
             htr[NEG].Sumw2()
     else: #data:
         hname = 'hd%sPOS'%iname
-        nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'l_q>0 && (%s)'%(opts.cut,),'goff')
+        nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(l_q>0) * (%s)'%(opts.cut,),'goff')
         hdata[POS].append(ROOT.gDirectory.Get(hname).Clone())
         hdata[POS][-1].Sumw2()
         hname = 'hd%sNEG'%iname
-        nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'l_q<0 && (%s)'%(opts.cut,),'goff')
+        nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(l_q<0) * (%s)'%(opts.cut,),'goff')
         hdata[NEG].append(ROOT.gDirectory.Get(hname).Clone())
         hdata[NEG][-1].Sumw2()
 
@@ -163,7 +158,7 @@ for q in xrange(2):
         hh[0].SetFillColor(po.mcgc[i])
         hh[0].SetMarkerSize(0)
         # make a sum of all bg
-        if not re.search('wmunu',inames[0]):
+        if not (re.search('wmunu',inames[0])):
             if hbg[q]:
                 hbg[q].Add(hh[0])
             else:
