@@ -11,7 +11,7 @@ parser.add_option("--type",dest="type",
                   type="int", default=1,
                   help="Type = 2 applies pileup weights")
 parser.add_option("--input",dest="input",
-                  type="string", default='ROOT/root_all_0616_loose',
+                  type="string", default='ROOT/root_all_0620_cmb',
                   help="Path to input root file with all histos")
 parser.add_option("--var",dest="var",
                   type="string", default='l_eta',
@@ -20,7 +20,7 @@ parser.add_option("--bin",dest="bin",
                   type="string", default='100,-2.5,2.5',
                   help="Binning for var")
 parser.add_option("--cut",dest="cut",
-                  type="string", default='weight',
+                  type="string", default='mcw*puw', # *effw*trigw
                   help="Additional cut to select events")
 #329602.0 up to F3 (182519) EF_mu18_MG
 #490814.0 up to G3 (183021) EF_mu18_MG
@@ -29,7 +29,7 @@ parser.add_option("--lumi",dest="lumi",
                   type="float", default=490814.0,
                   help="Integrated luminosity for data (in nb^-1)")
 parser.add_option("--qcd-scale",dest="qcdscale",
-                  type="string", default='1.6',
+                  type="string", default='0.45',  #1.6
                   help="QCD scale factor")
 parser.add_option("-o", "--output",dest="output",
                   type="string", default="",
@@ -40,14 +40,21 @@ parser.add_option("--root", default=False,
 parser.add_option('-t',"--tag",dest="tag",
                   type="string", default='plot',
                   help="A tag to append to all output plots")
+parser.add_option('-b', "--batch", default=False,
+                  action="store_true",dest="batch",
+                  help="Enable batch mode (all output directly to filesystem)")
+parser.add_option("-q", "--charge",dest="charge",
+                  type="int", default=2,
+                  help="Which charge to plot: 0=POS, 1=NEG, 2=ALL")
 (opts, args) = parser.parse_args()
 mode = opts.mode
 print "MODE =",mode
 
 from MC import *
+from SuCanvas import *
 #ROOT.TH1.AddDirectory(ROOT.kFALSE)    # ensure that we own all the histograms
-#ROOT.gROOT.SetBatch(1)                # uncomment for interactive usage
-
+ROOT.gROOT.SetBatch(opts.batch)
+ROOT.TH1.SetDefaultSumw2()
 SetStyle("AtlasStyle.C")
 #ROOT.gStyle.SetOptFit(1111);
 
@@ -56,6 +63,12 @@ SetStyle("AtlasStyle.C")
 def save(c,name):
     for ext in ('png','ps','pdf','C'):
         c.SaveAs("%s.%s"%(name,ext))
+
+POS,NEG,ALL=range(3)
+QMAP = {}
+QMAP[POS] = (0,'POS','(l_q>0)','mu+ only')
+QMAP[NEG] = (1,'NEG','(l_q<0)','mu- only')
+QMAP[ALL] = (2,'ALL','(l_q!=0)','mu+ and mu-')
 
 # MC stack order
 po = PlotOrder()
@@ -68,17 +81,16 @@ po.Add(name='bbmu15X/ccmu15X',samples=['mc_bbmu15x','mc_ccmu15x'],color=ROOT.kCy
 po.Add(name='W#rightarrow#mu#nu',samples='mc_wmunu',color=10)
 
 # Determine which data periods to plot
-data = [ 'period%s'%s for s in ('B','D','E','F','G1','G2','G3') ]
-#data = [ 'period%s'%s for s in ('B','D','E','F') ]
+data = [ 'data_period%s'%s for s in ('B','D','E','F','G1','G2','G3') ]
 mc = list(xflatten(po.mcg))
 # All histo files that we need to get
 allnames = data + mc
 
 # data and mc histograms
-hdata = [[] for i in xrange(2)]
-hmc = [{} for i in xrange(2)]
-# truth level for wmunu only!
-htr = [None for i in xrange(2)]
+hdata = [[] for i in xrange(3)]
+hmc = [{} for i in xrange(3)]
+# truth level (for wmunu only)
+htr = [None for i in xrange(3)]
 
 # load the data inputs
 gbg = []
@@ -95,62 +107,57 @@ for iname in allnames:
         continue
     if re.match('mc',iname):
         try:
-            hname = 'h%sPOS'%iname
-            nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(l_q>0) * (%s)'%(opts.cut,),'goff')
-            hmc[POS][iname]=ScaleToLumi(ROOT.gDirectory.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale,nevts)
-            hmc[POS][iname].Sumw2()
-            hname = 'h%sNEG'%iname
-            nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(l_q<0) * (%s)'%(opts.cut,),'goff')
-            hmc[NEG][iname]=ScaleToLumi(ROOT.gDirectory.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale,nevts)
-            hmc[NEG][iname].Sumw2()
+            for iq in range(2):
+                hname = 'h%s%s'%(iname,QMAP[iq][1])
+                nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(%s) * (%s)'%(QMAP[iq][2],opts.cut),'goff')
+                hmc[iq][iname]=ScaleToLumi(ROOT.gDirectory.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale,nevts)
+            hmc[ALL][iname] = WSum(hmc[POS][iname],hmc[NEG][iname],'h%sALL'%iname)
         except:
             print 'Error: could not find histogram %s in file %s'%(hname,iname)
             po.Remove(iname)
             continue
-        if re.search('wmunu',iname):
+        if is_wmunu(iname):
             # for signal MC, also get truth-level template for efficiency
             nt2 = f.Get('dg/truth/st_truth_reco_w/ntuple')
-            hname='htr%sPOS'%iname
-            nt2.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(l_q>0) * (%s)'%(opts.cut,),'goff')
-            htr[POS] = ScaleToLumi(ROOT.gDirectory.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale,nevts)
-            htr[POS].Sumw2()
-            hname='htr%sNEG'%iname
-            nt2.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(l_q<0) * (%s)'%(opts.cut,),'goff')
-            htr[NEG] = ScaleToLumi(ROOT.gDirectory.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale,nevts)
-            htr[NEG].Sumw2()
+            if nt2:
+                for iq in range(2):
+                    hname = 'htr%s%s'%(iname,QMAP[iq][1])
+                    nt2.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(%s) * (%s)'%(QMAP[iq][2],opts.cut),'goff')
+                    if not htr[ALL]:
+                        htr[iq]=ScaleToLumi(ROOT.gDirectory.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale,nevts)
+                    else:
+                        htr[iq].Add( ScaleToLumi(ROOT.gDirectory.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale,nevts) )
+                if not htr[ALL]:
+                    htr[ALL] = WSum(htr[POS],htr[NEG],'htr%sALL'%iname)
+                else:
+                    htr[ALL].Add( WSum(htr[POS],htr[NEG],'htr%sALL'%iname) )
     else: #data:
-        hname = 'hd%sPOS'%iname
-        nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(l_q>0) * (%s)'%(opts.cut,),'goff')
-        hdata[POS].append(ROOT.gDirectory.Get(hname).Clone())
-        hdata[POS][-1].Sumw2()
-        hname = 'hd%sNEG'%iname
-        nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(l_q<0) * (%s)'%(opts.cut,),'goff')
-        hdata[NEG].append(ROOT.gDirectory.Get(hname).Clone())
-        hdata[NEG][-1].Sumw2()
-
-def MakeLegend(label='Data and MC'):
-    l = ROOT.TLegend(0.55,0.70,0.88,0.88,label,"brNDC")
-    l.SetFillStyle(1001)
-    l.SetFillColor(10)
-    return l
+        for iq in range(2):
+            hname = 'hd%s%s'%(iname,QMAP[iq][1])
+            nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(%s) * (%s)'%(QMAP[iq][2],opts.cut),'goff')
+            hdata[iq].append(ROOT.gDirectory.Get(hname).Clone())
+            hdata[iq][-1].Sumw2()
+        hdata[ALL].append( WSum(hdata[POS][-1],hdata[NEG][-1],'hd%sALL'%iname) )
+#pos=hdata[0][0]
+#neg=hdata[1][0]
 
 # prepare output holders for summed histos
-leg = [MakeLegend() for i in xrange(2)]
-leg_eff = [MakeLegend() for i in xrange(2)]
-hd = [None for i in xrange(2)]   # data
-hd_sig = [None for i in xrange(2)]   # data bg-subtracted
-hd_eff = [None for i in xrange(2)]   # data bg-subtracted
-hd_sig_eff = [None for i in xrange(2)]   # data bg-subtracted and eff-corrected
-hbgs = [ROOT.THStack('eta','eta') for i in xrange(2)]  # all-mc stacks
-hbgs_eff = [ROOT.THStack('eta','eta') for i in xrange(2)]  # all-mc stacks, eff-corrected
-hbg = [None for i in xrange(2)]  # sum of bg, without wmunu sig
-hbg_noqcd = [None for i in xrange(2)]  # sum of bg, without QCD
-hbg_qcd = [None for i in xrange(2)]  # sum of QCD bg
-hsig = [None for i in xrange(2)] # wmunu sig only
-heff = [None for i in xrange(2)] # combined reco efficiency
+leg = [MakeLegend(QMAP[i][3]) for i in xrange(3)]
+leg_eff = [MakeLegend(QMAP[i][3]) for i in xrange(3)]
+hd = [None for i in xrange(3)]   # data
+hd_sig = [None for i in xrange(3)]   # data bg-subtracted
+hd_eff = [None for i in xrange(3)]   # data/truth
+hd_sig_eff = [None for i in xrange(3)]   # data bg-subtracted / truth
+hbgs = [ROOT.THStack('eta','eta') for i in xrange(3)]  # all-mc stacks
+hbgs_eff = [ROOT.THStack('eta','eta') for i in xrange(3)]  # all-mc stacks / truth
+hbg = [None for i in xrange(3)]  # sum of bg, without wmunu sig
+hbg_noqcd = [None for i in xrange(3)]  # sum of bg, without QCD
+hbg_qcd = [None for i in xrange(3)]  # sum of QCD bg
+hsig = [None for i in xrange(3)] # wmunu sig only
+heff = [None for i in xrange(3)] # hsig / truth
 
 # create mc histogram stacks and mc & data combined histos
-for q in xrange(2):
+for q in xrange(3):
     for i,inames in enumerate(po.mcg):
         hh = [hmc[q][f].Clone() for f in inames]
         [hh[0].Add(fc) for fc in hh[1:]]  # add J1..J5
@@ -158,15 +165,18 @@ for q in xrange(2):
         hh[0].SetFillColor(po.mcgc[i])
         hh[0].SetMarkerSize(0)
         # make a sum of all bg
-        if not (re.search('wmunu',inames[0])):
+        if not is_wmunu(inames[0]):
             if hbg[q]:
                 hbg[q].Add(hh[0])
             else:
                 hbg[q] = hh[0].Clone()
         else:
-            hsig[q]=hh[0].Clone()
+            if hsig[q]:
+                hsig[q].Add(hh[0])
+            else:
+                hsig[q]=hh[0].Clone()
         # make BG with and without QCD (for TFractionFitter)
-        if not ( re.search('mu15x',inames[0]) or inames[0] in ['mc_J%d'%r for r in range(0,7)] ):
+        if not is_qcd(inames[0]):
             if hbg_noqcd[q]:
                 hbg_noqcd[q].Add(hh[0])
             else:
@@ -181,175 +191,68 @@ for q in xrange(2):
     [hd[q].Add(fc) for fc in hdata[q][1:]]
     leg[q].AddEntry(hd[q],'Data(#int L dt = %.1f pb^{-1})'%(opts.lumi/1000.0),'LP')
     # create efficiency histograms:  sig/truth;  to use: hdata/eff
-    heff[q] = hsig[q].Clone()
-    heff[q].Divide(htr[q])
-    # make a eff-corrected version of stack plot
-    for i,inames in enumerate(po.mcg):
-        hh = [hmc[q][f].Clone() for f in inames]
-        [ih.Divide(heff[q]) for ih in hh] # correct for efficiency
-        [hh[0].Add(fc) for fc in hh[1:]]  # add J1..J5
-        hh[0].SetLineColor(ROOT.kBlack)
-        hh[0].SetFillColor(po.mcgc[i])
-        hh[0].SetMarkerSize(0)
-        # make a stack of all bg + sig
-        hbgs_eff[q].Add(hh[0])
-        leg_eff[q].AddEntry(hh[0],po.mcg_name[i],'F')
+    if htr[q]:
+        heff[q] = hsig[q].Clone()
+        heff[q].Divide(htr[q])
+        # make a eff-corrected version of stack plot
+        for i,inames in enumerate(po.mcg):
+            hh = [hmc[q][f].Clone() for f in inames]
+            [ih.Divide(heff[q]) for ih in hh] # correct for efficiency
+            [hh[0].Add(fc) for fc in hh[1:]]  # add J1..J5
+            hh[0].SetLineColor(ROOT.kBlack)
+            hh[0].SetFillColor(po.mcgc[i])
+            hh[0].SetMarkerSize(0)
+            # make a stack of all bg + sig
+            hbgs_eff[q].Add(hh[0])
+            leg_eff[q].AddEntry(hh[0],po.mcg_name[i],'F')
     # make a bg-subtracted and eff-corrected version of data plot
     hd_sig[q] = hd[q].Clone()
     hd_sig[q].Add(hbg[q],-1)
-    hd_sig_eff[q] = hd_sig[q].Clone()
-    hd_sig_eff[q].Divide(heff[q])
-    hd_eff[q] = hd[q].Clone()
-    hd_eff[q].Divide(heff[q])
+    if heff[q]:
+        hd_sig_eff[q] = hd_sig[q].Clone()
+        hd_sig_eff[q].Divide(heff[q])
+        hd_eff[q] = hd[q].Clone()
+        hd_eff[q].Divide(heff[q])
+
+q = opts.charge
 
 if mode==1: # total stack histo
-    c = canvas()
-    #ROOT.gPad.SetLogy(ROOT.kTRUE)
-    # mc
-    hbgs[0].Draw("H")
-    hbgs[0].SetMinimum(0.1)
-    maximum = max((hd[0].GetMaximum(),hbgs[0].GetMaximum()))
-    hbgs[0].SetMaximum(maximum*1.5)
-    #data
-    hd[0].SetMarkerSize(1.0)
-    hd[0].Draw("Lsame")
-    leg[0].Draw("same")
-    c.Modified()
+    c = SuCanvas()
+    c.plotStackHisto(hbgs[q],hd[q],leg[q])
 
 if mode==2: # total stack histo (eff-corrected from MC)
-    c = canvas()
-    #ROOT.gPad.SetLogy(ROOT.kTRUE)
-    # mc
-    hbgs_eff[0].Draw("H")
-    hbgs_eff[0].SetMinimum(0.1)
-    maximum = max((hd_eff[0].GetMaximum(),hbgs_eff[0].GetMaximum()))
-    hbgs_eff[0].SetMaximum(maximum*1.5)
-    #data
-    hd_eff[0].SetMarkerSize(1.0)
-    hd_eff[0].Draw("Lsame")
-    leg_eff[0].Draw("same")
-    c.Modified()
+    c = SuCanvas()
+    c.plotStackHisto(hbgs_eff[q],hd_eff[q],leg[q])
 
-if mode==11: # asymmetry (not corrected for eff)
-    c = canvas()
-    hasym = WAsymmetry(hd_sig[0],hd_sig[1])
-    if re.search('phi',hname):
-        hasym.Fit("pol0")
-    else:
-        hasym.Draw()
-    hasym.GetYaxis().SetRangeUser(0.0,0.5);
-    hasym.GetYaxis().SetTitle('Asymmetry');
-    if re.search('mod',hname):
-        hasym.GetXaxis().SetRangeUser(0.0,2.4);
-    c.Modified()
-    if opts.root:
-        f = ROOT.TFile.Open('plots.root','UPDATE')
-        f.cd()
-        hasym.Write('hasym_%s'%hname)
-        f.Close()
+if mode==11: # asymmetry (not bg-subtracted)
+    c = SuCanvas()
+    c.plotAsymmetry(hd[POS],hd[NEG],hsig[POS],hsig[NEG])
 
-if mode==12: # asymmetry (not corrected for eff) -vs- truth
-    c = canvas()
-    hasym = WAsymmetry(hd_sig[0],hd_sig[1])
-    hasym.SetMarkerColor(ROOT.kBlue)
-    if re.search('phi',hname):
-        hasym.Fit("pol0")
-    else:
-        hasym.Draw()
-    htasym = WAsymmetry(htr[0],htr[1])
-    htasym.Draw("same")
-    hasym.GetYaxis().SetRangeUser(0.0,0.5);
-    hasym.GetYaxis().SetTitle('Asymmetry');
-    if re.search('mod',hname):
-        hasym.GetXaxis().SetRangeUser(0.0,2.4);
-    c.Modified()
-    if opts.root:
-        f = ROOT.TFile.Open('plots.root','UPDATE')
-        f.cd()
-        hasym.Write('hasym_%s'%hname)
-        f.Close()
+if mode==12: # asymmetry (bg-subtracted)
+    c = SuCanvas()
+    c.plotAsymmetry(hd_sig[POS],hd_sig[NEG],hsig[POS],hsig[NEG])
 
-if mode==13: # asymmetry (fully corrected for eff)
-    c = canvas()
-    hasym = WAsymmetry(hd_sig_eff[0],hd_sig_eff[1])
-    if re.search('phi',hname):
-        hasym.Fit("pol0")
-    else:
-        hasym.Draw()
-    hasym.GetYaxis().SetRangeUser(0.0,0.5);
-    hasym.GetYaxis().SetTitle('Asymmetry');
-    hasym.GetXaxis().SetTitle('#eta_{#mu}');
-    if re.search('mod',hname):
-        hasym.GetXaxis().SetRangeUser(0.0,2.4);
-    # for phi: print fit results
-    if re.search('phi',hname) and False:
-        hasym.GetYaxis().SetRangeUser(0.0,0.6);
-        fs = [v for v in hasym.GetListOfFunctions()]
-        fs[0].SetLineColor(hasym.GetLineColor())
-        p = ROOT.TPaveText(.2,.70 , (.2+.30),(.70+.20) ,"NDC")
-        p.SetTextAlign(11)
-        p.SetFillColor(0)
-        z=0
-        chi2 = fs[z].GetChisquare()
-        ndf = fs[z].GetNDF()
-        prob = fs[z].GetProb()
-        par = fs[z].GetParameter(0)
-        p.AddText('Asymmetry fit to a straight line:')
-        p.AddText('   asymmetry = %.2f'%par)
-        p.AddText('   chi2/ndof = %.1f/%d'%(chi2,ndf))
-        p.AddText('   p-value   = %.3f'%prob)
-        p.Draw()
-    c.Modified()
-    if opts.root:
-        f = ROOT.TFile.Open('plots.root','UPDATE')
-        f.cd()
-        hasym.Write('hasym_%s'%hname)
-        f.Close()
-    if opts.output:
-        save(c,'muon_%s'%hname)
-
-if mode==14: # asymmetry (fully corrected for eff) -vs- truth
-    c = canvas()
-    hasym = WAsymmetry(hd_sig_eff[0],hd_sig_eff[1])
-    hasym.SetMarkerColor(ROOT.kBlue)
-    if re.search('phi',hname):
-        hasym.Fit("pol0")
-    else:
-        hasym.Draw()
-    htasym = WAsymmetry(htr[0],htr[1])
-    htasym.Draw("same")
-    hasym.GetYaxis().SetRangeUser(0.0,0.5);
-    if re.search('mod',hname):
-        hasym.GetXaxis().SetRangeUser(0.0,2.4);
-    hasym.GetYaxis().SetTitle('Asymmetry');
-    hasym.GetXaxis().SetTitle('#eta_{#mu}');
-    c.Modified()
-    if opts.root:
-        f = ROOT.TFile.Open('plots.root','UPDATE')
-        f.cd()
-        hasym.Write('hasym_%s'%hname)
-        f.Close()
-    if opts.output:
-        save(c,'muon_%s'%hname)
+if mode==13: # asymmetry (bg-subtracted, eff-corrected)
+    c = SuCanvas()
+    c.plotAsymmetry(hd_sig_eff[POS],hd_sig_eff[NEG],htr[POS],htr[NEG])
 
 if mode==99: # TFractionFitter for QCD contribution
-    c = canvas()
-    hbg_noqcd[0].Add(hbg_noqcd[1])
-    hbg_qcd[0].Add(hbg_qcd[1])
-    hd[0].Add(hd[1])
+    c = SuCanvas()
+    c.buildDefault()
     # mc
     mc = ROOT.TObjArray(2)
-    mc.Add(hbg_qcd[0])
-    mc.Add(hbg_noqcd[0])
-    fit = ROOT.TFractionFitter(hd[0],mc)
+    mc.Add(hbg_qcd[ALL])
+    mc.Add(hbg_noqcd[ALL])
+    fit = ROOT.TFractionFitter(hd[ALL],mc)
     fit.Constrain(1,0.0,1.0);
     status = fit.Fit();
     if status == 0:
         result = fit.GetPlot();
-        hd[0].Draw("Ep");
+        hd[ALL].Draw("Ep");
         result.Draw("same");
+        print 'Fit chi2 =',fit.GetChisquare()
+        print 'Fit prob =',fit.GetProb()
     else:
         print 'Fit failed!'
-    c.Modified()
 
-SaveAs(c,'%s_%s'%(opts.tag,opts.var),'png')
+c.SaveAs('%s_%s_%s_%s_%s'%(opts.tag,opts.input,QMAP[opts.charge][1],opts.var,opts.cut),'png')
