@@ -41,7 +41,7 @@ class SuCanvas:
     refLine.GetYaxis().SetNdivisions( 406 );
     if xtitle:
       refLine.GetXaxis().SetTitle( xtitle );
-    refLine.GetYaxis().SetTitle( "data / BG" );
+    refLine.GetYaxis().SetTitle( "data / MC" );
     refLine.SetLineWidth( 3 );
     refLine.SetLineStyle( ROOT.kDashed );
     refLine.Draw( "hist" );
