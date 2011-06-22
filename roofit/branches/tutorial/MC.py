@@ -116,18 +116,16 @@ if False: # from Peter
     mc09.append(MCR(106052,'mc_ztautau','*',856.967*1.15/1000,1.000000,1998598))
     mc09.append(MCR(105861,'mc_ttbar','*',0.1646,5.4258E-01,199838))
     # these are incorrect:
-    mc09.append(MCR(113204,'mc_J0','*',9.6139E+06,1.0,500000))
-    mc09.append(MCR(113205,'mc_J1','*',7.4366E+05,1.0,500000))
-    mc09.append(MCR(113206,'mc_J2','*',4.4307E+04,1.0,500000))
-    mc09.append(MCR(113207,'mc_J3','*',2.3576E+03,1.0,500000))
-    mc09.append(MCR(113208,'mc_J4','*',9.4236E+01,1.0,500000))
-    mc09.append(MCR(113209,'mc_J5','*',2.5813E+00,1.0,500000))
-    mc09.append(MCR(113210,'mc_J6','*',3.9439E-02,1.0,500000))
+    mc09.append(MCR(113204,'mc_J0','*',9.6139E+06/1000,1.0,500000))
+    mc09.append(MCR(113205,'mc_J1','*',7.4366E+05/1000,1.0,500000))
+    mc09.append(MCR(113206,'mc_J2','*',4.4307E+04/1000,1.0,500000))
+    mc09.append(MCR(113207,'mc_J3','*',2.3576E+03/1000,1.0,500000))
+    mc09.append(MCR(113208,'mc_J4','*',9.4236E+01/1000,1.0,500000))
+    mc09.append(MCR(113209,'mc_J5','*',2.5813E+00/1000,1.0,500000))
+    mc09.append(MCR(113210,'mc_J6','*',3.9439E-02/1000,1.0,500000))
     #from here: http://cdsweb.cern.ch/record/1282370/files/ATL-CAL-PROC-2010-001.pdf?version=3
     mc09.append(MCR(108405,'mc_bbmu15x','*',7.39E+04/1000,1.0,500000)) 
     mc09.append(MCR(106059,'mc_ccmu15x','*',2.84E+04/1000,1.0,500000))
-    mc09.append(MCR(106044,'mc_wminmunu','*',3.9607,1.000000,6993798))
-    mc09.append(MCR(106044,'mc_wplusmunu','*',5.8414,1.000000,6993798))
 
 if True: # before peter update
     mc09.append(MCR(106044,'mc_wmunu','*',8894.06*1.17/1000,1.000000,6993798))
@@ -136,15 +134,18 @@ if True: # before peter update
     mc09.append(MCR(106052,'mc_ztautau','*',856.967*1.15/1000,1.000000,1998598))
     mc09.append(MCR(105861,'mc_ttbar','*',1.4580E-1,0.54301,199838))
     # these are incorrect:
-    mc09.append(MCR(113204,'mc_J0','*',9.6139E+06,1.0,500000))
-    mc09.append(MCR(113205,'mc_J1','*',7.4366E+05,1.0,500000))
-    mc09.append(MCR(113206,'mc_J2','*',4.4307E+04,1.0,500000))
-    mc09.append(MCR(113207,'mc_J3','*',2.3576E+03,1.0,500000))
-    mc09.append(MCR(113208,'mc_J4','*',9.4236E+01,1.0,500000))
-    mc09.append(MCR(113209,'mc_J5','*',2.5813E+00,1.0,500000))
-    mc09.append(MCR(113210,'mc_J6','*',3.9439E-02,1.0,500000))
+    mc09.append(MCR(109276,'mc_J0','*',9752970.000000,0.000079,500000))
+    mc09.append(MCR(109277,'mc_J1','*',673020.000000,0.001233,500000))
+    mc09.append(MCR(109278,'mc_J2','*',41194.700000,0.005443,500000))
+    mc09.append(MCR(109279,'mc_J3','*',2193.250000,0.012949,500000))
+    mc09.append(MCR(109280,'mc_J4','*',87.848700,0.022156,500000))
+    mc09.append(MCR(109281,'mc_J5','*',2.328560,0.029753,500000))
     mc09.append(MCR(108405,'mc_bbmu15x','*',7.39E+04/1000,1.0,500000)) 
     mc09.append(MCR(106059,'mc_ccmu15x','*',2.84E+04/1000,1.0,500000))
+
+# MC@NLO samples
+mc09.append(MCR(106083,'mc_wminmunu','*',3.9607,1.000000,6993798))
+mc09.append(MCR(106084,'mc_wplusmunu','*',5.8414,1.000000,6993798))
 
 # W/Z + jets samples:
 # http://cdsweb.cern.ch/record/1298803/files/ATL-COM-PHYS-2010-836.pdf

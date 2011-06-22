@@ -28,7 +28,8 @@ parser.add_option("--cut",dest="cut",
 parser.add_option("--lumi",dest="lumi",
                   type="float", default=490814.0,
                   help="Integrated luminosity for data (in nb^-1)")
-parser.add_option("--qcd-scale",dest="qcdscale",
+# 0.824 from https://kyoko.web.cern.ch/KYOKO/DiffZ/KyokoYamamoto_DiffZ_20110426.pdf
+parser.add_option("--qcd",dest="qcdscale",
                   type="string", default='0.45',  #1.6
                   help="QCD scale factor")
 parser.add_option("-o", "--output",dest="output",
@@ -46,6 +47,12 @@ parser.add_option('-b', "--batch", default=False,
 parser.add_option("-q", "--charge",dest="charge",
                   type="int", default=2,
                   help="Which charge to plot: 0=POS, 1=NEG, 2=ALL")
+parser.add_option("--bgqcd",dest="bgqcd",
+                  type="int", default=0,
+                  help="QCD: 0=Pythia mu15x, 1=Pythia J0..J5")
+parser.add_option("--bgsig",dest="bgsig",
+                  type="int", default=0,
+                  help="Background: 0=Pythia, 1=MC@NLO, 2=W+jets Jimmy")
 (opts, args) = parser.parse_args()
 mode = opts.mode
 print "MODE =",mode
@@ -72,13 +79,27 @@ QMAP[ALL] = (2,'ALL','(l_q!=0)','mu+ and mu-')
 
 # MC stack order
 po = PlotOrder()
-po.Add(name='t#bar{t}',samples='mc_ttbar',color=ROOT.kGreen)
-po.Add(name='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta)
-po.Add(name='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow)
-po.Add(name='Z#rightarrow#mu#mu',samples='mc_zmumu',color=ROOT.kRed)
-po.Add(name='bbmu15X/ccmu15X',samples=['mc_bbmu15x','mc_ccmu15x'],color=ROOT.kCyan)
-#po.Add(name='W#rightarrow#mu#nu',samples=['mc_wminmunu','mc_wplusmunu'],color=10)
-po.Add(name='W#rightarrow#mu#nu',samples='mc_wmunu',color=10)
+if opts.bgsig!=3:
+    po.Add(name='t#bar{t}',samples='mc_ttbar',color=ROOT.kGreen)
+    po.Add(name='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta)
+    po.Add(name='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow)
+    po.Add(name='Z#rightarrow#mu#mu',samples='mc_zmumu',color=ROOT.kRed)
+    if opts.bgqcd==0:
+        po.Add(name='bbmu15X/ccmu15X',samples=['mc_bbmu15x','mc_ccmu15x'],color=ROOT.kCyan)
+    elif opts.bgqcd==1:
+        po.Add(name='QCD J0..J5',samples=['mc_J%d'%v for v in range(5)],color=ROOT.kCyan)
+    if opts.bgsig==0:
+        po.Add(name='W#rightarrow#mu#nu',samples='mc_wmunu',color=10)
+    elif opts.bgsig==1:
+        po.Add(name='W#rightarrow#mu#nu',samples=['mc_wminmunu','mc_wplusmunu'],color=10)
+else:
+    po.Add(name='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen)
+    po.Add(name='Z#rightarrow#tau#tau+jets',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta)
+    po.Add(name='W#rightarrow#tau#nu+jets',samples=['mc_jimmy_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow)
+    po.Add(name='Z#rightarrow#mu#mu+jets',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed)
+    po.Add(name='WZ/ZZ',samples=['mc_jimmy_wz_np%d'%v for v in range(4)]+['mc_jimmy_zz_np%d'%v for v in range(4)],color=11)
+    po.Add(name='WW',samples=['mc_jimmy_ww_np%d'%v for v in range(4)]+['mc_jimmy_ww_np%d'%v for v in range(4)],color=12)
+    po.Add(name='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10)
 
 # Determine which data periods to plot
 data = [ 'data_period%s'%s for s in ('B','D','E','F','G1','G2','G3') ]
@@ -255,4 +276,4 @@ if mode==99: # TFractionFitter for QCD contribution
     else:
         print 'Fit failed!'
 
-c.SaveAs('%s_%s_%s_%s_%s'%(opts.tag,opts.input,QMAP[opts.charge][1],opts.var,opts.cut),'png')
+c.SaveAs('%s_%s_%s_%s_%s_%d'%(opts.tag,opts.input,QMAP[opts.charge][1],opts.var,opts.cut,mode),'png')
