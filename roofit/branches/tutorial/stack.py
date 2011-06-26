@@ -25,8 +25,9 @@ parser.add_option("--cut",dest="cut",
 #329602.0 up to F3 (182519) EF_mu18_MG
 #490814.0 up to G3 (183021) EF_mu18_MG
 #689279.0 up to G5 (183347) EF_mu20_MG
+#832854.0 up to H1 (183602) EF_mu20_MG
 parser.add_option("--lumi",dest="lumi",
-                  type="float", default=490814.0,
+                  type="float", default=832854.0,
                   help="Integrated luminosity for data (in nb^-1)")
 # 0.824 from https://kyoko.web.cern.ch/KYOKO/DiffZ/KyokoYamamoto_DiffZ_20110426.pdf
 parser.add_option("--qcd",dest="qcdscale",

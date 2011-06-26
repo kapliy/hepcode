@@ -150,68 +150,6 @@ def ntuple_to_array1(t,name,xmin,xmax,maxdata=1000000):
         if nl>=maxdata: break
     return len(res),array.array('f',res)
 
-def ntuple_to_array_debug(t,name,xmin,xmax,maxdata=1000000,nskip=0):
-    """ Load TNtuple from a file; both Z muons in the same eta range, but phi cut is applied on integrated spectra
-    This is a debug version with scale corrections applied by-hand
-    """
-    assert False,'DEBUG!'
-    s = [ 100.25 , 100.25 ,
-          100.01 , 99.77  ,
-          100.82 , 99.36  ,
-          # MS/EXMS
-          99.98  , 99.26  ,
-          100.09 , 99.41  ,
-          102.61 , 104.19 ,
-          # ID
-          99.72  , 99.96  ,
-          100.18 , 99.96  ,
-          101.33 , 98.85  
-          ]
-    npertype = 6
-    # old stuff:
-    ep_name,en_name = 'lP_eta','lN_eta'
-    pp_name,pn_name = 'lP_pt','lN_pt'
-    fp_name,fn_name = 'lP_phi','lN_phi'
-    mz_name = 'Z_m'
-    rp,rn = get_eranges(name)
-    rf = get_prange(name)
-    N = t.GetEntries()
-    print 'Reading tree with',N,'entries'
-    resp = []
-    resn = []
-    for i in range(N):
-        t.GetEntry(i)
-        ep = getattr(t,ep_name)
-        en = getattr(t,en_name)
-        pp = getattr(t,pp_name)
-        pn = getattr(t,pn_name)
-        fp = getattr(t,fp_name)
-        fn = getattr(t,fn_name)
-        mz = getattr(t,mz_name)
-        if not xmin < mz < xmax:
-            continue
-        if not (rp[0] < ep < rp[1] and rn[0] < en < rn[1]):
-            continue
-        goodP = rf[0] < fp < rf[1]
-        goodN = rf[0] < fn < rf[1]
-        idx_POS = 6 + (1 if math.fabs(ep)<1.05 else 2 if ep<0 else 1)*2 + 0
-        idx_NEG = 6 + (1 if math.fabs(en)<1.05 else 2 if en<0 else 1)*2 + 1
-        cPOS = s[idx_POS]/100.0  #1.02
-        cNEG = s[idx_NEG]/100.0  #1.04
-        if goodP:
-            resp.append(pp/cPOS)
-        if goodN:
-            resn.append(pn/cNEG)
-        nl=min(len(resp),len(resn))
-        if nl>=maxdata: break
-    # truncate to the min(mu+,mu-)
-    Np,Nn = len(resp),len(resn)
-    nl=min(len(resp),len(resn))
-    print 'Read out %d mu+ and %d mu- - truncating to %d'%(len(resp),len(resn),nl)
-    resp,resn = resp[0:nl],resn[0:nl]
-    assert len(resp)==len(resn)
-    return Np,Nn,len(resp),array.array('f',resp),array.array('f',resn)
-
 def ntuple_to_array_etalim(t,name,xmin,xmax,maxdata=1000000,nskip=0):
     """ Load TNtuple from a file; both Z muons in the same eta range, but phi cut is applied on integrated spectra"""
     ep_name,en_name = 'lP_eta','lN_eta'
