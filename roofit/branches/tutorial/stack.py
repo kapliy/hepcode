@@ -11,7 +11,7 @@ parser.add_option("--type",dest="type",
                   type="int", default=1,
                   help="Type = 2 applies pileup weights")
 parser.add_option("--input",dest="input",
-                  type="string", default='ROOT/root_all_0621_newiso_1fb_cmb',
+                  type="string", default='ROOT/root_all_0630_newiso_1fb_cmb',
                   help="Path to input root file with all histos")
 parser.add_option("--var",dest="var",
                   type="string", default='l_eta',
@@ -19,6 +19,9 @@ parser.add_option("--var",dest="var",
 parser.add_option("--bin",dest="bin",
                   type="string", default='100,-2.5,2.5',
                   help="Binning for var")
+parser.add_option("--pre",dest="pre",
+                  type="string", default='l_pt>20.0 && ptiso40<2.0 && etiso40<2.0 && met>25.0 && w_mt>40.0',
+                  help="Preliminary cuts to select final W candidates")
 parser.add_option("--cut",dest="cut",
                   type="string", default='mcw*puw', # *effw*trigw
                   help="Additional cut to select events")
@@ -131,7 +134,7 @@ for iname in allnames:
         try:
             for iq in range(2):
                 hname = 'h%s%s'%(iname,QMAP[iq][1])
-                nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(%s) * (%s)'%(QMAP[iq][2],opts.cut),'goff')
+                nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(%s) * (%s) * (%s)'%(QMAP[iq][2],opts.cut,opts.pre),'goff')
                 hmc[iq][iname]=ScaleToLumi(ROOT.gDirectory.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale,nevts)
             hmc[ALL][iname] = WSum(hmc[POS][iname],hmc[NEG][iname],'h%sALL'%iname)
         except:
@@ -144,7 +147,10 @@ for iname in allnames:
             if nt2:
                 for iq in range(2):
                     hname = 'htr%s%s'%(iname,QMAP[iq][1])
-                    nt2.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(%s) * (%s)'%(QMAP[iq][2],opts.cut),'goff')
+                    # prune out isolation from the list of truth-level cuts
+                    pres = opts.pre.split('&&')
+                    precut=' && '.join([c for c in pres if not re.search('iso',c)])
+                    nt2.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(%s) * (%s) * (%s)'%(QMAP[iq][2],opts.cut,precut),'goff')
                     if not htr[ALL]:
                         htr[iq]=ScaleToLumi(ROOT.gDirectory.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale,nevts)
                     else:
@@ -156,7 +162,7 @@ for iname in allnames:
     else: #data:
         for iq in range(2):
             hname = 'hd%s%s'%(iname,QMAP[iq][1])
-            nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(%s) * (%s)'%(QMAP[iq][2],opts.cut),'goff')
+            nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(%s) * (%s) * (%s)'%(QMAP[iq][2],opts.cut,opts.pre),'goff')
             hdata[iq].append(ROOT.gDirectory.Get(hname).Clone())
             hdata[iq][-1].Sumw2()
         hdata[ALL].append( WSum(hdata[POS][-1],hdata[NEG][-1],'hd%sALL'%iname) )
