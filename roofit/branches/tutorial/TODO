@@ -1,7 +1,24 @@
+June 29:
+* Investigate RooEggePdf - see if it is indeed compatible with my implementation!
+  Test by fitting the same event!
+* Add to template the CDF plot before and after either chi2 or ks
+* Reorganize folders in root file: shapes in one subfolder!
+* IMPORTANT: Write code to convert dg to latex code; also to html (with picture conversion)
+
+Special cases:
+* Fix R0 bug: in high statistics, chi2 fit range is too wide in BB
+* FWA: chi2 and ks too different - why?? Try different smoothing parameters
+
+Data/MC:
+* see if wmin/wplus MC@NLO works better if mc weight is excluded
+* use jordan's xsection numbers and samples
+  Add ability to look for a differently-named folder (not 'dg')
+
+
 * Applying absolute scale: perhaps going about it the wrong way? Use the KS statistic between data and MC
   to find the location of the peak?
 * Think if we are doing the wrong thing in R0 scan by cutting around the edges, and THEN applying a scale
-  We should first apply the scale to an array and THEN put it into a roodataset
+  We should first apply the scale to an array and THEN put it into a roodataset - but that's what we do, no?
 
 Peter:
 * Add KS feature to dgplot

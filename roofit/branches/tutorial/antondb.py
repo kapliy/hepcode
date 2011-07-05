@@ -9,7 +9,7 @@ All ROOT data is stored in ROOT file with a similar directory structure.
 Folder structure: /TAG/{CMB,ID,EXMS}/{REG}/{ksp,ksf,chip,chif; npos,nneg ; plots/ }
 """
 
-import os,sys,pickle
+import os,sys,pickle,re
 from FileLock import FileLock
 
 class antondb:
@@ -25,16 +25,32 @@ class antondb:
         f = open(s.fname,'r')
         s.data = pickle.load(f)
         f.close()
+    def ls(s,path='/'):
+        """ trivial ls() """
+        keys = s.data.keys()
+        dirs = {}
+        lev = len(path.split('/'))
+        for k in keys:
+            jn='/'.join(k.split('/')[:lev])
+            if not re.match(path,jn): continue
+            dirs['/'.join(k.split('/')[:lev])] = 1
+        for lj in sorted(dirs.keys()):
+            print lj
+            if lj==path and path in s.data and isinstance(s.data[path],dict):
+                for ikey in sorted(s.data[path].keys()):
+                    print '-->',ikey
     def add(s,path,addition):
         """ locking write """
         with FileLock(s.fname):
-            if os.path.exists(s.fname):
+            if os.path.isfile(s.fname):
                 f = open(s.fname,'r')
                 s.data = pickle.load(f)
                 f.close()
+            # update the provenance
             if path not in s.data:
-                s.data[path]={}
+                s.data[path] = {}
             s.data[path].update(addition)
+            # save via pickle
             f = open(s.fname,'w')
             pickle.dump(s.data,f)
             f.close()

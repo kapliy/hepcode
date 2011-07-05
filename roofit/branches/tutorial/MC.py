@@ -10,7 +10,7 @@ def ScaleToLumi(h,name,lumi,qcdscale,nevts=None):
         nevents = nevts if nevts else mrun.nevents
         sample = mrun.sample
         if sample not in seen_samples:
-            print 'MC %s: \t xsec=%.1f nb \t nevts=%d/%d'%(sample,xsec,nevents,mrun.nevents)
+            print 'MC %s: \t xsec=%.1f (%.1f*%.1f) nb \t nevts=%d/%d'%(sample,xsec,mrun.xsec,mrun.filteff,nevents,mrun.nevents)
             seen_samples.append(sample)
         h.Sumw2()
         h.Scale(1.0/nevents*lumi*xsec)
@@ -109,54 +109,40 @@ class MC09_samples:
 
 mc09 = MC09_samples()
 
-if False: # from Peter
-    mc09.append(MCR(106044,'mc_wmunu','*',10.461,1.000000,6993798))
-    mc09.append(MCR(106022,'mc_wtaunu','*',8916.33*1.17/1000,0.87867,999874))
-    mc09.append(MCR(106047,'mc_zmumu','*',851.011*1.15/1000,1.000000,4998410))
-    mc09.append(MCR(106052,'mc_ztautau','*',856.967*1.15/1000,1.000000,1998598))
-    mc09.append(MCR(105861,'mc_ttbar','*',0.1646,5.4258E-01,199838))
-    # these are incorrect:
-    mc09.append(MCR(113204,'mc_J0','*',9.6139E+06/1000,1.0,500000))
-    mc09.append(MCR(113205,'mc_J1','*',7.4366E+05/1000,1.0,500000))
-    mc09.append(MCR(113206,'mc_J2','*',4.4307E+04/1000,1.0,500000))
-    mc09.append(MCR(113207,'mc_J3','*',2.3576E+03/1000,1.0,500000))
-    mc09.append(MCR(113208,'mc_J4','*',9.4236E+01/1000,1.0,500000))
-    mc09.append(MCR(113209,'mc_J5','*',2.5813E+00/1000,1.0,500000))
-    mc09.append(MCR(113210,'mc_J6','*',3.9439E-02/1000,1.0,500000))
-    #from here: http://cdsweb.cern.ch/record/1282370/files/ATL-CAL-PROC-2010-001.pdf?version=3
-    mc09.append(MCR(108405,'mc_bbmu15x','*',7.39E+04/1000,1.0,500000)) 
-    mc09.append(MCR(106059,'mc_ccmu15x','*',2.84E+04/1000,1.0,500000))
+#from http://cdsweb.cern.ch/record/1282370/files/ATL-CAL-PROC-2010-001.pdf?version=3
+#from http://cdsweb.cern.ch/record/1298803/files/ATL-COM-PHYS-2010-836.pdf
 
-if True: # before peter update
-    mc09.append(MCR(106044,'mc_wmunu','*',8894.06*1.17/1000,1.000000,6993798))
-    mc09.append(MCR(106022,'mc_wtaunu','*',8916.33*1.17/1000,0.87867,999874))
-    mc09.append(MCR(106047,'mc_zmumu','*',851.011*1.15/1000,1.000000,4998410))
-    mc09.append(MCR(106052,'mc_ztautau','*',856.967*1.15/1000,1.000000,1998598))
-    mc09.append(MCR(105861,'mc_ttbar','*',1.4580E-1,0.54301,199838))
-    # these are incorrect:
-    mc09.append(MCR(109276,'mc_J0','*',9752970.000000,0.000079,500000))
-    mc09.append(MCR(109277,'mc_J1','*',673020.000000,0.001233,500000))
-    mc09.append(MCR(109278,'mc_J2','*',41194.700000,0.005443,500000))
-    mc09.append(MCR(109279,'mc_J3','*',2193.250000,0.012949,500000))
-    mc09.append(MCR(109280,'mc_J4','*',87.848700,0.022156,500000))
-    mc09.append(MCR(109281,'mc_J5','*',2.328560,0.029753,500000))
-    mc09.append(MCR(108405,'mc_bbmu15x','*',7.39E+04/1000,1.0,500000)) 
-    mc09.append(MCR(106059,'mc_ccmu15x','*',2.84E+04/1000,1.0,500000))
+mc09.append(MCR(106044,'mc_wmunu','*',8894.06*1.17/1000,1.000000,6993798))
+mc09.append(MCR(106022,'mc_wtaunu','*',8916.33*1.17*0.35/1000,0.87867,999874)) #actual xs for this is 8.916E3*0.35 (tau is forced to decay into e/mu)
+mc09.append(MCR(106047,'mc_zmumu','*',851.011*1.15/1000,1.000000,4998410))
+mc09.append(MCR(106052,'mc_ztautau','*',856.967*1.15/1000,1.000000,1998598))
+mc09.append(MCR(105861,'mc_ttbar','*',1.4580E-1,0.54301,199838))  # NOTE: this is not the sample used by others
+# these are likely incorrect:
+mc09.append(MCR(109276,'mc_J0','*',9752970.000000,0.000079,500000))
+mc09.append(MCR(109277,'mc_J1','*',673020.000000,0.001233,500000))
+mc09.append(MCR(109278,'mc_J2','*',41194.700000,0.005443,500000))
+mc09.append(MCR(109279,'mc_J3','*',2193.250000,0.012949,500000))
+mc09.append(MCR(109280,'mc_J4','*',87.848700,0.022156,500000))
+mc09.append(MCR(109281,'mc_J5','*',2.328560,0.029753,500000))
+# approximate (from peter):
+mc09.append(MCR(108405,'mc_bbmu15x','*',7.39E+04/1000,1.0,500000)) 
+mc09.append(MCR(106059,'mc_ccmu15x','*',2.84E+04/1000,1.0,500000))
 
-# MC@NLO samples
+# MC@NLO samples (must be wrong)
 mc09.append(MCR(106083,'mc_wminmunu','*',3.9607,1.000000,6993798))
 mc09.append(MCR(106084,'mc_wplusmunu','*',5.8414,1.000000,6993798))
 
 # W/Z + jets samples:
-# http://cdsweb.cern.ch/record/1298803/files/ATL-COM-PHYS-2010-836.pdf
-mc09.append(MCR(105200,'mc_jimmy_ttbar','*',80.201/1000,1.11,500000))
+# https://svnweb.cern.ch/trac/atlasgrp/browser/Physics/StandardModel/ElectroWeak/Analyses/Summer2011/Common/mc10b_p574_info.txt
+#ttbar
+mc09.append(MCR(105200,'mc_jimmy_ttbar','*',0.16457,0.5562,500000))
 #wmunu
-mc09.append(MCR(107690,'mc_jimmy_wmunu_np0','*',6935.4/1000,1.22,500000))
-mc09.append(MCR(107691,'mc_jimmy_wmunu_np1','*',1281.2/1000,1.22,500000))
-mc09.append(MCR(107692,'mc_jimmy_wmunu_np2','*',375.3/1000,1.22,500000))
-mc09.append(MCR(107693,'mc_jimmy_wmunu_np3','*',101.1/1000,1.22,500000))
-mc09.append(MCR(107694,'mc_jimmy_wmunu_np4','*',25.7/1000,1.22,500000))
-mc09.append(MCR(107695,'mc_jimmy_wmunu_np5','*',7.0/1000,1.22,500000))
+mc09.append(MCR(107690,'mc_jimmy_wmunu_np0','*',6.8711E+3/1000,1.21,500000))
+mc09.append(MCR(107691,'mc_jimmy_wmunu_np1','*',1.2947E+3/1000,1.21,500000))
+mc09.append(MCR(107692,'mc_jimmy_wmunu_np2','*',3.7608E+2/1000,1.21,500000))
+mc09.append(MCR(107693,'mc_jimmy_wmunu_np3','*',1.0072E+2/1000,1.21,500000))
+mc09.append(MCR(107694,'mc_jimmy_wmunu_np4','*',2.5993E+1/1000,1.21,500000))
+mc09.append(MCR(107695,'mc_jimmy_wmunu_np5','*',7.1300E+0/1000,1.21,500000))
 #wtaunu
 mc09.append(MCR(107700,'mc_jimmy_wtaunu_np0','*',6835.8/1000,1.22,500000))
 mc09.append(MCR(107701,'mc_jimmy_wtaunu_np1','*',1276.8/1000,1.22,500000))
@@ -165,12 +151,12 @@ mc09.append(MCR(107703,'mc_jimmy_wtaunu_np3','*',100.8/1000,1.22,500000))
 mc09.append(MCR(107704,'mc_jimmy_wtaunu_np4','*',25.7/1000,1.22,500000))
 mc09.append(MCR(107705,'mc_jimmy_wtaunu_np5','*',7.0/1000,1.22,500000))
 #zmumu
-mc09.append(MCR(107660,'mc_jimmy_zmumu_np0','*',657.7/1000,1.22,500000))
-mc09.append(MCR(107661,'mc_jimmy_zmumu_np1','*',132.8/1000,1.22,500000))
-mc09.append(MCR(107662,'mc_jimmy_zmumu_np2','*',39.6/1000,1.22,500000))
-mc09.append(MCR(107663,'mc_jimmy_zmumu_np3','*',11.1/1000,1.22,500000))
-mc09.append(MCR(107664,'mc_jimmy_zmumu_np4','*',2.8/1000,1.22,500000))
-mc09.append(MCR(107665,'mc_jimmy_zmumu_np5','*',0.8/1000,1.22,500000))
+mc09.append(MCR(107660,'mc_jimmy_zmumu_np0','*',663.79/1000,1.26,500000))
+mc09.append(MCR(107661,'mc_jimmy_zmumu_np1','*',132.95/1000,1.26,500000))
+mc09.append(MCR(107662,'mc_jimmy_zmumu_np2','*',40.375/1000,1.26,500000))
+mc09.append(MCR(107663,'mc_jimmy_zmumu_np3','*',11.161/1000,1.26,500000))
+mc09.append(MCR(107664,'mc_jimmy_zmumu_np4','*',2.8987/1000,1.26,500000))
+mc09.append(MCR(107665,'mc_jimmy_zmumu_np5','*',0.75662/1000,1.26,500000))
 #ztautau
 mc09.append(MCR(107670,'mc_jimmy_ztautau_np0','*',657.4/1000,1.22,500000))
 mc09.append(MCR(107671,'mc_jimmy_ztautau_np1','*',133.0/1000,1.22,500000))
@@ -193,7 +179,6 @@ mc09.append(MCR(107108,'mc_jimmy_zz_np0','*',0.494/1000,1.21,500000))
 mc09.append(MCR(107109,'mc_jimmy_zz_np1','*',0.225/1000,1.21,500000))
 mc09.append(MCR(107110,'mc_jimmy_zz_np2','*',0.088/1000,1.21,500000))
 mc09.append(MCR(107111,'mc_jimmy_zz_np3','*',0.028/1000,1.21,500000))
-
 
 if False:
     print 'Registered',mc09.nruns(),'runs:'

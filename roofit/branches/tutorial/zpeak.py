@@ -3,15 +3,7 @@
 
 """
 mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/ntuple
-mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/BB/graph_Z_m_eta
-mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/BB/z_m_fine
-
 data_data.root/dg/dg/st_z_final/ntuple
-data_data.root/dg/dg/st_z_final/BB/graph_Z_m_eta
-data_data.root/dg/dg/st_z_final/BB/z_m_fine
-
-mc_zmumu_mc_zmumu.root/dg/dg/truth/st_truth_reco_z/BB/graph_Z_m_eta
-mc_zmumu_mc_zmumu.root/dg/dg/truth/st_truth_reco_z/BB/z_m_fine
 """
 
 try:
@@ -20,11 +12,12 @@ try:
 except ImportError:
     pass
 
-import sys,re,array,math
+import sys,re,array,math,glob
 from math import sqrt
 import SimpleProgressBar
 from load_data import *
-from fit_defaults import *
+from antondb import *
+#from fit_defaults import *
 
 def func_SCALE(xx,par):
     return par*xx
@@ -32,21 +25,33 @@ def func_SCALE(xx,par):
 from optparse import OptionParser
 parser = OptionParser()
 # data sources
-parser.add_option("--root",dest="root",
-                  type="string", default='root_all.root',
-                  help="Input ROOT file with all histograms")
+parser.add_option("--rootdata",dest="rootdata",
+                  type="string", default='ROOT/root_all_0626_newiso_noscale_1fb_cmb/data_period*/root_data_period*.root',
+                  help="Input ROOT file (primary)")
+parser.add_option("--rootmc",dest="rootmc",
+                  type="string", default='', #ROOT/root_all_0626_newiso_noscale_1fb_cmb/mc_zmumu/root_*.root',
+                  help="Input ROOT file (secondary) - for data/MC zmass mode")
+parser.add_option("--tt",dest="tt",
+                  type="string", default='cmb',
+                  help="Type of muons: {cmb,id,exms}")
+parser.add_option("--data",dest="data",
+                  type="string", default='dg/st_z_final/ntuple',
+                  help="TGraph containing data histograms")
 parser.add_option("--region",dest="region",
                   type="string", default='BB',
                   help="Where each leg of a Z must fall")
-parser.add_option("--data",dest="data",
-                  type="string", default='data_data.root/dg/dg/st_z_final/ntuple',
-                  help="TGraph or TH1F containing reconstructed z mass")
 parser.add_option("--ndata",dest="ndata",
                   type="int", default=1000000,
                   help="Number of unbinned data points to load")
+parser.add_option("--nmc",dest="nmc",
+                  type="int", default=100000,
+                  help="Number of unbinned MC points to load")
 parser.add_option("--nskip",dest="nskip",
                   type="int", default=0,
                   help="Number of data points to skip load")
+parser.add_option("--antondb",dest="antondb",
+                  type="string", default='output',
+                  help="Tag for antondb output container")
 # parameters
 parser.add_option("--auto",dest="auto",
                   type="float", default=None,
@@ -101,27 +106,9 @@ parser.add_option("--ext",dest="ext",
 parser.add_option('-b', "--batch", default=False,
                   action="store_true",dest="batch",
                   help="Enable batch mode (all output directly to filesystem)")
-parser.add_option("--gaus", default=False,
-                  action="store_true",dest="gaus",
-                  help="Fit simple gaussian")
-parser.add_option("--egge", default=False,
-                  action="store_true",dest="egge",
-                  help="Fit egge function - similar to bw, but no x^2 in denominator")
-parser.add_option("--voig", default=False,
-                  action="store_true",dest="voig",
-                  help="Fit voigtian without BG")
-parser.add_option("--voigbg", default=False,
-                  action="store_true",dest="voigbg",
-                  help="Fit voigtian with exponential BG")
-parser.add_option("--bw", default=False,
-                  action="store_true",dest="bw",
-                  help="Fit relativistic breit-wigner")
-parser.add_option("--bwfull", default=False,
-                  action="store_true",dest="bwfull",
-                  help="Fit relativistic breit-wigner (+photon exchange & interference)")
-parser.add_option("--res",dest="res",
-                  type="int", default=1,
-                  help="Resolution model: 0=none, 1=gaus, 2=double-gaus, 3=crystal-ball")
+parser.add_option('-f',"--func",dest="func",
+                  type="string", default='gaus',
+                  help="func = {gaus,egge,voig,voigbg,bw,bwfull}{0=none;1=gaus;2=double-gaus;3=crystal-ball}")
 
 (opts, args) = parser.parse_args()
 mz0 = opts.mz0
@@ -135,8 +122,10 @@ from ROOT import RooGaussModel,RooAddModel,RooRealVar,RooAbsReal,RooRealSumPdf
 from ROOT import kTRUE,kFALSE,kDashed,gStyle,gPad
 from ROOT import TFile,TH1,TH1F,TH1D
 from ROOT import RooFit as RF
-gbg = []; COUT = []
 w = RooWorkspace('w',kTRUE)
+gbg = []; COUT = []
+# antondb containers
+VMAP = {}; OMAP = []
 
 def cmd_none():
     return ['']
@@ -319,6 +308,7 @@ def Fit(data,isExt,fullbins,fitbins,ncpus=4,extras=False,gaus=False):
     RF.Hesse(kTRUE)
     r = model.fitTo(data,RF.PrintLevel(1),RF.Extended(isExt),RF.NumCPU(ncpus),RF.Save(),RF.Range('it1'))
     model.plotOn(frame,RF.Name('mit1'),RF.Range('it1'),RF.NormRange('it1'))
+    res1st = []
     if gaus:
         nsc = 1.0  #1.25
         mean=w.var('m').getVal()
@@ -326,6 +316,7 @@ def Fit(data,isExt,fullbins,fitbins,ncpus=4,extras=False,gaus=False):
         xtra = 'mz(1st) = %.3f +/- %.3f'%(w.var('m').getVal(),w.var('m').getError())
         ndf = r.floatParsFinal().getSize()
         chi2ndf = frame.chiSquare(ndf)
+        res1st += [mean,sigma,chi2ndf,ndf]
         print 'SECOND ITERATION: mean =',mean,'sigma =',sigma,'chi2dof =',chi2ndf
         x.setRange('it2',mean-sigma*nsc,mean+sigma*nsc)
         r = model.fitTo(data,RF.LineColor(ROOT.kRed),RF.PrintLevel(1),RF.Extended(isExt),RF.NumCPU(ncpus),RF.Save(),RF.Range('it2'))
@@ -338,14 +329,12 @@ def Fit(data,isExt,fullbins,fitbins,ncpus=4,extras=False,gaus=False):
     if extras:
         model.plotOn(frame,RF.VisualizeError(r))
         model.paramOn(frame,data)
-    return (r,frame,chi2ndf,ndf,xtra)
+    return (r,frame,chi2ndf,ndf,xtra,res1st)
 
-def load_unbinned(hz,name,xmin,xmax,scale=1.0):
+def load_unbinned(hz,name,xmin,xmax,ndata,scale=1.0):
     """ Load TGraph from a file. Note that we manually drop the points outside [xmin,xmax] range """
-    if hz.ClassName() == 'TGraph':
-        N,v1 = graph_to_array1(hz,opts.ndata)
-    elif hz.ClassName() == 'TNtuple':
-        N,v1 = ntuple_to_array1(hz,name,xmin,xmax,opts.ndata)
+    if hz.ClassName() in ('TNtuple','TTree','TChain'):
+        N,v1 = ntuple_to_array1(hz,name,xmin,xmax,ndata)
     else:
         print 'Problem loading class',hz.ClassName()
         sys.exit(0)
@@ -353,7 +342,7 @@ def load_unbinned(hz,name,xmin,xmax,scale=1.0):
     w.factory('x[%s,%s]'%(xmin,xmax))
     ds1 = RooDataSet('ds1','ds1',RooArgSet(w.var('x')))
     ds2 = RooDataSet('ds2','ds2',RooArgSet(w.var('x')))
-    nmax = min(N,opts.ndata); nmaxp10 = nmax if nmax>10 else 10
+    nmax = min(N,ndata); nmaxp10 = nmax if nmax>10 else 10
     bar = SimpleProgressBar.SimpleProgressBar(10,nmax)
     x = w.var('x')
     nf=0
@@ -366,8 +355,8 @@ def load_unbinned(hz,name,xmin,xmax,scale=1.0):
             ds1.add(RooArgSet(x))
             nf+=1
     print 'Final count of unbinned data:',nf
-    getattr(w,'import')(ds1,RF.Rename('ds1'))
-    getattr(w,'import')(ds2,RF.Rename('ds2'))
+    #getattr(w,'import')(ds1,RF.Rename('ds1'))
+    #getattr(w,'import')(ds2,RF.Rename('ds2'))
     return ds1,ds2
 
 def load_histo(hz,xmin,xmax,auto=None):
@@ -384,77 +373,119 @@ def load_histo(hz,xmin,xmax,auto=None):
 
 # getting data
 if True:
-    # load the data
-    f = TFile(opts.root,'r')
-    hz = f.Get(opts.data)
-    assert hz, 'Error loading data object %s from file %s'%(opts.data,opts.root)
-    cname = hz.ClassName()
+    ldata = opts.data if opts.tt=='cmb' else opts.data + '_' + opts.tt
+    print 'Ntuple path:',ldata
+    # load data
+    hdata = ROOT.TChain(ldata)
+    for fname in glob.glob(opts.rootdata):
+        print 'Adding to TChain:',fname
+        nadd = hdata.Add(fname)
+        assert nadd>0,'Failed to add file %s'%fname
+    print 'Loaded data trees with %d entries'%hdata.GetEntries()
+    assert hdata.GetEntries()>0, 'Error loading data object %s from file %s'%(ldata,opts.rootdata)
+    cname = hdata.ClassName()
     if cname in ('TGraph','TNtuple','TTree','TChain'):
-        data,crap = load_unbinned(hz,opts.region,opts.min,opts.max,opts.scale)
-    elif re.search('TH',cname):
-        hz.SetDirectory(0)
-        data = load_histo(hz,opts.min,opts.max,opts.auto)
-    f.Close()
+        data,crap = load_unbinned(hdata,opts.region,opts.min,opts.max,opts.nmc,opts.scale)
+    # load MC
+    mc = None
+    if opts.rootmc:
+        hmc = ROOT.TChain(ldata)
+        for fname in glob.glob(opts.rootmc):
+            print 'Adding to TChain:',fname
+            nadd = hmc.Add(fname)
+            assert nadd>0,'Failed to add file %s'%fname
+        print 'Loaded data trees with %d entries'%hmc.GetEntries()
+        assert hmc.GetEntries()>0, 'Error loading data object %s from file %s'%(ldata,opts.rootmc)
+        cname = hmc.ClassName()
+        if cname in ('TGraph','TNtuple','TTree','TChain'):
+            mc,crap = load_unbinned(hmc,opts.region,opts.min,opts.max,opts.ndata,opts.scale)
     # choose fit shape
-    if opts.gaus:
+    func,res='gaus',0
+    if opts.func[-1].isdigit():
+        func = opts.func[:-1]
+        res = int(opts.func[-1])
+    else:
+        func = opts.func
+    if func=='gaus':
         model,isExt = make_gaus(opts.min,opts.max)
-    elif opts.bw:
-        model,isExt = make_bw(opts.min,opts.max,opts.res)
-    elif opts.egge:
-        model,isExt = make_egge(opts.min,opts.max,opts.res)
-    elif opts.bwfull:
-        model,isExt = make_bwfull(opts.min,opts.max,opts.res)
-    elif opts.voig:
+    elif func=='bw':
+        model,isExt = make_bw(opts.min,opts.max,res)
+    elif func=='egge':
+        model,isExt = make_egge(opts.min,opts.max,res)
+    elif func=='bwfull':
+        model,isExt = make_bwfull(opts.min,opts.max,res)
+    elif func=='voig':
         model,isExt = make_voig(opts.min,opts.max)
-    elif opts.voigbg:
+    elif func=='voigbg':
         model,isExt = make_voigbg(opts.min,opts.max)
     else:
-        print 'Need at least one shape flag. Exiting...'
+        print 'Wrong --func (%s). Exiting...'%opts.func
         sys.exit(0)
-    # set some default event fractions
-    if w.var('nsig') and w.var('nbg'):
-        w.var('nsig').setVal(data.sumEntries())
-        w.var('nbg').setVal(0)
-    if w.var('C'):
-        w.var('C').setVal(data.sumEntries())
-    # Define fit range. Constrained to the core if using simple Gaussian
-    fullbins = (opts.min,opts.max)
-    fitbins = fullbins
-    if opts.gaus:
-        dGeV = opts.auto if opts.auto else 6.0  # 4.0
-        peak = data.mean(w.var('x'))
-        print 'OLD FIT RANGE:',opts.min,opts.max,'; MEAN:',peak
-        fitbins = [peak - dGeV, peak + dGeV]
-        print 'NEW FIT RANGE:',fitbins[0],fitbins[1]
-    # perform the fit
-    r,frame,chi2ndf,ndf,xtra = Fit(data,isExt,fullbins,fitbins,ncpus=opts.ncpus,gaus=opts.gaus)
-    frame.SetTitle(opts.tag)
-    # make the plots
-    c = ROOT.TCanvas('c','c'); c.cd()
-    frame.Draw()
-    # print fitted value on canvas
-    if w.var('m'):
-        m = w.var('m')
-        p = ROOT.TPaveText(.7,.75 , (.7+.2),(.75+.15) ,"NDC")
-        p.SetTextAlign(11)
-        p.SetFillColor(0)
-        p.AddText('mz = %.3f +/- %.3f'%(m.getVal(),m.getError()))
-        if opts.gaus:
-            p.AddText('sigma = %.3f +/- %.3f'%(w.var('s').getVal(),w.var('s').getError()))
-        if opts.egge:
-            p.AddText('gamma = %.3f +/- %.3f'%(w.var('g').getVal(),w.var('g').getError()))
-        if xtra:
-            p.AddText(xtra)
-        p.AddText('chi2/dof = %.1f. N=%d'%(chi2ndf,data.sumEntries()))
-        p.Draw()
-        gbg.append(p)
-    SaveAs(c,'%s_fit'%opts.tag,opts.ext)
-    PrintVariables()
-    mz=w.var('m').getVal()
-    emz=w.var('m').getError()
-    COUT.append( 'mz0 = %.3f'%(mz0) )
-    COUT.append( 'mz = %.3f +/- %.3f'%(mz,emz) )
-    COUT.append( 'CHI2/NDF = %.2f, NDF = %d'%(chi2ndf,ndf) )
+    # loop over mc and data
+    for dtype in ('mc_','data_'):
+        dfit = mc if dtype=='mc_' else data
+        if not dfit: continue
+        # set some default event fractions
+        # the other parameters are computed for mc and used as default in data fits
+        if w.var('nsig') and w.var('nbg'):
+            w.var('nsig').setVal(dfit.sumEntries())
+            w.var('nbg').setVal(0)
+        if w.var('C'):
+            w.var('C').setVal(dfit.sumEntries())
+        # Define fit range. Constrained to the core if using simple Gaussian
+        fullbins = (opts.min,opts.max)
+        fitbins = fullbins
+        if func=='gaus':
+            dGeV = opts.auto if opts.auto else 6.0  # 4.0
+            peak = dfit.mean(w.var('x'))
+            print 'OLD FIT RANGE:',opts.min,opts.max,'; MEAN:',peak
+            fitbins = [peak - dGeV, peak + dGeV]
+            print 'NEW FIT RANGE:',fitbins[0],fitbins[1]
+        # perform the fit
+        r,frame,chi2ndf,ndf,xtra,res1st = Fit(dfit,isExt,fullbins,fitbins,ncpus=opts.ncpus,gaus=(func=='gaus'))
+        frame.SetTitle(opts.tag)
+        # make the plots
+        c = ROOT.TCanvas('c%szfit'%dtype,'c%szfit'%dtype); c.cd()
+        frame.Draw()
+        # print fitted value on canvas
+        if w.var('m'):
+            m = w.var('m')
+            p = ROOT.TPaveText(.7,.75 , (.7+.2),(.75+.15) ,"NDC")
+            p.SetTextAlign(11)
+            p.SetFillColor(0)
+            p.AddText('mz = %.3f +/- %.3f'%(m.getVal(),m.getError()))
+            if func=='gaus':
+                p.AddText('sigma = %.3f +/- %.3f'%(w.var('s').getVal(),w.var('s').getError()))
+            if func=='egge':
+                p.AddText('gamma = %.3f +/- %.3f'%(w.var('g').getVal(),w.var('g').getError()))
+            if xtra:
+                p.AddText(xtra)
+            p.AddText('chi2/dof = %.1f. N=%d'%(chi2ndf,dfit.sumEntries()))
+            p.Draw()
+            gbg.append(p)
+        gbg.append(frame)
+        OMAP.append(c)
+        if False:
+            SaveAs(c,'%s_fit'%opts.tag,opts.ext)
+        PrintVariables()
+        mz=w.var('m').getVal()
+        emz=w.var('m').getError()
+        VMAP['%sN'%dtype]=dfit.numEntries()
+        VMAP['%smz0'%dtype]=mz0
+        VMAP['%smz'%dtype]=mz
+        VMAP['%semz'%dtype]=emz
+        VMAP['%schindf'%dtype]=chi2ndf
+        VMAP['%sndf'%dtype]=ndf
+        VMAP['%sfullbins'%dtype]=fullbins
+        VMAP['%sfitbins'%dtype]=fitbins
+        if res1st:
+            VMAP['%s1stmz'%dtype]=res1st[0]
+            VMAP['%s1stemz'%dtype]=res1st[1]
+            VMAP['%s1stchindf'%dtype]=res1st[2]
+            VMAP['%s1stndf'%dtype]=res1st[3]
+        COUT.append( '%s mz0 = %.3f'%(dtype,mz0) )
+        COUT.append( '%s mz = %.3f +/- %.3f'%(dtype,mz,emz) )
+        COUT.append( '%s CHI2/NDF = %.2f, NDF = %d'%(dtype,chi2ndf,ndf) )
     # Solve for scales given a ratio factor and one detector region
     if opts.R and opts.eR:
         R,eR = opts.R,opts.eR
@@ -482,8 +513,17 @@ if True:
 
 # save to text file
 if len(COUT)>0:
-    fout = open('%s_results.rtxt'%opts.tag,'w')
+    VMAP['COUT']=[]
     for l in COUT:
         print l
-        print >>fout,l
-    fout.close()
+        VMAP['COUT'].append(l)
+
+if len(VMAP)>0 or len(OMAP)>0:
+    a = antondb(opts.antondb)
+    sample_path = '/default/cmb/BB/Z/bw3'
+    path = os.path.join('/',opts.tag,opts.tt,opts.region,'Z',opts.func)
+    print VMAP
+    if len(VMAP)>0:
+        a.add(path,VMAP)
+    if len(OMAP)>0:
+        a.add_root(path,OMAP)

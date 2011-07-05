@@ -124,7 +124,7 @@ def ntuple_to_4vectors(t,name,xmin,xmax,maxdata=1000000):
         nl+=1
         if nl>=maxdata: break
     return len(res),res
-    
+
 def ntuple_to_array1(t,name,xmin,xmax,maxdata=1000000):
     """ Load TNtuple from a file: only load mZ """
     ep_name,en_name = 'lP_eta','lN_eta'
