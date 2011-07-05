@@ -7,9 +7,10 @@ except ImportError:
     pass
 
 # study muon momentum scale using z->mumu muon spectra
-import sys,array
+import sys,array,glob
 import SimpleProgressBar
 from load_data import *
+from antondb import *
 
 def func_SCALE_old(xx,par):
     return par*1.0/xx
@@ -22,10 +23,16 @@ from optparse import OptionParser
 parser = OptionParser()
 # data sources
 parser.add_option("--root",dest="root",
-                  type="string", default='root_all.root',
-                  help="Input ROOT file with all histograms")
+                  type="string", default='ROOT/root_all_0626_newiso_noscale_1fb_cmb/data_period*/root_data_period*.root',
+                  help="Input ROOT file (primary)")
+parser.add_option("--root2",dest="root2",
+                  type="string", default='', #default='ROOT/root_all_0621_newiso_cmb/mc_zmumu/root_*.root',
+                  help="Input ROOT file (secondary) - for data/MC zmass mode")
+parser.add_option("--tt",dest="tt",
+                  type="string", default='cmb',
+                  help="Type of muons: {cmb,id,exms}")
 parser.add_option("--data",dest="data",
-                  type="string", default='data_data.root/dg/dg/st_z_final/BB/graph_lpt_P_N',
+                  type="string", default='dg/st_z_final/ntuple',
                   help="TGraph containing data histograms")
 parser.add_option("--region",dest="region",
                   type="string", default='BB',
@@ -51,6 +58,9 @@ parser.add_option("--rookeysout",dest="rookeysout",
 parser.add_option('-t',"--tag",dest="tag",
                   type="string", default='plot',
                   help="A tag to append to all output plots")
+parser.add_option("--antondb",dest="antondb",
+                  type="string", default='output',
+                  help="Tag for antondb output container")
 parser.add_option("--ext",dest="ext",
                   type="string", default='png',
                   help="Extension for all output")
@@ -83,7 +93,7 @@ parser.add_option("--nbins",dest="nbins",
                   type="int", default=10,
                   help="Binning for chi2 calculation")
 parser.add_option("--nscan",dest="nscan",
-                  type="int", default=20,
+                  type="int", default=200,
                   help="Number of parameter values to scan")
 parser.add_option("--kluit", default=False,
                   action="store_true",dest="kluit",
@@ -118,6 +128,7 @@ parser.add_option("--savegrid", default=False,
                   help="Plot the grid of 9 scanned parameter values")
 
 (opts, args) = parser.parse_args()
+dmc = opts.root2
 
 import ROOT
 ROOT.gROOT.SetBatch(opts.batch)
@@ -129,7 +140,9 @@ from ROOT import kTRUE,kFALSE,kDashed,gStyle,gPad
 from ROOT import TFile,TH1,TH1F,TH1D
 from ROOT import RooFit as RF
 w = RooWorkspace('w',kTRUE); w.model = None
-gbg = []; COUT = []
+gbg = []; COUT = [];
+# antondb containers
+VMAP = {}; OMAP = []
 
 # Z mass cannot float if we fit for scale
 mZ = '91.1876'
@@ -154,24 +167,39 @@ if True:
     #################################################
     # data datasets
     #################################################
-    f = TFile(opts.root,'r')
-    hz = f.Get(opts.data)
-    assert hz, 'Error loading data object %s from file %s'%(opts.data,opts.root)
-    if hz.ClassName() == 'TGraph':
-        N,pos,neg = graph_to_array2(hz,opts.region)
-    elif hz.ClassName() == 'TNtuple':
-        if opts.debug:
-            Np,Nn,N,pos,neg = ntuple_to_array_debug(hz,opts.region,opts.zmin,opts.zmax,opts.ndata,opts.nskip)
-        elif opts.kluit:
+    data = opts.data if opts.tt=='cmb' else opts.data + '_' + opts.tt
+    print 'Ntuple path:',data
+    if dmc:  #data-mc mode: comparing mZ spectrum in data and MC
+        hdata = ROOT.TChain(data)
+        for fname in glob.glob(opts.root):
+            print 'Adding to TChain:',fname
+            nadd = hdata.Add(fname)
+            assert nadd>0,'Failed to add file %s'%fname
+        print 'Loaded data trees with %d entries'%hdata.GetEntries()
+        assert hdata.GetEntries()>0, 'Error loading data object %s from file %s'%(data,opts.root)
+        hmc = ROOT.TChain(data)
+        for fname in glob.glob(opts.root2):
+            hmc.Add(fname)
+        print 'Loaded MC trees with %d entries'%hmc.GetEntries()
+        assert hmc.GetEntries()>0, 'Error loading data object %s from file %s'%(data,opts.root2)
+        Np,pos = ntuple_to_array1(hmc,opts.region,opts.zmin,opts.zmax,opts.ndata)
+        Nn,neg = ntuple_to_array1(hdata,opts.region,opts.zmin,opts.zmax,opts.ndata)
+        N=min(Np,Nn)
+        assert N>0,'Something failed: NPOS=%d NNEG=%d'%(Np,Nn)
+    else:    #regular mode: comparing 1/pt for mu+ and mu-
+        hz = ROOT.TChain(data)
+        for fname in glob.glob(opts.root):
+            print 'Adding to TChain:',fname
+            nadd = hz.Add(fname)
+            assert nadd>0,'Failed to add file %s'%fname
+        print 'Loaded trees with %d entries'%hz.GetEntries()
+        assert hz.GetEntries()>0, 'Error loading data object %s from file %s'%(data,opts.root)
+        if opts.kluit:
             Np,Nn,N,pos,neg = ntuple_to_array_kluit(hz,opts.region,opts.zmin,opts.zmax,opts.ndata,opts.nskip)
         elif opts.akluit:
             Np,Nn,N,pos,neg = ntuple_to_array_akluit(hz,opts.region,opts.zmin,opts.zmax,opts.ndata,opts.nskip)
         else:
             Np,Nn,N,pos,neg = ntuple_to_array_etalim(hz,opts.region,opts.zmin,opts.zmax,opts.ndata,opts.nskip)
-    else:
-        print 'Problem loading class',hz.ClassName()
-        sys.exit(0)
-    f.Close()
     avg_pos = sum(pos)/len(pos)
     avg_neg = sum(neg)/len(neg)
     if opts.shift:
@@ -180,17 +208,24 @@ if True:
     avg_scale = avg_pos/avg_neg
     avg_shift = avg_pos - avg_neg
     nmax = min(N,opts.ndata)
+    VMAP['avg']=avg_scale
+    VMAP['nmax']=nmax
+    VMAP['np']=Np
+    VMAP['nn']=Nn
     if nmax == 0:
         print 'Error: no data passed the cuts'
         sys.exit(0)
     nstep = nmax if nmax>10 else 10
     ngroups = int(nmax/opts.npergroup) if opts.npergroup>0 else 0
-    print 'Loaded data object',opts.data,'with',N,'entries','in',ngroups,'groups'
+    print 'Loaded data object',data,'with',N,'entries','in',ngroups,'groups'
     # make data(x) for positive and negative muons
     dataP = RooDataSet('dataP','Zmumu mu+ data',RooArgSet(x))
     dataN = RooDataSet('dataN','Zmumu mu- data',RooArgSet(x))
     datasP = [RooDataSet('datasP%s'%i,'Zmumu mu+ data bin %s'%i,RooArgSet(x)) for i in range(opts.nscan)]
     datasN = [RooDataSet('datasN%s'%i,'Zmumu mu- data bin %s'%i,RooArgSet(x)) for i in range(opts.nscan)]
+    # same as dataP, but limited to 10k events max (otherwise keys generation is too slow)
+    data_model = RooDataSet('data_model','Zmumu mu+ data',RooArgSet(x))
+    ndata_model_max = 10000
     # reserve arrays of ngroups scans
     datasNsp = []
     datasPsp = []
@@ -205,6 +240,8 @@ if True:
     for i in range(0,nmax):
         x.setVal(1.0/pos[i])
         dataP.add(RooArgSet(x))
+        if i<ndata_model_max:
+            data_model.add(RooArgSet(x))
         x.setVal(1.0/neg[i])
         dataN.add(RooArgSet(x))
     # scaled / shifted versions for manual scans
@@ -234,7 +271,6 @@ if True:
     # make truth(x*b)
     w.factory("expr::xf('x*1.0/b',x,b)")
     xf = w.function('xf')
-    data_model = dataP
     models = []
     if opts.rookeys and opts.npergroup==0:
         fkeys = ROOT.TFile.Open(opts.rookeys)
@@ -402,10 +438,11 @@ def fitgraph(h,ks,FITMIN,FITMAX):
 
 # Scan the parameter space and determine best value & error
 def create_scan_graph(model,datasN,nbins,ks,nscan,shift,tag,c2):
+    kss = 'ks' if ks else 'chi'
     global gbg
     c1 = None
     if not ks:
-        c1 = ROOT.TCanvas(rand_name(),rand_name(),1024,768)
+        c1 = ROOT.TCanvas(kss+'scan',kss+'scan',1024,768)
         c1.Divide(3,3)
     zplot = 1
     chi2,frames = runscan(model,dataP,datasN,ks,nbins=nbins)
@@ -457,17 +494,25 @@ def create_scan_graph(model,datasN,nbins,ks,nscan,shift,tag,c2):
     c2.Update()
     gbg.append(p); gbg.append(c2)
     COUT.append('%d peak = %.10f +/- %.10f ; chi2 = %.10f ; fitted_mean = %.10f ; avg_scale = %.10f ; avg_shift = %.10f ; nmax = %d ; npos = %d ; nneg = %d'%(ks,xmin,err,chimin,fitted_xmin,avg_scale,avg_shift,nmax,Np,Nn))
+    # save results to antondb
+    VMAP['%sp'%kss]=xmin
+    VMAP['%sf'%kss]=fitted_xmin
+    VMAP['%se'%kss]=err
+    VMAP['%sval'%kss]=chimin
     return c1,fitted_xmin
 
 if opts.scan:
     print 'Entering parameter scan studies'
-    c = ROOT.TCanvas(rand_name(),rand_name(),600,800); c.Divide(1,2)
-    crap, fitted_xmin_ks  = create_scan_graph(model,datasN,opts.nbins,True,opts.nscan,opts.shift,opts.tag,c.cd(1))
-    cscan,fitted_xmin_chi = create_scan_graph(model,datasN,opts.nbins,False,opts.nscan,opts.shift,opts.tag,c.cd(2))
+    c = ROOT.TCanvas('fit','fit',600,800); c.Divide(1,2)
+    crap, fitted_xmin_ks  = create_scan_graph(model,datasN,opts.nbins,True,opts.nscan,opts.shift,opts.tag+' '+opts.tt,c.cd(1))
+    cscan,fitted_xmin_chi = create_scan_graph(model,datasN,opts.nbins,False,opts.nscan,opts.shift,opts.tag+' '+opts.tt,c.cd(2))
     c.Update()
-    SaveAs(c,'%s_fit'%opts.tag,opts.ext)
-    if opts.savegrid:
-        SaveAs(cscan,'%s_scan'%opts.tag,opts.ext)
+    OMAP.append(c)
+    OMAP.append(cscan)
+    if False:
+        SaveAs(c,'%s_fit'%opts.tag,opts.ext)
+        if opts.savegrid:
+            SaveAs(cscan,'%s_scan'%opts.tag,opts.ext)
 
 # study statistical stability of distributions in subsamples
 if opts.npergroup>0:
@@ -495,7 +540,7 @@ if opts.npergroup>0:
         ks_fitted.append(fitted_xmin)
         ks_errors.append(err)
     # plot
-    cgroup = ROOT.TCanvas(rand_name(),rand_name(),600,800); cgroup.Divide(1,2)
+    cgroup = ROOT.TCanvas('cgroups','cgroups',600,800); cgroup.Divide(1,2)
     cgroup.cd(1)
     h_chi_mean = ROOT.TGraphErrors(len(chi_means))
     h_chi_mean.SetTitle("Chi2 method: %d subsamples of size %d"%(ngroups,opts.npergroup))
@@ -520,7 +565,9 @@ if opts.npergroup>0:
     h_chi_mean.Draw('A*')
     h_chi_fitted.Draw('*SAMES')
     #h_chi_fitted.Draw('A*SAMES')
-    SaveAs(cgroup,'%s_statcheck'%opts.tag,opts.ext)
+    OMAP.append(cgroup)
+    if False:
+        SaveAs(cgroup,'%s_statcheck'%opts.tag,opts.ext)
     ROOT.gStyle.SetOptFit(oldf);
 
 if opts.varbins:
@@ -533,7 +580,7 @@ if opts.varbins:
         xmin,err,xleft,xright,xtra,lbl_xmin,chimin=fitgraph(h,False,FITMIN,FITMAX)
         means.append(xmin)
         errors.append(err)
-    cvarbins = ROOT.TCanvas(rand_name(),rand_name(),800,600); cvarbins.cd()
+    cvarbins = ROOT.TCanvas('cvarbins','cvarbins',800,600); cvarbins.cd()
     h = ROOT.TGraphErrors(len(bins))
     h.SetTitle("Effect of chi2 binning")
     h.SetMarkerColor(4);
@@ -547,7 +594,9 @@ if opts.varbins:
     h.Fit("pol0")
     h.Draw('A*')
     #ROOT.gPad.SetLogy(ROOT.kTRUE)
-    SaveAs(cvarbins,'%s_varbins'%opts.tag,opts.ext)
+    OMAP.append(cvarbins)    
+    if False:
+        SaveAs(cvarbins,'%s_varbins'%opts.tag,opts.ext)
     ROOT.gStyle.SetOptFit(oldf);
 
 # Plot template shape
@@ -555,10 +604,10 @@ if opts.template:
     tmponly = False  # for making plots
     # plot model for POS and data for POS
     if not tmponly:
-        cmodel = ROOT.TCanvas(rand_name(),rand_name(),600,800)
+        cmodel = ROOT.TCanvas('ctemplate','ctemplate',600,800)
         cmodel.Divide(1,2)
     else:
-        cmodel = ROOT.TCanvas(rand_name(),rand_name(),640,480)
+        cmodel = ROOT.TCanvas('ctemplate','ctemplate',640,480)
     if not opts.ks:
         cmodel.cd(1)
         frame = x.frame()
@@ -591,12 +640,22 @@ if opts.template:
         RooAbsData.plotOn(dataN_ks,frame,RF.LineColor(color),RF.MarkerColor(color),RF.Binning(20),RF.MarkerSize(0.5))
         frame.SetTitle('Green = KS scale (%.2f%%). Yellow = chi scale (%.2f%%)'%(fitted_xmin_ks*100.0,fitted_xmin_chi*100.0))
         frame.Draw()
-    SaveAs(cmodel,'%s_template'%opts.tag,opts.ext)
+    OMAP.append(cmodel)
+    if False:
+        SaveAs(cmodel,'%s_template'%opts.tag,opts.ext)
 
 # save to text file
 if len(COUT)>0:
-    fout = open('%s_results.rtxt'%opts.tag,'w')
+    VMAP['COUT']=[]
     for l in COUT:
         print l
-        print >>fout,l
-    fout.close()
+        VMAP['COUT'].append(l)
+
+if len(VMAP)>0 or len(OMAP)>0:
+    a = antondb(opts.antondb)
+    sample_path = '/default/cmb/BB/R0'
+    path = os.path.join('/',opts.tag,opts.tt,opts.region,'KK' if opts.root2 else 'R0')
+    if len(VMAP)>0:
+        a.add(path,VMAP)
+    if len(OMAP)>0:
+        a.add_root(path,OMAP)

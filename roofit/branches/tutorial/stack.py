@@ -11,7 +11,7 @@ parser.add_option("--type",dest="type",
                   type="int", default=1,
                   help="Type = 2 applies pileup weights")
 parser.add_option("--input",dest="input",
-                  type="string", default='ROOT/root_all_0620_cmb',
+                  type="string", default='ROOT/root_all_0621_newiso_1fb_cmb',
                   help="Path to input root file with all histos")
 parser.add_option("--var",dest="var",
                   type="string", default='l_eta',
@@ -31,7 +31,7 @@ parser.add_option("--lumi",dest="lumi",
                   help="Integrated luminosity for data (in nb^-1)")
 # 0.824 from https://kyoko.web.cern.ch/KYOKO/DiffZ/KyokoYamamoto_DiffZ_20110426.pdf
 parser.add_option("--qcd",dest="qcdscale",
-                  type="string", default='0.45',  #1.6
+                  type="string", default='1.0',
                   help="QCD scale factor")
 parser.add_option("-o", "--output",dest="output",
                   type="string", default="",
@@ -81,7 +81,7 @@ QMAP[ALL] = (2,'ALL','(l_q!=0)','mu+ and mu-')
 # MC stack order
 po = PlotOrder()
 if opts.bgsig!=3:
-    po.Add(name='t#bar{t}',samples='mc_ttbar',color=ROOT.kGreen)
+    po.Add(name='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen)
     po.Add(name='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta)
     po.Add(name='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow)
     po.Add(name='Z#rightarrow#mu#mu',samples='mc_zmumu',color=ROOT.kRed)
@@ -103,7 +103,7 @@ else:
     po.Add(name='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10)
 
 # Determine which data periods to plot
-data = [ 'data_period%s'%s for s in ('B','D','E','F','G1','G2','G3') ]
+data = [ 'data_period%s'%s for s in ('B','D','E','F','G1','G2','G3','G4','G5','G6','H1') ]
 mc = list(xflatten(po.mcg))
 # All histo files that we need to get
 allnames = data + mc
