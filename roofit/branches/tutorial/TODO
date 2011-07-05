@@ -2,7 +2,6 @@ June 29:
 * Investigate RooEggePdf - see if it is indeed compatible with my implementation!
   Test by fitting the same event!
 * Add to template the CDF plot before and after either chi2 or ks
-* Reorganize folders in root file: shapes in one subfolder!
 * IMPORTANT: Write code to convert dg to latex code; also to html (with picture conversion)
 
 Special cases:

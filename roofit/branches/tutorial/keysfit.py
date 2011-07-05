@@ -31,6 +31,9 @@ parser.add_option("--root2",dest="root2",
 parser.add_option("--tt",dest="tt",
                   type="string", default='cmb',
                   help="Type of muons: {cmb,id,exms}")
+parser.add_option("--pre",dest="pre",  #TODO FIXME - opposite-charge requirement in next version of ntuple: lP_q*lN_q<0
+                  type="string", default='lP_pt>20.0 && lN_pt>20.0 && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0 && Z_m>50',
+                  help="Preliminary cuts to select final W candidates")
 parser.add_option("--data",dest="data",
                   type="string", default='dg/st_z_final/ntuple',
                   help="TGraph containing data histograms")
@@ -167,39 +170,38 @@ if True:
     #################################################
     # data datasets
     #################################################
-    data = opts.data if opts.tt=='cmb' else opts.data + '_' + opts.tt
-    print 'Ntuple path:',data
+    print 'Ntuple path:',opts.data
     if dmc:  #data-mc mode: comparing mZ spectrum in data and MC
-        hdata = ROOT.TChain(data)
+        hdata = ROOT.TChain(opts.data)
         for fname in glob.glob(opts.root):
             print 'Adding to TChain:',fname
             nadd = hdata.Add(fname)
             assert nadd>0,'Failed to add file %s'%fname
         print 'Loaded data trees with %d entries'%hdata.GetEntries()
-        assert hdata.GetEntries()>0, 'Error loading data object %s from file %s'%(data,opts.root)
-        hmc = ROOT.TChain(data)
+        assert hdata.GetEntries()>0, 'Error loading data object %s from file %s'%(opts.data,opts.root)
+        hmc = ROOT.TChain(opts.data)
         for fname in glob.glob(opts.root2):
             hmc.Add(fname)
         print 'Loaded MC trees with %d entries'%hmc.GetEntries()
-        assert hmc.GetEntries()>0, 'Error loading data object %s from file %s'%(data,opts.root2)
-        Np,pos = ntuple_to_array1(hmc,opts.region,opts.zmin,opts.zmax,opts.ndata)
-        Nn,neg = ntuple_to_array1(hdata,opts.region,opts.zmin,opts.zmax,opts.ndata)
+        assert hmc.GetEntries()>0, 'Error loading data object %s from file %s'%(opts.data,opts.root2)
+        Np,pos = ntuple_to_array1(hmc,opts.tt,opts.region,opts.zmin,opts.zmax,opts.ndata,pre=opts.pre)
+        Nn,neg = ntuple_to_array1(hdata,opts.tt,opts.region,opts.zmin,opts.zmax,opts.ndata,pre=opts.pre)
         N=min(Np,Nn)
         assert N>0,'Something failed: NPOS=%d NNEG=%d'%(Np,Nn)
     else:    #regular mode: comparing 1/pt for mu+ and mu-
-        hz = ROOT.TChain(data)
+        hz = ROOT.TChain(opts.data)
         for fname in glob.glob(opts.root):
             print 'Adding to TChain:',fname
             nadd = hz.Add(fname)
             assert nadd>0,'Failed to add file %s'%fname
         print 'Loaded trees with %d entries'%hz.GetEntries()
-        assert hz.GetEntries()>0, 'Error loading data object %s from file %s'%(data,opts.root)
+        assert hz.GetEntries()>0, 'Error loading data object %s from file %s'%(opts.data,opts.root)
         if opts.kluit:
-            Np,Nn,N,pos,neg = ntuple_to_array_kluit(hz,opts.region,opts.zmin,opts.zmax,opts.ndata,opts.nskip)
+            Np,Nn,N,pos,neg = ntuple_to_array_kluit(hz,opts.tt,opts.region,opts.zmin,opts.zmax,opts.ndata,opts.nskip,pre=opts.pre)
         elif opts.akluit:
-            Np,Nn,N,pos,neg = ntuple_to_array_akluit(hz,opts.region,opts.zmin,opts.zmax,opts.ndata,opts.nskip)
+            Np,Nn,N,pos,neg = ntuple_to_array_akluit(hz,opts.tt,opts.region,opts.zmin,opts.zmax,opts.ndata,opts.nskip,pre=opts.pre)
         else:
-            Np,Nn,N,pos,neg = ntuple_to_array_etalim(hz,opts.region,opts.zmin,opts.zmax,opts.ndata,opts.nskip)
+            Np,Nn,N,pos,neg = ntuple_to_array_etalim(hz,opts.tt,opts.region,opts.zmin,opts.zmax,opts.ndata,opts.nskip,pre=opts.pre)
     avg_pos = sum(pos)/len(pos)
     avg_neg = sum(neg)/len(neg)
     if opts.shift:
@@ -217,7 +219,7 @@ if True:
         sys.exit(0)
     nstep = nmax if nmax>10 else 10
     ngroups = int(nmax/opts.npergroup) if opts.npergroup>0 else 0
-    print 'Loaded data object',data,'with',N,'entries','in',ngroups,'groups'
+    print 'Loaded data object',opts.data,'with',N,'entries','in',ngroups,'groups'
     # make data(x) for positive and negative muons
     dataP = RooDataSet('dataP','Zmumu mu+ data',RooArgSet(x))
     dataN = RooDataSet('dataN','Zmumu mu- data',RooArgSet(x))

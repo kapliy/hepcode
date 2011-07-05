@@ -4,7 +4,8 @@
 A few modules to load data from TGraphs or TNtuples into python array.array's
 """
 
-import array,math,random,string
+import array,math,random,string,re,sys,copy
+import ROOT
 
 def SaveAs(c,name,ext):
     c.SaveAs('%s.%s'%(name,ext))
@@ -102,13 +103,38 @@ def get_prange(name):
     print 'Phi range for muons:', rp
     return rp
 
-def ntuple_to_4vectors(t,name,xmin,xmax,maxdata=1000000):
+def repl_dic(v,tt):
+    rdic = ["Z_m","Z_pt","lP_pt","lP_eta","lP_phi","lN_pt","lN_eta","lN_phi"]
+    if tt in ('id','exms'):
+        try: # simple string, including &&-separated cuts
+            resc = v.split('&&')
+            out = []
+            for rcut in resc:
+                res = rcut
+                if not re.search('iso',rcut):
+                    for rvar in rdic:
+                        res = re.sub(rvar,'%s_%s'%(rvar,tt),res)
+                out.append(res)
+            return '&&'.join(out)
+        except: # list of objects
+            out = []
+            for rcut in v:
+                if rcut in rdic:
+                    out.append('%s_%s'%(rcut,tt))
+                else:
+                    out.append(rcut)
+            return out
+    return v
+
+def ntuple_to_4vectors(t2,tt,reg,xmin,xmax,maxdata=1000000,pre=None):
     """ Load TNtuple from a file: load two Z->mumu 4vectors """
-    pos_names = ('lP_pt','lP_eta','lP_phi','lP_m')
-    neg_names = ('lN_pt','lN_eta','lN_phi','lN_m')
-    mz_name = 'Z_m'
+    pos_names = repl_dic(['lP_pt','lP_eta','lP_phi','lP_m'],tt)
+    neg_names = repl_dic(['lN_pt','lN_eta','lN_phi','lN_m'],tt)
+    mz_name = repl_dic('Z_m',tt)
+    ROOT.gROOT.cd()
+    t = t2.CopyTree(repl_dic(pre,tt)) if pre else t2
     t.lP_m = t.lN_m = 105.658367/1000.0
-    rp,rn = get_eranges(name)
+    rp,rn = get_eranges(reg)
     N = t.GetEntries()
     print 'Reading tree with',N,'entries'
     res = []
@@ -125,13 +151,15 @@ def ntuple_to_4vectors(t,name,xmin,xmax,maxdata=1000000):
         if nl>=maxdata: break
     return len(res),res
 
-def ntuple_to_array1(t,name,xmin,xmax,maxdata=1000000):
+def ntuple_to_array1(t2,tt,reg,xmin,xmax,maxdata=1000000,pre=None):
     """ Load TNtuple from a file: only load mZ """
-    ep_name,en_name = 'lP_eta','lN_eta'
-    fp_name,fn_name = 'lP_phi','lN_phi'
-    mz_name = 'Z_m'
-    rp,rn = get_eranges(name)
-    rf = get_prange(name)
+    ep_name,en_name = repl_dic(['lP_eta','lN_eta'],tt)
+    fp_name,fn_name = repl_dic(['lP_phi','lN_phi'],tt)
+    mz_name = repl_dic('Z_m',tt)
+    ROOT.gROOT.cd()
+    t = t2.CopyTree(repl_dic(pre,tt)) if pre else t2
+    rp,rn = get_eranges(reg)
+    rf = get_prange(reg)
     N = t.GetEntries()
     print 'Reading tree with',N,'entries'
     res = []
@@ -150,14 +178,16 @@ def ntuple_to_array1(t,name,xmin,xmax,maxdata=1000000):
         if nl>=maxdata: break
     return len(res),array.array('f',res)
 
-def ntuple_to_array_etalim(t,name,xmin,xmax,maxdata=1000000,nskip=0):
+def ntuple_to_array_etalim(t2,tt,reg,xmin,xmax,maxdata=1000000,nskip=0,pre=''):
     """ Load TNtuple from a file; both Z muons in the same eta range, but phi cut is applied on integrated spectra"""
-    ep_name,en_name = 'lP_eta','lN_eta'
-    pp_name,pn_name = 'lP_pt','lN_pt'
-    fp_name,fn_name = 'lP_phi','lN_phi'
-    mz_name = 'Z_m'
-    rp,rn = get_eranges(name)
-    rf = get_prange(name)
+    ep_name,en_name = repl_dic(['lP_eta','lN_eta'],tt)
+    pp_name,pn_name = repl_dic(['lP_pt','lN_pt'],tt)
+    fp_name,fn_name = repl_dic(['lP_phi','lN_phi'],tt)
+    mz_name = repl_dic('Z_m',tt)
+    ROOT.gROOT.cd()
+    t = t2.CopyTree(repl_dic(pre,tt)) if pre else t2
+    rp,rn = get_eranges(reg)
+    rf = get_prange(reg)
     N = t.GetEntries()
     print 'Reading tree with',N,'entries'
     resp = []
@@ -191,14 +221,16 @@ def ntuple_to_array_etalim(t,name,xmin,xmax,maxdata=1000000,nskip=0):
     assert len(resp)==len(resn)
     return Np,Nn,len(resp),array.array('f',resp),array.array('f',resn)
 
-def ntuple_to_array_kluit(t,name,xmin,xmax,maxdata=1000000,nskip=0):
+def ntuple_to_array_kluit(t2,tt,reg,xmin,xmax,maxdata=1000000,nskip=0,pre=''):
     """ Load TNtuple from a file; never require that muons are in fiducial eta/phi in the same Z event (more statistics) """
-    ep_name,en_name = 'lP_eta','lN_eta'
-    pp_name,pn_name = 'lP_pt','lN_pt'
-    fp_name,fn_name = 'lP_phi','lN_phi'
-    mz_name = 'Z_m'
-    rp,rn = get_eranges(name)
-    rf = get_prange(name)
+    ep_name,en_name = repl_dic(['lP_eta','lN_eta'],tt)
+    pp_name,pn_name = repl_dic(['lP_pt','lN_pt'],tt)
+    fp_name,fn_name = repl_dic(['lP_phi','lN_phi'],tt)
+    mz_name = repl_dic('Z_m',tt)
+    ROOT.gROOT.cd()
+    t = t2.CopyTree(repl_dic(pre,tt)) if pre else t2
+    rp,rn = get_eranges(reg)
+    rf = get_prange(reg)
     N = t.GetEntries()
     print 'Reading tree with',N,'entries via Kluit method'
     resp = []
@@ -230,14 +262,16 @@ def ntuple_to_array_kluit(t,name,xmin,xmax,maxdata=1000000,nskip=0):
     assert len(resp)==len(resn)
     return Np,Nn,len(resp),array.array('f',resp),array.array('f',resn)
 
-def ntuple_to_array_akluit(t,name,xmin,xmax,maxdata=1000000,nskip=0):
+def ntuple_to_array_akluit(t2,tt,reg,xmin,xmax,maxdata=1000000,nskip=0,pre=''):
     """ Load TNtuple from a file; require that muons are NOT in the same fiducial eta in the same Z event (exclusive sample) """
-    ep_name,en_name = 'lP_eta','lN_eta'
-    pp_name,pn_name = 'lP_pt','lN_pt'
-    fp_name,fn_name = 'lP_phi','lN_phi'
-    mz_name = 'Z_m'
-    rp,rn = get_eranges(name)
-    rf = get_prange(name)
+    ep_name,en_name = repl_dic(['lP_eta','lN_eta'],tt)
+    pp_name,pn_name = repl_dic(['lP_pt','lN_pt'],tt)
+    fp_name,fn_name = repl_dic(['lP_phi','lN_phi'],tt)
+    mz_name = repl_dic('Z_m',tt)
+    ROOT.gROOT.cd()
+    t = t2.CopyTree(repl_dic(pre,tt)) if pre else t2
+    rp,rn = get_eranges(reg)
+    rf = get_prange(reg)
     N = t.GetEntries()
     print 'Reading tree with',N,'entries via Anti-Kluit method'
     resp = []

@@ -26,14 +26,17 @@ from optparse import OptionParser
 parser = OptionParser()
 # data sources
 parser.add_option("--rootdata",dest="rootdata",
-                  type="string", default='ROOT/root_all_0626_newiso_noscale_1fb_cmb/data_period*/root_data_period*.root',
+                  type="string", default='ROOT/root_all_0630_newiso_noscale_1fb_cmb/data_period*/root_data_period*.root',
                   help="Input ROOT file (primary)")
 parser.add_option("--rootmc",dest="rootmc",
-                  type="string", default='', #ROOT/root_all_0626_newiso_noscale_1fb_cmb/mc_zmumu/root_*.root',
+                  type="string", default='', #ROOT/root_all_0630_newiso_noscale_1fb_cmb/mc_zmumu/root_*.root',
                   help="Input ROOT file (secondary) - for data/MC zmass mode")
 parser.add_option("--tt",dest="tt",
                   type="string", default='cmb',
                   help="Type of muons: {cmb,id,exms}")
+parser.add_option("--pre",dest="pre",  #TODO FIXME - opposite-charge requirement in next version of ntuple: lP_q*lN_q<0
+                  type="string", default='lP_pt>20.0 && lN_pt>20.0 && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0 && Z_m>50',
+                  help="Preliminary cuts to select final W candidates")
 parser.add_option("--data",dest="data",
                   type="string", default='dg/st_z_final/ntuple',
                   help="TGraph containing data histograms")
@@ -331,10 +334,10 @@ def Fit(data,isExt,fullbins,fitbins,ncpus=4,extras=False,gaus=False):
         model.paramOn(frame,data)
     return (r,frame,chi2ndf,ndf,xtra,res1st)
 
-def load_unbinned(hz,name,xmin,xmax,ndata,scale=1.0):
+def load_unbinned(hz,tt,pre,reg,xmin,xmax,ndata,scale=1.0):
     """ Load TGraph from a file. Note that we manually drop the points outside [xmin,xmax] range """
     if hz.ClassName() in ('TNtuple','TTree','TChain'):
-        N,v1 = ntuple_to_array1(hz,name,xmin,xmax,ndata)
+        N,v1 = ntuple_to_array1(hz,tt,reg,xmin,xmax,ndata,pre=pre)
     else:
         print 'Problem loading class',hz.ClassName()
         sys.exit(0)
@@ -373,32 +376,31 @@ def load_histo(hz,xmin,xmax,auto=None):
 
 # getting data
 if True:
-    ldata = opts.data if opts.tt=='cmb' else opts.data + '_' + opts.tt
-    print 'Ntuple path:',ldata
+    print 'Ntuple path:',opts.data
     # load data
-    hdata = ROOT.TChain(ldata)
+    hdata = ROOT.TChain(opts.data)
     for fname in glob.glob(opts.rootdata):
         print 'Adding to TChain:',fname
         nadd = hdata.Add(fname)
         assert nadd>0,'Failed to add file %s'%fname
     print 'Loaded data trees with %d entries'%hdata.GetEntries()
-    assert hdata.GetEntries()>0, 'Error loading data object %s from file %s'%(ldata,opts.rootdata)
+    assert hdata.GetEntries()>0, 'Error loading data object %s from file %s'%(opts.data,opts.rootdata)
     cname = hdata.ClassName()
     if cname in ('TGraph','TNtuple','TTree','TChain'):
-        data,crap = load_unbinned(hdata,opts.region,opts.min,opts.max,opts.nmc,opts.scale)
+        data,crap = load_unbinned(hdata,opts.tt,opts.pre,opts.region,opts.min,opts.max,opts.nmc,opts.scale)
     # load MC
     mc = None
     if opts.rootmc:
-        hmc = ROOT.TChain(ldata)
+        hmc = ROOT.TChain(opts.data)
         for fname in glob.glob(opts.rootmc):
             print 'Adding to TChain:',fname
             nadd = hmc.Add(fname)
             assert nadd>0,'Failed to add file %s'%fname
         print 'Loaded data trees with %d entries'%hmc.GetEntries()
-        assert hmc.GetEntries()>0, 'Error loading data object %s from file %s'%(ldata,opts.rootmc)
+        assert hmc.GetEntries()>0, 'Error loading data object %s from file %s'%(opts.data,opts.rootmc)
         cname = hmc.ClassName()
         if cname in ('TGraph','TNtuple','TTree','TChain'):
-            mc,crap = load_unbinned(hmc,opts.region,opts.min,opts.max,opts.ndata,opts.scale)
+            mc,crap = load_unbinned(hmc,opts.tt,opts.pre,opts.region,opts.min,opts.max,opts.ndata,opts.scale)
     # choose fit shape
     func,res='gaus',0
     if opts.func[-1].isdigit():
