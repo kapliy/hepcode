@@ -28,8 +28,8 @@ class SuCanvas:
     for ibin in range (1,refLine.GetNbinsX()+1):
       refLine.SetBinContent( ibin , 1. )
     refLine.SetLineColor( ROOT.kAzure-7 );
-    refLine.SetMinimum( 0.7 )
-    refLine.SetMaximum( 1.3 )
+    refLine.SetMinimum( 0.5 )
+    refLine.SetMaximum( 1.5 )
     refLine.GetXaxis().SetLabelSize( s.getRatioLabelSize() );
     refLine.GetYaxis().SetLabelSize( s.getRatioLabelSize() );
     refLine.GetXaxis().SetTitleSize( s.getRatioAxisTitleSize() );

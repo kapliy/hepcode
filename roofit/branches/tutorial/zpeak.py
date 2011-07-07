@@ -34,8 +34,8 @@ parser.add_option("--rootmc",dest="rootmc",
 parser.add_option("--tt",dest="tt",
                   type="string", default='cmb',
                   help="Type of muons: {cmb,id,exms}")
-parser.add_option("--pre",dest="pre",  #TODO FIXME - opposite-charge requirement in next version of ntuple: lP_q*lN_q<0
-                  type="string", default='lP_pt>20.0 && lN_pt>20.0 && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0 && Z_m>50',
+parser.add_option("--pre",dest="pre",
+                  type="string", default='lP_pt>20.0 && lN_pt>20.0 && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0 && Z_m>50 && (lP_q*lN_q)<0',
                   help="Preliminary cuts to select final W candidates")
 parser.add_option("--data",dest="data",
                   type="string", default='dg/st_z_final/ntuple',

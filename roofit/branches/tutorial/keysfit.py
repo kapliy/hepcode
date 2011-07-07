@@ -31,8 +31,8 @@ parser.add_option("--root2",dest="root2",
 parser.add_option("--tt",dest="tt",
                   type="string", default='cmb',
                   help="Type of muons: {cmb,id,exms}")
-parser.add_option("--pre",dest="pre",  #TODO FIXME - opposite-charge requirement in next version of ntuple: lP_q*lN_q<0
-                  type="string", default='lP_pt>20.0 && lN_pt>20.0 && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0 && Z_m>50',
+parser.add_option("--pre",dest="pre",
+                  type="string", default='lP_pt>20.0 && lN_pt>20.0 && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0 && Z_m>50 && (lP_q*lN_q)<0',
                   help="Preliminary cuts to select final W candidates")
 parser.add_option("--data",dest="data",
                   type="string", default='dg/st_z_final/ntuple',
@@ -400,36 +400,49 @@ def fitgraph(h,ks,FITMIN,FITMAX):
         pc=min([(h.GetY()[i],h.GetX()[i]) for i in xrange(h.GetN())])
         peak,chimean = pc[1],pc[0]
         xmin = peak
+        print 'RMS fit x,y',xmin,chimean
         # first, rough fit (to get an estimate of sigma)
         print 'Original fit range:',FITMIN,FITMAX
         fr = h.Fit('pol2','S0','',FITMIN,FITMAX)
-        f = h.GetFunction('pol2')
+        f = h.GetFunction('pol2').Clone('stage1')
+        f.SetLineColor(30)
+        f.SetLineStyle(2)
+        f.Draw('SAME')
+        gbg.append(f)
         chimin = f.GetMinimum(FITMIN,FITMAX)
         fitted_xmin = f.GetMinimumX(FITMIN,FITMAX)
-        chirange=50 #20
+        chirange=70 #50
         xleft = f.GetX(chimin+chirange,FITMIN,fitted_xmin)
         xright = f.GetX(chimin+chirange,fitted_xmin,FITMAX)
         err = 0.5*((fitted_xmin-xleft)+(xright-fitted_xmin))
-        del fr; del f;
+        del fr; #del f;
         # second, refined fit
         FITMIN=fitted_xmin-err
         FITMAX=fitted_xmin+err
         print 'Refined fit range:',FITMIN,FITMAX
-        fr = h.Fit('pol2','S','',FITMIN,FITMAX)
-        f = h.GetFunction('pol2')
+        fr = h.Fit('pol2','S0','',FITMIN,FITMAX)
+        f = h.GetFunction('pol2').Clone('stage2')
+        f.SetLineColor(3)
+        f.SetLineStyle(2)
+        f.Draw('SAME')
+        gbg.append(f)
         chimin = f.GetMinimum(FITMIN,FITMAX)
         fitted_xmin = f.GetMinimumX(FITMIN,FITMAX)
         chirange=20 #20
         xleft = f.GetX(chimin+chirange,FITMIN,fitted_xmin)
         xright = f.GetX(chimin+chirange,fitted_xmin,FITMAX)
         err = 0.5*((fitted_xmin-xleft)+(xright-fitted_xmin))
-        del fr; del f;
+        del fr; #del f;
         # third, final fit
         FITMIN=fitted_xmin-err
         FITMAX=fitted_xmin+err
         print 'Re-refined fit range:',FITMIN,FITMAX
-        fr = h.Fit('pol2','S','',FITMIN,FITMAX)
-        f = h.GetFunction('pol2')
+        fr = h.Fit('pol2','S0','',FITMIN,FITMAX)
+        f = h.GetFunction('pol2').Clone('stage3')
+        f.SetLineColor(1)
+        f.SetLineStyle(1)
+        f.Draw('SAME')
+        gbg.append(f)
         chimin = f.GetMinimum(FITMIN,FITMAX)
         fitted_xmin = f.GetMinimumX(FITMIN,FITMAX)
         xleft = f.GetX(chimin+1,FITMIN,fitted_xmin)
