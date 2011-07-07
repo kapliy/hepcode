@@ -111,9 +111,9 @@ class SuCanvas:
   def __init__(s):
     s._ratioDrawn = False
 
-  def buildDefault(s):
+  def buildDefault(s,title='default'):
     s._ratioDrawn = False;
-    s._canvas = ROOT.TCanvas( "canvas" , "default" , 0 , 0 , 800 , 600 );
+    s._canvas = ROOT.TCanvas( title , title , 0 , 0 , 800 , 600 );
     s._canvas.SetFillColor( ROOT.kWhite );
     s._canvas.GetFrame().SetBorderMode( 0 );
     s._canvas.GetFrame().SetBorderSize( 0 );
@@ -183,7 +183,7 @@ class SuCanvas:
     s._ratioXtitleOffset = 1.;
     s._ratioYtitleOffset = 0.5;
 
-  def SaveAs(s,name2,ext):
+  def SaveAs(s,name2,ext='png'):
     name = re.sub(r'[^\w]', '_', name2)
     c = s._canvas
     c.SaveAs('%s.%s'%(name,ext))
