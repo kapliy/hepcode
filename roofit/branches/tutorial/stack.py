@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+_PRE_PETER  = 'l_pt>25.0 && ptiso40<2.0 && etiso40<2.0 && met>25.0 && w_mt>40.0'
+_PRE_JORDAN = 'l_pt>25.0 && ptiso20/l_pt<0.1 && ptiso30/l_pt<0.15 && met>25.0 && w_mt>40.0'
+
 import sys,re
 from optparse import OptionParser
 from load_data import SaveAs
@@ -17,10 +20,10 @@ parser.add_option("--var",dest="var",
                   type="string", default='l_eta',
                   help="Variable to plot")
 parser.add_option("--bin",dest="bin",
-                  type="string", default='100,-2.5,2.5',
+                  type="string", default='50,-2.5,2.5',
                   help="Binning for var")
 parser.add_option("--pre",dest="pre",
-                  type="string", default='l_pt>20.0 && ptiso40<2.0 && etiso40<2.0 && met>25.0 && w_mt>40.0',
+                  type="string", default=_PRE_JORDAN,
                   help="Preliminary cuts to select final W candidates")
 parser.add_option("--cut",dest="cut",
                   type="string", default='mcw*puw', # *effw*trigw
@@ -32,7 +35,6 @@ parser.add_option("--cut",dest="cut",
 parser.add_option("--lumi",dest="lumi",
                   type="float", default=832854.0,
                   help="Integrated luminosity for data (in nb^-1)")
-# 0.824 from https://kyoko.web.cern.ch/KYOKO/DiffZ/KyokoYamamoto_DiffZ_20110426.pdf
 parser.add_option("--qcd",dest="qcdscale",
                   type="string", default='1.0',
                   help="QCD scale factor")
@@ -56,7 +58,7 @@ parser.add_option("--bgqcd",dest="bgqcd",
                   help="QCD: 0=Pythia mu15x, 1=Pythia J0..J5")
 parser.add_option("--bgsig",dest="bgsig",
                   type="int", default=0,
-                  help="Background: 0=Pythia, 1=MC@NLO, 2=W+jets Jimmy")
+                  help="Background: 0=Pythia, 1=MC@NLO, 3=W+jets Jimmy")
 (opts, args) = parser.parse_args()
 mode = opts.mode
 print "MODE =",mode
@@ -102,7 +104,8 @@ else:
     po.Add(name='W#rightarrow#tau#nu+jets',samples=['mc_jimmy_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow)
     po.Add(name='Z#rightarrow#mu#mu+jets',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed)
     po.Add(name='WZ/ZZ',samples=['mc_jimmy_wz_np%d'%v for v in range(4)]+['mc_jimmy_zz_np%d'%v for v in range(4)],color=11)
-    po.Add(name='WW',samples=['mc_jimmy_ww_np%d'%v for v in range(4)]+['mc_jimmy_ww_np%d'%v for v in range(4)],color=12)
+    po.Add(name='WW',samples=['mc_jimmy_ww_np%d'%v for v in range(4)],color=12)
+    po.Add(name='bbmu15X/ccmu15X',samples=['mc_bbmu15x','mc_ccmu15x'],color=ROOT.kCyan)
     po.Add(name='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10)
 
 # Determine which data periods to plot
@@ -123,9 +126,14 @@ for iname in allnames:
     print 'Loading',iname,
     f = ROOT.TFile.Open('%s/%s/root_%s.root'%(opts.input,iname,iname))
     gbg.append(f)
-    nevts = f.Get('dg/nevts').GetEntries()
+    topdir = 'dg'
+    if not f.Get(topdir):
+        ldirs = [z.GetName() for z in f.GetListOfKeys()]
+        assert len(ldirs)==1, 'Expecting one folder here: '+' '.join(ldirs)
+        topdir=ldirs[0]+'/dg'
+    nevts = f.Get('%s/nevts'%topdir).GetEntries()
     print 'with',int(nevts),'events'
-    nt = f.Get('dg/st_w_final/ntuple')
+    nt = f.Get('%s/st_w_final/ntuple'%topdir)
     if not nt:
         print 'No events passed cuts in background',iname
         po.Remove(iname)
@@ -143,7 +151,7 @@ for iname in allnames:
             continue
         if is_wmunu(iname):
             # for signal MC, also get truth-level template for efficiency
-            nt2 = f.Get('dg/truth/st_truth_reco_w/ntuple')
+            nt2 = f.Get('%s/truth/st_truth_reco_w/ntuple'%topdir)
             if nt2:
                 for iq in range(2):
                     hname = 'htr%s%s'%(iname,QMAP[iq][1])

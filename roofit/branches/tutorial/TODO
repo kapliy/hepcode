@@ -3,29 +3,23 @@ June 29:
   Test by fitting the same event!
 * Add to template the CDF plot before and after either chi2 or ks
 * IMPORTANT: Write code to convert dg to latex code; also to html (with picture conversion)
+* Relax eta to 2.5 - apply at plot level
 
 Special cases:
 * Fix R0 bug: in high statistics, chi2 fit range is too wide in BB
 * FWA: chi2 and ks too different - why?? Try different smoothing parameters
 
-Data/MC:
-* see if wmin/wplus MC@NLO works better if mc weight is excluded
-* use jordan's xsection numbers and samples
-  Add ability to look for a differently-named folder (not 'dg')
+Jordan cutflow:
+* Rip QCD fit from Jordan
+* Apply pt>25 GeV cut on muons, as Jordan does.
 
 
 * Applying absolute scale: perhaps going about it the wrong way? Use the KS statistic between data and MC
   to find the location of the peak?
-* Think if we are doing the wrong thing in R0 scan by cutting around the edges, and THEN applying a scale
-  We should first apply the scale to an array and THEN put it into a roodataset - but that's what we do, no?
-
-Peter:
-* Add KS feature to dgplot
-
-
 * in zpeak.py: automatically apply defaults depending on region and type of muon!
-* Change eta bound to 1.95 - for later!
-Make Z fits with gaus res; feed back scales into code.
+
+TrigFTKAna:
+* Add charge separation in StudyWCrossSectionCandidate::_study by dg::down into POS and NEG folders automatically
 
 TODO
 Differences from F. Cerutti:
@@ -33,31 +27,6 @@ Differences from F. Cerutti:
 * HE: ptid, ptexms > 10 GeV
 * HE: ptcb > 10 GeV (we use > 20 GeV)
 * TODO: fit egge convolved with simple gaussian; range = 80..100;
-* TODO: add |eta|<1.7 region!
 
-MC: r2230
-Study new MC for systematics!!!
-* Add eta sum
-Add relative et cone 0.2 < 1.5
-* change binning 1.7 - 2.0; 2.0 - 2.4 OR 1.7 - 2.4
-
-
-Code:
-* Enable zmumu tag and probe studies: trigger and reconstruction efficiency
-
-Check if rho can be chosen smartly - Jahred's thesis.
-Check error variation due to binning.
-
-
-*regions: 1.05-1.7, 1.7-2.0, 2.0-2.5, 1.7-2.5 integrated
-* Z template mass fit from MC
-* Try to fit 1/pt spectrum to a functional form -> single integrated fit.
-
-* zpeak.py:
-** Verify consistency. Can use ID as a cross-check since it has largest deviations!
-* Introduce 2% inefficiency for mu+, linear with pt - see if MC still works fine.
+* Check if rho can be chosen smartly - Jahred's thesis.
 * Repeat a study to verify sqrt(A*B) works if one leg in barrel, another in endcap
-
-
-expand range for better QCD estimate (60..100 GeV, or higher)
-use new function from Peter

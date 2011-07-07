@@ -2,9 +2,9 @@
 source bashmap.sh
 ROOTDIR=$PWD
 
-antondb=out0630
+antondb=out0706
 # Specify the list of tags
-data="--root 'ROOT/root_all_0630_newiso_noscale_1fb_cmb/data_period*/root_data_period*.root'"
+data="--root 'ROOT/root_all_0706_newiso_noscale_1fb_cmb/data_period*/root_data_period*.root'"
 gput tags 0 default    "${data} --zmin 80 --zmax 100"
 gput tags 1 m70110     "${data} --zmin 70 --zmax 110"
 gput tags 2 klu        "${data} --zmin 80 --zmax 100 --kluit"

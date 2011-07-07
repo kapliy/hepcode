@@ -1,3 +1,7 @@
+0706 - q*q<0; first stage chi fit window expanded 50->70
+0704 - no q*q<0 requirement
+
+==================================
 root_all.root, root_all_v1.root
 Flatntupler release 16 (athena version 15) - first results.
 This had been verified with cutflows long time ago (via python version of analysis code)
