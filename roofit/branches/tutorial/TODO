@@ -1,25 +1,19 @@
-June 29:
+* update db_* executable to do systematics and print in latex
+
+Muon scales:
 * Investigate RooEggePdf - see if it is indeed compatible with my implementation!
   Test by fitting the same event!
 * Add to template the CDF plot before and after either chi2 or ks
 * IMPORTANT: Write code to convert dg to latex code; also to html (with picture conversion)
 * Relax eta to 2.5 - apply at plot level
 
-Special cases:
-* Fix R0 bug: in high statistics, chi2 fit range is too wide in BB
-* FWA: chi2 and ks too different - why?? Try different smoothing parameters
-
 Jordan cutflow:
 * Rip QCD fit from Jordan
-* Apply pt>25 GeV cut on muons, as Jordan does.
-
 
 * Applying absolute scale: perhaps going about it the wrong way? Use the KS statistic between data and MC
   to find the location of the peak?
 * in zpeak.py: automatically apply defaults depending on region and type of muon!
 
-TrigFTKAna:
-* Add charge separation in StudyWCrossSectionCandidate::_study by dg::down into POS and NEG folders automatically
 
 TODO
 Differences from F. Cerutti:

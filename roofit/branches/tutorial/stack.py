@@ -6,6 +6,7 @@ _PRE_JORDAN = 'l_pt>25.0 && ptiso20/l_pt<0.1 && ptiso30/l_pt<0.15 && met>25.0 &&
 import sys,re
 from optparse import OptionParser
 from load_data import SaveAs
+import antondb
 parser = OptionParser()
 parser.add_option("-m", "--mode",dest="mode",
                   type="int", default=1,
@@ -14,7 +15,7 @@ parser.add_option("--type",dest="type",
                   type="int", default=1,
                   help="Type = 2 applies pileup weights")
 parser.add_option("--input",dest="input",
-                  type="string", default='ROOT/root_all_0630_newiso_1fb_cmb',
+                  type="string", default='ROOT/root_all_0706_newiso_1fb_cmb', #'ROOT/root_all_0630_newiso_1fb_cmb',
                   help="Path to input root file with all histos")
 parser.add_option("--var",dest="var",
                   type="string", default='l_eta',
@@ -28,6 +29,18 @@ parser.add_option("--pre",dest="pre",
 parser.add_option("--cut",dest="cut",
                   type="string", default='mcw*puw', # *effw*trigw
                   help="Additional cut to select events")
+parser.add_option("--hdata",dest="hdata",
+                  type="string", default=None,
+                  help="Path to data histogram")
+parser.add_option("--hmc",dest="hmc",
+                  type="string", default=None,
+                  help="Path to mc histogram")
+parser.add_option("--rebin",dest="rebin",
+                  type="int", default=1,
+                  help="Rebin histograms")
+parser.add_option("--antondb",dest="antondb",
+                  type="string", default=None,
+                  help="Tag for antondb output container")
 #329602.0 up to F3 (182519) EF_mu18_MG
 #490814.0 up to G3 (183021) EF_mu18_MG
 #689279.0 up to G5 (183347) EF_mu20_MG
@@ -76,6 +89,10 @@ SetStyle("AtlasStyle.C")
 def save(c,name):
     for ext in ('png','ps','pdf','C'):
         c.SaveAs("%s.%s"%(name,ext))
+def QAPP(path,iq):
+    htmp = path.split('/');
+    htmp.insert(-1,QMAP[iq][1])
+    return '/'.join(htmp) if iq in (0,1) else path
 
 POS,NEG,ALL=range(3)
 QMAP = {}
@@ -110,6 +127,7 @@ else:
 
 # Determine which data periods to plot
 data = [ 'data_period%s'%s for s in ('B','D','E','F','G1','G2','G3','G4','G5','G6','H1') ]
+data = [ 'data_period%s_updscaleqq0706'%s for s in ('B','D','E','F','G1','G2','G3','G4','G5','G6','H1') ]
 mc = list(xflatten(po.mcg))
 # All histo files that we need to get
 allnames = data + mc
@@ -140,13 +158,25 @@ for iname in allnames:
         continue
     if re.match('mc',iname):
         try:
+            hname,hpath='',''
             for iq in range(2):
                 hname = 'h%s%s'%(iname,QMAP[iq][1])
-                nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(%s) * (%s) * (%s)'%(QMAP[iq][2],opts.cut,opts.pre),'goff')
-                hmc[iq][iname]=ScaleToLumi(ROOT.gDirectory.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale,nevts)
+                if opts.hmc:
+                    hpath = QAPP(opts.hmc,iq)
+                    # tmp FIXME: wmin mc may not have any events
+                    if True and (re.search('wminmunu',iname) or re.search('wplusmunu',iname)) and not f.Get('%s/%s'%(topdir,hpath)):
+                        print 'Warning: no events in histogram %s (path %s) in file %s'%(hname,hpath,iname)
+                        hmc[iq][iname] = ROOT.TH1F(hname,hname,100,0,3)
+                        hmc[iq][iname].Rebin(opts.rebin)
+                        continue
+                    hmc[iq][iname]=ScaleToLumi(f.Get('%s/%s'%(topdir,hpath)).Clone(hname),iname,opts.lumi,opts.qcdscale,nevts)
+                    hmc[iq][iname].Rebin(opts.rebin)
+                else:
+                    nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(%s) * (%s) * (%s)'%(QMAP[iq][2],opts.cut,opts.pre),'goff')
+                    hmc[iq][iname]=ScaleToLumi(ROOT.gDirectory.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale,nevts)
             hmc[ALL][iname] = WSum(hmc[POS][iname],hmc[NEG][iname],'h%sALL'%iname)
         except:
-            print 'Error: could not find histogram %s in file %s'%(hname,iname)
+            print 'Error: could not find histogram %s (path %s) in file %s'%(hname,hpath,iname)
             po.Remove(iname)
             continue
         if is_wmunu(iname):
@@ -170,12 +200,16 @@ for iname in allnames:
     else: #data:
         for iq in range(2):
             hname = 'hd%s%s'%(iname,QMAP[iq][1])
-            nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(%s) * (%s) * (%s)'%(QMAP[iq][2],opts.cut,opts.pre),'goff')
-            hdata[iq].append(ROOT.gDirectory.Get(hname).Clone())
-            hdata[iq][-1].Sumw2()
+            if opts.hdata:
+                hpath = QAPP(opts.hdata,iq)
+                print '%s/%s'%(topdir,hpath)
+                hdata[iq].append(  f.Get('%s/%s'%(topdir,hpath)).Clone(hname)  )
+                hdata[iq][-1].Rebin(opts.rebin)
+            else:
+                nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(%s) * (%s) * (%s)'%(QMAP[iq][2],opts.cut,opts.pre),'goff')
+                hdata[iq].append(ROOT.gDirectory.Get(hname).Clone())
+                hdata[iq][-1].Sumw2()
         hdata[ALL].append( WSum(hdata[POS][-1],hdata[NEG][-1],'hd%sALL'%iname) )
-#pos=hdata[0][0]
-#neg=hdata[1][0]
 
 # prepare output holders for summed histos
 leg = [MakeLegend(QMAP[i][3]) for i in xrange(3)]
@@ -263,6 +297,9 @@ if mode==2: # total stack histo (eff-corrected from MC)
 if mode==11: # asymmetry (not bg-subtracted)
     c = SuCanvas()
     c.plotAsymmetry(hd[POS],hd[NEG],hsig[POS],hsig[NEG])
+    if opts.antondb:
+        a = antondb.antondb(opts.antondb)
+        a.add_root(opts.tag,[c.hmcasym,c.hdasym,c._canvas])
 
 if mode==12: # asymmetry (bg-subtracted)
     c = SuCanvas()
