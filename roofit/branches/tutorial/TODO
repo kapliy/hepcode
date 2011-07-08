@@ -1,4 +1,4 @@
-* update db_* executable to do systematics and print in latex
+* Add systematic tables to db_ executable; allow to select chif and chip
 
 Muon scales:
 * Investigate RooEggePdf - see if it is indeed compatible with my implementation!
