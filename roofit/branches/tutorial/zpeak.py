@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 # fits a single z peak
 
-"""
-mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/ntuple
-data_data.root/dg/dg/st_z_final/ntuple
-"""
+_PRE_PETER='lP_pt>20.0 && lN_pt>20.0 && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0 && Z_m>50 && (lP_q*lN_q)<0'
 
 try:
     import psyco
@@ -35,7 +32,7 @@ parser.add_option("--tt",dest="tt",
                   type="string", default='cmb',
                   help="Type of muons: {cmb,id,exms}")
 parser.add_option("--pre",dest="pre",
-                  type="string", default='lP_pt>20.0 && lN_pt>20.0 && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0 && Z_m>50 && (lP_q*lN_q)<0',
+                  type="string", default=_PRE_PETER,
                   help="Preliminary cuts to select final W candidates")
 parser.add_option("--data",dest="data",
                   type="string", default='dg/st_z_final/ntuple',
@@ -423,6 +420,9 @@ if True:
     else:
         print 'Wrong --func (%s). Exiting...'%opts.func
         sys.exit(0)
+    VMAP['rootdata']=opts.rootdata
+    VMAP['rootmc']=opts.rootmc
+    VMAP['pre']=opts.pre
     # loop over mc and data
     for dtype in ('mc_','data_'):
         dfit = mc if dtype=='mc_' else data
@@ -523,8 +523,7 @@ if len(COUT)>0:
 if len(VMAP)>0 or len(OMAP)>0:
     a = antondb(opts.antondb)
     sample_path = '/default/cmb/BB/Z/bw3'
-    path = os.path.join('/',opts.tag,opts.tt,opts.region,'Z',opts.func)
-    print VMAP
+    path = os.path.join('/zpeak/',opts.tag,opts.tt,opts.region,opts.func)
     if len(VMAP)>0:
         a.add(path,VMAP)
     if len(OMAP)>0:

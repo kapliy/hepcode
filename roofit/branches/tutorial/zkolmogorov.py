@@ -1,10 +1,7 @@
 #!/usr/bin/env python
-# fits a single z peak
+# fits a single z peak and plots cdf
 
-"""
-mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/ntuple
-data_data.root/dg/dg/st_z_final/ntuple
-"""
+_PRE_PETER='lP_pt>20.0 && lN_pt>20.0 && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0 && Z_m>50 && (lP_q*lN_q)<0'
 
 try:
     import psyco
@@ -12,11 +9,12 @@ try:
 except ImportError:
     pass
 
-import sys,re,array,math
+import sys,re,array,math,glob
 from math import sqrt
 import SimpleProgressBar
 from load_data import *
-from fit_defaults import *
+from antondb import *
+#from fit_defaults import *
 
 def func_SCALE(xx,par):
     return par*xx
@@ -24,24 +22,33 @@ def func_SCALE(xx,par):
 from optparse import OptionParser
 parser = OptionParser()
 # data sources
-parser.add_option("--root",dest="root",
-                  type="string", default='root_all.root',
-                  help="Input ROOT file with all histograms")
+parser.add_option("--rootdata",dest="rootdata",
+                  type="string", default='ROOT/root_all_0630_newiso_noscale_1fb_cmb/data_period*/root_data_period*.root',
+                  help="Input ROOT file (primary)")
+parser.add_option("--rootmc",dest="rootmc",
+                  type="string", default='', #ROOT/root_all_0630_newiso_noscale_1fb_cmb/mc_zmumu/root_*.root',
+                  help="Input ROOT file (secondary) - for data/MC zmass mode")
+parser.add_option("--tt",dest="tt",
+                  type="string", default='cmb',
+                  help="Type of muons: {cmb,id,exms}")
+parser.add_option("--pre",dest="pre",
+                  type="string", default=_PRE_PETER,
+                  help="Preliminary cuts to select final W candidates")
+parser.add_option("--data",dest="data",
+                  type="string", default='dg/st_z_final/ntuple',
+                  help="TGraph containing data histograms")
 parser.add_option("--region",dest="region",
                   type="string", default='BB',
                   help="Where each leg of a Z must fall")
-parser.add_option("--data",dest="data",
-                  type="string", default='data_data.root/dg/dg/st_z_final/ntuple',
-                  help="TGraph or TH1F containing reconstructed z mass")
-parser.add_option("--mc",dest="mc",
-                  type="string", default='mc_zmumu_mc_zmumu.root/dg/dg/st_z_final/ntuple',
-                  help="TGraph or TH1F containing reconstructed z mass")
 parser.add_option("--ndata",dest="ndata",
                   type="int", default=1000000,
                   help="Number of unbinned data points to load")
 parser.add_option("--nskip",dest="nskip",
                   type="int", default=0,
                   help="Number of data points to skip load")
+parser.add_option("--antondb",dest="antondb",
+                  type="string", default='output',
+                  help="Tag for antondb output container")
 # parameters
 parser.add_option("--auto",dest="auto",
                   type="float", default=None,
@@ -130,8 +137,10 @@ from ROOT import RooGaussModel,RooAddModel,RooRealVar,RooAbsReal,RooRealSumPdf,R
 from ROOT import kTRUE,kFALSE,kDashed,gStyle,gPad
 from ROOT import TFile,TH1,TH1F,TH1D
 from ROOT import RooFit as RF
-gbg = []; COUT = []
 w = RooWorkspace('w',kTRUE)
+gbg = []; COUT = []
+# antondb containers
+VMAP = {}; OMAP = []
 
 # Perform unbinned Ks comparison
 def make_array_sorted(data,var='x'):
@@ -151,20 +160,17 @@ def p_value(dP,dN):
     return pval
 
 # Load unbinned data
-def load_unbinned(hz,name,xmin,xmax,scale=1.0,nmaxT=-1):
+def load_unbinned(hz,tt,pre,reg,xmin,xmax,nmaxT,scale=1.0):
     """ Load TGraph from a file. Note that we manually drop the points outside [xmin,xmax] range """
-    if hz.ClassName() == 'TGraph':
-        N,v1 = graph_to_array1(hz,opts.ndata)
-    elif hz.ClassName() == 'TNtuple':
-        N,v1 = ntuple_to_array1(hz,name,xmin,xmax,nmaxT if nmaxT>0 else opts.ndata)
+    if hz.ClassName() in ('TNtuple','TTree','TChain'):
+        N,v1 = ntuple_to_array1(hz,tt,reg,xmin,xmax,nmaxT,pre=pre)
     else:
         print 'Problem loading class',hz.ClassName()
         sys.exit(0)
     print 'Loaded raw unbinned data with',N,'entries'
     w.factory('x[%s,%s]'%(xmin,xmax))
     ds1 = RooDataSet('ds1','ds1',RooArgSet(w.var('x')))
-    ds2 = RooDataSet('ds2','ds2',RooArgSet(w.var('x')))
-    nmax = min(N,opts.ndata); nmaxp10 = nmax if nmax>10 else 10
+    nmax = min(N,nmaxT); nmaxp10 = nmax if nmax>10 else 10
     bar = SimpleProgressBar.SimpleProgressBar(10,nmax)
     x = w.var('x')
     nf=0
@@ -179,22 +185,38 @@ def load_unbinned(hz,name,xmin,xmax,scale=1.0,nmaxT=-1):
         if nmaxT>0 and nf>=nmaxT:
             break
     print 'Final count of unbinned data:',nf
-    #getattr(w,'import')(ds1,RF.Rename('ds1'))
     return ds1,nf
 
 if True:
-    # load the data
-    f = TFile(opts.root,'r')
-    hdata,hmc = f.Get(opts.data),f.Get(opts.mc)
-    assert (hdata and hmc), 'Error loading data objects %s %s from file %s'%(opts.data,opts.mc,opts.root)
+    print 'Ntuple path:',opts.data
+    # load data
+    hdata = ROOT.TChain(opts.data)
+    for fname in glob.glob(opts.rootdata):
+        print 'Adding to TChain:',fname
+        nadd = hdata.Add(fname)
+        assert nadd>0,'Failed to add file %s'%fname
+    print 'Loaded data trees with %d entries'%hdata.GetEntries()
+    assert hdata.GetEntries()>0, 'Error loading data object %s from file %s'%(opts.data,opts.rootdata)
+    # load MC
+    hmc = ROOT.TChain(opts.data)
+    for fname in glob.glob(opts.rootmc):
+        print 'Adding to TChain:',fname
+        nadd = hmc.Add(fname)
+        assert nadd>0,'Failed to add file %s'%fname
+    print 'Loaded data trees with %d entries'%hmc.GetEntries()
+    assert hmc.GetEntries()>0, 'Error loading data object %s from file %s'%(opts.data,opts.rootmc)
+    # read ntuples
     assert hdata.ClassName() in ('TGraph','TNtuple','TTree','TChain')
     assert hmc.ClassName() in ('TGraph','TNtuple','TTree','TChain')
-    data,ndata = load_unbinned(hdata,opts.region,opts.min,opts.max,scale=opts.scale)
-    mc,nmc = load_unbinned(hmc,opts.region,opts.min,opts.max,scale=opts.scale,nmaxT=ndata)
+    data,ndata = load_unbinned(hdata,opts.tt,opts.pre,opts.region,opts.min,opts.max,opts.ndata,scale=opts.scale)
+    mc,nmc = load_unbinned(hmc,opts.tt,opts.pre,opts.region,opts.min,opts.max,ndata,scale=opts.scale)
+    if nmc < ndata:
+        print 'WARNING: nmc = %d is less than ndata = %d. Reducing ndata to nmc'
+        data,ndata = data.reduce(RF.EventRange(0,nmc)),nmc
     assert ndata == nmc, 'Error: ndata=%d not equal to nmc=%d'%(ndata,nmc)
     x = w.var('x')
     # save plot
-    c = ROOT.TCanvas('c','c',480,768)
+    c = ROOT.TCanvas('zkolmogorov','zkolmogorov',480,768)
     c.Divide(1,2)
     # plot histos
     c.cd(1)
@@ -211,6 +233,12 @@ if True:
     p.AddText('# of events = %d'%(ndata))
     p.AddText('KS probability = %.2f%%'%(pval*100.0))
     p.Draw()
+    # antondb values
+    VMAP['ndata']=ndata
+    VMAP['pval']=pval
+    VMAP['rootdata']=opts.rootdata
+    VMAP['rootmc']=opts.rootmc
+    VMAP['pre']=opts.pre
     # plot cdf
     c.cd(2)
     frame = x.frame(RF.Title('cdf'))
@@ -224,12 +252,24 @@ if True:
     cdfdata.plotOn(frame,RF.LineColor(ROOT.kRed))
     cdfmc.plotOn(frame,RF.LineColor(ROOT.kBlue))
     frame.Draw()
-    SaveAs(c,'%s_kshape'%opts.tag,opts.ext)
+    #OMAP.append(hdata)
+    #OMAP.append(hmc)
+    OMAP.append(c)
+    if False:
+        SaveAs(c,'%s_kshape'%opts.tag,opts.ext)
 
 # save to text file
 if len(COUT)>0:
-    fout = open('%s_kshape.rtxt'%opts.tag,'w')
+    VMAP['COUT']=[]
     for l in COUT:
         print l
-        print >>fout,l
-    fout.close()
+        VMAP['COUT'].append(l)
+
+if len(VMAP)>0 or len(OMAP)>0:
+    a = antondb(opts.antondb)
+    path = os.path.join('/zkolmogorov/',opts.tag,opts.tt,opts.region)
+    print VMAP
+    if len(VMAP)>0:
+        a.add(path,VMAP)
+    if len(OMAP)>0:
+        a.add_root(path,OMAP)
