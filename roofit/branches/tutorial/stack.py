@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 _PRE_PETER  = 'l_pt>25.0 && ptiso40<2.0 && etiso40<2.0 && met>25.0 && w_mt>40.0'
-_PRE_JORDAN = 'l_pt>25.0 && ptiso20/l_pt<0.1 && ptiso30/l_pt<0.15 && met>25.0 && w_mt>40.0'
+_PRE_JORDAN = 'l_pt>25.0 && ptiso20/l_pt<0.1 && met>25.0 && w_mt>40.0'
+_PRE_JORDANALT = 'l_pt>25.0 && ptiso20/l_pt<0.1 && ptiso30/l_pt<0.15 && met>25.0 && w_mt>40.0'
 
 import sys,re
 from optparse import OptionParser
@@ -45,6 +46,7 @@ parser.add_option("--antondb",dest="antondb",
 #490814.0 up to G3 (183021) EF_mu18_MG
 #689279.0 up to G5 (183347) EF_mu20_MG
 #832854.0 up to H1 (183602) EF_mu20_MG
+#1035040.0 up to H4 (184169) EF_mu18_MG
 parser.add_option("--lumi",dest="lumi",
                   type="float", default=832854.0,
                   help="Integrated luminosity for data (in nb^-1)")
@@ -140,6 +142,9 @@ htr = [None for i in xrange(3)]
 
 # load the data inputs
 gbg = []
+nentries_data = []
+nentries_bg = []
+nentries_sig = []
 for iname in allnames:
     print 'Loading',iname,
     f = ROOT.TFile.Open('%s/%s/root_%s.root'%(opts.input,iname,iname))
@@ -174,6 +179,10 @@ for iname in allnames:
                 else:
                     nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(%s) * (%s) * (%s)'%(QMAP[iq][2],opts.cut,opts.pre),'goff')
                     hmc[iq][iname]=ScaleToLumi(ROOT.gDirectory.Get(hname).Clone(),iname,opts.lumi,opts.qcdscale,nevts)
+            if is_wmunu(iname):
+                nentries_sig.append(hmc[POS][iname].GetEntries())
+            else:
+                nentries_bg.append(hmc[POS][iname].GetEntries())
             hmc[ALL][iname] = WSum(hmc[POS][iname],hmc[NEG][iname],'h%sALL'%iname)
         except:
             print 'Error: could not find histogram %s (path %s) in file %s'%(hname,hpath,iname)
@@ -209,7 +218,11 @@ for iname in allnames:
                 nt.Draw('%s>>%s(%s)'%(opts.var,hname,opts.bin),'(%s) * (%s) * (%s)'%(QMAP[iq][2],opts.cut,opts.pre),'goff')
                 hdata[iq].append(ROOT.gDirectory.Get(hname).Clone())
                 hdata[iq][-1].Sumw2()
+        nentries_data.append(hdata[POS][-1].GetEntries())
         hdata[ALL].append( WSum(hdata[POS][-1],hdata[NEG][-1],'hd%sALL'%iname) )
+
+print 'DATA      ENTRIES:',sum(nentries_data)
+print 'SIGNAL MC ENTRIES:',sum(nentries_sig)
 
 # prepare output holders for summed histos
 leg = [MakeLegend(QMAP[i][3]) for i in xrange(3)]

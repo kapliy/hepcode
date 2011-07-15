@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+_PRE_PETER='lP_pt>20.0 && lN_pt>20.0 && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0 && Z_m>50 && (lP_q*lN_q)<0'
+
 try:
     import psyco
     psyco.full()
@@ -32,7 +34,7 @@ parser.add_option("--tt",dest="tt",
                   type="string", default='cmb',
                   help="Type of muons: {cmb,id,exms}")
 parser.add_option("--pre",dest="pre",
-                  type="string", default='lP_pt>20.0 && lN_pt>20.0 && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0 && Z_m>50 && (lP_q*lN_q)<0',
+                  type="string", default=_PRE_PETER,
                   help="Preliminary cuts to select final W candidates")
 parser.add_option("--data",dest="data",
                   type="string", default='dg/st_z_final/ntuple',
@@ -214,6 +216,9 @@ if True:
     VMAP['nmax']=nmax
     VMAP['np']=Np
     VMAP['nn']=Nn
+    VMAP['root']=opts.root
+    VMAP['root2']=opts.root2
+    VMAP['pre']=opts.pre
     if nmax == 0:
         print 'Error: no data passed the cuts'
         sys.exit(0)
@@ -669,7 +674,10 @@ if len(COUT)>0:
 if len(VMAP)>0 or len(OMAP)>0:
     a = antondb(opts.antondb)
     sample_path = '/default/cmb/BB/R0'
-    path = os.path.join('/',opts.tag,opts.tt,opts.region,'KK' if opts.root2 else 'R0')
+    mtype = 'KK' if opts.root2 else 'R0'
+    if opts.shift:
+        mtype = 'SHIFT'
+    path = os.path.join('/keysfit/',opts.tag,opts.tt,opts.region,mtype)
     if len(VMAP)>0:
         a.add(path,VMAP)
     if len(OMAP)>0:
