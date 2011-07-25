@@ -2,13 +2,20 @@
 source bashmap.sh
 ROOTDIR=$PWD
 
-antondb=out0706
+antondb=out0721
 # Specify the list of tags
-data="--root 'ROOT/root_all_0706_newiso_noscale_1fb_cmb/data_period*/root_data_period*.root'"
-gput tags 0 default    "${data} --zmin 80 --zmax 100"
-gput tags 1 m70110     "${data} --zmin 70 --zmax 110"
-gput tags 2 klu        "${data} --zmin 80 --zmax 100 --kluit"
-gput tags 3 aklu       "${data} --zmin 80 --zmax 100 --akluit"
+data="--root 'ROOT/current/noscale/data_period*/root_data_period*.root'"
+i=0
+gput tags $i default    "${data} --zmin 80 --zmax 100"
+((i++))
+gput tags $i m70110     "${data} --zmin 70 --zmax 110"
+((i++))
+gput tags $i klu        "${data} --zmin 80 --zmax 100 --kluit"
+((i++))
+gput tags $i aklu       "${data} --zmin 80 --zmax 100 --akluit"
+((i++))
+prenomsid="'lP_pt>20.0 && lN_pt>20.0 && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0 && Z_m>50 && (lP_q*lN_q)<0 && lP_idhits==1 && fabs(lP_z0)<10. && fabs(lP_d0sig)<10. && lN_idhits==1 && fabs(lN_z0)<10. && fabs(lN_d0sig)<10.'"
+gput tags $i nomsid     "${data} --zmin 80 --zmax 100 --pre ${prenomsid}"
 
 tts="cmb id exms"
 regs="AA BB CC Bcc Baa FWC FWA MWC MWA" # "FWC0 FWC1 FWC2 FWC3 FWA0 FWA1 FWA2 FWA3"
@@ -20,12 +27,15 @@ for itag in `gkeys tags`; do
     opts=`ggetb tags $itag`
     for tt in $tts; do
 	for reg in $regs; do
-	    J=JOB.R0.$i.$tag_$tt_$reg.sh
+	    JNAME=JOB.R0.$i.$tag_$tt_$reg.sh
+	    J=/home/antonk/logs/${JNAME}
+	    LOG=/home/antonk/logs/LOG.${JNAME}.out
+	    ERR=/home/antonk/logs/LOG.${JNAME}.err
 	    rm -f $J; touch $J; chmod +x $J
 	    echo "#!/bin/bash" >> $J
 	    echo "#PBS -q uct3" >> $J
-	    echo "#PBS -l cput=24:00:00" >> $J
-	    echo "#PBS -l walltime=24:00:00" >> $J
+	    echo "#PBS -l cput=07:00:00" >> $J
+	    echo "#PBS -l walltime=07:00:00" >> $J
 	    echo "source ~/.bashrc" >> $J
 	    echo "anaquick2" >> $J
 	    echo "cd ${ROOTDIR}" >> $J
@@ -37,7 +47,7 @@ for itag in `gkeys tags`; do
 	    cmd="./keysfit.py -b --antondb ${antondb} ${opts} --tt ${tt} --region ${reg} --tag ${tag} --ndata $nevt --nscan ${nscan} --scan ${frange} ${xtra}"
 	    echo $cmd
 	    echo $cmd >> $J
-	    qsub -N R0${i} -o LOG.${J}.out -e LOG.${J}.err ${J}
+	    qsub -N R0${i} -o ${LOG} -e ${ERR} ${J}
 	    ((i++))
 	done
     done

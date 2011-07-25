@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-_PRE_PETER  = 'l_pt>25.0 && ptiso40<2.0 && etiso40<2.0 && met>25.0 && w_mt>40.0'
-_PRE_JORDAN = 'l_pt>25.0 && ptiso20/l_pt<0.1 && met>25.0 && w_mt>40.0'
-_PRE_JORDANALT = 'l_pt>25.0 && ptiso20/l_pt<0.1 && ptiso30/l_pt<0.15 && met>25.0 && w_mt>40.0'
+_QUALITY = ' && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'
+_PRE_PETER  = 'l_pt>20.0 && ptiso40<2.0 && etiso40<2.0 && met>25.0 && w_mt>40.0'+_QUALITY
+_PRE_JORDAN = 'l_pt>25.0 && ptiso20/l_pt<0.1 && met>25.0 && w_mt>40.0'+_QUALITY
+_PRE_JORDANALT = 'l_pt>25.0 && ptiso20/l_pt<0.1 && ptiso30/l_pt<0.15 && met>25.0 && w_mt>40.0'+_QUALITY
 
 import sys,re
 from optparse import OptionParser
@@ -16,7 +17,7 @@ parser.add_option("--type",dest="type",
                   type="int", default=1,
                   help="Type = 2 applies pileup weights")
 parser.add_option("--input",dest="input",
-                  type="string", default='ROOT/root_all_0706_newiso_1fb_cmb', #'ROOT/root_all_0630_newiso_1fb_cmb',
+                  type="string", default='ROOT/0711', #'ROOT/root_all_0630_newiso_1fb_cmb',
                   help="Path to input root file with all histos")
 parser.add_option("--var",dest="var",
                   type="string", default='l_eta',
@@ -25,7 +26,7 @@ parser.add_option("--bin",dest="bin",
                   type="string", default='50,-2.5,2.5',
                   help="Binning for var")
 parser.add_option("--pre",dest="pre",
-                  type="string", default=_PRE_JORDAN,
+                  type="string", default=_PRE_PETER,
                   help="Preliminary cuts to select final W candidates")
 parser.add_option("--cut",dest="cut",
                   type="string", default='mcw*puw', # *effw*trigw
@@ -48,7 +49,7 @@ parser.add_option("--antondb",dest="antondb",
 #832854.0 up to H1 (183602) EF_mu20_MG
 #1035040.0 up to H4 (184169) EF_mu18_MG
 parser.add_option("--lumi",dest="lumi",
-                  type="float", default=832854.0,
+                  type="float", default=1035040.0,
                   help="Integrated luminosity for data (in nb^-1)")
 parser.add_option("--qcd",dest="qcdscale",
                   type="string", default='1.0',
@@ -77,6 +78,9 @@ parser.add_option("--bgsig",dest="bgsig",
 (opts, args) = parser.parse_args()
 mode = opts.mode
 print "MODE =",mode
+gbg = []; COUT = [];
+# antondb containers
+VMAP = {}; OMAP = []
 
 from MC import *
 from SuCanvas import *
@@ -119,8 +123,10 @@ if opts.bgsig!=3:
         po.Add(name='W#rightarrow#mu#nu',samples=['mc_wminmunu','mc_wplusmunu'],color=10)
 else:
     po.Add(name='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen)
-    po.Add(name='Z#rightarrow#tau#tau+jets',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta)
-    po.Add(name='W#rightarrow#tau#nu+jets',samples=['mc_jimmy_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow)
+    #po.Add(name='Z#rightarrow#tau#tau+jets',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta)
+    po.Add(name='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta)
+    #po.Add(name='W#rightarrow#tau#nu+jets',samples=['mc_jimmy_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow)
+    po.Add(name='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow)
     po.Add(name='Z#rightarrow#mu#mu+jets',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed)
     po.Add(name='WZ/ZZ',samples=['mc_jimmy_wz_np%d'%v for v in range(4)]+['mc_jimmy_zz_np%d'%v for v in range(4)],color=11)
     po.Add(name='WW',samples=['mc_jimmy_ww_np%d'%v for v in range(4)],color=12)
@@ -128,8 +134,7 @@ else:
     po.Add(name='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10)
 
 # Determine which data periods to plot
-data = [ 'data_period%s'%s for s in ('B','D','E','F','G1','G2','G3','G4','G5','G6','H1') ]
-data = [ 'data_period%s_updscaleqq0706'%s for s in ('B','D','E','F','G1','G2','G3','G4','G5','G6','H1') ]
+data = [ 'data_period%s'%s for s in ('B','D','E','F','G','H') ]
 mc = list(xflatten(po.mcg))
 # All histo files that we need to get
 allnames = data + mc
@@ -310,9 +315,6 @@ if mode==2: # total stack histo (eff-corrected from MC)
 if mode==11: # asymmetry (not bg-subtracted)
     c = SuCanvas()
     c.plotAsymmetry(hd[POS],hd[NEG],hsig[POS],hsig[NEG])
-    if opts.antondb:
-        a = antondb.antondb(opts.antondb)
-        a.add_root(opts.tag,[c.hmcasym,c.hdasym,c._canvas])
 
 if mode==12: # asymmetry (bg-subtracted)
     c = SuCanvas()
@@ -322,7 +324,7 @@ if mode==13: # asymmetry (bg-subtracted, eff-corrected)
     c = SuCanvas()
     c.plotAsymmetry(hd_sig_eff[POS],hd_sig_eff[NEG],htr[POS],htr[NEG])
 
-if mode==99: # TFractionFitter for QCD contribution
+if mode==99: # TFractionFitter for QCD contribution - FIXME
     c = SuCanvas()
     c.buildDefault()
     # mc
@@ -338,7 +340,25 @@ if mode==99: # TFractionFitter for QCD contribution
         result.Draw("same");
         print 'Fit chi2 =',fit.GetChisquare()
         print 'Fit prob =',fit.GetProb()
+        OMAP += [c._canvas,]
     else:
         print 'Fit failed!'
 
-c.SaveAs('%s_%s_%s_%s_%s_%d'%(opts.tag,opts.input,QMAP[opts.charge][1],opts.var,opts.cut,mode),'png')
+if False:
+    c.SaveAs('%s_%s_%s_%s_%s_%d'%(opts.tag,opts.input,QMAP[opts.charge][1],opts.var,opts.cut,mode),'png')
+
+# save everything
+if len(COUT)>0:
+    VMAP['COUT']=[]
+    for l in COUT:
+        print l
+        VMAP['COUT'].append(l)
+c._canvas.SetName('%s_m%d_%s'%(opts.tag,mode,opts.var))
+OMAP += [c._canvas,]
+if len(VMAP)>0 or len(OMAP)>0 and opts.antondb:
+    a = antondb.antondb(opts.antondb)
+    path = os.path.join('/stack/',opts.tag,QMAP[opts.charge][1])
+    if len(VMAP)>0:
+        a.add(path,VMAP)
+    if len(OMAP)>0:
+        a.add_root(path,OMAP)

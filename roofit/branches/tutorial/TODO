@@ -1,3 +1,13 @@
+Debug charge: q_id and q_exms have -2 sometimes. Also, seems unfilled in peter ntuple!
+
+Results of meeting:
+TODO: try without psMS - ptID cut
+pt cone 0.2 / pt < 0.1
+Peter: et isolation problem; do pileup reweighting
+
+TAG-PROBE
+* Fork stack.py to provide tag-and-probe functionality
+
 Immediate:
 * Update xsections
 * Write script RUN_PLOTS.sh to run multiple ntuple plots
