@@ -111,7 +111,7 @@ def repl_dic(v,tt):
             out = []
             for rcut in resc:
                 res = rcut
-                if not re.search('iso',rcut):
+                if not (re.search('iso',rcut) or re.search('_id',rcut) or re.search('_exms',rcut)):
                     for rvar in rdic:
                         res = re.sub(rvar,'%s_%s'%(rvar,tt),res)
                 out.append(res)
@@ -119,7 +119,7 @@ def repl_dic(v,tt):
         except: # list of objects
             out = []
             for rcut in v:
-                if rcut in rdic:
+                if (rcut in rdic) and not (re.search('iso',rcut) or re.search('_id',rcut) or re.search('_exms',rcut)):
                     out.append('%s_%s'%(rcut,tt))
                 else:
                     out.append(rcut)
