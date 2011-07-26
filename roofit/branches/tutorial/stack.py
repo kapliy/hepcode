@@ -81,6 +81,7 @@ print "MODE =",mode
 gbg = []; COUT = [];
 # antondb containers
 VMAP = {}; OMAP = []
+VMAP['cmd']=' '.join(sys.argv)
 
 from MC import *
 from SuCanvas import *
@@ -344,7 +345,7 @@ if mode==99: # TFractionFitter for QCD contribution - FIXME
     else:
         print 'Fit failed!'
 
-if False:
+if not opts.antondb:
     c.SaveAs('%s_%s_%s_%s_%s_%d'%(opts.tag,opts.input,QMAP[opts.charge][1],opts.var,opts.cut,mode),'png')
 
 # save everything

@@ -71,6 +71,7 @@ class antondb:
                     ROOT.gDirectory.cd(dir)
                 assert dnext, 'Failed to create directory %s'%dir
             assert ROOT.gDirectory.GetName()==sdirs[-1]
+            [o.SetTitle("") for o in objects]
             [o.Write(o.GetName(),ROOT.TObject.kOverwrite) for o in objects]
             f.Close()
             

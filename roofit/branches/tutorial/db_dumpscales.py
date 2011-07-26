@@ -13,9 +13,7 @@ import sys,math
 import antondb
 from optparse import OptionParser
 
-dbname = 'out0706'
-pattern_R0 = '/default/%s/%s/R0' #'/default/cmb/BB/R0'
-pattern_Z  = '/default/%s/%s/Z/gaus0'  #'/default/cmb/BB/Z'
+dbname = 'backup/out0721'
 
 from optparse import OptionParser
 parser = OptionParser()
@@ -147,10 +145,10 @@ def latex_sysdev(db1,db2,regs,ptype1='ksf',ptype2='ksf'):
     return mysys
 
 # load everything into dictionaries
-default = load_all(pattern_R0='/default/%s/%s/R0',pattern_Z='/default/%s/%s/Z/gaus0')
-klu = load_all(pattern_R0='/klu/%s/%s/R0',pattern_Z='/default/%s/%s/Z/gaus0')
-R70 = load_all(pattern_R0='/m70110/%s/%s/R0',pattern_Z='/default/%s/%s/Z/gaus0')
-egge = load_all(pattern_R0='/default/%s/%s/R0',pattern_Z='/default/%s/%s/Z/egge3')
+default = load_all(pattern_R0='/keysfit/default/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/gaus0')
+klu = load_all(pattern_R0='/keysfit/klu/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/gaus0')
+R70 = load_all(pattern_R0='/keysfit/m70110/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/gaus0')
+egge = load_all(pattern_R0='/keysfit/default/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/egge3')
 
 # dump scales as C++ arrays
 if mode==0:
@@ -167,7 +165,7 @@ if mode==5:
     latex_k(default,['AA','BB','CC'])
 if mode==6:
     latex_k(default,['FWA','MWA','Baa','Bcc','MWC','FWC'])
-
+    
 def print_syst(regs):
     print '==================SYS1================='
     sys1 = latex_sysdev(default,klu,regs)
@@ -202,3 +200,17 @@ if mode==11:
     #dets = ['id',]
     regs = ['FWA','MWA','Baa','Bcc','MWC','FWC']
     print_syst(regs)
+
+
+if mode==0725:
+    nomsid=load_all(pattern_R0='/keysfit/nomsid/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/gaus0')
+    print 'DEFAULT:'
+    latex_R(default,['AA','BB','CC'])
+    print 'NOMSID:'
+    latex_R(nomsid,['AA','BB','CC'])
+if mode==07252:
+    nomsid=load_all(pattern_R0='/keysfit/nomsid/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/gaus0')
+    print 'DEFAULT:'
+    latex_R(default,['FWA','MWA','Baa','Bcc','MWC','FWC'])
+    print 'NOMSID:'
+    latex_R(nomsid,['FWA','MWA','Baa','Bcc','MWC','FWC'])

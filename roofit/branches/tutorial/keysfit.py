@@ -151,6 +151,7 @@ w = RooWorkspace('w',kTRUE); w.model = None
 gbg = []; COUT = [];
 # antondb containers
 VMAP = {}; OMAP = []
+VMAP['cmd']=' '.join(sys.argv)
 
 # Z mass cannot float if we fit for scale
 mZ = '91.1876'
