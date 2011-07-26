@@ -143,6 +143,7 @@ w = RooWorkspace('w',kTRUE)
 gbg = []; COUT = []
 # antondb containers
 VMAP = {}; OMAP = []
+VMAP['cmd']=' '.join(sys.argv)
 
 # Perform unbinned Ks comparison
 def make_array_sorted(data,var='x'):

@@ -1,17 +1,12 @@
-Debug charge: q_id and q_exms have -2 sometimes. Also, seems unfilled in peter ntuple!
-
 Results of meeting:
-TODO: try without psMS - ptID cut
-pt cone 0.2 / pt < 0.1
+DONE: try without psMS - ptID cut
+DONE: pt cone 0.2 / pt < 0.1
 Peter: et isolation problem; do pileup reweighting
 
 TAG-PROBE
 * Fork stack.py to provide tag-and-probe functionality
 
 Immediate:
-* Update xsections
-* Write script RUN_PLOTS.sh to run multiple ntuple plots
-  Include QCD region, anti-d0 selection, etc (add to ntuple)
 * Add to antondb ability to save exact command used to run it
 
 Muon scales:

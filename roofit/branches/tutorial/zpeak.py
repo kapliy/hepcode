@@ -128,6 +128,7 @@ w = RooWorkspace('w',kTRUE)
 gbg = []; COUT = []
 # antondb containers
 VMAP = {}; OMAP = []
+VMAP['cmd']=' '.join(sys.argv)
 
 def cmd_none():
     return ['']
@@ -524,7 +525,6 @@ if len(COUT)>0:
 
 if len(VMAP)>0 or len(OMAP)>0:
     a = antondb(opts.antondb)
-    sample_path = '/default/cmb/BB/Z/bw3'
     path = os.path.join('/zpeak/',opts.tag,opts.tt,opts.region,opts.func)
     if len(VMAP)>0:
         a.add(path,VMAP)
