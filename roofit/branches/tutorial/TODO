@@ -1,22 +1,26 @@
+TODO:
+* add et plot; consider effects of pileup
+* Ask root to do binomial errors: use long form of divide (option "B")
+* fix MCP hits requirements - weird bugs (??)
+Peter: shape of abs isolation is funny
+MCP hits that fail - vs eta/phi in 2d (suspect specific modules)!
+* Rip QCD fit from Jordan
+* Update tag-probe code to also plot Z's and perform BG subtraction, if requested!
+* check that we don't get multiple entries per event in tag-probe study!
+
 Results of meeting:
 DONE: try without psMS - ptID cut
 DONE: pt cone 0.2 / pt < 0.1
 Peter: et isolation problem; do pileup reweighting
 
-TAG-PROBE
-* Fork stack.py to provide tag-and-probe functionality
-
-Immediate:
-* Add to antondb ability to save exact command used to run it
-
 Muon scales:
 * Investigate RooEggePdf - see if it is indeed compatible with my implementation!
   Test by fitting the same event!
 * Add to template the CDF plot before and after either chi2 or ks
-* Relax eta to 2.5 - apply at plot level
+* !!! Relax eta to 2.5 - apply at plot level. Add to wasym definitions
+* !!! Start using mutag muons
 
-Jordan cutflow:
-* Rip QCD fit from Jordan
+
 
 * Applying absolute scale: perhaps going about it the wrong way? Use the KS statistic between data and MC
   to find the location of the peak?
@@ -26,12 +30,5 @@ ANALYSIS:
 * Muon QCD template: events failing d0
   MET fix (0..100) with qcd and w+jets floating
 
-TODO
-Differences from F. Cerutti:
-* HE: |delta-z0| < 5 mm
-* HE: ptid, ptexms > 10 GeV
-* HE: ptcb > 10 GeV (we use > 20 GeV)
-* TODO: fit egge convolved with simple gaussian; range = 80..100;
-
-* Check if rho can be chosen smartly - Jahred's thesis.
+* Check if RooKeysPDF rho can be chosen smartly - Jahred's thesis.
 * Repeat a study to verify sqrt(A*B) works if one leg in barrel, another in endcap

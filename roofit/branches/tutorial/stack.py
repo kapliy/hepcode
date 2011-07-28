@@ -17,7 +17,7 @@ parser.add_option("--type",dest="type",
                   type="int", default=1,
                   help="Type = 2 applies pileup weights")
 parser.add_option("--input",dest="input",
-                  type="string", default='ROOT/0711', #'ROOT/root_all_0630_newiso_1fb_cmb',
+                  type="string", default='ROOT/current/all',
                   help="Path to input root file with all histos")
 parser.add_option("--var",dest="var",
                   type="string", default='l_eta',
@@ -356,7 +356,7 @@ if len(COUT)>0:
         VMAP['COUT'].append(l)
 c._canvas.SetName('%s_m%d_%s'%(opts.tag,mode,opts.var))
 OMAP += [c._canvas,]
-if len(VMAP)>0 or len(OMAP)>0 and opts.antondb:
+if (len(VMAP)>0 or len(OMAP)>0) and opts.antondb:
     a = antondb.antondb(opts.antondb)
     path = os.path.join('/stack/',opts.tag,QMAP[opts.charge][1])
     if len(VMAP)>0:
