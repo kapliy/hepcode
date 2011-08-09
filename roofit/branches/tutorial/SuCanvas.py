@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import re
+import re,math
 import ROOT
 
 class SuCanvas:
@@ -22,12 +22,13 @@ class SuCanvas:
     ratio.SetFillStyle( 3154 );
     ratio.SetMarkerStyle( 2 );
     ratio.Draw("AP E2 same");
-                    
+
   def drawRefLine(s,refLine,xtitle=None):
     """ Draws a reference line """
     for ibin in range (1,refLine.GetNbinsX()+1):
-      refLine.SetBinContent( ibin , 1. )
+      refLine.SetBinContent( ibin , 1.0 )
     refLine.SetLineColor( ROOT.kAzure-7 );
+    refLine.SetFillColor( 10 );
     refLine.SetMinimum( 0.5 )
     refLine.SetMaximum( 1.5 )
     refLine.GetXaxis().SetLabelSize( s.getRatioLabelSize() );
@@ -71,13 +72,39 @@ class SuCanvas:
     s.hratio.Draw("AP same");
     s.update()
 
-  def WAsymmetry(s,hplus,hminus,title='asymmetry'):
+  def WAsymmetry_old(s,hplus,hminus,title='asymmetry'):
     """ (W+ - W-)/(W+ + W-) workhorse function """
     hsum = hplus.Clone(hplus.GetName()+" asymmetry")
     hsum.Add(hminus,-1.0)
     hdiff = hplus.Clone(hplus.GetName()+" asymmetry_diff")
     hdiff.Add(hminus)
     hsum.Divide(hdiff)
+    hsum.SetTitle(title)
+    #TODO : correct the errors via 2*sqrt(Np*Nm/(Np+Nm)^3)
+    return hsum
+
+  def asym_error(s,Np,sNp,Nm,sNm):
+    """ Error propagation formula for (N+ - N-)/(N+ + N-) """
+    t = (Np+Nm)**2
+    if t==0:
+      return 0
+    res2 = (2*Nm/t)**2 * sNp**2 + (-2*Np/t)**2 * sNm**2
+    return math.sqrt(res2) if res2>0 else 0.0
+  def asym_value(s,Np,sNp,Nm,sNm):
+    """ returns (N+ - N-)/(N+ + N-) """
+    res = (Np-Nm)/(Np+Nm) if Np+Nm>0 else 0
+    return res
+  def WAsymmetry(s,hplus,hminus,title='asymmetry'):
+    """ (W+ - W-)/(W+ + W-) workhorse function with correct errors """
+    hsum = hplus.Clone(hplus.GetName()+" asymmetry")
+    hsum.Reset()
+    for i in xrange(1,hsum.GetNbinsX()+1):
+      Np  = hplus.GetBinContent(i)
+      sNp = hplus.GetBinError(i)
+      Nm  = hminus.GetBinContent(i)
+      sNm = hminus.GetBinError(i)
+      hsum.SetBinContent(i,s.asym_value(Np,sNp,Nm,sNm))
+      hsum.SetBinError(i,s.asym_error(Np,sNp,Nm,sNm))
     hsum.SetTitle(title)
     return hsum
 
@@ -108,12 +135,81 @@ class SuCanvas:
     s.hratio.Draw("AP same");
     s.update()
 
+  def plotTagProbe(s,hda_bef,hda_aft,hmc_bef,hmc_aft,xtitle='var'):
+    """ Makes a large tag-and-probe canvas """
+    s.buildDefault(width=1200,height=600)
+    s.hda_r = [None for i in xrange(2)]
+    s.hmc_r = [None for i in xrange(2)]
+    s.hsc_r = [None for i in xrange(2)]
+    for iq in xrange(2):
+      # colors and style
+      hmc_aft[iq].SetLineColor(ROOT.kBlue)
+      hmc_aft[iq].SetMarkerColor(ROOT.kBlue)
+      hmc_aft[iq].SetMarkerSize(0.4);
+      hmc_bef[iq].SetLineColor(ROOT.kBlue)
+      hmc_bef[iq].SetMarkerColor(ROOT.kBlue)
+      hmc_bef[iq].SetMarkerSize(0.4);
+      hda_aft[iq].SetLineColor(ROOT.kRed)
+      hda_aft[iq].SetMarkerColor(ROOT.kRed)
+      hda_aft[iq].SetMarkerSize(0.6);
+      hda_bef[iq].SetLineColor(ROOT.kRed)
+      hda_bef[iq].SetMarkerColor(ROOT.kRed)
+      hda_bef[iq].SetMarkerSize(0.6);
+      # ratios
+      s.hda_r[iq] = hda_aft[iq].Clone()
+      s.hda_r[iq].Divide(hda_aft[iq],hda_bef[iq],1.0,1.0,"B")
+      s.hmc_r[iq] = hmc_aft[iq].Clone()
+      s.hmc_r[iq].Divide(hmc_aft[iq],hmc_bef[iq],1.0,1.0,"B")
+      s.hsc_r[iq] = s.hda_r[iq].Clone()
+      s.hsc_r[iq].Divide(s.hda_r[iq],s.hmc_r[iq],1.0,1.0,"")
+      s.hsc_r[iq].SetLineColor(ROOT.kBlack)
+      s.hsc_r[iq].SetMarkerColor(ROOT.kBlack)
+      s.hsc_r[iq].SetMarkerSize(0.4);
+    c = s.cd_canvas()
+    c.Divide(2,2)
+    c.cd(1)
+    s.hda_r[0].Draw("")
+    s.hmc_r[0].Draw("A same")
+    s.hda_r[0].GetYaxis().SetRangeUser(0.50,1.10);
+    s.hda_r[0].GetYaxis().SetTitle('mu+ efficiency');
+    s.hda_r[0].GetXaxis().SetTitle(xtitle);
+    c.cd(2)
+    s.hda_r[1].Draw("")
+    s.hmc_r[1].Draw("A same")
+    s.hda_r[1].GetYaxis().SetRangeUser(0.50,1.10);
+    s.hda_r[1].GetYaxis().SetTitle('mu- efficiency');
+    s.hda_r[1].GetXaxis().SetTitle(xtitle);
+    c.cd(3)
+    s.hsc_r[0].Draw("")
+    s.hsc_r[0].GetYaxis().SetRangeUser(0.90,1.10);
+    s.hsc_r[0].GetYaxis().SetTitle('mu+ scale factor (data/MC)');
+    s.hsc_r[0].GetXaxis().SetTitle(xtitle);
+    s.l0 = ROOT.TGraph(2)
+    s.l0.SetPoint(0,s.hsc_r[0].GetXaxis().GetXmin(),1.0)
+    s.l0.SetPoint(1,s.hsc_r[0].GetXaxis().GetXmax(),1.0)
+    s.l0.SetLineWidth(1)
+    s.l0.SetLineColor(ROOT.kRed)
+    s.l0.SetLineStyle(2)
+    s.l0.Draw('l')
+    c.cd(4)
+    s.hsc_r[1].Draw("")
+    s.hsc_r[1].GetYaxis().SetRangeUser(0.90,1.10);
+    s.hsc_r[1].GetYaxis().SetTitle('mu- scale factor (data/MC)');
+    s.hsc_r[1].GetXaxis().SetTitle(xtitle);
+    s.l1 = ROOT.TGraph(2)
+    s.l1.SetPoint(0,s.hsc_r[0].GetXaxis().GetXmin(),1.0)
+    s.l1.SetPoint(1,s.hsc_r[0].GetXaxis().GetXmax(),1.0)
+    s.l1.SetLineWidth(1)
+    s.l1.SetLineColor(ROOT.kRed)
+    s.l1.SetLineStyle(2)
+    s.l1.Draw('l')
+                   
   def __init__(s):
     s._ratioDrawn = False
 
-  def buildDefault(s,title='default'):
+  def buildDefault(s,title='default',width=800,height=600):
     s._ratioDrawn = False;
-    s._canvas = ROOT.TCanvas( title , title , 0 , 0 , 800 , 600 );
+    s._canvas = ROOT.TCanvas( title , title , 0 , 0 , width , height );
     s._canvas.SetFillColor( ROOT.kWhite );
     s._canvas.GetFrame().SetBorderMode( 0 );
     s._canvas.GetFrame().SetBorderSize( 0 );
@@ -205,13 +301,13 @@ class SuCanvas:
 
   # cd into different pads
   def cd_canvas(s):
-    s._canvas.cd()
+    return s._canvas.cd()
   def cd_plotPad(s):
     assert s._plotPad
-    s._plotPad.cd()
+    return s._plotPad.cd()
   def cd_ratioPad(s):
     assert s._ratioPad
-    s._ratioPad.cd()
+    return s._ratioPad.cd()
 
   # get vats
   def getCanvas(s):

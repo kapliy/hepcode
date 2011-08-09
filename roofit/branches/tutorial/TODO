@@ -2,8 +2,13 @@ TODO:
 * add et plot; consider effects of pileup
 * Ask root to do binomial errors: use long form of divide (option "B")
 * fix MCP hits requirements - weird bugs (??)
+* Add a version of histo creation using temp in-memory tree - to remove multiple candidates per event
+
 Peter: shape of abs isolation is funny
 MCP hits that fail - vs eta/phi in 2d (suspect specific modules)!
+
+* upgrade to newer athena version to get TEfficiency
+
 * Rip QCD fit from Jordan
 * Update tag-probe code to also plot Z's and perform BG subtraction, if requested!
 * check that we don't get multiple entries per event in tag-probe study!
