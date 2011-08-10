@@ -94,6 +94,7 @@ parser.add_option("--bgsig",dest="bgsig",
 (opts, args) = parser.parse_args()
 mode = opts.mode
 print "MODE =",mode
+print "PRE =",opts.pre
 gbg = []; COUT = [];
 # antondb containers
 VMAP = {}; OMAP = []
@@ -194,15 +195,22 @@ q = opts.charge
 if mode==1: # total stack histo
     c = SuCanvas()
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
-    hmc = po.stack('mc',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre),leg=leg)
-    hdata   = po.data('data',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre),leg=leg)
+    hmc,hdata = None,None
+    if opts.ntuple=='w':
+        hmc = po.stack('mc',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre),leg=leg)
+        hdata   = po.data('data',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre),leg=leg)
+    else:
+        hmc = po.stack('mc',opts.var,opts.bin,'(%s) * (%s)'%(opts.cut,opts.pre),leg=leg)
+        hdata   = po.data('data',opts.var,opts.bin,'(%s) * (%s)'%(opts.cut,opts.pre),leg=leg)
     c.plotStackHisto(hmc,hdata,leg)
 
 if mode==11: # asymmetry (not bg-subtracted)
     assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
     hsig,hd    = [None]*2,[None]*2
+    SuSample.hcharge = POS
     hsig[POS]  = po.sig('signalPOS',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[POS][2],opts.cut,opts.pre))
     hd[POS]    = po.data('dataPOS',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[POS][2],opts.cut,opts.pre))
+    SuSample.hcharge = NEG
     hsig[NEG]  = po.sig('signalNEG',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[NEG][2],opts.cut,opts.pre))
     hd[NEG]    = po.data('dataNEG',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[NEG][2],opts.cut,opts.pre))
     c = SuCanvas()
@@ -211,8 +219,10 @@ if mode==11: # asymmetry (not bg-subtracted)
 if mode==12: # asymmetry (bg-subtracted)
     assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
     hsig,hd_sig  = [None]*2,[None]*2
+    SuSample.hcharge = POS
     hsig[POS]    = po.sig('signalPOS',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[POS][2],opts.cut,opts.pre))
     hd_sig[POS]  = po.data_sub('dataPOS',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[POS][2],opts.cut,opts.pre))
+    SuSample.hcharge = NEG
     hsig[NEG]    = po.sig('signalNEG',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[NEG][2],opts.cut,opts.pre))
     hd_sig[NEG]  = po.data_sub('dataNEG',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[NEG][2],opts.cut,opts.pre))
     c = SuCanvas()
