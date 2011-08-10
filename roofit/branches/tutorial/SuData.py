@@ -89,6 +89,11 @@ class SuSample:
             return 1.0
         from MC import mc
         mrun = mc.match_sample(s.name)
+        qcdscale = 1
+        if False: # blow up QCD for debugging
+            if re.search('mu15x',s.name):
+                qcdscale=10
+                assert False
         if mrun:
             xsec = mrun.xsec*mrun.filteff
             # TODO - choose the right evcnt depending on cut (effw/trigw)
@@ -97,7 +102,7 @@ class SuSample:
             if sample not in s.seen_samples:
                 print 'MC %s: \t xsec=%.1f (%.1f*%.1f) nb \t nevts=%d/%d'%(sample,xsec,mrun.xsec,mrun.filteff,nevents,mrun.nevents)
                 s.seen_samples.append(sample)
-            return 1.0/nevents*s.lumi*xsec
+            return 1.0/nevents*s.lumi*xsec*qcdscale
         print 'WARNING: unable to find scale for MC sample ',s.name
         return 1.0
     def GetHisto(s,hname,hpath):
