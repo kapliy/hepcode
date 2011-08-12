@@ -78,7 +78,7 @@ if mode==2:
     canvas = SuCanvas()
     canvas.buildDefault('mc_samples')
     folds = ['WP','mcnlo_WP','jimmy_WP']
-    labs = ['106044.PythiaWmunu','106084.McAtNloWplusmunu','107693.AlpgenJimmyWmunuNp3']
+    labs = ['106044.PythiaWmunu','106084.McAtNloWmunu','107693.AlpgenJimmyWmunuNpX']
     leg = MakeLegend('Color code')
     title='Variation due various MC samples'
     for i,n in enumerate(folds):

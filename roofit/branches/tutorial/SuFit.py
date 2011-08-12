@@ -177,7 +177,8 @@ class SuFit:
     fractext.SetBorderSize( 0 )
     fractext.SetMargin( 0 )
     for ift,frac in enumerate(s.fractions):
-      fractext.AddText( '%s = %.3f'%(s.free[ift].getLegendName(),frac) )
+      fractext.AddText( 'Frac. %s = %.3f'%(s.free[ift].getLegendName(),frac) )
+      fractext.AddText( 'Scale %s = %.3f'%(s.free[ift].getLegendName(),s.scales[ift]) )
     key.Draw("9");
     fractext.Draw("9");
     return canvas,frame
