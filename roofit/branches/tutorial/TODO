@@ -1,17 +1,27 @@
+CHECK WHY CM VERSION HAS DISAGREEMENTS! IS IT TRULY ONLY DUE TO JET CLEANING??
+* Trace down the disagreement between post-CM and pre-CM run!
+
+Peter:
+apply pythia-based acceptance correction to alpgen samples.
+do things break down as a function of njets?
+Write down exactly what am i measuring
+
+* Check POWHEG+pythia asymmetry in last bin - compared with MC@NLO+HERWIG
+* Et-miss resolution study: use Z events; project on Z pt axis (Sam Whitehead's thesis)
+* Try to see if low-mass tail in Mll goes away if cuts are always applied to combined muons
+* Add data-driven QCD template capability to SuData
+
+Apply MET scales. Verify they actually work (print scaling correcting factor out)
+Consider W+jets QCD templates
+
 TODO:
-* add et plot; consider effects of pileup
-* Ask root to do binomial errors: use long form of divide (option "B")
 * fix MCP hits requirements - weird bugs (??)
 * Add a version of histo creation using temp in-memory tree - to remove multiple candidates per event
-
+   check that we don't get multiple entries per event in tag-probe study!
+* Employ effFast (TEfficiency) in the tag-and-probe calculation
 Peter: shape of abs isolation is funny
 MCP hits that fail - vs eta/phi in 2d (suspect specific modules)!
 
-* upgrade to newer athena version to get TEfficiency
-
-* Rip QCD fit from Jordan
-* Update tag-probe code to also plot Z's and perform BG subtraction, if requested!
-* check that we don't get multiple entries per event in tag-probe study!
 
 Results of meeting:
 DONE: try without psMS - ptID cut
@@ -24,7 +34,6 @@ Muon scales:
 * Add to template the CDF plot before and after either chi2 or ks
 * !!! Relax eta to 2.5 - apply at plot level. Add to wasym definitions
 * !!! Start using mutag muons
-
 
 
 * Applying absolute scale: perhaps going about it the wrong way? Use the KS statistic between data and MC

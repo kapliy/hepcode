@@ -33,6 +33,17 @@ class SuSample:
         """ add one of the TNtuples """
         s.nt[path] = ROOT.TChain(path,path)
         s.path = path # excluding dg/
+    def choose_evcount(s,cut):
+        """ chooses the right nevents histogram depending on which scales were requested """
+        effw = re.search('effw',cut)
+        trigw = re.search('trigw',cut)
+        if effw and not trigw:
+            return 'nevts_eff'
+        elif trigw and not effw:
+            return 'nevts_trig'
+        elif trigw and effw:
+            return 'nevts_efftrig'
+        return 'nevts'
     def topdir(s,f):
         """ descend down the root file in case it's the output of single-file dgplot merge """
         topdir = 'dg'
@@ -70,7 +81,9 @@ class SuSample:
                 hist = f.Get(hname)
                 n = 0
                 if hist:
-                    n = hist.GetEntries()
+                    # TODO CHECKME
+                    #n = hist.GetEntries()  # had this here before!
+                    n = hist.GetBinContent(1)
                     if ii==0:
                         print 'Number of GRL events:',n
                 else:
@@ -89,14 +102,14 @@ class SuSample:
             return 1.0
         from MC import mc
         mrun = mc.match_sample(s.name)
-        qcdscale = 1
-        if False: # blow up QCD for debugging
-            if re.search('mu15x',s.name):
-                qcdscale=10
-                assert False
+        qcdscale = 1.0
+        if re.search('mu15x',s.name):
+            qcdscale=s.qcdscale
+            if qcdscale!=1.0:
+                print 'MC QCD: extra scaling by %.3f'%qcdscale
         if mrun:
             xsec = mrun.xsec*mrun.filteff
-            # TODO - choose the right evcnt depending on cut (effw/trigw)
+            # Choose the right evcnt - depending on which scale factors were used (effw/trigw)
             nevents = s.nevt[evcnt]
             sample = mrun.sample
             if sample not in s.seen_samples:
@@ -142,7 +155,7 @@ class SuSample:
                 s.data[key] = ROOT.gDirectory.Get(hname).Clone()
         res = s.data[key].Clone()
         if s.lumi:
-            res.Scale(s.scale())
+            res.Scale(s.scale(evcnt = s.choose_evcount(cut)))
         if s.rebin!=1:
             res.Rebin(s.rebin)
         if True:

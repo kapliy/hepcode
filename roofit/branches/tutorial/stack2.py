@@ -64,6 +64,7 @@ parser.add_option("--antondb",dest="antondb",
 #689279.0 up to G5 (183347) EF_mu20_MG
 #832854.0 up to H1 (183602) EF_mu20_MG
 #1035040.0 up to H4 (184169) EF_mu18_MG
+#1340030.0 up to I4 (186493) EF_mu18_MG
 parser.add_option("--lumi",dest="lumi",
                   type="float", default=1035040.0,
                   help="Integrated luminosity for data (in nb^-1)")
@@ -115,6 +116,29 @@ SuSample.hsource = opts.hsource
 SuSample.hcharge = opts.charge
 SuSample.lumi = opts.lumi
 SuSample.rebin = opts.rebin
+SuSample.qcdscale = float(opts.qcdscale) if not opts.qcdscale=='AUTO' else 1.0
+
+def metfitreg(pre):
+    """ met fit region from w+jets 2010 analysis """
+    res = []
+    for elm in pre.split(' && '):
+        if re.match('w_mt',elm):
+            res.append('w_mt>35.0')
+        elif re.match('met',elm):
+            res.append('met>15.0')
+        else:
+            res.append(elm)
+    return ' && '.join(res)
+
+def qcdreg(pre):
+    """ qcd-enriches sample to get data-driven template """
+    res = []
+    for elm in pre.split(' && '):
+        if re.match('fabs\(d0',elm) or re.match('d0',elm):
+            res.append('fabs(d0sig)>3.0 && fabs(d0)>0.1 && fabs(d0)<0.4')
+        else:
+            res.append(elm)
+    return ' && '.join(res)
 
 #SetStyle()
 def QAPP(path,iq):
@@ -159,7 +183,7 @@ if opts.ntuple=='w':
         po.Add(label='bbmu15X/ccmu15X',samples=['mc_bbmu15x','mc_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
         po.Add(label='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk'])
 elif opts.ntuple=='z':
-    if opts.bgsig in (0,1): # z inclusive
+    if opts.bgsig in (0,1,2): # z inclusive
         po.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
         po.add(label='W#rightarrow#mu#nu',samples='mc_wmunu',color=10,flags=['bg','mc','ewk'])
         po.add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
@@ -168,6 +192,8 @@ elif opts.ntuple=='z':
             po.add(label='bbmu15X/ccmu15X',samples=['mc_bbmu15x','mc_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
         elif opts.bgqcd==1:
             po.Add(label='QCD J0..J5',samples=['mc_J%d'%v for v in xrange(5)],color=ROOT.kCyan,flags=['bg','mc','qcd'])
+        elif opts.bgqcd==2:
+            po.Add(label='QCD data-driven',samples=['data_period%s'%s for s in ('B','D','E','F','G','H')],color=ROOT.kCyan,flags=['bg','mc','qcd','driven'])
         po.add(label='Z#rightarrow#mu#mu',samples='mc_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
     elif opts.bgsig in (3,): # z+jets
         po.Add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
@@ -192,7 +218,14 @@ po.print_counts()
 gbg = []
 q = opts.charge
 
+# normalize MET?
+def renormalize():
+    """ Normalizes MET template """
+    if not opts.qcdscale=='AUTO':
+        return
+
 if mode==1: # total stack histo
+    renormalize()
     c = SuCanvas()
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
     hmc,hdata = None,None
