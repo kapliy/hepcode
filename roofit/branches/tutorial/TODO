@@ -1,10 +1,16 @@
-CHECK WHY CM VERSION HAS DISAGREEMENTS! IS IT TRULY ONLY DUE TO JET CLEANING??
-* Trace down the disagreement between post-CM and pre-CM run!
+Analysis updates:
+* trigger matching (HiggsWW example)
+* trigger scaling (following matching)
+* jet-muon overlap
+* only consider vtx[0] for vertex finding
+* do we use em-scale jets for met cleaning?
+* alpgen HFOR tool
 
 Peter:
 apply pythia-based acceptance correction to alpgen samples.
 do things break down as a function of njets?
-Write down exactly what am i measuring
+Write down exactly what am i measuring.
+
 
 * Check POWHEG+pythia asymmetry in last bin - compared with MC@NLO+HERWIG
 * Et-miss resolution study: use Z events; project on Z pt axis (Sam Whitehead's thesis)

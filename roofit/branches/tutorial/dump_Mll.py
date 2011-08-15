@@ -8,8 +8,8 @@ import sys
 import ROOT
 ROOT.gROOT.SetBatch(True)
 
-dbname='out0721'
-folds= ['default','SC00','SC10','SHT00','SHT10']
+dbname='out0813'
+folds= ['default','MCP'] + ['closure_8140%d'%i for i in xrange(3)]
 tts=['cmb','id','exms']
 regs=['AA','BB','CC','BA','AB','BC','CB']
 gbg = []
@@ -33,4 +33,4 @@ for fold in folds[1:]:
             [p.Draw() for p in p_def]
             c.cd(2)
             [p.Draw() for p in p_stu]
-            c.SaveAs('MllJUL25_%s_%s_%s.png'%(fold,tt,reg))
+            c.SaveAs('AUG15_%s_%s_%s.png'%(fold,tt,reg))

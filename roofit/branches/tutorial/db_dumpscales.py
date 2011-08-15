@@ -13,15 +13,22 @@ import sys,math
 import antondb
 from optparse import OptionParser
 
-dbname = 'backup/out0721'
+dbname = 'out0813'
 
 from optparse import OptionParser
 parser = OptionParser()
 parser.add_option("-m", "--mode",dest="mode",
                   type="int", default=0,
                   help="Plot mode")
+parser.add_option("-a", "--algo",dest="algo",
+                  type="int", default=0,
+                  help="Algorith: 0=STACO, 1=MuID")
+parser.add_option("-d", "--dets",dest="dets",
+                  type="int", default=0,
+                  help="For printing syst tables: 0=ALL,1=cmb,2=exms,3=id")
 (opts, args) = parser.parse_args()
 mode = opts.mode
+algo = opts.algo
 
 a = antondb.antondb(dbname)
 a.load()
@@ -145,11 +152,19 @@ def latex_sysdev(db1,db2,regs,ptype1='ksf',ptype2='ksf'):
     return mysys
 
 # load everything into dictionaries
-default = load_all(pattern_R0='/keysfit/default/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/gaus0')
-klu = load_all(pattern_R0='/keysfit/klu/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/gaus0')
-R70 = load_all(pattern_R0='/keysfit/m70110/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/gaus0')
-egge = load_all(pattern_R0='/keysfit/default/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/egge3')
-
+if algo==0: # STACO
+    default = load_all(pattern_R0='/keysfit/default/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/gaus0')
+    klu = load_all(pattern_R0='/keysfit/klu/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/gaus0')
+    R70 = load_all(pattern_R0='/keysfit/m70110/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/gaus0')
+    egge = load_all(pattern_R0='/keysfit/default/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/egge3')
+elif algo==1:
+    default = load_all(pattern_R0='/keysfit/muid_default/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/gaus0')
+    klu = load_all(pattern_R0='/keysfit/muid_klu/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/gaus0')
+    R70 = load_all(pattern_R0='/keysfit/muid_m70110/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/gaus0')
+    egge = load_all(pattern_R0='/keysfit/muid_default/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/egge3')
+else:
+    assert False, 'Unknown algorithm'
+    
 # dump scales as C++ arrays
 if mode==0:
     print_cpp(default,['AA','BB','CC'])
@@ -197,7 +212,16 @@ if mode==10:
     print_syst(regs)
     
 if mode==11:
-    #dets = ['id',]
+    if opts.dets==0:
+        pass
+    elif opts.dets==1:
+        dets = ['cmb',]
+    elif opts.dets==2:
+        dets = ['exms',]
+    elif opts.dets==3:
+        dets = ['id',]
+    else:
+        assert False,'Unknown --dets'
     regs = ['FWA','MWA','Baa','Bcc','MWC','FWC']
     print_syst(regs)
 

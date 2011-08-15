@@ -5,7 +5,7 @@
 source bashmap.sh
 ROOTDIR=$PWD
 
-antondb=out0721
+antondb=out0813
 
 # Specify the list of tags (e.g., preselection cuts)
 i=0
@@ -42,9 +42,9 @@ tts[((i++))]="-m1 --var 'w_pt' --bin '50,0,200'"
 tts[((i++))]="-m1 --var 'njets' --bin '10,0,10'"
 tts[((i++))]="-m1 --var 'ptiso20/l_pt' --bin '100,0,0.1'"
 tts[((i++))]="-m1 --var 'ptiso40' --bin '100,0,2.0'"
-tts[((i++))]="-m1 --var 'z0' --bin '100,-10,10'"
-tts[((i++))]="-m1 --var 'd0' --bin '100,-5,5'"
-tts[((i++))]="-m1 --var 'd0sig' --bin '100,-10,10'"
+tts[((i++))]="-m1 --var 'z0' --bin '400,-10,10'"
+tts[((i++))]="-m1 --var 'd0' --bin '400,-10,10'"
+tts[((i++))]="-m1 --var 'd0sig' --bin '400,-10,10'"
 tts[((i++))]="-m11 --var 'l_eta' --bin '50,-2.5,2.5'"
 tts[((i++))]="-m11 --var 'fabs(l_eta)' --bin '50,0,2.5'"
 
@@ -71,7 +71,7 @@ for itag in `gkeys tags`; do
 	    echo "source ~/.bashrc" >> $J
 	    echo "anaquick2" >> $J
 	    echo "cd ${ROOTDIR}" >> $J
-	    cmd="./stack.py -b -t ${tag} --antondb ${antondb} ${tt} -q ${q} ${opts}"
+	    cmd="./stack2.py -b -t ${tag} --antondb ${antondb} ${tt} -q ${q} ${opts}"
 	    echo $cmd
 	    echo $cmd >> $J
 	    qsub -N PL${i} -o ${LOG} -e ${ERR} ${J}
