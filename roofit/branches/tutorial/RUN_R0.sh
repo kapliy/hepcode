@@ -2,20 +2,50 @@
 source bashmap.sh
 ROOTDIR=$PWD
 
-antondb=out0721
+antondb=out0813
 # Specify the list of tags
-data="--root 'ROOT/current/noscale/data_period*/root_data_period*.root'"
 i=0
-gput tags $i default    "${data} --zmin 80 --zmax 100"
+data="--root '/share/ftkdata1/antonk/ana_v26_0813_closure_stacoCB_fixmetcln_fixsht/data_period*_81400/root_data_period*.root'"
+gput tags $i closurefx_81400    "${data} --zmin 80 --zmax 100"
 ((i++))
-gput tags $i m70110     "${data} --zmin 70 --zmax 110"
+data="--root '/share/ftkdata1/antonk/ana_v26_0813_closure_stacoCB_fixmetcln_fixsht/data_period*_81401/root_data_period*.root'"
+gput tags $i closurefx_81401    "${data} --zmin 80 --zmax 100"
 ((i++))
-gput tags $i klu        "${data} --zmin 80 --zmax 100 --kluit"
+data="--root '/share/ftkdata1/antonk/ana_v26_0813_closure_stacoCB_fixmetcln_fixsht/data_period*_81402/root_data_period*.root'"
+gput tags $i closurefx_81402    "${data} --zmin 80 --zmax 100"
 ((i++))
-gput tags $i aklu       "${data} --zmin 80 --zmax 100 --akluit"
-((i++))
-prenomsid="'lP_pt>20.0 && lN_pt>20.0 && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0 && Z_m>50 && (lP_q*lN_q)<0 && lP_idhits==1 && fabs(lP_z0)<10. && fabs(lP_d0sig)<10. && lN_idhits==1 && fabs(lN_z0)<10. && fabs(lN_d0sig)<10.'"
-gput tags $i nomsid     "${data} --zmin 80 --zmax 100 --pre ${prenomsid}"
+
+if [ "0" -eq "1" ]; then
+    data="--root 'ROOT/current/noscale/data_period*/root_data_period*.root'"
+    i=0
+    gput tags $i default    "${data} --zmin 80 --zmax 100"
+    ((i++))
+    gput tags $i m70110     "${data} --zmin 70 --zmax 110"
+    ((i++))
+    gput tags $i klu        "${data} --zmin 80 --zmax 100 --kluit"
+    ((i++))
+    data="--root 'ROOT/current/noscale_muid/data_period*/root_data_period*.root'"
+    gput tags $i muid_default    "${data} --zmin 80 --zmax 100"
+    ((i++))
+    gput tags $i muid_m70110     "${data} --zmin 70 --zmax 110"
+    ((i++))
+    gput tags $i muid_klu        "${data} --zmin 80 --zmax 100 --kluit"
+    ((i++))
+fi;
+if [ "0" -eq "1" ]; then
+    data="--root 'ROOT/current/noscale/data_period*/root_data_period*.root'"
+    i=0
+    gput tags $i default    "${data} --zmin 80 --zmax 100"
+    ((i++))
+    gput tags $i m70110     "${data} --zmin 70 --zmax 110"
+    ((i++))
+    gput tags $i klu        "${data} --zmin 80 --zmax 100 --kluit"
+    ((i++))
+    gput tags $i aklu       "${data} --zmin 80 --zmax 100 --akluit"
+    ((i++))
+    prenomsid="'lP_pt>20.0 && lN_pt>20.0 && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0 && Z_m>50 && (lP_q*lN_q)<0 && lP_idhits==1 && fabs(lP_z0)<10. && fabs(lP_d0sig)<10. && lN_idhits==1 && fabs(lN_z0)<10. && fabs(lN_d0sig)<10.'"
+    gput tags $i nomsid     "${data} --zmin 80 --zmax 100 --pre ${prenomsid}"
+fi;
 
 tts="cmb id exms"
 regs="AA BB CC Bcc Baa FWC FWA MWC MWA" # "FWC0 FWC1 FWC2 FWC3 FWA0 FWA1 FWA2 FWA3"

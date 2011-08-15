@@ -65,8 +65,9 @@ parser.add_option("--antondb",dest="antondb",
 #832854.0 up to H1 (183602) EF_mu20_MG
 #1035040.0 up to H4 (184169) EF_mu18_MG
 #1340030.0 up to I4 (186493) EF_mu18_MG
+_DATA_PERIODS = ('B','D','E','F','G','H','I')
 parser.add_option("--lumi",dest="lumi",
-                  type="float", default=1035040.0,
+                  type="float", default=1340030.0,
                   help="Integrated luminosity for data (in nb^-1)")
 parser.add_option("--qcd",dest="qcdscale",
                   type="string", default='1.0',
@@ -160,55 +161,61 @@ po = SuStack()
 if opts.ntuple=='w':
     if opts.bgsig in (0,1): # w inclusive
         po.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
-        po.add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
+        if True: # FIXME - until this is run by Antonio in v1_26
+            po.add(label='Z#rightarrow#tau#tau',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta,flags=['bg','mc','ewk'])
+        else:
+            po.add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
         po.add(label='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow,flags=['bg','mc','ewk'])
         po.add(label='Z#rightarrow#mu#mu',samples='mc_zmumu',color=ROOT.kRed,flags=['bg','mc','ewk'])
         if opts.bgqcd==0:
             po.add(label='bbmu15X/ccmu15X',samples=['mc_bbmu15x','mc_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
         elif opts.bgqcd==1:
-            po.Add(label='QCD J0..J5',samples=['mc_J%d'%v for v in xrange(5)],color=ROOT.kCyan,flags=['bg','mc','qcd'])
+            po.add(label='QCD J0..J5',samples=['mc_J%d'%v for v in xrange(5)],color=ROOT.kCyan,flags=['bg','mc','qcd'])
         if opts.bgsig==0:
             po.add(label='W#rightarrow#mu#nu',samples='mc_wmunu',color=10,flags=['sig','mc','ewk'])
         elif opts.bgsig==1:
-            po.Add(label='W#rightarrow#mu#nu',samples=['mc_wminmunu','mc_wplusmunu'],color=10,flags=['sig','mc','ewk'])
+            po.add(label='W#rightarrow#mu#nu',samples=['mc_wminmunu','mc_wplusmunu'],color=10,flags=['sig','mc','ewk'])
     elif opts.bgsig in (3,): # w+jets
-        po.Add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
-        #po.Add(label='Z#rightarrow#tau#tau+jets',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta)
-        po.Add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
-        #po.Add(label='W#rightarrow#tau#nu+jets',samples=['mc_jimmy_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow)
-        po.Add(label='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow,flags=['bg','mc','ewk'])
-        po.Add(label='Z#rightarrow#mu#mu+jets',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['bg','mc','ewk'])
-        po.Add(label='WZ/ZZ',samples=['mc_jimmy_wz_np%d'%v for v in range(4)]+['mc_jimmy_zz_np%d'%v for v in range(4)],color=11,flags=['bg','mc','ewk'])
-        po.Add(label='WW',samples=['mc_jimmy_ww_np%d'%v for v in range(4)],color=12,flags=['bg','mc','ewk'])
-        po.Add(label='bbmu15X/ccmu15X',samples=['mc_bbmu15x','mc_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
-        po.Add(label='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk'])
+        po.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
+        #po.add(label='Z#rightarrow#tau#tau+jets',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta)
+        po.add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
+        #po.add(label='W#rightarrow#tau#nu+jets',samples=['mc_jimmy_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow)
+        po.add(label='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow,flags=['bg','mc','ewk'])
+        po.add(label='Z#rightarrow#mu#mu+jets',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['bg','mc','ewk'])
+        po.add(label='WZ/ZZ',samples=['mc_jimmy_wz_np%d'%v for v in range(4)]+['mc_jimmy_zz_np%d'%v for v in range(4)],color=11,flags=['bg','mc','ewk'])
+        po.add(label='WW',samples=['mc_jimmy_ww_np%d'%v for v in range(4)],color=12,flags=['bg','mc','ewk'])
+        po.add(label='bbmu15X/ccmu15X',samples=['mc_bbmu15x','mc_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
+        po.add(label='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk'])
 elif opts.ntuple=='z':
     if opts.bgsig in (0,1,2): # z inclusive
         po.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
         po.add(label='W#rightarrow#mu#nu',samples='mc_wmunu',color=10,flags=['bg','mc','ewk'])
-        po.add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
+        if True: # FIXME - until this is run by Antonio in v1_26
+            po.add(label='Z#rightarrow#tau#tau',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta,flags=['bg','mc','ewk'])
+        else:
+            po.add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
         po.add(label='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow,flags=['bg','mc','ewk'])
         if opts.bgqcd==0:
             po.add(label='bbmu15X/ccmu15X',samples=['mc_bbmu15x','mc_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
         elif opts.bgqcd==1:
-            po.Add(label='QCD J0..J5',samples=['mc_J%d'%v for v in xrange(5)],color=ROOT.kCyan,flags=['bg','mc','qcd'])
+            po.add(label='QCD J0..J5',samples=['mc_J%d'%v for v in xrange(5)],color=ROOT.kCyan,flags=['bg','mc','qcd'])
         elif opts.bgqcd==2:
-            po.Add(label='QCD data-driven',samples=['data_period%s'%s for s in ('B','D','E','F','G','H')],color=ROOT.kCyan,flags=['bg','mc','qcd','driven'])
+            po.add(label='QCD data-driven',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kCyan,flags=['bg','mc','qcd','driven'])
         po.add(label='Z#rightarrow#mu#mu',samples='mc_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
     elif opts.bgsig in (3,): # z+jets
-        po.Add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
-        po.Add(label='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['bg','mc','ewk'])
-        #po.Add(label='Z#rightarrow#tau#tau+jets',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta)
-        po.Add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
-        #po.Add(label='W#rightarrow#tau#nu+jets',samples=['mc_jimmy_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow)
-        po.Add(label='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow,flags=['bg','mc','ewk'])
-        po.Add(label='WZ/ZZ',samples=['mc_jimmy_wz_np%d'%v for v in range(4)]+['mc_jimmy_zz_np%d'%v for v in range(4)],color=11,flags=['bg','mc','ewk'])
-        po.Add(label='WW',samples=['mc_jimmy_ww_np%d'%v for v in range(4)],color=12,flags=['bg','mc','ewk'])
-        po.Add(label='bbmu15X/ccmu15X',samples=['mc_bbmu15x','mc_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
-        po.Add(label='Z#rightarrow#mu#mu+jets',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['sig','mc','ewk'])
+        po.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
+        po.add(label='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['bg','mc','ewk'])
+        #po.add(label='Z#rightarrow#tau#tau+jets',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta)
+        po.add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
+        #po.add(label='W#rightarrow#tau#nu+jets',samples=['mc_jimmy_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow)
+        po.add(label='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow,flags=['bg','mc','ewk'])
+        po.add(label='WZ/ZZ',samples=['mc_jimmy_wz_np%d'%v for v in range(4)]+['mc_jimmy_zz_np%d'%v for v in range(4)],color=11,flags=['bg','mc','ewk'])
+        po.add(label='WW',samples=['mc_jimmy_ww_np%d'%v for v in range(4)],color=12,flags=['bg','mc','ewk'])
+        po.add(label='bbmu15X/ccmu15X',samples=['mc_bbmu15x','mc_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
+        po.add(label='Z#rightarrow#mu#mu+jets',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['sig','mc','ewk'])
 else:
     assert False,'Unsupported --ntuple: %s'%opts.ntuple
-po.add(label='2011 data',samples=['data_period%s'%s for s in ('B','D','E','F','G','H')],color=ROOT.kBlack,flags=['data'])
+po.add(label='2011 data',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kBlack,flags=['data'])
 
 # Pre-load the ntuples
 po.addchain('st_%s_final/ntuple'%opts.ntuple)

@@ -34,7 +34,10 @@ class SuSample:
         s.nt[path] = ROOT.TChain(path,path)
         s.path = path # excluding dg/
     def choose_evcount(s,cut):
-        """ chooses the right nevents histogram depending on which scales were requested """
+        """ chooses the right nevents histogram depending on which scales were requested
+        UPDATE: this should alwats be nevts - otherwise it would revert the scale correction
+        """
+        return 'nevts'
         effw = re.search('effw',cut)
         trigw = re.search('trigw',cut)
         if effw and not trigw:
