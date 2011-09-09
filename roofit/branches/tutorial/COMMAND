@@ -1,17 +1,1 @@
-python -i zpeak.py scales.root z_p1.05_n1.0.root/dg/dg/st_z_final/z_m
-python -i zmultifit.py root_all.root 'mc_zmumu.root/dg/dg/st_z_final/%s/z_m_fine'
-python -i zmultifit.py root_all.root 'data.root/dg/dg/st_z_final/%s/z_m_fine'
-
-s=data_data
-python -i histfit.py root_all.root ${s}.root/dg/dg/st_z_final/BB/leptonP_invp ${s}.root/dg/dg/st_z_final/BB/leptonM_invp
-
-# RooKeysPdf parsing results
-for f in cmb_mc_BB_*_results.rtxt; do n=`echo $f | awk 'BEGIN{FS="_"}{print $4}'`; err=`cat $f | awk '{print $5}'`; echo $n $err; done | sort -n
-
-# Z fits
-./zpeak.py -b --egge --res 0 -t mcreco_egge_raw
-./zpeak.py -b --egge --res 1 -t mcreco_egge_gaus
-./zpeak.py -b --egge --res 3 -t mcreco_egge_cb
-./zpeak.py -b --data mc_zmumu_mc_zmumu.root/dg/dg/truth/st_truth_reco_z/BB/graph_Z_m_eta --egge --res 0 -t mctruth_egge_raw
-./zpeak.py -b --data mc_zmumu_mc_zmumu.root/dg/dg/truth/st_truth_reco_z/BB/graph_Z_m_eta --egge --res 1 -t mctruth_egge_gaus
-./zpeak.py -b --data mc_zmumu_mc_zmumu.root/dg/dg/truth/st_truth_reco_z/BB/graph_Z_m_eta --egge --res 3 -t mctruth_egge_cb
+./stack2.py -b --input /share/ftkdata1/antonk/ana_v26_0830_all_stacoCB_fixmetcln/ -b -m1 --var 'l_eta' --bin '50,-2.5,2.5' -t CRAP  -m100
