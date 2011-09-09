@@ -30,9 +30,12 @@ class SuSample:
         # fast histogram cache
         s.data = {}
     def addchain(s,path='st_w_final/ntuple'):
-        """ add one of the TNtuples """
+        """ add one of the TNtuples
+        path excludes dg/
+        """
         s.nt[path] = ROOT.TChain(path,path)
-        s.path = path # excluding dg/
+        s.nevt[path] = {}
+        s.path = path
     def choose_evcount(s,cut):
         """ chooses the right nevents histogram depending on which scales were requested
         UPDATE: this should alwats be nevts - otherwise it would revert the scale correction
@@ -91,10 +94,10 @@ class SuSample:
                         print 'Number of GRL events:',n
                 else:
                     print 'WARNING: failed to find object [%s] in file [%s]'%(hname,file)
-                if ev in s.nevt:
-                    s.nevt[ev] += n
+                if ev in s.nevt[s.path]:
+                    s.nevt[s.path][ev] += n
                 else:
-                    s.nevt[ev] = n
+                    s.nevt[s.path][ev] = n
             #f.Close()
     def nentries(s,path=None):
         """ compute number of entries in TNtuple """
@@ -113,7 +116,7 @@ class SuSample:
         if mrun:
             xsec = mrun.xsec*mrun.filteff
             # Choose the right evcnt - depending on which scale factors were used (effw/trigw)
-            nevents = s.nevt[evcnt]
+            nevents = s.nevt[s.path][evcnt]
             sample = mrun.sample
             if sample not in s.seen_samples:
                 print 'MC %s: \t xsec=%.1f (%.1f*%.1f) nb \t nevts=%d/%d'%(sample,xsec,mrun.xsec,mrun.filteff,nevents,mrun.nevents)
@@ -213,6 +216,12 @@ class SuStack:
     def auto(s):
         """ add all files satisfying a glob pattern - using rootpath"""
         return [e.auto() for e in s.elm]
+    def set_path(s,path):
+        """ Changes default ntuple path """
+        for elm in s.elm:
+            for sam in elm.samples:
+                assert path in sam.nt.keys()
+                sam.path = path
     def all_samples(s):
         """ returns all samples """
         res = []
