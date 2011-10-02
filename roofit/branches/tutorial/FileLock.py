@@ -34,7 +34,7 @@ class FileLock(object):
         while True:
             try:
                 self.fd = os.open(self.lockfile, os.O_CREAT|os.O_EXCL|os.O_RDWR)
-                print "Lock acquired on %s"%self.lockfile
+                #print "Lock acquired on %s"%self.lockfile
                 break;
             except OSError as e:
                 if e.errno != errno.EEXIST:
@@ -54,7 +54,7 @@ class FileLock(object):
             os.close(self.fd)
             os.unlink(self.lockfile)
             self.is_locked = False
-            print 'Lock released on %s'%self.lockfile
+            #print 'Lock released on %s'%self.lockfile
  
  
     def __enter__(self):

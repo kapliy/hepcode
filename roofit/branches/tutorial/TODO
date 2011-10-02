@@ -1,3 +1,12 @@
+simultaneous loading of w and z ntuples doesn't quite work yet - fixme!
+
+Efficiencies with/without pileup weights
+Add all-cuts version
+
+
+* Add data-driven QCD template capability to SuData
+Apply MET scales. Verify they actually work (print scaling correcting factor out)
+
 Analysis updates:
 * trigger matching (HiggsWW example)
 * trigger scaling (following matching)
@@ -15,9 +24,7 @@ Write down exactly what am i measuring.
 * Check POWHEG+pythia asymmetry in last bin - compared with MC@NLO+HERWIG
 * Et-miss resolution study: use Z events; project on Z pt axis (Sam Whitehead's thesis)
 * Try to see if low-mass tail in Mll goes away if cuts are always applied to combined muons
-* Add data-driven QCD template capability to SuData
 
-Apply MET scales. Verify they actually work (print scaling correcting factor out)
 Consider W+jets QCD templates
 
 TODO:
