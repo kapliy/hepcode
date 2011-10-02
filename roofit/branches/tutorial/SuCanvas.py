@@ -135,38 +135,67 @@ class SuCanvas:
     s.hratio.Draw("AP same");
     s.update()
 
+  def Efficiency_old(s,hatot,hntot):
+    """ Binomial errors """
+    hsum = hatot.Clone()
+    hsum.Divide(hatot,hntot,1.0,1.0,"B")
+    return hsum
+    
+  def Efficiency(s,hatot,hntot):
+    """ Acceptance/efficiency workhorse function with correct errors """
+    #return s.Efficiency_old(hatot,hntot) # FIXME
+    import SuEfficiency
+    oef = SuEfficiency.SuEfficiency()
+    hsum = hntot.Clone(hntot.GetName()+"_efficiency")
+    hsum.Reset()
+    for i in xrange(1,hsum.GetNbinsX()+1):
+      atot = hatot.GetBinContent(i)
+      ntot = hntot.GetBinContent(i)
+      mean,err = oef.signal(ntot,atot,erravg=True)
+      hsum.SetBinContent(i,mean)
+      hsum.SetBinError(i,err)
+    return hsum
+
   def plotTagProbe(s,hda_bef,hda_aft,hmc_bef,hmc_aft,xtitle='var'):
     """ Makes a large tag-and-probe canvas """
     s.buildDefault(width=1200,height=600)
     s.hda_r = [None for i in xrange(2)]
     s.hmc_r = [None for i in xrange(2)]
     s.hsc_r = [None for i in xrange(2)]
+    s.hq_r = None
+    color = (ROOT.kRed,ROOT.kBlue,46,38)
     for iq in xrange(2):
+      # efficiencies
+      if False:
+        s.hda_r[iq] = hda_aft[iq].Clone()
+        s.hda_r[iq].Divide(hda_aft[iq],hda_bef[iq],1.0,1.0,"B")
+        s.hmc_r[iq] = hmc_aft[iq].Clone()
+        s.hmc_r[iq].Divide(hmc_aft[iq],hmc_bef[iq],1.0,1.0,"B")
+      else:
+        s.hda_r[iq] = s.Efficiency(hda_aft[iq],hda_bef[iq])
+        s.hmc_r[iq] = s.Efficiency(hmc_aft[iq],hmc_bef[iq])
       # colors and style
-      hmc_aft[iq].SetLineColor(ROOT.kBlue)
-      hmc_aft[iq].SetMarkerColor(ROOT.kBlue)
-      hmc_aft[iq].SetMarkerSize(0.4);
-      hmc_bef[iq].SetLineColor(ROOT.kBlue)
-      hmc_bef[iq].SetMarkerColor(ROOT.kBlue)
-      hmc_bef[iq].SetMarkerSize(0.4);
-      hda_aft[iq].SetLineColor(ROOT.kRed)
-      hda_aft[iq].SetMarkerColor(ROOT.kRed)
-      hda_aft[iq].SetMarkerSize(0.6);
-      hda_bef[iq].SetLineColor(ROOT.kRed)
-      hda_bef[iq].SetMarkerColor(ROOT.kRed)
-      hda_bef[iq].SetMarkerSize(0.6);
-      # ratios
-      s.hda_r[iq] = hda_aft[iq].Clone()
-      s.hda_r[iq].Divide(hda_aft[iq],hda_bef[iq],1.0,1.0,"B")
-      s.hmc_r[iq] = hmc_aft[iq].Clone()
-      s.hmc_r[iq].Divide(hmc_aft[iq],hmc_bef[iq],1.0,1.0,"B")
+      s.hmc_r[iq].SetLineColor(color[iq+2])
+      s.hmc_r[iq].SetMarkerColor(color[iq+2])
+      s.hmc_r[iq].SetMarkerSize(0.8);
+      s.hda_r[iq].SetLineColor(color[iq])
+      s.hda_r[iq].SetMarkerColor(color[iq])
+      s.hda_r[iq].SetMarkerSize(1.0);
+      s.hda_r[iq].SetMarkerStyle(22);
+      # ratios of data to MC
       s.hsc_r[iq] = s.hda_r[iq].Clone()
       s.hsc_r[iq].Divide(s.hda_r[iq],s.hmc_r[iq],1.0,1.0,"")
-      s.hsc_r[iq].SetLineColor(ROOT.kBlack)
-      s.hsc_r[iq].SetMarkerColor(ROOT.kBlack)
+      s.hsc_r[iq].SetLineColor(color[iq])
+      s.hsc_r[iq].SetMarkerColor(color[iq])
       s.hsc_r[iq].SetMarkerSize(0.4);
+    # ratios of ratios data/MC for mu+/mu-
+    s.hq_r = s.hsc_r[0].Clone()
+    s.hq_r.Divide(s.hsc_r[0],s.hsc_r[1],1.0,1.0,"")
+    s.hq_r.SetLineColor(ROOT.kBlack)
+    s.hq_r.SetMarkerColor(ROOT.kBlack)
+    # plot on the canvas
     c = s.cd_canvas()
-    c.Divide(2,2)
+    c.Divide(3,2)
     c.cd(1)
     s.hda_r[0].Draw("")
     s.hmc_r[0].Draw("A same")
@@ -179,7 +208,7 @@ class SuCanvas:
     s.hda_r[1].GetYaxis().SetRangeUser(0.50,1.10);
     s.hda_r[1].GetYaxis().SetTitle('mu- efficiency');
     s.hda_r[1].GetXaxis().SetTitle(xtitle);
-    c.cd(3)
+    c.cd(4)
     s.hsc_r[0].Draw("")
     s.hsc_r[0].GetYaxis().SetRangeUser(0.90,1.10);
     s.hsc_r[0].GetYaxis().SetTitle('mu+ scale factor (data/MC)');
@@ -191,7 +220,7 @@ class SuCanvas:
     s.l0.SetLineColor(ROOT.kRed)
     s.l0.SetLineStyle(2)
     s.l0.Draw('l')
-    c.cd(4)
+    c.cd(5)
     s.hsc_r[1].Draw("")
     s.hsc_r[1].GetYaxis().SetRangeUser(0.90,1.10);
     s.hsc_r[1].GetYaxis().SetTitle('mu- scale factor (data/MC)');
@@ -200,9 +229,21 @@ class SuCanvas:
     s.l1.SetPoint(0,s.hsc_r[0].GetXaxis().GetXmin(),1.0)
     s.l1.SetPoint(1,s.hsc_r[0].GetXaxis().GetXmax(),1.0)
     s.l1.SetLineWidth(1)
-    s.l1.SetLineColor(ROOT.kRed)
+    s.l1.SetLineColor(ROOT.kBlack)
     s.l1.SetLineStyle(2)
     s.l1.Draw('l')
+    c.cd(6)
+    s.hq_r.Draw("")
+    s.hq_r.GetYaxis().SetRangeUser(0.90,1.10);
+    s.hq_r.GetYaxis().SetTitle('Ratio of scale factors: mu+/mu-');
+    s.hq_r.GetXaxis().SetTitle(xtitle);
+    s.lq = ROOT.TGraph(2)
+    s.lq.SetPoint(0,s.hq_r.GetXaxis().GetXmin(),1.0)
+    s.lq.SetPoint(1,s.hq_r.GetXaxis().GetXmax(),1.0)
+    s.lq.SetLineWidth(1)
+    s.lq.SetLineColor(ROOT.kBlack)
+    s.lq.SetLineStyle(2)
+    s.lq.Draw('l')
                    
   def __init__(s):
     s._ratioDrawn = False

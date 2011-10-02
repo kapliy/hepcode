@@ -5,13 +5,17 @@ A generalized class to handle all data access matters
 """
 
 import sys,os,math,re,glob
+from hashlib import md5
 import ROOT
+from FileLock import FileLock
 
 class SuSample:
     """
     Encapsulates a single TChain
     For example: jimmy_wmunu_np0
     """
+    GLOBAL_CACHE = 'cache.root' # if None, global cache is disabled
+    cache = None
     _evcounts = ("nevts","nevts_eff","nevts_trig","nevts_efftrig","nevts_unw")
     seen_samples = []
     rootpath = None
@@ -80,14 +84,13 @@ class SuSample:
                 nadd = nt.AddFile(file,ROOT.TChain.kBigNumber,s.topdir(f)+'/'+path)
                 if not nadd>0:
                     print 'WARNING: failed to find chain %s in file %s'%(path,file)
-                print 'Added %d file(s) to TChain: %s'%(nadd,file)
+                print 'Added %d file(s) to TChain [%s]: %s'%(nadd,nt.GetName(),file)
             # update total nevt counts for xsec normalization
             for ii,ev in enumerate(s._evcounts):
                 hname = '%s/%s'%(s.topdir(f),ev)
                 hist = f.Get(hname)
                 n = 0
                 if hist:
-                    # TODO CHECKME
                     #n = hist.GetEntries()  # had this here before!
                     n = hist.GetBinContent(1)
                     if ii==0:
@@ -138,7 +141,23 @@ class SuSample:
     def histo(s,hname,var,bin,cut,path=None):
         """ retrieve a particular histogram from ntuple """
         path = path if path else s.path
-        key = (path,var,bin,cut)
+        key = (s.name,path,var,bin,cut)
+        if False:
+            key_str = re.sub(r'[^\w]', '_', '_'.join(key))
+        else:
+            key_str_all =  '_'.join(key)
+            key_str = md5(key_str_all).hexdigest()
+        needs_saving = s.GLOBAL_CACHE
+        if s.GLOBAL_CACHE and os.path.exists(s.GLOBAL_CACHE):
+            with FileLock(s.GLOBAL_CACHE):
+                s.cache = ROOT.TFile.Open(s.GLOBAL_CACHE,'READ')
+                assert s.cache and s.cache.IsOpen()
+                if s.cache.Get(key_str):
+                    s.data[key]=s.cache.Get(key_str).Clone(hname)
+                    s.data[key].SetDirectory(0)
+                    needs_saving = False
+                s.cache.Close()
+                s.cache = None
         if not key in s.data:
             hname = hname + '_' + s.name
             print '--> creating %s'%hname
@@ -159,6 +178,16 @@ class SuSample:
                 # build from TNtuple
                 s.nt[path].Draw('%s>>%s(%s)'%(var,hname,bin),cut,'goff')
                 s.data[key] = ROOT.gDirectory.Get(hname).Clone()
+            if needs_saving:
+                print 'SAVING INTO CACHE:',key
+                with FileLock(s.GLOBAL_CACHE):
+                    s.cache = ROOT.TFile.Open(s.GLOBAL_CACHE,'UPDATE')
+                    assert s.cache and s.cache.IsOpen()
+                    s.cache.cd()
+                    htmp = s.data[key].Clone()
+                    htmp.Write(key_str,ROOT.TObject.kOverwrite)
+                    s.cache.Close()
+                    s.cache = None
         res = s.data[key].Clone()
         if s.lumi:
             res.Scale(s.scale(evcnt = s.choose_evcount(cut)))
@@ -215,6 +244,7 @@ class SuStack:
         return [e.addchain(path) for e in s.elm]
     def auto(s):
         """ add all files satisfying a glob pattern - using rootpath"""
+        print 'Auto-loading ntuples...'
         return [e.auto() for e in s.elm]
     def set_path(s,path):
         """ Changes default ntuple path """
@@ -245,22 +275,31 @@ class SuStack:
         if not isinstance(samples,list):
             samples = [samples,]
         s.elm.append( SuStackElm(label,samples,color,flags) )
-    def histosum(s,loop,hname,var,bin,cut,path=None):
+    def histo(s,label,hname,var,bin,cut,path=None,norm=None):
+        """ generic function to return histogram for a particular subsample """
+        loop = [z for z in s.elm if z.label==label]
+        return s.histosum(loop,hname,var,bin,cut,path,norm)
+    def histosum(s,loop,hname,var,bin,cut,path,norm=None):
         """ generic function to add up a subset of samples """
         if len(loop)==0:
             return None
         res = loop[0].histo(hname,var,bin,cut,path)
         for h in loop[1:] :
             htmp = h.histo(hname,var,bin,cut,path)
-            if not htmp:
+            if res and not htmp:
                 continue
-            res.Add(htmp)
+            elif res and htmp:
+                res.Add(htmp)
+            elif not res:
+                res = htmp
         res.SetName(hname)
         res.SetMarkerSize(0)
+        if norm:
+            res.Scale(1/res.Integral())
         return res
     def data(s,hname,var,bin,cut,path=None,leg=None):
         """ data summed histogram """
-        loop = [e for e in s.elm if 'data' in e.flags]
+        loop = [e for e in s.elm if 'data' in e.flags and 'no' not in e.flags]
         res = s.histosum(loop,hname,var,bin,cut,path)
         if leg:
             leg.AddEntry(res,'Data(#int L dt = %.1f pb^{-1})'%(SuSample.lumi/1000.0),'LP')
@@ -274,23 +313,23 @@ class SuStack:
         return hdata
     def mc(s,hname,var,bin,cut,path=None):
         """ MC summed histogram """
-        loop = [e for e in s.elm if 'mc' in e.flags]
+        loop = [e for e in s.elm if 'mc' in e.flags and 'no' not in e.flags]
         return s.histosum(loop,hname,var,bin,cut,path)
     def sig(s,hname,var,bin,cut,path=None):
         """ signal MC summed histogram """
-        loop = [e for e in s.elm if 'sig' in e.flags]
+        loop = [e for e in s.elm if 'sig' in e.flags and 'no' not in e.flags]
         return s.histosum(loop,hname,var,bin,cut,path)
     def bg(s,hname,var,bin,cut,path=None):
         """ background MC summed histogram """
-        loop = [e for e in s.elm if 'mc' in e.flags and 'sig' not in e.flags]
+        loop = [e for e in s.elm if 'mc' in e.flags and 'sig' not in e.flags and 'no' not in e.flags]
         return s.histosum(loop,hname,var,bin,cut,path)
     def ewk(s,hname,var,bin,cut,path=None):
         """ EWK background summed histogram """
-        loop = [e for e in s.elm if 'ewk' in e.flags]
+        loop = [e for e in s.elm if 'ewk' in e.flags and 'no' not in e.flags]
         return s.histosum(loop,hname,var,bin,cut,path)
     def qcd(s,hname,var,bin,cut,path=None):
         """ QCD background summed histogram """
-        loop = [e for e in s.elm if 'qcd' in e.flags]
+        loop = [e for e in s.elm if 'qcd' in e.flags and 'no' not in e.flags]
         return s.histosum(loop,hname,var,bin,cut,path)
     def stack_ewk(s,hname,var,bin,cut,path=None):
         """ MC histogram stack for EWK backgrounds """
@@ -303,7 +342,7 @@ class SuStack:
             leg.SetFillStyle(1001)
             leg.SetFillColor(10)
         # populate with data
-        loop = [e for e in s.elm if set(flags) == (set(flags) & set(e.flags))]
+        loop = [e for e in s.elm if set(flags) == (set(flags) & set(e.flags)) and 'no' not in e.flags]
         #loop = [e for e in s.elm if 'mc' in e.flags]
         for bg in loop:
             h = bg.histo(hname,var,bin,cut,path)
