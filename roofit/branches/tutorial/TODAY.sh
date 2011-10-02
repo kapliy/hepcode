@@ -3,8 +3,8 @@
 #./stack2.py -b -t TBNEW --var 'lY_eta' --bin '50,-2.5,2.5' -m101 --ntuple z
 wpre_jordan='l_pt>20.0 && ptiso20/l_pt<0.1 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'
 wpre_peter='l_pt>20.0 && ptiso40<2.0 && etiso40<2.0 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'
-common="--input /share/ftkdata1/antonk/ana_v26_0813_all_stacoCB_fixmetcln/"
 common="--input /share/ftkdata1/antonk/ana_v26_0830_all_stacoCB_fixmetcln/"
+common="--input /share/ftkdata1/antonk/ana_v26_0930_all_stacoCB_10GeV/"
 
 # W stack histos
 function run_w_stacks () {
@@ -28,7 +28,8 @@ function run_w_asym () {
 
 # QCD studies: comparing shapes after inversion of certain cuts
 # QCD template: bbar
-if [ "1" -eq "1" ]; then
+# TODO - work in progress!
+if [ "0" -eq "1" ]; then
     pre="${wpre_jordan}"
     m=920
 
@@ -70,15 +71,16 @@ if [ "0" -eq "1" ]; then
     cut="mcw*puw"
     m=922
     tag=QALL
-    common="--input /share/ftkdata1/antonk/ana_v26_0830_all_stacoCB_fixmetcln/ --charge 2"
+    common_orig="${common}"
+    common="${common_orig} --charge 2"
     run_w_stacks
     wait
     tag=QPOS
-    common="--input /share/ftkdata1/antonk/ana_v26_0830_all_stacoCB_fixmetcln/ --charge 0"
+    common="${common_orig} --charge 0"
     run_w_stacks
     wait
     tag=QNEG
-    common="--input /share/ftkdata1/antonk/ana_v26_0830_all_stacoCB_fixmetcln/ --charge 1"
+    common="${common_orig} --charge 1"
     run_w_stacks
     wait
 
@@ -112,14 +114,13 @@ if [ "0" -eq "1" ]; then
 fi
 
 # Z tag and probe
-if [ "0" -eq "1" ]; then
+if [ "1" -eq "1" ]; then
     tag=ptcone20
     tag=mcphits
     tag=ptiso40
     if [ "$#" -eq "1" ]; then
 	tag="$1"
     fi
-    #./stack2.py ${common} -m102 --ntuple z -b --var 'lY_phi' --bin '30,-3.14,3.14' -t ${tag}_phi &
     m=102
     ncut='mcw*puw'
     ./stack2.py ${common} --cut ${ncut} -m${m} --ntuple z -b --var 'lY_pt'  --bin '30,20,140' -t ${tag}_pt&
