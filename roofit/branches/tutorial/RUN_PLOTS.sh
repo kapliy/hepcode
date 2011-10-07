@@ -11,25 +11,25 @@ antondb=out1003
 i=0
 input="ROOT/current/all"
 
-pre="'l_pt>20.0 && ptiso40<2.0 && etiso40<2.0 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'"
+pre="'fabs(l_eta)<2.4 && l_pt20.0 && ptiso40<2.0 && etiso40<2.0 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'"
 gput tags ${i} peter_20GeV    "--input ${input} --pre ${pre}"
 ((i++))
-pre="'l_pt>20.0 && ptiso40<2.0 && etiso40<2.0 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10.'"
+pre="'fabs(l_eta)<2.4 && l_pt20.0 && ptiso40<2.0 && etiso40<2.0 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10.'"
 gput tags ${i} peter_20GeV_nomsid    "--input ${input} --pre ${pre}"
 ((i++))
-pre="'l_pt>25.0 && ptiso40<2.0 && etiso40<2.0 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'"
+pre="'fabs(l_eta)<2.4 && l_pt25.0 && ptiso40<2.0 && etiso40<2.0 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'"
 gput tags ${i} peter_25GeV     "--input ${input} --pre ${pre}"
 ((i++))
-pre="'l_pt>25.0 && ptiso20/l_pt<0.1 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'"
+pre="'fabs(l_eta)<2.4 && l_pt25.0 && ptiso20/l_pt<0.1 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'"
 gput tags ${i} jordan_25GeV   "--input ${input} --pre ${pre}"
 ((i++))
-pre="'l_pt>20.0 && ptiso20/l_pt<0.1 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'"
+pre="'fabs(l_eta)<2.4 && l_pt20.0 && ptiso20/l_pt<0.1 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'"
 gput tags ${i} jordan_20GeV   "--input ${input} --pre ${pre}"
 ((i++))
-pre="'l_pt>25.0 && ptiso20/l_pt<0.1 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'"
+pre="'fabs(l_eta)<2.4 && l_pt25.0 && ptiso20/l_pt<0.1 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'"
 gput tags ${i} jordan_25GeV_NLO   "--input ${input} --pre ${pre} --bgsig 1"
 ((i++))
-pre="'l_pt>25.0 && ptiso20/l_pt<0.1 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'"
+pre="'fabs(l_eta)<2.4 && l_pt25.0 && ptiso20/l_pt<0.1 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'"
 gput tags ${i} jordan_25GeV_JIMMY   "--input ${input} --pre ${pre} --bgsig 3"
 
 # Specify the list of plots
