@@ -1,21 +1,13 @@
 #!/usr/bin/env python
 
-_QUALITY = ' && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'
+_QUALITY = ' && fabs(l_eta)<2.4 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'
 _PRE_PETER  = 'l_pt>20.0 && ptiso40<2.0 && etiso40<2.0 && met>25.0 && w_mt>40.0'+_QUALITY
 _PRE_JORDAN = 'l_pt>25.0 && ptiso20/l_pt<0.1 && met>25.0 && w_mt>40.0'+_QUALITY
 _PRE_JORDANALT = 'l_pt>25.0 && ptiso20/l_pt<0.1 && ptiso30/l_pt<0.15 && met>25.0 && w_mt>40.0'+_QUALITY
 
 # X - tag muon (doesn't change), Y - probe muon used to measure efficiency ( = Y after/before specific cut)
-#_BEF = 'lX_idhits==1 && fabs(lP_z0)<10. && lX_pt>20.0 && lY_idhits==1 && fabs(lN_z0)<10. && lY_pt>10.0 && Z_m>81.0 && Z_m<101.0 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0 && lX_ptiso20/lX_pt<0.1'
-_BEF = 'lX_idhits==1 && fabs(lP_z0)<10. && lX_pt>10.0 && lY_idhits==1 && fabs(lN_z0)<10. && lY_pt>10.0 && Z_m>81.0 && Z_m<101.0 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0 && lX_ptiso40<2.0 && lX_etiso40<2.0'
-_AFT = _BEF + ' && ' + 'lY_ptiso20/lY_pt<0.1'
-#_AFT = _BEF + ' && ' + 'lY_ptiso40<2.0 && lY_etiso40<2.0'
+_BEF = 'lX_idhits==1 && fabs(lP_z0)<10. && fabs(lX_eta)<2.4 && lX_pt>10.0 && lY_idhits==1 && fabs(lN_z0)<10. && fabs(lY_eta)<2.4 && lY_pt>10.0 && Z_m>81.0 && Z_m<101.0 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0 && lX_ptiso40<2.0 && lX_etiso40<2.0'
 _AFT = _BEF + ' && ' + 'lY_etiso40<2.0'
-#_AFT = _BEF + ' && ' + 'lY_ptiso40<2.0'
-
-if False:
-    _BEF = 'lX_idhits==1 && fabs(lP_z0)<10. && lX_pt>10.0 && fabs(lN_z0)<10. && lY_pt>10.0 && Z_m>81.0 && Z_m<101.0 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0 && lX_ptiso20/lX_pt<0.1 && lY_ptiso20/lY_pt<0.1'
-    _AFT = _BEF + ' && ' + 'lY_idhits==1'
 
 import sys,re
 from hashlib import md5
