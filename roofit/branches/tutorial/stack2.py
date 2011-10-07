@@ -6,15 +6,15 @@ _PRE_JORDAN = 'l_pt>25.0 && ptiso20/l_pt<0.1 && met>25.0 && w_mt>40.0'+_QUALITY
 _PRE_JORDANALT = 'l_pt>25.0 && ptiso20/l_pt<0.1 && ptiso30/l_pt<0.15 && met>25.0 && w_mt>40.0'+_QUALITY
 
 # X - tag muon (doesn't change), Y - probe muon used to measure efficiency ( = Y after/before specific cut)
-_BEF = 'lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>20.0 && lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0 && Z_m>81.0 && Z_m<101.0 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0 && lX_ptiso20/lX_pt<0.1'
-#_BEF = 'lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>20.0 && lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0 && Z_m>81.0 && Z_m<101.0 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0 && lX_ptiso40<2.0 && lX_etiso40<2.0'
+#_BEF = 'lX_idhits==1 && fabs(lP_z0)<10. && lX_pt>20.0 && lY_idhits==1 && fabs(lN_z0)<10. && lY_pt>10.0 && Z_m>81.0 && Z_m<101.0 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0 && lX_ptiso20/lX_pt<0.1'
+_BEF = 'lX_idhits==1 && fabs(lP_z0)<10. && lX_pt>10.0 && lY_idhits==1 && fabs(lN_z0)<10. && lY_pt>10.0 && Z_m>81.0 && Z_m<101.0 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0 && lX_ptiso40<2.0 && lX_etiso40<2.0'
 _AFT = _BEF + ' && ' + 'lY_ptiso20/lY_pt<0.1'
 #_AFT = _BEF + ' && ' + 'lY_ptiso40<2.0 && lY_etiso40<2.0'
-#_AFT = _BEF + ' && ' + 'lY_etiso40<2.0'
-_AFT = _BEF + ' && ' + 'lY_ptiso40<2.0'
+_AFT = _BEF + ' && ' + 'lY_etiso40<2.0'
+#_AFT = _BEF + ' && ' + 'lY_ptiso40<2.0'
 
 if False:
-    _BEF = 'lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>20.0 && fabs(lN_z0)<10. && lN_pt>20.0 && Z_m>81.0 && Z_m<101.0 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0 && lX_ptiso20/lX_pt<0.1 && lY_ptiso20/lY_pt<0.1'
+    _BEF = 'lX_idhits==1 && fabs(lP_z0)<10. && lX_pt>10.0 && fabs(lN_z0)<10. && lY_pt>10.0 && Z_m>81.0 && Z_m<101.0 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0 && lX_ptiso20/lX_pt<0.1 && lY_ptiso20/lY_pt<0.1'
     _AFT = _BEF + ' && ' + 'lY_idhits==1'
 
 import sys,re
@@ -208,7 +208,7 @@ if opts.bgsig in (0,1): # w inclusive
         pw.add(label='W#rightarrow#mu#nu',samples='mc_wmunu',color=10,flags=['sig','mc','ewk'])
     elif opts.bgsig==1:
         pw.add(label='W#rightarrow#mu#nu',samples=['mc_wminmunu','mc_wplusmunu'],color=10,flags=['sig','mc','ewk'])
-    elif opts.bgdis==2:
+    elif opts.bgsig==2:
         pw.add(label='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk'])
     # cache some samples for special studies. Disabled from stacks using a 'no' flag.
     pw.add(label='pythia',samples='mc_wmunu',color=10,flags=['sig','mc','ewk','no'])
@@ -241,7 +241,10 @@ if opts.bgsig in (0,1,2): # z inclusive
         pz.add(label='QCD J0..J5',samples=['mc_J%d'%v for v in xrange(5)],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     elif opts.bgqcd==2:
         pz.add(label='QCD data-driven',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kCyan,flags=['bg','mc','qcd','driven'])
-    pz.add(label='Z#rightarrow#mu#mu',samples='mc_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
+    if opts.bgsig==0:
+        pz.add(label='Z#rightarrow#mu#mu',samples='mc_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
+    elif opts.bgsig==2:
+        pz.add(label='Z#rightarrow#mu#mu+jets',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['sig','mc','ewk'])
 elif opts.bgsig in (3,): # z+jets
     pz.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
     pz.add(label='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['bg','mc','ewk'])
@@ -437,7 +440,7 @@ if mode==2: # signal - directly from MC, or bg-subtracted data - allow applicati
     if opts.effroot:
         f = ROOT.TFile.Open(opts.effroot,'READ')
         assert f and f.IsOpen()
-        key_str = re.sub(r'[^\w]', '_', 'eff_%s_%s_%d'%(opts.var,opts.bin,opts.charge))
+        key_str = re.sub(r'[^\w]', '_', 'eff_%s_%s_%s_%d'%(opts.input,opts.var,opts.bin,opts.charge))
         heff = f.Get(key_str)
         heff.SetDirectory(0)
         heff.SetLineColor(ROOT.kBlack)
@@ -485,7 +488,7 @@ if mode==100: # creates efficiency histogram (corrects back to particle level)
             f = ROOT.TFile.Open(opts.effroot,'UPDATE')
             assert f and f.IsOpen()
             f.cd()
-            key_str = re.sub(r'[^\w]', '_', 'eff_%s_%s_%d'%(opts.var,opts.bin,opts.charge))
+            key_str = re.sub(r'[^\w]', '_', 'eff_%s_%s_%s_%d'%(opts.input,opts.var,opts.bin,opts.charge))
             heff.Write(key_str,ROOT.TObject.kOverwrite)
             f.Close()
 

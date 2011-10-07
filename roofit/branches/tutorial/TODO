@@ -1,8 +1,9 @@
+print keysfit id/exms string modification to make sure it is correct.
+In zpeak/keysfit: swap isolation option; swap z0/d0 muon matching.
+
+
+
 simultaneous loading of w and z ntuples doesn't quite work yet - fixme!
-
-Efficiencies with/without pileup weights
-Add all-cuts version
-
 
 * Add data-driven QCD template capability to SuData
 Apply MET scales. Verify they actually work (print scaling correcting factor out)
@@ -12,7 +13,6 @@ Analysis updates:
 * trigger scaling (following matching)
 * jet-muon overlap
 * only consider vtx[0] for vertex finding
-* do we use em-scale jets for met cleaning?
 * alpgen HFOR tool
 
 Peter:

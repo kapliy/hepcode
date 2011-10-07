@@ -1,24 +1,13 @@
 #!/bin/bash
 source bashmap.sh
 ROOTDIR=$PWD
-antondb=out0813
+antondb=out1003
 # Specify the list of tags
 
-data="--rootdata 'ROOT/current/noscale/data_period*/root_data_period*.root'"
-mc="--rootmc 'ROOT/current/noscale/mc_zmumu/root_mc_zmumu*.root'"
-data81400="--rootdata '/share/ftkdata1/antonk/ana_v26_0813_closure_stacoCB_fixmetcln_fixsht/data_period*_81400/root_data_period*.root'"
-data81401="--rootdata '/share/ftkdata1/antonk/ana_v26_0813_closure_stacoCB_fixmetcln_fixsht/data_period*_81401/root_data_period*.root'"
-data81402="--rootdata '/share/ftkdata1/antonk/ana_v26_0813_closure_stacoCB_fixmetcln_fixsht/data_period*_81402/root_data_period*.root'"
+data="--rootdata '/share/ftkdata1/antonk/ana_v26_0930_noscale_stacoCB_10GeV/data_period*/root_data_period*.root'"
+mc="--rootmc '/share/ftkdata1/antonk/ana_v26_0930_noscale_stacoCB_10GeV/mc_zmumu/root_mc_zmumu*.root'"
 
-i=0
-gput tags $i closurefx_81400     "${data81400} ${mc} --min 70 --max 110"
-((i++))
-gput tags $i closurefx_81401     "${data81401} ${mc} --min 70 --max 110"
-((i++))
-gput tags $i closurefx_81402     "${data81402} ${mc} --min 70 --max 110"
-((i++))
-
-if [ "0" -eq "q" ]; then
+if [ "1" -eq "1" ]; then
     dataMCP="--rootdata 'ROOT/current/all/data_period*/root_data_period*.root'"
     data="--rootdata 'ROOT/current/noscale/data_period*/root_data_period*.root'"
     mcMCP="--rootmc 'ROOT/current/all/mc_zmumu/root_mc_zmumu*.root'"
@@ -30,21 +19,11 @@ if [ "0" -eq "q" ]; then
     i=0
     gput tags $i default     "${data} ${mc} --min 70 --max 110"
     ((i++))
-    gput tags $i MCP     "${data} ${mcMCP} --min 70 --max 110"
-    ((i++))
-    gput tags $i SHT00          "${dataSHT00} ${mc} --min 70 --max 110"
-    ((i++))
-    gput tags $i SHT10          "${dataSHT10} ${mc} --min 70 --max 110"
-    ((i++))
-    gput tags $i SC00          "${dataSC00} ${mc} --min 70 --max 110"
-    ((i++))
-    gput tags $i SC10          "${dataSC10} ${mc} --min 70 --max 110"
-    ((i++))
-    gput tags $i default80to100     "${data} ${mc} --min 80 --max 100"
 fi;
 
 tts="cmb id exms"
 regs="AA BB CC AB BA CB BC AC CA" # "FWC0 FWC1 FWC2 FWC3 FWA0 FWA1 FWA2 FWA3"
+regs="AA BB CC" # "FWC0 FWC1 FWC2 FWC3 FWA0 FWA1 FWA2 FWA3"
 xtra="--ext eps"
 i=0
 

@@ -1,10 +1,12 @@
 #!/bin/bash
+source bashmap.sh
 
 #./stack2.py -b -t TBNEW --var 'lY_eta' --bin '50,-2.5,2.5' -m101 --ntuple z
 wpre_jordan='l_pt>20.0 && ptiso20/l_pt<0.1 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'
 wpre_peter='l_pt>20.0 && ptiso40<2.0 && etiso40<2.0 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'
-common="--input /share/ftkdata1/antonk/ana_v26_0830_all_stacoCB_fixmetcln/"
 common="--input /share/ftkdata1/antonk/ana_v26_0930_all_stacoCB_10GeV/"
+common="--input /share/ftkdata1/antonk/ana_v27_0930_all_stacoCB_10GeV/"
+common="--input /share/ftkdata1/antonk/ana_v27_0930_all_stacoCB_10GeV_mc11pu/"
 
 # W stack histos
 function run_w_stacks () {
@@ -108,23 +110,40 @@ fi
 # Z stack histos
 if [ "0" -eq "1" ]; then
     tag=zplots
-    ./stack2.py -m1 --ntuple z -b --var 'Z_m' --bin '100,60,120' -t ${tag}_zm --pre '(lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>20.0 && lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0) && Z_m<150.0 && (lP_q*lN_q)<0 && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0'
+    #./stack2.py -m1 --ntuple z -b --var 'Z_m' --bin '100,60,120' -t ${tag}_zm --pre '(lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>20.0 && lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0) && Z_m<150.0 && (lP_q*lN_q)<0 && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0'
+    ./stack2.py -m1 --ntuple z -b --var 'lP_pt' --bin '32,10,140' -t ${tag}_lPpt_BEF --pre '(lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>10.0 && lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0) && Z_m>86 && Z_m<96 && (lP_q*lN_q)<0 && lN_ptiso20/lN_pt<0.1'
+    ./stack2.py -m1 --ntuple z -b --var 'lP_pt' --bin '32,10,140' -t ${tag}_lPpt_AFT --pre '(lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>10.0 && lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0) && Z_m>86 && Z_m<96 && (lP_q*lN_q)<0 && lN_ptiso20/lN_pt<0.1 && lP_ptiso40<2.0'
     wait
     echo DONE
 fi
 
 # Z tag and probe
 if [ "1" -eq "1" ]; then
-    tag=ptcone20
-    tag=mcphits
-    tag=ptiso40
-    if [ "$#" -eq "1" ]; then
-	tag="$1"
-    fi
-    m=102
     ncut='mcw*puw'
-    ./stack2.py ${common} --cut ${ncut} -m${m} --ntuple z -b --var 'lY_pt'  --bin '30,20,140' -t ${tag}_pt&
-    ./stack2.py ${common} --cut ${ncut} -m${m} --ntuple z -b --var 'lY_eta' --bin '30,-2.5,2.5' -t ${tag}_eta &
+    # Select cuts against which we measure efficiency:
+    i=0
+    BEF="lX_idhits==1 && fabs(lP_z0)<10. && lX_pt>10.0 && lY_idhits==1 && fabs(lN_z0)<10. && lY_pt>10.0 && Z_m>81.0 && Z_m<101.0 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0 && lX_ptiso40<2.0 && lX_etiso40<2.0"
+    gput tags ${i} etiso40  "--prebef \"${BEF}\" --preaft \"${BEF} && lY_etiso40<2.0\""
+    ((i++))
+    gput tags ${i} ptiso40  "--prebef \"${BEF}\" --preaft \"${BEF} && lY_ptiso40<2.0\""
+    ((i++))
+    BEF='lX_idhits==1 && fabs(lP_z0)<10. && lX_pt>10.0 && fabs(lN_z0)<10. && lY_pt>10.0 && Z_m>81.0 && Z_m<101.0 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0 && lX_ptiso40<2.0 && lX_etiso40<2.0'
+    gput tags ${i} mcphits  "--prebef \"${BEF}\" --preaft \"${BEF} && lY_idhits==1\""
+    ((i++))
+    # run all jobs
+    for itag in `gkeys tags`; do  # cuts
+	tag=`ggeta tags $itag`
+	opts=`ggetb tags $itag`
+	for bgsig in 0 3; do  # Pythia or Alpgen MC
+	    for m in 101 102; do  # Use BG subtraction?
+		eval ./stack2.py ${common} ${opts} --bgsig ${bgsig} --cut ${ncut} -m${m} --ntuple z -b --var 'lY_pt'  --bin '32,10,140' -t ${tag}_pt_MC${bgsig}&
+		eval ./stack2.py ${common} ${opts} --bgsig ${bgsig} --cut ${ncut} -m${m} --ntuple z -b --var 'lY_eta' --bin '30,-2.5,2.5' -t ${tag}_eta_MC${bgsig} &
+		break
+	    done
+	    break
+	done
+	wait
+    done
     wait
     echo DONE
 fi

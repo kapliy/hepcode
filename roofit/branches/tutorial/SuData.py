@@ -141,7 +141,7 @@ class SuSample:
     def histo(s,hname,var,bin,cut,path=None):
         """ retrieve a particular histogram from ntuple """
         path = path if path else s.path
-        key = (s.name,path,var,bin,cut)
+        key = (s.rootpath,s.name,path,var,bin,cut)
         if False:
             key_str = re.sub(r'[^\w]', '_', '_'.join(key))
         else:
@@ -177,9 +177,11 @@ class SuSample:
             else:
                 # build from TNtuple
                 s.nt[path].Draw('%s>>%s(%s)'%(var,hname,bin),cut,'goff')
+                if not ROOT.gDirectory.Get(hname):
+                    return None
                 s.data[key] = ROOT.gDirectory.Get(hname).Clone()
             if needs_saving:
-                print 'SAVING INTO CACHE:',key
+                #print 'SAVING INTO CACHE:',key
                 with FileLock(s.GLOBAL_CACHE):
                     s.cache = ROOT.TFile.Open(s.GLOBAL_CACHE,'UPDATE')
                     assert s.cache and s.cache.IsOpen()
@@ -221,12 +223,16 @@ class SuStackElm:
         res = s.samples[0].histo(hname,var,bin,cut,path)
         for h in s.samples[1:]:
             htmp = h.histo(hname,var,bin,cut,path)
-            if not htmp:
+            if res and not htmp:
                 continue
-            res.Add(htmp)
-        res.SetLineColor(ROOT.kBlack)
-        res.SetFillColor(s.color)
-        res.SetMarkerSize(0)
+            elif res and htmp:
+                res.Add(htmp)
+            elif not res:
+                res = htmp
+        if res:
+            res.SetLineColor(ROOT.kBlack)
+            res.SetFillColor(s.color)
+            res.SetMarkerSize(0)
         return res
 
 class SuStack:
@@ -292,10 +298,11 @@ class SuStack:
                 res.Add(htmp)
             elif not res:
                 res = htmp
-        res.SetName(hname)
-        res.SetMarkerSize(0)
-        if norm:
-            res.Scale(1/res.Integral())
+        if res:
+            res.SetName(hname)
+            res.SetMarkerSize(0)
+            if norm:
+                res.Scale(1/res.Integral())
         return res
     def data(s,hname,var,bin,cut,path=None,leg=None):
         """ data summed histogram """
@@ -346,7 +353,8 @@ class SuStack:
         #loop = [e for e in s.elm if 'mc' in e.flags]
         for bg in loop:
             h = bg.histo(hname,var,bin,cut,path)
-            res.Add(h)
-            if leg:
-                leg.AddEntry(h,bg.label,'F')
+            if h:
+                res.Add(h)
+                if leg:
+                    leg.AddEntry(h,bg.label,'F')
         return res

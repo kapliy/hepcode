@@ -13,7 +13,7 @@ import sys,math
 import antondb
 from optparse import OptionParser
 
-dbname = 'out0813'
+dbname = 'out1003'
 
 from optparse import OptionParser
 parser = OptionParser()
@@ -26,9 +26,17 @@ parser.add_option("-a", "--algo",dest="algo",
 parser.add_option("-d", "--dets",dest="dets",
                   type="int", default=0,
                   help="For printing syst tables: 0=ALL,1=cmb,2=exms,3=id")
+parser.add_option("-r", "--release",dest="rel",
+                  type="int", default=16,
+                  help="Athena release: 16 or 17")
+parser.add_option("--antondb",dest="antondb",
+                  type="string", default=dbname,
+                  help="Tag for antondb output container")
 (opts, args) = parser.parse_args()
 mode = opts.mode
 algo = opts.algo
+rel = opts.rel
+dbname = opts.antondb
 
 a = antondb.antondb(dbname)
 a.load()
@@ -68,11 +76,17 @@ def load_all(regs=['AA','BB','CC']+['FWA','MWA','Baa','Bcc','MWC','FWC'], patter
         for reg in regs:
             res[det][reg] = {}
             aR0 = a.data[pattern_R0%(det,reg)];  assert aR0
-            aZ = a.data[pattern_Z%(det,reg)];  assert aZ
-            res[det][reg]['ksf'] = scales(aR0['ksf'],aR0['chie'],aZ['data_mz'],aZ['data_emz'],aZ['mc_mz'])
-            res[det][reg]['chif'] = scales(aR0['chif'],aR0['chie'],aZ['data_mz'],aZ['data_emz'],aZ['mc_mz'])
-            res[det][reg]['ksp'] = scales(aR0['ksp'],aR0['chie'],aZ['data_mz'],aZ['data_emz'],aZ['mc_mz'])
-            res[det][reg]['chip'] = scales(aR0['chip'],aR0['chie'],aZ['data_mz'],aZ['data_emz'],aZ['mc_mz'])
+            if True:  # False if z peak fit was not run
+                aZ = a.data[pattern_Z%(det,reg)];  assert aZ
+                res[det][reg]['ksf'] = scales(aR0['ksf'],aR0['chie'],aZ['data_mz'],aZ['data_emz'],aZ['mc_mz'])
+                res[det][reg]['chif'] = scales(aR0['chif'],aR0['chie'],aZ['data_mz'],aZ['data_emz'],aZ['mc_mz'])
+                res[det][reg]['ksp'] = scales(aR0['ksp'],aR0['chie'],aZ['data_mz'],aZ['data_emz'],aZ['mc_mz'])
+                res[det][reg]['chip'] = scales(aR0['chip'],aR0['chie'],aZ['data_mz'],aZ['data_emz'],aZ['mc_mz'])
+            else:
+                res[det][reg]['ksf'] = scales(aR0['ksf'],aR0['chie'],1.0,0.1,1.01)
+                res[det][reg]['chif'] = scales(aR0['chif'],aR0['chie'],1.0,0.1,1.01)
+                res[det][reg]['ksp'] = scales(aR0['ksp'],aR0['chie'],1.0,0.1,1.01)
+                res[det][reg]['chip'] = scales(aR0['chip'],aR0['chie'],1.0,0.1,1.01)
     return res
 
 def max_pair(s):
@@ -152,18 +166,11 @@ def latex_sysdev(db1,db2,regs,ptype1='ksf',ptype2='ksf'):
     return mysys
 
 # load everything into dictionaries
-if algo==0: # STACO
-    default = load_all(pattern_R0='/keysfit/default/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/gaus0')
-    klu = load_all(pattern_R0='/keysfit/klu/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/gaus0')
-    R70 = load_all(pattern_R0='/keysfit/m70110/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/gaus0')
-    egge = load_all(pattern_R0='/keysfit/default/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/egge3')
-elif algo==1:
-    default = load_all(pattern_R0='/keysfit/muid_default/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/gaus0')
-    klu = load_all(pattern_R0='/keysfit/muid_klu/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/gaus0')
-    R70 = load_all(pattern_R0='/keysfit/muid_m70110/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/gaus0')
-    egge = load_all(pattern_R0='/keysfit/muid_default/%s/%s/R0',pattern_Z='/zpeak/default/%s/%s/egge3')
-else:
-    assert False, 'Unknown algorithm'
+alg='staco' if algo==0 else 'muid'
+default = load_all(pattern_R0='/keysfit/r%d_default_%s'%(rel,alg)+'/%s/%s/R0',pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
+klu = load_all(pattern_R0='/keysfit/r%d_klu_%s'%(rel,alg)+'/%s/%s/R0',pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
+R70 = load_all(pattern_R0='/keysfit/r%d_m70110_%s'%(rel,alg)+'/%s/%s/R0',pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
+egge = load_all(pattern_R0='/keysfit/r%d_default_%s'%(rel,alg)+'/%s/%s/R0',pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/egge3')
     
 # dump scales as C++ arrays
 if mode==0:

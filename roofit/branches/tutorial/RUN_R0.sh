@@ -2,49 +2,42 @@
 source bashmap.sh
 ROOTDIR=$PWD
 
-antondb=out0813
+antondb=out1006alt
 # Specify the list of tags
 i=0
-data="--root '/share/ftkdata1/antonk/ana_v26_0813_closure_stacoCB_fixmetcln_fixsht/data_period*_81400/root_data_period*.root'"
-gput tags $i closurefx_81400    "${data} --zmin 80 --zmax 100"
-((i++))
-data="--root '/share/ftkdata1/antonk/ana_v26_0813_closure_stacoCB_fixmetcln_fixsht/data_period*_81401/root_data_period*.root'"
-gput tags $i closurefx_81401    "${data} --zmin 80 --zmax 100"
-((i++))
-data="--root '/share/ftkdata1/antonk/ana_v26_0813_closure_stacoCB_fixmetcln_fixsht/data_period*_81402/root_data_period*.root'"
-gput tags $i closurefx_81402    "${data} --zmin 80 --zmax 100"
-((i++))
 
-if [ "0" -eq "1" ]; then
-    data="--root 'ROOT/current/noscale/data_period*/root_data_period*.root'"
-    i=0
-    gput tags $i default    "${data} --zmin 80 --zmax 100"
+if [ "1" -eq "1" ]; then
+    data="--root '/share/ftkdata1/antonk/ana_v26_0930_noscale_stacoCB_10GeV/data_period*/root_data_period*.root'"
+    gput tags $i r16_default_staco    "${data} --zmin 80 --zmax 100"
     ((i++))
-    gput tags $i m70110     "${data} --zmin 70 --zmax 110"
+    gput tags $i r16_m70110_staco     "${data} --zmin 70 --zmax 110"
     ((i++))
-    gput tags $i klu        "${data} --zmin 80 --zmax 100 --kluit"
+    gput tags $i r16_klu_staco        "${data} --zmin 80 --zmax 100 --kluit"
     ((i++))
-    data="--root 'ROOT/current/noscale_muid/data_period*/root_data_period*.root'"
-    gput tags $i muid_default    "${data} --zmin 80 --zmax 100"
+    data="--root '/share/ftkdata1/antonk/ana_v26_0930_noscale_muidCB_10GeV/data_period*/root_data_period*.root'"
+    gput tags $i r16_default_muid    "${data} --zmin 80 --zmax 100"
     ((i++))
-    gput tags $i muid_m70110     "${data} --zmin 70 --zmax 110"
+    gput tags $i r16_m70110_muid     "${data} --zmin 70 --zmax 110"
     ((i++))
-    gput tags $i muid_klu        "${data} --zmin 80 --zmax 100 --kluit"
+    gput tags $i r16_klu_muid        "${data} --zmin 80 --zmax 100 --kluit"
     ((i++))
 fi;
-if [ "0" -eq "1" ]; then
-    data="--root 'ROOT/current/noscale/data_period*/root_data_period*.root'"
-    i=0
-    gput tags $i default    "${data} --zmin 80 --zmax 100"
+
+if [ "1" -eq "1" ]; then
+    data="--root '/share/ftkdata1/antonk/ana_v27_0930_noscale_stacoCB_10GeV/data_period*/root_data_period*.root'"
+    gput tags $i r17_default_staco    "${data} --zmin 80 --zmax 100"
     ((i++))
-    gput tags $i m70110     "${data} --zmin 70 --zmax 110"
+    gput tags $i r17_m70110_staco     "${data} --zmin 70 --zmax 110"
     ((i++))
-    gput tags $i klu        "${data} --zmin 80 --zmax 100 --kluit"
+    gput tags $i r17_klu_staco        "${data} --zmin 80 --zmax 100 --kluit"
     ((i++))
-    gput tags $i aklu       "${data} --zmin 80 --zmax 100 --akluit"
+    data="--root '/share/ftkdata1/antonk/ana_v27_0930_noscale_muidCB_10GeV/data_period*/root_data_period*.root'"
+    gput tags $i r17_default_muid    "${data} --zmin 80 --zmax 100"
     ((i++))
-    prenomsid="'lP_pt>20.0 && lN_pt>20.0 && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0 && Z_m>50 && (lP_q*lN_q)<0 && lP_idhits==1 && fabs(lP_z0)<10. && fabs(lP_d0sig)<10. && lN_idhits==1 && fabs(lN_z0)<10. && fabs(lN_d0sig)<10.'"
-    gput tags $i nomsid     "${data} --zmin 80 --zmax 100 --pre ${prenomsid}"
+    gput tags $i r17_m70110_muid     "${data} --zmin 70 --zmax 110"
+    ((i++))
+    gput tags $i r17_klu_muid        "${data} --zmin 80 --zmax 100 --kluit"
+    ((i++))
 fi;
 
 tts="cmb id exms"

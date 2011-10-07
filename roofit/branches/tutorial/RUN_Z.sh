@@ -2,57 +2,47 @@
 source bashmap.sh
 ROOTDIR=$PWD
 
-antondb=out0813
+antondb=out1006alt
 # Specify the list of tags
-
 i=0
-mc="--rootmc 'ROOT/current/noscale/mc_zmumu/root_mc_zmumu*.root'"
-data="--rootdata '/share/ftkdata1/antonk/ana_v26_0813_closure_stacoCB_fixmetcln_fixsht/data_period*_81400/root_data_period*.root'"
-gput tags $i closurefx_81400     "${data} ${mc} --func gaus0 --min 70 --max 110"
-((i++))
-data="--rootdata '/share/ftkdata1/antonk/ana_v26_0813_closure_stacoCB_fixmetcln_fixsht/data_period*_81401/root_data_period*.root'"
-gput tags $i closurefx_81401     "${data} ${mc} --func gaus0 --min 70 --max 110"
-((i++))
-data="--rootdata '/share/ftkdata1/antonk/ana_v26_0813_closure_stacoCB_fixmetcln_fixsht/data_period*_81402/root_data_period*.root'"
-gput tags $i closurefx_81402     "${data} ${mc} --func gaus0 --min 70 --max 110"
-((i++))
 
-if [ "0" -eq "1" ]; then
-    i=0
-    data="--rootdata 'ROOT/current/noscale/data_period*/root_data_period*.root'"
-    mc="--rootmc 'ROOT/current/noscale/mc_zmumu/root_mc_zmumu*.root'"
-    gput tags $i default     "${data} ${mc} --func gaus0 --min 70 --max 110"
+if [ "1" -eq "1" ]; then
+    data="--rootdata '/share/ftkdata1/antonk/ana_v26_0930_noscale_stacoCB_10GeV/data_period*/root_data_period*.root'"
+    mc="--rootmc '/share/ftkdata1/antonk/ana_v26_0930_noscale_stacoCB_10GeV/mc_zmumu/root_mc_zmumu*.root'"
+    gput tags $i r16_default_staco     "${data} ${mc} --func gaus0 --min 70 --max 110"
     ((i++))
-    gput tags $i default     "${data} ${mc} --func egge3 --min 70 --max 110"
+    gput tags $i r16_default_staco     "${data} ${mc} --func egge3 --min 70 --max 110"
     ((i++))
-    gput tags $i m80100      "${data} ${mc} --func egge3 --min 80 --max 100"
+    gput tags $i r16_m80100_staco      "${data} ${mc} --func egge3 --min 80 --max 100"
     ((i++))
-    gput tags $i m80100      "${data} ${mc} --func egge1 --min 80 --max 100"
+    data="--rootdata '/share/ftkdata1/antonk/ana_v26_0930_noscale_muidCB_10GeV/data_period*/root_data_period*.root'"
+    mc="--rootmc '/share/ftkdata1/antonk/ana_v26_0930_noscale_muidCB_10GeV/mc_zmumu/root_mc_zmumu*.root'"
+    gput tags $i r16_default_muid     "${data} ${mc} --func gaus0 --min 70 --max 110"
     ((i++))
-    
-    data="--rootdata 'ROOT/current/noscale_muid/data_period*/root_data_period*.root'"
-    mc="--rootmc 'ROOT/current/noscale_muid/mc_zmumu/root_mc_zmumu*.root'"
-    gput tags $i muid_default     "${data} ${mc} --func gaus0 --min 70 --max 110"
+    gput tags $i r16_default_muid     "${data} ${mc} --func egge3 --min 70 --max 110"
     ((i++))
-    gput tags $i muid_default     "${data} ${mc} --func egge3 --min 70 --max 110"
-    ((i++))
-    gput tags $i muid_m80100      "${data} ${mc} --func egge3 --min 80 --max 100"
-    ((i++))
-    gput tags $i muid_m80100      "${data} ${mc} --func egge1 --min 80 --max 100"
+    gput tags $i r16_m80100_muid      "${data} ${mc} --func egge3 --min 80 --max 100"
     ((i++))
 fi;
 
-if [ "0" -eq "1" ]; then
-    data="--rootdata 'ROOT/current/noscale/data_period*/root_data_period*.root'"
-    mc="--rootmc 'ROOT/current/noscale/mc_zmumu/root_mc_zmumu*.root'"
-    gput tags $i default     "${data} ${mc} --func gaus0 --min 70 --max 110"
+if [ "1" -eq "1" ]; then
+    data="--rootdata '/share/ftkdata1/antonk/ana_v27_0930_noscale_stacoCB_10GeV/data_period*/root_data_period*.root'"
+    mc="--rootmc '/share/ftkdata1/antonk/ana_v27_0930_noscale_stacoCB_10GeV/mc_zmumu/root_mc_zmumu*.root'"
+    gput tags $i r17_default_staco     "${data} ${mc} --func gaus0 --min 70 --max 110"
     ((i++))
-    gput tags $i default     "${data} ${mc} --func egge3 --min 70 --max 110"
+    gput tags $i r17_default_staco     "${data} ${mc} --func egge3 --min 70 --max 110"
     ((i++))
-    gput tags $i m80100      "${data} ${mc} --func egge3 --min 80 --max 100"
+    gput tags $i r17_m80100_staco      "${data} ${mc} --func egge3 --min 80 --max 100"
     ((i++))
-    gput tags $i m80100      "${data} ${mc} --func egge1 --min 80 --max 100"
-fi
+    data="--rootdata '/share/ftkdata1/antonk/ana_v27_0930_noscale_muidCB_10GeV/data_period*/root_data_period*.root'"
+    mc="--rootmc '/share/ftkdata1/antonk/ana_v27_0930_noscale_muidCB_10GeV/mc_zmumu/root_mc_zmumu*.root'"
+    gput tags $i r17_default_muid     "${data} ${mc} --func gaus0 --min 70 --max 110"
+    ((i++))
+    gput tags $i r17_default_muid     "${data} ${mc} --func egge3 --min 70 --max 110"
+    ((i++))
+    gput tags $i r17_m80100_muid      "${data} ${mc} --func egge3 --min 80 --max 100"
+    ((i++))
+fi;
 
 tts="cmb id exms"
 regs="AA BB CC Bcc Baa FWC FWA MWC MWA" # "FWC0 FWC1 FWC2 FWC3 FWA0 FWA1 FWA2 FWA3"
