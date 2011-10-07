@@ -2,7 +2,7 @@
 source bashmap.sh
 ROOTDIR=$PWD
 
-antondb=out0813
+antondb=out1003
 # Specify the list of tags
 i=0
 data="--root '/share/ftkdata1/antonk/ana_v26_0813_closure_stacoCB_fixmetcln_fixsht/data_period*_81400/root_data_period*.root'"

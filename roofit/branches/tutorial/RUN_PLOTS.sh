@@ -5,7 +5,7 @@
 source bashmap.sh
 ROOTDIR=$PWD
 
-antondb=out0813
+antondb=out1003
 
 # Specify the list of tags (e.g., preselection cuts)
 i=0

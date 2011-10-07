@@ -1,4 +1,15 @@
 #!/usr/bin/env python
+# determines R0 (or shift C) and k+*k-
+
+_QUALITY = ' && lP_idhits==1 && fabs(lP_z0)<10. && fabs(lP_d0sig)<10. && fabs(lP_pt_id-lP_pt_exms)/lP_pt_id<0.5'
+_QUALITY += ' && lN_idhits==1 && fabs(lN_z0)<10. && fabs(lN_d0sig)<10. && fabs(lN_pt_id-lN_pt_exms)/lN_pt_id<0.5'
+_PRE_PETER='lP_pt>20.0 && lN_pt>20.0 && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0 && Z_m>60 && (lP_q*lN_q)<0'+_QUALITY
+
+#FIXME:
+if False:
+    _QUALITY = ' && lP_idhits==1 && fabs(lP_z0)<10. && fabs(lP_d0sig)<10. && fabs(lP_pt_id-lP_pt_exms)/lP_pt_id<0.5'
+    _QUALITY += ' && lN_idhits==1 && fabs(lN_z0)<10. && fabs(lN_d0sig)<10. && fabs(lN_pt_id-lN_pt_exms)/lN_pt_id<0.5'
+    _PRE_PETER='lP_pt>20.0 && lN_pt>20.0 && lP_ptiso20/lP_pt<0.1 && lN_ptiso20/lN_pt<0.1 && Z_m>50 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0'+_QUALITY
 
 try:
     import psyco
@@ -7,62 +18,56 @@ except ImportError:
     pass
 
 # study muon momentum scale using z->mumu muon spectra
-import sys,array
+import sys,array,glob
 import SimpleProgressBar
 from load_data import *
-
-def func_SCALE_old(xx,par):
-    return par*1.0/xx
-def func_SCALE(xx,par):
-    return 1.0/(par*1.0*xx)
-def func_SHIFT(xx,par):
-    return 1.0/(xx) + par
+from antondb import *
 
 from optparse import OptionParser
 parser = OptionParser()
 # data sources
-parser.add_option("--root",dest="root",
-                  type="string", default='root_all.root',
-                  help="Input ROOT file with all histograms")
-parser.add_option("--data0",dest="data0",
-                  type="string", default='data_data.root/dg/dg/st_z_final/ntuple',
-                  help="Default data pt spectra")
-parser.add_option("--data1",dest="data1",
-                  type="string", default='data_00_data_00.root/dg/dg/st_z_final/ntuple',
-                  help="Scaled data pt spectra")
+parser.add_option("--data",dest="data",
+                  type="string", default='dg/st_z_final/ntuple',
+                  help="TGraph containing data histograms")
+parser.add_option("--root0",dest="root0",
+                  type="string", default=None,
+                  help="Input ROOT file (primary)")
+parser.add_option("--root1",dest="root1",
+                  type="string", default=None,
+                  help="Input ROOT file (secondary) - for data/MC zmass mode")
+parser.add_option("--label0",dest="label0",
+                  type="string", default='2011, Rel16',
+                  help="Label for first file")
+parser.add_option("--label1",dest="label1",
+                  type="string", default='2011, Rel17',
+                  help="Label for second file")
+parser.add_option("--pre",dest="pre",
+                  type="string", default=_PRE_PETER,
+                  help="Preliminary cuts to select final Z candidates")
+parser.add_option("--tt",dest="tt",
+                  type="string", default='cmb',
+                  help="Type of muons: {cmb,id,exms}")
 parser.add_option("--region",dest="region",
                   type="string", default='BB',
                   help="Where each leg of a Z must fall")
 parser.add_option("--ndata",dest="ndata",
                   type="int", default=1000000,
                   help="Number of unbinned data points to load")
-parser.add_option("--nskip",dest="nskip",
-                  type="int", default=0,
-                  help="Number of data points to skip load")
-parser.add_option("--forcescale",dest="forcescale",
-                  type="float", default=1.0,
-                  help="Force a particular scale factor on negative muons")
-parser.add_option("--roomodel",dest="roomodel",
-                  type="int", default=2,
-                  help="Which model to use: 1=RooHist, 2=RooKeys, 3=RooNDKeys")
-parser.add_option("--rookeys",dest="rookeys",
-                  type="string", default=None,
-                  help="ROOT file from which we load a cached RooKeysPdf")
-parser.add_option("--rookeysout",dest="rookeysout",
-                  type="string", default='',
-                  help="ROOT file into which we will save a cached RooKeysPdf")
 parser.add_option('-t',"--tag",dest="tag",
                   type="string", default='plot',
                   help="A tag to append to all output plots")
 parser.add_option("--ext",dest="ext",
                   type="string", default='png',
                   help="Extension for all output")
+parser.add_option("--antondb",dest="antondb",
+                  type="string", default=None,
+                  help="Tag for antondb output container")
 # parameters
 parser.add_option("--zmin",dest="zmin",
-                  type="float", default=66.0,
+                  type="float", default=80.0,
                   help="Minimum value for z mass window")
 parser.add_option("--zmax",dest="zmax",
-                  type="float", default=116.0,
+                  type="float", default=100.0,
                   help="Maximum value for z mass window")
 parser.add_option("--xmin",dest="xmin",
                   type="string", default='0.005',
@@ -70,55 +75,25 @@ parser.add_option("--xmin",dest="xmin",
 parser.add_option("--xmax",dest="xmax",
                   type="string", default='0.05',
                   help="Maximum value for 1/pt spectrum")
-parser.add_option("--fitmin",dest="fitmin",
-                  type="float", default=0.98,
-                  help="Minimum bound of fit range")
-parser.add_option("--fitmax",dest="fitmax",
-                  type="float", default=1.02,
-                  help="Maximum bound of fit range")
-parser.add_option("--shift", default=False,
-                  action="store_true",dest="shift",
-                  help="Fit for shift, rather than scale")
-parser.add_option("--smooth",dest="smooth",
-                  type="float", default=2.0,
-                  help="Smoothing factor (aka bandwidth) for kernel estimation")
 parser.add_option("--nbins",dest="nbins",
                   type="int", default=50,
                   help="Binning for chi2 calculation")
-parser.add_option("--nscan",dest="nscan",
-                  type="int", default=20,
-                  help="Number of parameter values to scan")
 parser.add_option("--kluit", default=False,
                   action="store_true",dest="kluit",
                   help="If kluit is enabled, muons are not required to be both in the same detector region")
 parser.add_option("--akluit", default=False,
                   action="store_true",dest="akluit",
                   help="If akluit is enabled, muons are required to NOT be both in the same detector region")
-parser.add_option("--debug", default=False,
-                  action="store_true",dest="debug",
-                  help="General-use flag to assist with debugging")
 # enable modules
 parser.add_option('-b', "--batch", default=False,
                   action="store_true",dest="batch",
                   help="Enable batch mode (all output directly to filesystem)")
-parser.add_option("--template", default=False,
-                  action="store_true",dest="template",
-                  help="Make a plot of the template")
-parser.add_option("--scan", default=False,
+parser.add_option("--scan", default=True,
                   action="store_true",dest="scan",
                   help="Scan through parameter space and determine best value and error")
 parser.add_option("--ks", default=False,
                   action="store_true",dest="ks",
                   help="Perform unbinned KS comparison of two spectra")
-parser.add_option("--npergroup", dest="npergroup",
-                  type="int", default=0,
-                  help="Split the sample into several subsamples with npergroup in each")
-parser.add_option("--varbins", default=False,
-                  action="store_true",dest="varbins",
-                  help="Study systematic effect of bin variation")
-parser.add_option("--savegrid", default=False,
-                  action="store_true",dest="savegrid",
-                  help="Plot the grid of 9 scanned parameter values")
 
 (opts, args) = parser.parse_args()
 
@@ -127,50 +102,52 @@ ROOT.gROOT.SetBatch(opts.batch)
 ROOT.gROOT.LoadMacro("AtlasStyle.C")
 ROOT.SetAtlasStyle()
 from ROOT import RooWorkspace,RooArgSet,RooArgList,RooDataHist,RooDataSet,RooAbsData,RooFormulaVar
-from ROOT import RooHistPdf,RooKeysPdf,RooNDKeysPdf
+from ROOT import RooHistPdf
 from ROOT import kTRUE,kFALSE,kDashed,gStyle,gPad
 from ROOT import TFile,TH1,TH1F,TH1D
 from ROOT import RooFit as RF
 w = RooWorkspace('w',kTRUE); w.model = None
 gbg = []; COUT = []
-
-# Z mass cannot float if we fit for scale
-mZ = '91.1876'
-func = func_SCALE
-FITMIN=opts.fitmin  #parameter fitting minimum
-FITMAX=opts.fitmax
+# antondb containers
+VMAP = {}; OMAP = []
+VMAP['cmd']=' '.join(sys.argv)
 
 # Load all datasets
 if True:
     # variables and parameters
     w.factory('x[%s,%s]'%(opts.xmin,opts.xmax)); x = w.var('x')
-    w.factory('b[1.0,0.9,1.1]')
     #################################################
     # data datasets
     #################################################
-    f = TFile(opts.root,'r')
-    hdata0 = f.Get(opts.data0)
-    hdata1 = f.Get(opts.data1)
-    assert hdata0 and hdata1
-    assert hdata0.ClassName() == 'TNtuple' and hdata1.ClassName() == 'TNtuple'
+    hdata0 = ROOT.TChain(opts.data)
+    for fname in glob.glob(opts.root0):
+        print 'Adding to TChain:',fname
+        nadd = hdata0.Add(fname)
+        assert nadd>0,'Failed to add file %s'%fname
+    assert hdata0.GetEntries()>0, 'Error loading data object %s from file %s'%(opts.root0,opts.data)
+    hdata1 = ROOT.TChain(opts.data)
+    for fname in glob.glob(opts.root1):
+        print 'Adding to TChain:',fname
+        nadd = hdata1.Add(fname)
+        assert nadd>0,'Failed to add file %s'%fname
+    assert hdata1.GetEntries()>0, 'Error loading data object %s from file %s'%(opts.root1,opts.data)
     nload = ntuple_to_array_etalim
     if opts.kluit:
         nload = ntuple_to_array_kluit
     elif opts.akluit:
         nload = ntuple_to_array_akluit
-    Np0,Nn0,N0,pos0,neg0 = nload(hdata0,opts.region,opts.zmin,opts.zmax,opts.ndata,opts.nskip)
-    Np1,Nn1,N1,pos1,neg1 = nload(hdata1,opts.region,opts.zmin,opts.zmax,N0,opts.nskip)
+    Np0,Nn0,N0,pos0,neg0 = nload(hdata0,opts.tt,opts.region,opts.zmin,opts.zmax,opts.ndata,opts.pre)
+    Np1,Nn1,N1,pos1,neg1 = nload(hdata1,opts.tt,opts.region,opts.zmin,opts.zmax,N0,opts.pre)
     pos = [pos0,pos1]
     neg = [neg0,neg1]
     N = [N0,N1]
-    f.Close()
     print N0,N1
     nmax = min(N0,N1,opts.ndata)
     if nmax == 0:
         print 'Error: no data passed the cuts'
         sys.exit(0)
     nstep = nmax if nmax>10 else 10
-    print 'Loaded data object',opts.data0,'with',nmax,'entries'
+    print 'Loaded data object',opts.data,'with',nmax,'entries'
     # make data(x) for positive and negative muons
     dataP = [RooDataSet('data0P','Zmumu mu+ data0',RooArgSet(x)), RooDataSet('data0P','Zmumu mu+ data1',RooArgSet(x))]
     dataN = [RooDataSet('data0N','Zmumu mu- data0',RooArgSet(x)), RooDataSet('data0N','Zmumu mu- data1',RooArgSet(x))]
@@ -204,9 +181,9 @@ def p_value(dP,dN):
     return pval
 
 if opts.scan:
-    c = ROOT.TCanvas(rand_name(),rand_name(),1024,768)
+    c = ROOT.TCanvas('keysspectra','keysspectra',1024,768)
     c.Divide(2,2)
-    frame = [x.frame(RF.Title('Data 1/p_{T} (uncorrected)')),x.frame(RF.Title('Data 1/p_{T} (scaled)'))]
+    frame = [x.frame(RF.Title('1/p_{T} (0)')),x.frame(RF.Title('1/p_{T} (1)'))]
     # plot raw data
     for i in (0,1):
         c.cd(i+1)
@@ -219,6 +196,10 @@ if opts.scan:
         p.SetTextAlign(11)
         p.SetFillColor(0)
         pval = p_value(dataP[i],dataN[i])
+        if i==0 and opts.label0:
+            p.AddText(opts.label0)
+        if i==1 and opts.label1:
+            p.AddText(opts.label1)
         p.AddText('# of events = %d'%(nmax))
         p.AddText('KS probability = %.2f%%'%(pval*100.0))
         p.Draw()
@@ -237,8 +218,7 @@ if opts.scan:
         cdfP.plotOn(frame,RF.LineColor(ROOT.kRed))
         cdfN.plotOn(frame,RF.LineColor(ROOT.kBlue)) #,RF.LineStyle(ROOT.kDashed))
         frame.Draw()
-    # save
-    SaveAs(c,'%s_ptspectra'%opts.tag,opts.ext)
+    OMAP.append(c)
 
 # study statistical properties of KS statistic
 if opts.ks:
@@ -258,10 +238,22 @@ if opts.ks:
     h.GetYaxis().SetRangeUser(0,100)
     SaveAs(c,'%s_ksstudy'%opts.tag,opts.ext)
 
+if not opts.antondb:
+    fname = 'CURV_%s_%s_%s.png'%(opts.tag,opts.tt,opts.region)
+    c.SaveAs(fname)
+
 # save to text file
 if len(COUT)>0:
-    fout = open('%s_ptspectra.rtxt'%opts.tag,'w')
+    VMAP['COUT']=[]
     for l in COUT:
         print l
-        print >>fout,l
-    fout.close()
+        VMAP['COUT'].append(l)
+
+if (len(VMAP)>0 or len(OMAP)>0) and opts.antondb:
+    a = antondb(opts.antondb)
+    path = os.path.join('/keysspectra/',opts.tag,opts.tt,opts.region)
+    print VMAP
+    if len(VMAP)>0:
+        a.add(path,VMAP)
+    if len(OMAP)>0:
+        a.add_root(path,OMAP)
