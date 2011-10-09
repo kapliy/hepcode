@@ -1,8 +1,10 @@
+Pilcher meeting:
+* MC muon smearing systematic; data muon scaling systematic.
+* Change of asymmetry for different +/- X% cuts; for different fraction of QCD - using the ntupled version.
+* Apply/not apply efficiency and/or trigger scale factors
+
+
 print keysfit id/exms string modification to make sure it is correct.
-In zpeak/keysfit: swap isolation option; swap z0/d0 muon matching.
-
-
-
 simultaneous loading of w and z ntuples doesn't quite work yet - fixme!
 
 * Add data-driven QCD template capability to SuData
@@ -16,30 +18,13 @@ Analysis updates:
 * alpgen HFOR tool
 
 Peter:
-apply pythia-based acceptance correction to alpgen samples.
 do things break down as a function of njets?
-Write down exactly what am i measuring.
-
 
 * Check POWHEG+pythia asymmetry in last bin - compared with MC@NLO+HERWIG
 * Et-miss resolution study: use Z events; project on Z pt axis (Sam Whitehead's thesis)
-* Try to see if low-mass tail in Mll goes away if cuts are always applied to combined muons
 
 Consider W+jets QCD templates
-
-TODO:
-* fix MCP hits requirements - weird bugs (??)
-* Add a version of histo creation using temp in-memory tree - to remove multiple candidates per event
-   check that we don't get multiple entries per event in tag-probe study!
-* Employ effFast (TEfficiency) in the tag-and-probe calculation
-Peter: shape of abs isolation is funny
 MCP hits that fail - vs eta/phi in 2d (suspect specific modules)!
-
-
-Results of meeting:
-DONE: try without psMS - ptID cut
-DONE: pt cone 0.2 / pt < 0.1
-Peter: et isolation problem; do pileup reweighting
 
 Muon scales:
 * Investigate RooEggePdf - see if it is indeed compatible with my implementation!
@@ -48,14 +33,10 @@ Muon scales:
 * !!! Relax eta to 2.5 - apply at plot level. Add to wasym definitions
 * !!! Start using mutag muons
 
-
 * Applying absolute scale: perhaps going about it the wrong way? Use the KS statistic between data and MC
   to find the location of the peak?
 * in zpeak.py: automatically apply defaults depending on region and type of muon!
 
 ANALYSIS:
-* Muon QCD template: events failing d0
-  MET fix (0..100) with qcd and w+jets floating
-
 * Check if RooKeysPDF rho can be chosen smartly - Jahred's thesis.
 * Repeat a study to verify sqrt(A*B) works if one leg in barrel, another in endcap

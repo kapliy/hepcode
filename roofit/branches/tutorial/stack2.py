@@ -117,7 +117,7 @@ SuSample.hsource = opts.hsource
 SuSample.hcharge = opts.charge
 SuSample.lumi = opts.lumi
 SuSample.rebin = opts.rebin
-SuSample.qcdscale = float(opts.qcdscale) if not opts.qcdscale=='AUTO' else 1.0
+SuSample.qcdscale = float(opts.qcdscale) if not opts.qcdscale in ('AUTO','auto','Auto') else 1.0
 
 def fortruth(pre):
     """ removes pre variables that are not applicable to truth tracks """
@@ -274,8 +274,11 @@ q = opts.charge
 
 def renormalize():
     """ Normalizes MET template """
-    if not opts.qcdscale=='AUTO':
+    if not opts.qcdscale in ('AUTO','auto','Auto'):
         return
+    fitpre = metfitreg(opts.pre)
+    dum1,dum2,scale = run_fit(pre=fitpre)
+    SuSample.qcdscale = 1.0
 
 def particle(h,var=opts.var,bin=opts.bin,q=opts.charge):
     """ Uses pre-computed efficiency histogram to convert a given reco-level quantity to particle-level """
@@ -498,6 +501,7 @@ if mode==11: # asymmetry (not bg-subtracted)
 
 if mode==12: # asymmetry (bg-subtracted)
     assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
+    renormalize()
     hsig,hd_sig  = [None]*2,[None]*2
     SuSample.hcharge = POS
     hsig[POS]    = particle(po.sig('signalPOS',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[POS][2],opts.cut,opts.pre)),q=POS)
@@ -510,6 +514,7 @@ if mode==12: # asymmetry (bg-subtracted)
 
 if mode in (101,102): # tag and probe
     assert opts.ntuple=='z','ERROR: tag-and-probe can only be computed for the z ntuple'
+    #renormalize()
     hda_bef = [None]*2
     hda_aft = [None]*2
     hmc_bef = [None]*2
@@ -533,21 +538,27 @@ if mode in (101,102): # tag and probe
     c = SuCanvas()
     c.plotTagProbe(hda_bef,hda_aft,hmc_bef,hmc_aft,xtitle=opts.var)
 
-if mode==99: # Floating QCD normalization
+def run_fit(pre,var='met',bin='100,5,100',cut='mcw*puw'):
     import SuFit
     f = SuFit.SuFit()
-    f.addFitVar( opts.var, float(opts.bin.split(',')[1]) , float(opts.bin.split(',')[2]) , opts.var );
+    f.addFitVar( var, float(bin.split(',')[1]) , float(bin.split(',')[2]) , var );
     # get histograms
-    hdata   = po.data('data',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre))
-    hfixed = po.ewk('bgfixed',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre))
-    hfree = po.qcd('bgfree',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre))
+    hdata   = po.data('data',var,bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],cut,pre))
+    hfixed = po.ewk('bgfixed',var,bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],cut,pre))
+    hfree = po.qcd('bgfree',var,bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],cut,pre))
     # run SuFit
     hdata.getLegendName = lambda : 'DATA'
     hfixed.getLegendName = lambda : 'EWK backgrounds'
     hfree.getLegendName = lambda : 'QCD (bb/cc mu15X)'
     f.setDataBackgrounds(hdata,hfixed,hfree)
     f.doFit()
-    c,frame = f.drawFits()
+    tmp = f.drawFits()
+    gbg.append((f,hdata,hfixed,hfree,tmp))
+    return tmp[0],tmp[1],f.scales[0]
+
+if mode==99: # Floating QCD normalization
+    renormalize()  # for testing - only activated when --qcd=auto
+    c,frame,scalef = run_fit(metfitreg(opts.pre),opts.var,opts.bin,opts.cut)
 
 if not opts.antondb:
     c.SaveAs('%s_%s_%s_%s_%s_%d'%(opts.tag,opts.input,QMAP[opts.charge][1],opts.var,opts.cut,mode),'png')

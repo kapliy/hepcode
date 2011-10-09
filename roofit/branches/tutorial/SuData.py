@@ -22,6 +22,7 @@ class SuSample:
     lumi = None
     rebin = 1
     hsource = None  # source path to the histograms
+    debug = False
     def __init__(s,name):
         """ constructor """
         s.name = name
@@ -84,7 +85,8 @@ class SuSample:
                 nadd = nt.AddFile(file,ROOT.TChain.kBigNumber,s.topdir(f)+'/'+path)
                 if not nadd>0:
                     print 'WARNING: failed to find chain %s in file %s'%(path,file)
-                print 'Added %d file(s) to TChain [%s]: %s'%(nadd,nt.GetName(),file)
+                if SuSample.debug:
+                    print 'Added %d file(s) to TChain [%s]: %s'%(nadd,nt.GetName(),file)
             # update total nevt counts for xsec normalization
             for ii,ev in enumerate(s._evcounts):
                 hname = '%s/%s'%(s.topdir(f),ev)
@@ -93,7 +95,7 @@ class SuSample:
                 if hist:
                     #n = hist.GetEntries()  # had this here before!
                     n = hist.GetBinContent(1)
-                    if ii==0:
+                    if ii==0 and SuSample.debug:
                         print 'Number of GRL events:',n
                 else:
                     print 'WARNING: failed to find object [%s] in file [%s]'%(hname,file)
