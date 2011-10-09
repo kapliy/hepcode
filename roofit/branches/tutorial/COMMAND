@@ -1,1 +1,2 @@
-./stack2.py -b --input /share/ftkdata1/antonk/ana_v26_0830_all_stacoCB_fixmetcln/ -b -m1 --var 'l_eta' --bin '50,-2.5,2.5' -t CRAP  -m100
+./stack2.py --input /share/ftkdata1/antonk/ana_v26_1008_all_stacoCB_test/ -b -m99 --var met --pre "l_pt>20.0 && fabs(l_eta)<2.4 && ptiso20/l_pt<0.1 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5" --bin "100,5,100" -t CRAP --qcd AUTO
+
