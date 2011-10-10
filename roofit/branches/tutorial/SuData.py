@@ -20,8 +20,12 @@ class SuSample:
     seen_samples = []
     rootpath = None
     lumi = None
+    # for direct histogram access:
     rebin = 1
-    hsource = None  # source path to the histograms
+    hsource = None
+    hcharge = 2
+    hsourcemc = None
+    hsourcedata = None
     debug = False
     def __init__(s,name):
         """ constructor """
@@ -30,6 +34,7 @@ class SuSample:
         s.nt = {}
         s.nevt = {}
         s.files = []
+        s.flags = []
         # volatile
         s.path = None  # current ntuple path
         # fast histogram cache
@@ -174,7 +179,11 @@ class SuSample:
                     htmp = path.split('/');
                     htmp.insert(-1,QMAP[iq][1])
                     return '/'.join(htmp) if iq in (0,1) else path
-                hpath = QAPP(s.hsource,s.hcharge)
+                hsource = s.hsource
+                if s.hsourcemc and s.hsourcedata:
+                    # in the future, this could bootstrap path from flags[]
+                    hsource = s.hsourcemc if 'mc' in s.flags else s.hsourcedata
+                hpath = QAPP(hsource,s.hcharge)
                 s.data[key]=s.GetHisto(hname,hpath)
             else:
                 # build from TNtuple
@@ -212,6 +221,8 @@ class SuStackElm:
         s.label = label
         s.color = color
         s.flags = [a.lower() for a in flags]
+        for a in s.samples: # duplicate the flags
+            a.flags = s.flags
     def addchain(s,path):
         """ add one of the TNtuples """
         return [e.addchain(path) for e in s.samples]
