@@ -9,26 +9,28 @@ common="--input /share/ftkdata1/antonk/ana_v27_0930_all_stacoCB_10GeV_mc11pu/"
 common="--input /share/ftkdata1/antonk/ana_v26_0930_all_stacoCB_10GeV/"
 common="--input /share/ftkdata1/antonk/ana_v26_1008_all_stacoCB_test/" # new ntuple: correct efficiency
 
-#common="${common} --qcd AUTO"
+common="${common} --qcd AUTO"
 
 # W stack histos
+function run_d0_stacks () {
+    refl="--refline 0.5,3.0"
+    eval ./stack2.py ${common}  -b --var 'd0' --bin '100,-0.1,0.1' -t ${tag} $@ ${refl} &
+    eval ./stack2.py ${common}  -b --var 'd0sig' --bin '100,-5.0,5.0' -t ${tag} $@ ${refl} &
+    eval ./stack2.py ${common}  -b --var 'z0' --bin '100,-1.0,1.0' -t ${tag} $@ ${refl}
+}
 function run_w_stacks () {
-    ./stack2.py ${common} -b -m${m} --var 'l_pt' --bin '50,0,100' -t ${tag} --pre "${pre}" --cut "${cut}" &
-    ./stack2.py ${common} -b -m${m} --var 'met' --bin '50,0,200' -t ${tag} --pre "${pre}" --cut "${cut}" &
-    wait
-    ./stack2.py ${common} -b -m${m} --var 'w_mt' --bin '50,0,200' -t ${tag} --pre "${pre}" --cut "${cut}" &
-    ./stack2.py ${common} -b -m${m} --var 'l_eta' --bin '50,-2.5,2.5' -t ${tag} --pre "${pre}" --cut "${cut}" &
-    wait
-    ./stack2.py ${common} -b -m${m} --var 'w_pt' --bin '50,0,200' -t ${tag} --pre "${pre}" --cut "${cut}" &
-    wait
-    #./stack2.py ${common} -b -m${m} --var 'd0sig' --bin '100,-10.0,10.0' -t ${tag} --pre "${pre}" --cut "${cut}" &
-    #./stack2.py ${common} -b -m${m} --var 'd0' --bin '100,-5.0,5.0' -t ${tag} --pre "${pre}" --cut "${cut}" &
-    #wait
-    #./stack2.py ${common} -b -m${m} --var 'z0' --bin '100,-10.0,10.0' -t ${tag} --pre "${pre}" --cut "${cut}" &
+    eval ./stack2.py ${common}  -b --var 'l_pt' --bin '50,0,100' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var 'met' --bin '50,0,200' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var 'w_mt' --bin '50,0,200' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var 'l_eta' --bin '50,-2.5,2.5' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var 'w_pt' --bin '50,0,200' -t ${tag} $@ &
 }
 function run_w_asym () {
-    ./stack2.py ${common} -b -m${m} --var 'l_eta' --bin '50,-2.5,2.5' -t ${tag} --pre "${pre}" --cut "${cut}" &
-    ./stack2.py ${common} -b -m${m} --var 'fabs(l_eta)' --bin '25,0.0,2.5' -t ${tag} --pre "${pre}" --cut "${cut}" &
+    eval ./stack2.py ${common}  -b --var "\"fabs(l_eta)\"" --bin '25,0.0,2.5' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var 'l_eta' --bin '50,-2.5,2.5' -t ${tag} $@ &
+}
+function run_w_asym_min () {
+    eval ./stack2.py ${common}  -b --var "\"fabs(l_eta)\"" --bin '25,0.0,2.5' -t ${tag} $@ &
 }
 
 # QCD studies: comparing shapes after inversion of certain cuts
@@ -44,32 +46,38 @@ if [ "0" -eq "1" ]; then
     wait
 fi
 
-if [ "1" -eq "1" ]; then
-    pre="${wpre_jordan}"
-    m=1
+# stack plots and single-MC asymmetry
+if [ "0" -eq "1" ]; then
+    i=0
+    gput tagss ${i} J_st0_q2 "--pre \"${wpre_jordan}\" --cut \"mcw*puw\" --charge 2"
+    ((i++))
+    gput tagss ${i} J_st0_q0 "--pre \"${wpre_jordan}\" --cut \"mcw*puw\" --charge 0"
+    ((i++))
+    gput tagss ${i} J_st0_q1 "--pre \"${wpre_jordan}\" --cut \"mcw*puw\" --charge 1"
+    ((i++))
+    gput tagss ${i} J_st3_q2 "--pre \"${wpre_jordan}\" --cut \"mcw*puw\" --bgsig 3 --charge 2"
+    ((i++))
+    gput tagss ${i} P_stack "--pre \"${wpre_peter}\" --cut \"mcw*puw\" "
+    ((i++))
+    # run all jobs
+    i=0
+    for itag in `gkeys tagss`; do
+	tag=`ggeta tagss $itag`
+	opts=`ggetb tagss $itag`
+	run_w_stacks -m1 "${opts}"
+	if [ "${i}" -eq "0" ]; then
+	    run_d0_stacks -m1 "${opts}"
+	    run_w_asym -m12 "${opts}"
+	fi;
+	wait
+	((i++))
+	break
+    done
 
-    # default plots:
-    cut="mcw*puw"
-    tag=DEF
-    run_w_stacks
-    wait
-
-    exit 0
-
-    cut="mcw*puw*effw"
-    tag=EFFW
-    #run_w_stacks
-    wait
-
-    cut="mcw*puw*effw*trigw"
-    tag=EFFTRIGW
-    #run_w_stacks
-    wait
-    
     echo DONE
 fi
 
-# truth plots
+# truth plots for multiple generators
 if [ "0" -eq "1" ]; then
     pre="${wpre_jordan}"
     m=1
@@ -77,26 +85,117 @@ if [ "0" -eq "1" ]; then
     cut="mcw*puw"
     m=922
     tag=QALL
-    common_orig="${common}"
-    common="${common_orig} --charge 2"
-    run_w_stacks
-    wait
+    run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 2 "
     tag=QPOS
-    common="${common_orig} --charge 0"
-    run_w_stacks
+    run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 0 "
     wait
     tag=QNEG
-    common="${common_orig} --charge 1"
-    run_w_stacks
-    wait
+    run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 1 "
 
     cut="mcw*puw"
     m=921
     tag=ASYM
-    run_w_asym
+    run_w_asym  "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 1 "
     wait
-    exit 1
     
+    echo DONE
+fi
+
+# creation and verification of unfolding efficiency histograms
+if [ "0" -eq "1" ]; then
+    pre="${wpre_jordan}"
+    cut="mcw*puw"
+    common="${common} --effroot oct09_eff.root"
+
+    if [ "1" -eq "1" ]; then
+	m=100
+	tag=EFF_q0
+	run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 0 "
+	run_w_asym "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 0 "
+	tag=EFF_q1
+	run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 1 "
+	run_w_asym "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 1 "
+	tag=EFF_q2
+	run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 2 "
+	run_w_asym "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 2 "
+	wait
+    fi;
+
+    m=2
+    tag=EFFDO_q2_pythia
+    run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 2 "
+    tag=EFFDO_q2_alpgen
+    run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 2 --bgsig 2"
+    wait
+    
+fi;
+
+# FINAL OUTPUT:
+# reco-level asymmetry plots for multiple generators
+# also allows to perform a correction to particle level
+if [ "0" -eq "1" ]; then
+    pre="${wpre_jordan}"
+    cut="mcw*puw"
+    m=923
+
+    i=0
+    # detector level
+    #gput tagsF ${i} RASYM  "--pre \"${pre}\" --cut \"${cut}\" -m ${m} "
+    ((i++))
+    # unfolded to particle level
+    #gput tagsF ${i} UASYM  "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --effroot oct09_eff.root"
+    ((i++))
+    # additional variations - for run
+    gput tagsF ${i} RASYM_nj0  "--pre \"${pre} && njets==0\" --cut \"${cut}\" -m ${m} "
+    ((i++))
+    gput tagsF ${i} RASYM_nj1  "--pre \"${pre} && njets==1\" --cut \"${cut}\" -m ${m} "
+    ((i++))
+    gput tagsF ${i} RASYM_nj2  "--pre \"${pre} && njets==2\" --cut \"${cut}\" -m ${m} "
+    ((i++))
+    gput tagsF ${i} RASYM_wmt4060  "--pre \"${pre} && w_mt>40 && w_mt<80\" --cut \"${cut}\" -m ${m} "
+    ((i++))
+    gput tagsF ${i} RASYM_wmt4080  "--pre \"${pre} && w_mt>40 && w_mt<80\" --cut \"${cut}\" -m ${m} "
+    ((i++))
+    gput tagsF ${i} RASYM_wmt80120  "--pre \"${pre} && w_mt>80 && w_mt<120\" --cut \"${cut}\" -m ${m} "
+    ((i++))
+    gput tagsF ${i} RASYM_wpt0015  "--pre \"${pre} && w_pt>0 && w_pt<15\" --cut \"${cut}\" -m ${m} "
+    ((i++))
+    gput tagsF ${i} RASYM_wpt1580  "--pre \"${pre} && w_pt>15 && w_pt<80\" --cut \"${cut}\" -m ${m} "
+    ((i++))
+    gput tagsF ${i} RASYM_met4080  "--pre \"${pre} && met>40 && met<80\" --cut \"${cut}\" -m ${m} "
+    ((i++))
+
+    # run all jobs
+    for itag in `gkeys tagsF`; do  # cuts
+	tag=`ggeta tagsF $itag`
+	opts=`ggetb tagsF $itag`
+	run_w_asym_min "${opts}"
+    done
+
+    wait
+    echo DONE
+fi
+
+
+# reco-level asymmetry: systematic variations
+if [ "0" -eq "1" ]; then
+    pre="${wpre_jordan}"
+    cut="mcw*puw"
+    m=924
+
+    i=0
+    # detector level
+    gput tagsF ${i} RASYM_sys  "--pre \"${pre}\" --cut \"${cut}\" -m ${m} "
+    ((i++))
+
+    # run all jobs
+    for itag in `gkeys tagsF`; do  # cuts
+	tag=`ggeta tagsF $itag`
+	opts=`ggetb tagsF $itag`
+	run_w_asym_min "${opts}"
+    done
+
+    wait
     echo DONE
 fi
 
@@ -104,9 +203,9 @@ fi
 if [ "0" -eq "1" ]; then
     #./stack2.py -b -m99 --var 'met' --bin '50,25,100' --hsource WJ/st_w_final/00_wmt/met --rebin 4
     i=0
-    gput tagsq ${i} qcdfit_jordan  "--pre \"${wpre_jordan}\" --bin \"100,5,100\" "
+    gput tagsq ${i} J_qcdfit  "--pre \"${wpre_jordan}\" --bin \"100,5,100\" "
     ((i++))
-    gput tagsq ${i} qcdfit_peter  "--pre \"${wpre_peter}\" --bin \"100,5,100\" "
+    gput tagsq ${i} P_qcdfit  "--pre \"${wpre_peter}\" --bin \"100,5,100\" "
     ((i++))
     # run all jobs
     for itag in `gkeys tagsq`; do  # cuts

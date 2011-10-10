@@ -5,6 +5,9 @@ import ROOT
 class SuCanvas:
   """ Jordan's canvas class for plotting """
 
+  _refLineMin = 0.5
+  _refLineMax = 1.5
+
   def FixupHisto(s,h):
     h.GetXaxis().SetTitleOffset( s.getXtitleOffset() );
     h.GetYaxis().SetTitleOffset( s.getYtitleOffset() );
@@ -29,8 +32,8 @@ class SuCanvas:
       refLine.SetBinContent( ibin , 1.0 )
     refLine.SetLineColor( ROOT.kAzure-7 );
     refLine.SetFillColor( 10 );
-    refLine.SetMinimum( 0.5 )
-    refLine.SetMaximum( 1.5 )
+    refLine.SetMinimum( s._refLineMin )
+    refLine.SetMaximum( s._refLineMax )
     refLine.GetXaxis().SetLabelSize( s.getRatioLabelSize() );
     refLine.GetYaxis().SetLabelSize( s.getRatioLabelSize() );
     refLine.GetXaxis().SetTitleSize( s.getRatioAxisTitleSize() );

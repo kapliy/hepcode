@@ -50,6 +50,9 @@ parser.add_option("--hsource",dest="hsource",
 parser.add_option("--rebin",dest="rebin",
                   type="int", default=1,
                   help="Rebin histograms")
+parser.add_option("--refline",dest="refline",
+                  type="string", default='0.5,1.5',
+                  help="The range for ratio histogram reference line used in stack plots")
 parser.add_option("--antondb",dest="antondb",
                   type="string", default=None,
                   help="Tag for antondb output container")
@@ -89,7 +92,7 @@ parser.add_option("--bgqcd",dest="bgqcd",
                   help="QCD: 0=Pythia mu15x, 1=Pythia J0..J5")
 parser.add_option("--bgsig",dest="bgsig",
                   type="int", default=0,
-                  help="Background: 0=Pythia, 1=MC@NLO, 3=W+jets Jimmy")
+                  help="Background: 0=Pythia, 1=MC@NLO, 2=Alpgen(signal only), 3=Alpgen(all)")
 (opts, args) = parser.parse_args()
 mode = opts.mode
 print "MODE =",mode
@@ -111,6 +114,8 @@ SetStyle("AtlasStyle.C")
 
 from FileLock import FileLock
 from SuCanvas import *
+SuCanvas._refLineMin = float(opts.refline.split(',')[0])
+SuCanvas._refLineMax = float(opts.refline.split(',')[1])
 from SuData import *
 SuSample.rootpath = opts.input
 SuSample.hsource = opts.hsource
@@ -181,10 +186,51 @@ QMAPZ = {}
 QMAPZ[POS] = (0,'POS','lP','mu+')
 QMAPZ[NEG] = (1,'NEG','lN','mu-')
 
+
+def run_fit(pre,var='met',bin='100,5,100',cut='mcw*puw'):
+    import SuFit
+    f = SuFit.SuFit()
+    f.addFitVar( var, float(bin.split(',')[1]) , float(bin.split(',')[2]) , var );
+    # get histograms
+    hdata   = po.data('data',var,bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],cut,pre))
+    hfixed = po.ewk('bgfixed',var,bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],cut,pre))
+    hfree = po.qcd('bgfree',var,bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],cut,pre))
+    assert hfixed,'Failed to find fixed backgrounds'
+    # run SuFit
+    hdata.getLegendName = lambda : 'DATA'
+    hfixed.getLegendName = lambda : 'EWK backgrounds'
+    hfree.getLegendName = lambda : 'QCD (bb/cc mu15X)'
+    f.setDataBackgrounds(hdata,hfixed,hfree)
+    f.doFit()
+    tmp = f.drawFits()
+    gbg.append((f,hdata,hfixed,hfree,tmp))
+    return tmp[0],tmp[1],f.scales[0]
+
+def renormalize():
+    """ Normalizes MET template """
+    if not opts.qcdscale in ('AUTO','auto','Auto'):
+        return
+    fitpre = metfitreg(opts.pre)
+    dum1,dum2,scale = run_fit(pre=fitpre)
+    SuSample.qcdscale = 1.0
+
+def particle(h,inp=opts.input,var=opts.var,bin=opts.bin,q=opts.charge):
+    """ Uses pre-computed efficiency histogram to convert a given reco-level quantity to particle-level """
+    if opts.effroot and os.path.exists(opts.effroot):
+        f = ROOT.TFile.Open(opts.effroot,'READ')
+        assert f and f.IsOpen()
+        key_str = re.sub(r'[^\w]', '_', 'eff_%s_%s_%s_%d'%(inp,var,bin,q))
+        assert f.Get(key_str),'Failed to find key: %s'%key_str
+        heff = f.Get(key_str).Clone()
+        if heff:
+            h.Divide(heff)
+        f.Close()
+    return h
+
 # MC stack order
 pw,pz = [SuStack() for zz in xrange(2)]
 # w samples:
-if opts.bgsig in (0,1): # w inclusive
+if opts.bgsig in (0,1,2): # w inclusive
     pw.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
     if False: # until this is run by Antonio in v1_26
         pw.add(label='Z#rightarrow#tau#tau',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta,flags=['bg','mc','ewk'])
@@ -272,30 +318,10 @@ if False:
 gbg = []
 q = opts.charge
 
-def renormalize():
-    """ Normalizes MET template """
-    if not opts.qcdscale in ('AUTO','auto','Auto'):
-        return
-    fitpre = metfitreg(opts.pre)
-    dum1,dum2,scale = run_fit(pre=fitpre)
-    SuSample.qcdscale = 1.0
-
-def particle(h,var=opts.var,bin=opts.bin,q=opts.charge):
-    """ Uses pre-computed efficiency histogram to convert a given reco-level quantity to particle-level """
-    if opts.effroot and os.path.exists(opts.effroot):
-        f = ROOT.TFile.Open(opts.effroot,'READ')
-        assert f and f.IsOpen()
-        key_str = re.sub(r'[^\w]', '_', 'eff_%s_%s_%d'%(var,bin,q))
-        heff = f.Get(key_str).Clone()
-        if heff:
-            h.Divide(heff)
-        f.Close()
-    return h
-
 if mode==922: # compares, at truth level, different monte-carlos. TODO - put to SuCanvas!
     renormalize()
     c = SuCanvas()
-    c.buildDefault(width=640,height=480)
+    c.buildDefault(width=800,height=600)
     cc = c.cd_canvas()
     cc.cd(1)
     pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,fortruth(opts.pre))
@@ -304,40 +330,41 @@ if mode==922: # compares, at truth level, different monte-carlos. TODO - put to 
     halpgen = po.histo('alpgen','truth_alpgen',opts.var,opts.bin,pre,path=path_truth,norm=True)
     mstyle = 20
     msize = 1.5
-    hpythia.SetLineColor(ROOT.kBlack)
-    hpythia.SetMarkerColor(ROOT.kBlack)
+    hpythia.SetLineColor(ROOT.kRed)
+    hpythia.SetMarkerColor(ROOT.kRed)
     hpythia.SetMarkerStyle(mstyle)
     hpythia.SetMarkerSize(msize*1.0)
     hpythia.Draw('')
     hpythia.GetYaxis().SetRangeUser(0,max(hpythia.GetMaximum(),hmcnlo.GetMaximum(),halpgen.GetMaximum())*1.5)
     hpythia.GetXaxis().SetTitle(opts.var);
-    hmcnlo.SetLineColor(ROOT.kRed)
-    hmcnlo.SetMarkerColor(ROOT.kRed)
+    hmcnlo.SetLineColor(ROOT.kBlue)
+    hmcnlo.SetMarkerColor(ROOT.kBlue)
     hmcnlo.SetMarkerStyle(mstyle)
     hmcnlo.SetMarkerSize(msize*0.6)
     hmcnlo.Draw('A same')
-    halpgen.SetLineColor(ROOT.kBlue)
-    halpgen.SetMarkerColor(ROOT.kBlue)
+    halpgen.SetLineColor(8)
+    halpgen.SetMarkerColor(8)
     halpgen.SetMarkerStyle(mstyle)
     halpgen.SetMarkerSize(msize*0.30)
     halpgen.Draw('A same')
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
-    leg.AddEntry(hpythia,'Pythia','LP')
-    leg.AddEntry(hmcnlo,'MC@NLO','LP')
-    leg.AddEntry(halpgen,'Alpgen','LP')
+    lab = ('Pythia(MRST)','MC@NLO(CTEQ6.6)','Alpgen(CTEQ6.1)')
+    leg.AddEntry(hpythia,lab[0],'LP')
+    leg.AddEntry(hmcnlo,lab[1],'LP')
+    leg.AddEntry(halpgen,lab[2],'LP')
     leg.Draw('same')
 
 if mode==921: # asymmetry, at truth level, of different monte-carlos. TODO - put to SuCanvas!
     renormalize()
     c = SuCanvas()
-    c.buildDefault(width=640,height=480)
+    c.buildDefault(width=800,height=600)
     cc = c.cd_canvas()
     cc.cd(1)
     names = ('pythia','mcnlo','alpgen')
-    labels = ('Pythia','MC@NLO','Alpgen')
+    labels = ('Pythia(MRST)','MC@NLO(CTEQ6.6)','Alpgen(CTEQ6.1)')
     mstyle = 20
     msize = 1.5
-    colors = (ROOT.kBlack,ROOT.kRed,ROOT.kBlue)
+    colors = (ROOT.kRed,ROOT.kBlue,8)
     sizes = (msize*1.0,msize*0.6,msize*0.3)
     h = []
     hasym = []
@@ -356,6 +383,102 @@ if mode==921: # asymmetry, at truth level, of different monte-carlos. TODO - put
         hasym[i].Draw() if i==0 else hasym[i].Draw('A same')
         leg.AddEntry(hasym[i],labels[i],'LP')
     hasym[0].GetYaxis().SetRangeUser(0,max(hasym[0].GetMaximum(),hasym[1].GetMaximum(),hasym[2].GetMaximum())*1.5)
+    leg.Draw('same')
+
+if mode==923: # asymmetry, at reco/particle level, of different monte-carlos. Compared to BG-subtracted data
+    renormalize()
+    c = SuCanvas()
+    c.buildDefault(width=800,height=600)
+    cc = c.cd_canvas()
+    cc.cd(1)
+    names = ('pythia','mcnlo','alpgen','datasub')
+    labels = ('Pythia(MRST)','MC@NLO(CTEQ6.6)','Alpgen(CTEQ6.1)','Data')
+    msize = 1.5
+    colors = (ROOT.kRed,ROOT.kBlue,8,ROOT.kBlack)
+    sizes = (msize*0.7,msize*0.7,msize*0.7,msize*0.5)
+    mstyles = (20,20,20,21)
+    h = []
+    hasym = []
+    leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
+    for i in range(len(names)):
+        h.append([None,None])
+        for q in (0,1):
+            print 'Creating:',i,q
+            pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre)
+            if i==len(names)-1: #data
+                h[i][q] = particle(po.data_sub('datasub_%s_%d'%(names[i],q),opts.var,opts.bin,pre,path=path_reco),q=q)
+            else: #MC
+                h[i][q] = particle(po.histo(names[i],'recomc_%s_%d'%(names[i],q),opts.var,opts.bin,pre,path=path_reco),q=q)
+            h[i][q].SetLineColor(colors[i])
+            h[i][q].SetMarkerColor(colors[i])
+            h[i][q].SetMarkerStyle(mstyles[i])
+            h[i][q].SetMarkerSize(sizes[i])
+        hasym.append(c.WAsymmetry(h[i][POS],h[i][NEG]))
+        if not i==len(names)-1:
+            hasym[i].Draw() if i==0 else hasym[i].Draw('A same')
+        else:
+            hasym[i].Draw('A same')
+        leg.AddEntry(hasym[i],labels[i],'LP')
+    hasym[0].GetYaxis().SetRangeUser(0,max(hasym[0].GetMaximum(),hasym[1].GetMaximum(),hasym[2].GetMaximum())*1.5)
+    leg.Draw('same')
+
+# WARNING: this function is very specific to the TrigFTKAna ntuple (ie, manually refers to many folders!)
+if mode==924: # asymmetry, at reco/particle level: systematic variations in bg-subtracted data
+    renormalize()
+    qcdscale = SuSample.qcdscale
+    c = SuCanvas()
+    c.buildDefault(width=800,height=600)
+    cc = c.cd_canvas()
+    cc.cd(1)
+    names = ('pythia','mcnlo','alpgen','datasub')
+    msize = 1.5
+    sizes = [msize*0.7]*20
+    colors = [i for i in xrange(20,40)]
+    mstyles=[20]*20
+    h = []
+    hasym = []
+    leg = ROOT.TLegend(0.55-0.4,0.70-0.11,0.88-0.4,0.92,QMAP[q][3],"brNDC")
+    leg.SetHeader('Systematic variations:')
+    hs = [('nominal','WJ','WJ',''),]  # format: (data,mc) histo
+    hs += [('mu scale 00','WJ_sc00','WJ',''),('mu scale 10','WJ_sc10','WJ',''),('mu scale 11','WJ_sc11','WJ','')] # data scales
+    hs += [('mu smear %d'%i,'WJ','WJ_sm%d'%i,'') for i in xrange(2,6)] # mc smears
+    hs += [('QCD +20%','WJ','WJ','qcd+'),('QCD -20%','WJ','WJ','qcd-')]
+    hs += [('Isolation','WP','WP','qcdP'),]
+    SuSample.GLOBAL_CACHE = None
+    SuSample.rebin = 4
+    SuSample.hsource = '%s/st_w_final/00_wmt/asym_abseta'
+    for i,hh in enumerate(hs):
+        SuSample.hsourcedata = SuSample.hsource%hh[1]
+        SuSample.hsourcemc = SuSample.hsource%hh[2]
+        SuSample.qcdscale = qcdscale
+        if hh[3]=='qcd+':
+            SuSample.qcdscale = qcdscale*1.2
+        elif hh[3]=='qcd-':
+            SuSample.qcdscale = qcdscale/1.2
+        elif hh[3]=='qcdP':
+            SuSample.qcdscale = qcdscale*2.967  # from qcd fit
+        h.append([None,None])
+        for q in (0,1):
+            SuSample.hcharge = q
+            pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre)
+            pre += hh[0]+'_'+SuSample.hsourcedata + '_' + SuSample.hsourcemc
+            h[i][q] = particle(po.data_sub('datasub_%s_%d'%(hh[0],q),opts.var,opts.bin,pre,path=path_reco),q=q)
+            h[i][q].SetLineColor(colors[i])
+            h[i][q].SetMarkerColor(colors[i])
+            h[i][q].SetMarkerStyle(mstyles[i])
+            h[i][q].SetMarkerSize(sizes[i])
+        hasym.append(c.WAsymmetry(h[i][POS],h[i][NEG]))
+        hasym[i].Draw() if i==0 else hasym[i].Draw('A same')
+        leg.AddEntry(hasym[i],hh[0],'LP')
+    
+    hasym[0].GetXaxis().SetRangeUser(0,2.4)
+    def hmaximum(h):
+        res=[]
+        for i in xrange(1,h.GetNbinsX()+1):
+            if h.GetBinCenter(i)<2.4:
+                res.append(h.GetBinContent(i))
+        return max(res)
+    hasym[0].GetYaxis().SetRangeUser(0,max([hmaximum(hh) for hh in hasym])*1.5)
     leg.Draw('same')
 
 if mode==920: # QCD data-driven template studies
@@ -428,27 +551,14 @@ if mode==2: # signal - directly from MC, or bg-subtracted data - allow applicati
     htruth.SetLineColor(ROOT.kBlack)
     hsig  = po.sig('signal',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre))
     hsig.SetLineColor(ROOT.kRed)
-    #hd_sig = po.data_sub('bgsub_data',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre))
-    #hd_sig.SetLineColor(ROOT.kBlue)
-    hsig_eff = hsig.Clone('signal_eff')
-    heff = None
-    if opts.effroot:
-        f = ROOT.TFile.Open(opts.effroot,'READ')
-        assert f and f.IsOpen()
-        key_str = re.sub(r'[^\w]', '_', 'eff_%s_%s_%s_%d'%(opts.input,opts.var,opts.bin,opts.charge))
-        heff = f.Get(key_str)
-        heff.SetDirectory(0)
-        heff.SetLineColor(ROOT.kBlack)
-        f.Close()
-    if opts.effroot:
-        hsig_eff.Divide(heff)
-    #hd_sig_eff = hd_sig.Clone('bsub_data_eff')
-    if opts.effroot:
-        #hd_sig_eff.Divide(heff)
-        pass
+    hsig_eff = particle(hsig.Clone('signal_eff'))
     htruth.Draw('')
     hsig.Draw('A same')
-    #hd_sig.Draw('A same')
+    if False:
+        hd_sig = po.data_sub('bgsub_data',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre))
+        hd_sig.SetLineColor(ROOT.kBlue)
+        hd_sig_eff = particle(hd_sig.Clone('bgsub_data_eff'))
+        hd_sig.Draw('A same')
     if opts.effroot:
         cc.cd(2)
         htruth.Draw('')
@@ -537,24 +647,6 @@ if mode in (101,102): # tag and probe
             assert False,'Unknown tag-and-probe mode'
     c = SuCanvas()
     c.plotTagProbe(hda_bef,hda_aft,hmc_bef,hmc_aft,xtitle=opts.var)
-
-def run_fit(pre,var='met',bin='100,5,100',cut='mcw*puw'):
-    import SuFit
-    f = SuFit.SuFit()
-    f.addFitVar( var, float(bin.split(',')[1]) , float(bin.split(',')[2]) , var );
-    # get histograms
-    hdata   = po.data('data',var,bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],cut,pre))
-    hfixed = po.ewk('bgfixed',var,bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],cut,pre))
-    hfree = po.qcd('bgfree',var,bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],cut,pre))
-    # run SuFit
-    hdata.getLegendName = lambda : 'DATA'
-    hfixed.getLegendName = lambda : 'EWK backgrounds'
-    hfree.getLegendName = lambda : 'QCD (bb/cc mu15X)'
-    f.setDataBackgrounds(hdata,hfixed,hfree)
-    f.doFit()
-    tmp = f.drawFits()
-    gbg.append((f,hdata,hfixed,hfree,tmp))
-    return tmp[0],tmp[1],f.scales[0]
 
 if mode==99: # Floating QCD normalization
     renormalize()  # for testing - only activated when --qcd=auto
