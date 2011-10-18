@@ -318,7 +318,7 @@ if False:
 gbg = []
 q = opts.charge
 
-if mode==922: # compares, at truth level, different monte-carlos. TODO - put to SuCanvas!
+if mode==922: # compares, at truth level, different monte-carlos.
     renormalize()
     c = SuCanvas()
     c.buildDefault(width=800,height=600)
@@ -348,13 +348,14 @@ if mode==922: # compares, at truth level, different monte-carlos. TODO - put to 
     halpgen.SetMarkerSize(msize*0.30)
     halpgen.Draw('A same')
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
+    leg.SetHeader('Different generators:')
     lab = ('Pythia(MRST)','MC@NLO(CTEQ6.6)','Alpgen(CTEQ6.1)')
     leg.AddEntry(hpythia,lab[0],'LP')
     leg.AddEntry(hmcnlo,lab[1],'LP')
     leg.AddEntry(halpgen,lab[2],'LP')
     leg.Draw('same')
 
-if mode==921: # asymmetry, at truth level, of different monte-carlos. TODO - put to SuCanvas!
+if mode==921: # asymmetry, at truth level, of different monte-carlos.
     renormalize()
     c = SuCanvas()
     c.buildDefault(width=800,height=600)
@@ -369,6 +370,7 @@ if mode==921: # asymmetry, at truth level, of different monte-carlos. TODO - put
     h = []
     hasym = []
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
+    leg.SetHeader('Asymmetry:')
     for i in range(3):
         h.append([None,None])
         for q in (0,1):
@@ -400,6 +402,7 @@ if mode==923: # asymmetry, at reco/particle level, of different monte-carlos. Co
     h = []
     hasym = []
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
+    leg.SetHeader('Asymmetry:')
     for i in range(len(names)):
         h.append([None,None])
         for q in (0,1):
@@ -520,6 +523,7 @@ if mode==920: # QCD data-driven template studies
         hdata[iv].GetYaxis().SetRangeUser(0,max(maxdata[iv],maxqcd[iv])*1.5)
         hdata[iv].GetXaxis().SetTitle(opts.var);
         hqcd[iv].Draw('same')
+        leg.SetHeader('QCD fit:')
         leg.AddEntry(hdata[iv],'Data Template','LP')
         leg.AddEntry(hqcd[iv],'QCD MC (bbar)','LP')
         leg.Draw('same')
@@ -647,6 +651,84 @@ if mode in (101,102): # tag and probe
             assert False,'Unknown tag-and-probe mode'
     c = SuCanvas()
     c.plotTagProbe(hda_bef,hda_aft,hmc_bef,hmc_aft,xtitle=opts.var)
+
+if mode == 1012: # 10/12/2011: MCP group studies of Z mass peak in data and MC
+    #TODO work in progress!
+    assert opts.ntuple=='z','ERROR: MCP Z studies can only be computed for the z ntuple'
+    c = SuCanvas()
+    c.buildDefault(width=800,height=600)
+    cc = c.cd_canvas()
+    #cc.Divide(2,1)
+    cc.cd(1)
+    pre_tmp = 'lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>20.0 && fabs(lP_eta)<2.4 && lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0 && fabs(lN_eta)<2.4 && Z_m>70 && Z_m<110 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && lP_ptiso20/lP_pt<0.1 && lN_ptiso20/lN_pt<0.1'
+    pre = pre_tmp
+    hdata = po.histo('2011 data','data',opts.var,opts.bin,pre,path=path_reco)
+    hsig =  po.sig('signal',opts.var,opts.bin,pre,path=path_reco)
+    import Fit
+    rdata = Fit.load_histo( hdata,float(opts.bin.split(',')[1]) , float(opts.bin.split(',')[2]) )
+
+if mode == 1013: # 10/13/2011: MCP group studies that do not require a Z peak (MS-ID-CB comparisons)
+    # we still use Z events to ensure little QCD contamination
+    assert opts.ntuple=='z','ERROR: MCP Z studies can only be computed for the z ntuple'
+    c = SuCanvas()
+    c.buildDefault(title='pT_CB-pT_ID',width=800,height=600)
+    cc = c.cd_canvas()
+    pre_tag = 'lX_idhits==1 && fabs(lX_z0)<10. && fabs(lX_eta)<2.4 && lX_pt>20.0 && (lX_q*lY_q)<0 && fabs(lX_z0-lY_z0)<3 && fabs(lX_d0-lY_d0)<2 && lX_ptiso20/lX_pt<0.1 && Z_m>70 && Z_m<110'
+    pre_pro = 'lY_idhits==1 && fabs(lY_z0)<10. && lY_pt>20.0 && lX_ptiso20/lX_pt<0.1'
+    bin = '200,-10,10'
+    rms_scale=1.0
+    hPOS = ROOT.TH1F('ptCB_ptID+','ptCB_ptID+',25,-2.5,2.5)
+    hNEG = ROOT.TH1F('ptCB_ptID-','ptCB_ptID-',25,-2.5,2.5)
+    hPOS.SetLineColor(ROOT.kRed)
+    hPOS.SetMarkerColor(ROOT.kRed)
+    hNEG.SetLineColor(ROOT.kBlue)
+    hNEG.SetMarkerColor(ROOT.kBlue)
+    result = [[],[]]
+    cscan = ROOT.TCanvas('scan','scan',1500,1500)
+    cscan.Divide(5,5)
+    for i,eta in enumerate([-2.5+ibin*0.2 for ibin in range(25)]):
+        cscan.cd(i+1)
+        h = []
+        f = []
+        for iqp in (POS,NEG):
+            iqt = 0 if iqp==1 else 1
+            var = 'lY_pt-lY_pt_id'.replace('lX',QMAPZ[iqt][2]).replace('lY',QMAPZ[iqp][2])
+            pre = (' && '.join([pre_tag,pre_pro,'lY_eta>%f && lY_eta<%f'%(eta,eta+0.2)])).replace('lX',QMAPZ[iqt][2]).replace('lY',QMAPZ[iqp][2])
+            h.append( po.data('data%d_q%d'%(i,iqp),var,bin,pre) )
+            rms,mean=h[-1].GetRMS(),h[-1].GetMean()
+            FITMIN=mean-rms*rms_scale
+            FITMAX=mean+rms*rms_scale
+            h[-1].Fit('gaus','S','',FITMIN,FITMAX)
+            f.append( h[-1].GetFunction('gaus') )
+        f[0].SetLineColor(ROOT.kRed)
+        f[1].SetLineColor(ROOT.kBlue)
+        hPOS.SetBinContent(i,f[0].GetParameter(1))
+        hPOS.SetBinError(i,f[0].GetParError(1))
+        hNEG.SetBinContent(i,f[1].GetParameter(1))
+        hNEG.SetBinError(i,f[1].GetParError(1))
+        if False: # simple mean
+            hPOS.SetBinContent(i,h[0].GetMean())
+            hNEG.SetBinContent(i,h[1].GetMean())
+        h[0].SetLineColor(ROOT.kRed)
+        h[0].SetMarkerColor(ROOT.kRed)
+        h[1].SetLineColor(ROOT.kBlue)
+        h[1].SetMarkerColor(ROOT.kBlue)
+        h[0].Draw()
+        h[1].Draw('SAME')
+        gbg += h
+    cscan.SaveAs('scan_ptCB_ptID.png')
+    cc.cd()
+    hPOS.Draw()
+    hPOS.GetYaxis().SetRangeUser(-0.5,0.5)
+    hNEG.Draw('SAME')
+    if True:
+        line = ROOT.TGraph(2)
+        line.SetPoint(0,-2.5,0)
+        line.SetPoint(1,2.5,0)
+        line.SetLineWidth(1)
+        line.SetLineColor(ROOT.kBlack)
+        line.Draw('l')
+        gbg.append(line)
 
 if mode==99: # Floating QCD normalization
     renormalize()  # for testing - only activated when --qcd=auto

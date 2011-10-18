@@ -1,17 +1,18 @@
 #!/bin/bash
 source bashmap.sh
 
-#./stack2.py -b -t TBNEW --var 'lY_eta' --bin '50,-2.5,2.5' -m101 --ntuple z
-wpre_jordan='l_pt>20.0 && fabs(l_eta)<2.4 && ptiso20/l_pt<0.1 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'
-wpre_peter='l_pt>20.0 && fabs(l_eta)<2.4 && ptiso40<2.0 && etiso40<2.0 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'
+wpre_preiso='l_pt>20.0 && fabs(l_eta)<2.4 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'
+wpre_jordan="${wpre_preiso} && ptiso20/l_pt<0.1"
+wpre_peter="${wpre_preiso} && ptiso40<2.0 && etiso40<2.0"
+zpre_preiso='lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>20.0 && fabs(lP_eta)<2.4 && fabs(lP_pt_id-lP_pt_exms)/lP_pt_id<0.5    &&     lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0 && fabs(lN_eta)<2.4 && fabs(lN_pt_id-lN_pt_exms)/lN_pt_id<0.5    &&     Z_m>70 && Z_m<110 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0'
+zpre_jordan="${zpre_preiso} && lP_ptiso20/lP_pt<0.1 && lN_ptiso20/lN_pt<0.1"
+zpre_peter="${zpre_preiso} && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0"
+
 common="--input /share/ftkdata1/antonk/ana_v27_0930_all_stacoCB_10GeV/"
-common="--input /share/ftkdata1/antonk/ana_v27_0930_all_stacoCB_10GeV_mc11pu/"
-common="--input /share/ftkdata1/antonk/ana_v26_0930_all_stacoCB_10GeV/"
 common="--input /share/ftkdata1/antonk/ana_v26_1008_all_stacoCB_test/" # new ntuple: correct efficiency
+common="--input /share/ftkdata1/antonk/ana_v26_0930_all_stacoCB_10GeV/"
+common="--input /share/ftkdata1/antonk/ana_v27_0930_all_stacoCB_10GeV_mc11pu/"
 
-common="${common} --qcd AUTO"
-
-# W stack histos
 function run_d0_stacks () {
     refl="--refline 0.5,3.0"
     eval ./stack2.py ${common}  -b --var 'd0' --bin '100,-0.1,0.1' -t ${tag} $@ ${refl} &
@@ -24,6 +25,7 @@ function run_w_stacks () {
     eval ./stack2.py ${common}  -b --var 'w_mt' --bin '50,0,200' -t ${tag} $@ &
     eval ./stack2.py ${common}  -b --var 'l_eta' --bin '50,-2.5,2.5' -t ${tag} $@ &
     eval ./stack2.py ${common}  -b --var 'w_pt' --bin '50,0,200' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var 'fabs\(l_pt_id-l_pt_exms\)/l_pt_id' --bin '50,0,2' -t ${tag} $@ &
 }
 function run_w_asym () {
     eval ./stack2.py ${common}  -b --var "\"fabs(l_eta)\"" --bin '25,0.0,2.5' -t ${tag} $@ &
@@ -32,11 +34,19 @@ function run_w_asym () {
 function run_w_asym_min () {
     eval ./stack2.py ${common}  -b --var "\"fabs(l_eta)\"" --bin '25,0.0,2.5' -t ${tag} $@ &
 }
+function run_z_stacks () {
+    eval ./stack2.py ${common} --ntuple z -b --var 'lP_pt' --bin '50,0,100' -t ${tag} $@ &
+    eval ./stack2.py ${common} --ntuple z -b --var 'lN_pt' --bin '50,0,100' -t ${tag} $@ &
+    eval ./stack2.py ${common} --ntuple z -b --var 'met' --bin '50,0,200' -t ${tag} $@ &
+    eval ./stack2.py ${common} --ntuple z -b --var 'Z_m' --bin '50,70,110' -t ${tag} $@ &
+    eval ./stack2.py ${common} --ntuple z -b --var 'fabs\(lP_phi-lN_phi\)' --bin '50,0,6.3' -t ${tag} $@ &
+}
 
 # QCD studies: comparing shapes after inversion of certain cuts
 # QCD template: bbar
 # TODO - work in progress!
 if [ "0" -eq "1" ]; then
+    common="${common} --qcd AUTO"
     pre="${wpre_jordan}"
     m=920
     # default plots:
@@ -46,8 +56,29 @@ if [ "0" -eq "1" ]; then
     wait
 fi
 
+# Z MCP studies
+# TODO - work in progress!
+if [ "1" -eq "1" ]; then
+    m=1013
+    i=0
+    gput tagzmcp ${i} ZMCP_default "--pre \"${zpre_jordan}\" --cut \"mcw*puw\""
+    ((i++))
+    i=0
+    for itag in `gkeys tagzmcp`; do
+	tag=`ggeta tagzmcp $itag`
+	opts=`ggetb tagzmcp $itag`
+	eval ./stack2.py ${common} -m${m} --ntuple z -b --var 'Z_m' --bin '50,70,110' -t ${tag} ${opts} &
+	wait
+	((i++))
+    done
+
+    wait
+    echo DONE
+fi
+
 # stack plots and single-MC asymmetry
 if [ "0" -eq "1" ]; then
+    common="${common} --qcd AUTO"
     i=0
     gput tagss ${i} J_st0_q2 "--pre \"${wpre_jordan}\" --cut \"mcw*puw\" --charge 2"
     ((i++))
@@ -79,6 +110,7 @@ fi
 
 # truth plots for multiple generators
 if [ "0" -eq "1" ]; then
+    common="${common} --qcd AUTO"
     pre="${wpre_jordan}"
     m=1
 
@@ -103,11 +135,12 @@ fi
 
 # creation and verification of unfolding efficiency histograms
 if [ "0" -eq "1" ]; then
+    common="${common} --qcd AUTO"
     pre="${wpre_jordan}"
     cut="mcw*puw"
     common="${common} --effroot oct09_eff.root"
 
-    if [ "1" -eq "1" ]; then
+    if [ "dome" == "dome" ]; then
 	m=100
 	tag=EFF_q0
 	run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 0 "
@@ -134,16 +167,17 @@ fi;
 # reco-level asymmetry plots for multiple generators
 # also allows to perform a correction to particle level
 if [ "0" -eq "1" ]; then
+    common="${common} --qcd AUTO"
     pre="${wpre_jordan}"
     cut="mcw*puw"
     m=923
 
     i=0
     # detector level
-    #gput tagsF ${i} RASYM  "--pre \"${pre}\" --cut \"${cut}\" -m ${m} "
+    gput tagsF ${i} RASYM  "--pre \"${pre}\" --cut \"${cut}\" -m ${m} "
     ((i++))
     # unfolded to particle level
-    #gput tagsF ${i} UASYM  "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --effroot oct09_eff.root"
+    gput tagsF ${i} UASYM  "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --effroot oct09_eff.root"
     ((i++))
     # additional variations - for run
     gput tagsF ${i} RASYM_nj0  "--pre \"${pre} && njets==0\" --cut \"${cut}\" -m ${m} "
@@ -179,6 +213,7 @@ fi
 
 # reco-level asymmetry: systematic variations
 if [ "0" -eq "1" ]; then
+    common="${common} --qcd AUTO"
     pre="${wpre_jordan}"
     cut="mcw*puw"
     m=924
@@ -201,6 +236,7 @@ fi
 
 # W QCD FITS
 if [ "0" -eq "1" ]; then
+    common="${common} --qcd AUTO"
     #./stack2.py -b -m99 --var 'met' --bin '50,25,100' --hsource WJ/st_w_final/00_wmt/met --rebin 4
     i=0
     gput tagsq ${i} J_qcdfit  "--pre \"${wpre_jordan}\" --bin \"100,5,100\" "
@@ -219,11 +255,24 @@ fi
 
 # Z stack histos
 if [ "0" -eq "1" ]; then
-    tag=zplots
-    # TODO: rewrite using tag
-    #./stack2.py -m1 --ntuple z -b --var 'Z_m' --bin '100,60,120' -t ${tag}_zm --pre '(lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>20.0 && lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0) && Z_m<150.0 && (lP_q*lN_q)<0 && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0'
-    ./stack2.py -m1 --ntuple z -b --var 'lP_pt' --bin '32,10,140' -t ${tag}_lPpt_BEF --pre '(lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>10.0 && lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0) && Z_m>86 && Z_m<96 && (lP_q*lN_q)<0 && lN_ptiso20/lN_pt<0.1'
-    ./stack2.py -m1 --ntuple z -b --var 'lP_pt' --bin '32,10,140' -t ${tag}_lPpt_AFT --pre '(lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>10.0 && lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0) && Z_m>86 && Z_m<96 && (lP_q*lN_q)<0 && lN_ptiso20/lN_pt<0.1 && lP_ptiso40<2.0'
+    i=0
+    gput tagzz ${i} ZST_uncut "--pre \"${zpre_preiso}\" --cut \"mcw*puw\""
+    ((i++))
+    gput tagzz ${i} ZST_jordan_pythia "--pre \"${zpre_jordan}\" --cut \"mcw*puw\""
+    ((i++))
+    # note that alpgen gives a much better agreement for Zs!
+    gput tagzz ${i} ZST_jordan_alpgen "--pre \"${zpre_jordan}\" --cut \"mcw*puw\" --bgsig 3"
+    ((i++))
+    # run all jobs
+    i=0
+    for itag in `gkeys tagzz`; do
+	tag=`ggeta tagzz $itag`
+	opts=`ggetb tagzz $itag`
+	run_z_stacks -m1 "${opts}"
+	wait
+	((i++))
+    done
+
     wait
     echo DONE
 fi

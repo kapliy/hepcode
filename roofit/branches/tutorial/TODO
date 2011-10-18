@@ -1,14 +1,26 @@
-Pilcher meeting:
-* MC muon smearing systematic; data muon scaling systematic.
-* Change of asymmetry for different +/- X% cuts; for different fraction of QCD - using the ntupled version.
-* Apply/not apply efficiency and/or trigger scale factors
+Issues:
+* samples: big xls spreadsheet with all official requested samples
+* alpgen-pythia in addition to alpgen-herwig (aka jimmy)
+* choose generator that models missing et best (!!!)
+* alternate higher order generators for w production - ? powheg? Read about generators!
+
+Suggestions for analysis:
+* z0/d0 vs nvtx plots
+* charge mis-id plots
+* z tag-probe vs muon p (not pt)
+* add yields
+
+
+Suggestions for MCP:
+* Add fitted-z-mass in phi/eta bins plot!
+  https://indico.cern.ch/getFile.py/access?subContId=3&contribId=7&resId=1&materialId=slides&confId=157170
+* Add p_cmb-p_ID feature
+  https://indico.cern.ch/getFile.py/access?subContId=0&contribId=7&resId=0&materialId=slides&confId=157170
+* Do Peter-style W analysis (should be easy, given what i have!)
 
 
 print keysfit id/exms string modification to make sure it is correct.
-simultaneous loading of w and z ntuples doesn't quite work yet - fixme!
-
 * Add data-driven QCD template capability to SuData
-Apply MET scales. Verify they actually work (print scaling correcting factor out)
 
 Analysis updates:
 * trigger matching (HiggsWW example)
@@ -17,8 +29,6 @@ Analysis updates:
 * only consider vtx[0] for vertex finding
 * alpgen HFOR tool
 
-Peter:
-do things break down as a function of njets?
 
 * Check POWHEG+pythia asymmetry in last bin - compared with MC@NLO+HERWIG
 * Et-miss resolution study: use Z events; project on Z pt axis (Sam Whitehead's thesis)
