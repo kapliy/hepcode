@@ -171,12 +171,12 @@ def make_bw(minZ,maxZ,ires=0,m=mz0):
         pdf = w.pdf('sum')
     return pdf, kFALSE
 
-def PrintVariables():
+def PrintVariables(model):
     #model.Print('t')
     vars = model.getVariables()
     vars.Print('v')
 
-def Fit(data,isExt,fullbins,fitbins,ncpus=4,extras=False,gaus=False):
+def Fit(model,data,isExt,fullbins,fitbins,ncpus=4,extras=False,gaus=False):
     # plot the data first
     x = w.var('x'); xtra = None
     frame = x.frame(RF.Title('Invariant mass fit using'))

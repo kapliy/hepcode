@@ -1,6 +1,11 @@
+TODO: (look into efficiency calculation and why histograms turn negative!)
+
+conversion to truth level. Resolution is not negligible in MET. unfolding.
+Peter: METRefFinal - METTruth; split into parallel and perpendicular to lepton axis components (later)
+Handle bad charge-dependent modeling - even though QCD is fit in a charge-dependent fasion.
+
+
 Issues:
-* samples: big xls spreadsheet with all official requested samples
-* alpgen-pythia in addition to alpgen-herwig (aka jimmy)
 * choose generator that models missing et best (!!!)
 * alternate higher order generators for w production - ? powheg? Read about generators!
 

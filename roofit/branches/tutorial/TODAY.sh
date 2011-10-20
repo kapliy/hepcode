@@ -8,16 +8,18 @@ zpre_preiso='lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>20.0 && fabs(lP_eta)<2.4 &
 zpre_jordan="${zpre_preiso} && lP_ptiso20/lP_pt<0.1 && lN_ptiso20/lN_pt<0.1"
 zpre_peter="${zpre_preiso} && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0"
 
-common="--input /share/ftkdata1/antonk/ana_v27_0930_all_stacoCB_10GeV/"
+common="--input /share/ftkdata1/antonk/ana_v27_0930_all_stacoCB_10GeV_mc11pu/"
 common="--input /share/ftkdata1/antonk/ana_v26_1008_all_stacoCB_test/" # new ntuple: correct efficiency
 common="--input /share/ftkdata1/antonk/ana_v26_0930_all_stacoCB_10GeV/"
-common="--input /share/ftkdata1/antonk/ana_v27_0930_all_stacoCB_10GeV_mc11pu/"
+
+common="--input /share/ftkdata1/antonk/ana_v26_1019_all_stacoCB_rebin/"
 
 function run_d0_stacks () {
     refl="--refline 0.5,3.0"
     eval ./stack2.py ${common}  -b --var 'd0' --bin '100,-0.1,0.1' -t ${tag} $@ ${refl} &
     eval ./stack2.py ${common}  -b --var 'd0sig' --bin '100,-5.0,5.0' -t ${tag} $@ ${refl} &
     eval ./stack2.py ${common}  -b --var 'z0' --bin '100,-1.0,1.0' -t ${tag} $@ ${refl}
+    eval ./stack2.py ${common}  -b --var 'fabs\(l_pt_id-l_pt_exms\)/l_pt_id' --bin '50,0,2' -t ${tag} $@ &
 }
 function run_w_stacks () {
     eval ./stack2.py ${common}  -b --var 'l_pt' --bin '50,0,100' -t ${tag} $@ &
@@ -25,7 +27,6 @@ function run_w_stacks () {
     eval ./stack2.py ${common}  -b --var 'w_mt' --bin '50,0,200' -t ${tag} $@ &
     eval ./stack2.py ${common}  -b --var 'l_eta' --bin '50,-2.5,2.5' -t ${tag} $@ &
     eval ./stack2.py ${common}  -b --var 'w_pt' --bin '50,0,200' -t ${tag} $@ &
-    eval ./stack2.py ${common}  -b --var 'fabs\(l_pt_id-l_pt_exms\)/l_pt_id' --bin '50,0,2' -t ${tag} $@ &
 }
 function run_w_asym () {
     eval ./stack2.py ${common}  -b --var "\"fabs(l_eta)\"" --bin '25,0.0,2.5' -t ${tag} $@ &
@@ -58,8 +59,10 @@ fi
 
 # Z MCP studies
 # TODO - work in progress!
-if [ "1" -eq "1" ]; then
+# TODO: merge in a single framework to do these kinds of plots; fix gaussian fit 
+if [ "0" -eq "1" ]; then
     m=1013
+    m=1012
     i=0
     gput tagzmcp ${i} ZMCP_default "--pre \"${zpre_jordan}\" --cut \"mcw*puw\""
     ((i++))
@@ -67,7 +70,8 @@ if [ "1" -eq "1" ]; then
     for itag in `gkeys tagzmcp`; do
 	tag=`ggeta tagzmcp $itag`
 	opts=`ggetb tagzmcp $itag`
-	eval ./stack2.py ${common} -m${m} --ntuple z -b --var 'Z_m' --bin '50,70,110' -t ${tag} ${opts} &
+	eval ./stack2.py ${common} -m${m} --ntuple z -b --var 'Z_m' -t ${tag} ${opts} --func egge3 &
+	#eval ./stack2.py ${common} -m${m} --ntuple z -b --var 'Z_m' -t ${tag} ${opts} --func gaus0 &
 	wait
 	((i++))
     done
@@ -102,9 +106,7 @@ if [ "0" -eq "1" ]; then
 	fi;
 	wait
 	((i++))
-	break
     done
-
     echo DONE
 fi
 
@@ -138,7 +140,7 @@ if [ "0" -eq "1" ]; then
     common="${common} --qcd AUTO"
     pre="${wpre_jordan}"
     cut="mcw*puw"
-    common="${common} --effroot oct09_eff.root"
+    common="${common} --effroot oct20_eff.root"
 
     if [ "dome" == "dome" ]; then
 	m=100
@@ -177,27 +179,31 @@ if [ "0" -eq "1" ]; then
     gput tagsF ${i} RASYM  "--pre \"${pre}\" --cut \"${cut}\" -m ${m} "
     ((i++))
     # unfolded to particle level
-    gput tagsF ${i} UASYM  "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --effroot oct09_eff.root"
+    gput tagsF ${i} UASYM  "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --effroot oct20_eff.root"
     ((i++))
     # additional variations - for run
-    gput tagsF ${i} RASYM_nj0  "--pre \"${pre} && njets==0\" --cut \"${cut}\" -m ${m} "
-    ((i++))
-    gput tagsF ${i} RASYM_nj1  "--pre \"${pre} && njets==1\" --cut \"${cut}\" -m ${m} "
-    ((i++))
-    gput tagsF ${i} RASYM_nj2  "--pre \"${pre} && njets==2\" --cut \"${cut}\" -m ${m} "
-    ((i++))
-    gput tagsF ${i} RASYM_wmt4060  "--pre \"${pre} && w_mt>40 && w_mt<80\" --cut \"${cut}\" -m ${m} "
-    ((i++))
-    gput tagsF ${i} RASYM_wmt4080  "--pre \"${pre} && w_mt>40 && w_mt<80\" --cut \"${cut}\" -m ${m} "
-    ((i++))
-    gput tagsF ${i} RASYM_wmt80120  "--pre \"${pre} && w_mt>80 && w_mt<120\" --cut \"${cut}\" -m ${m} "
-    ((i++))
-    gput tagsF ${i} RASYM_wpt0015  "--pre \"${pre} && w_pt>0 && w_pt<15\" --cut \"${cut}\" -m ${m} "
-    ((i++))
-    gput tagsF ${i} RASYM_wpt1580  "--pre \"${pre} && w_pt>15 && w_pt<80\" --cut \"${cut}\" -m ${m} "
-    ((i++))
-    gput tagsF ${i} RASYM_met4080  "--pre \"${pre} && met>40 && met<80\" --cut \"${cut}\" -m ${m} "
-    ((i++))
+    if [ "2" -eq "2" ]; then
+	gput tagsF ${i} RASYM_nj0  "--pre \"${pre} && njets==0\" --cut \"${cut}\" -m ${m} "
+	((i++))
+	gput tagsF ${i} RASYM_nj1  "--pre \"${pre} && njets==1\" --cut \"${cut}\" -m ${m} "
+	((i++))
+	gput tagsF ${i} RASYM_wpt0015  "--pre \"${pre} && w_pt>0 && w_pt<15\" --cut \"${cut}\" -m ${m} "
+	((i++))
+	gput tagsF ${i} RASYM_wpt1580  "--pre \"${pre} && w_pt>15 && w_pt<80\" --cut \"${cut}\" -m ${m} "
+	((i++))
+    fi
+    if [ "0" -eq "1" ]; then
+	gput tagsF ${i} RASYM_met4080  "--pre \"${pre} && met>40 && met<80\" --cut \"${cut}\" -m ${m} "
+	((i++))
+	gput tagsF ${i} RASYM_nj2  "--pre \"${pre} && njets==2\" --cut \"${cut}\" -m ${m} "
+	((i++))
+	gput tagsF ${i} RASYM_wmt4060  "--pre \"${pre} && w_mt>40 && w_mt<80\" --cut \"${cut}\" -m ${m} "
+	((i++))
+	gput tagsF ${i} RASYM_wmt4080  "--pre \"${pre} && w_mt>40 && w_mt<80\" --cut \"${cut}\" -m ${m} "
+	((i++))
+	gput tagsF ${i} RASYM_wmt80120  "--pre \"${pre} && w_mt>80 && w_mt<120\" --cut \"${cut}\" -m ${m} "
+	((i++))
+    fi;
 
     # run all jobs
     for itag in `gkeys tagsF`; do  # cuts

@@ -93,6 +93,9 @@ parser.add_option("--bgqcd",dest="bgqcd",
 parser.add_option("--bgsig",dest="bgsig",
                   type="int", default=0,
                   help="Background: 0=Pythia, 1=MC@NLO, 2=Alpgen(signal only), 3=Alpgen(all)")
+parser.add_option('-f',"--func",dest="func",
+                  type="string", default='gaus',
+                  help="func = {gaus,egge,voig,voigbg,bw,bwfull}{0=none;1=gaus;2=double-gaus;3=crystal-ball}")
 (opts, args) = parser.parse_args()
 mode = opts.mode
 print "MODE =",mode
@@ -223,6 +226,7 @@ def particle(h,inp=opts.input,var=opts.var,bin=opts.bin,q=opts.charge):
         assert f.Get(key_str),'Failed to find key: %s'%key_str
         heff = f.Get(key_str).Clone()
         if heff:
+            print '---> Applying efficiency histogram to:',h.GetName()
             h.Divide(heff)
         f.Close()
     return h
@@ -411,7 +415,11 @@ if mode==923: # asymmetry, at reco/particle level, of different monte-carlos. Co
             if i==len(names)-1: #data
                 h[i][q] = particle(po.data_sub('datasub_%s_%d'%(names[i],q),opts.var,opts.bin,pre,path=path_reco),q=q)
             else: #MC
-                h[i][q] = particle(po.histo(names[i],'recomc_%s_%d'%(names[i],q),opts.var,opts.bin,pre,path=path_reco),q=q)
+                if opts.effroot: # just get the particle truth histo directly (correctly handles the errors)
+                    pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,fortruth(opts.pre))
+                    h[i][q] = po.histo(names[i],'recomc_%s_%d'%(names[i],q),opts.var,opts.bin,pre,path=path_truth)
+                else:
+                    h[i][q] = particle(po.histo(names[i],'recomc_%s_%d'%(names[i],q),opts.var,opts.bin,pre,path=path_reco),q=q)
             h[i][q].SetLineColor(colors[i])
             h[i][q].SetMarkerColor(colors[i])
             h[i][q].SetMarkerStyle(mstyles[i])
@@ -433,7 +441,7 @@ if mode==924: # asymmetry, at reco/particle level: systematic variations in bg-s
     c.buildDefault(width=800,height=600)
     cc = c.cd_canvas()
     cc.cd(1)
-    names = ('pythia','mcnlo','alpgen','datasub')
+    # variations
     msize = 1.5
     sizes = [msize*0.7]*20
     colors = [i for i in xrange(20,40)]
@@ -448,7 +456,7 @@ if mode==924: # asymmetry, at reco/particle level: systematic variations in bg-s
     hs += [('QCD +20%','WJ','WJ','qcd+'),('QCD -20%','WJ','WJ','qcd-')]
     hs += [('Isolation','WP','WP','qcdP'),]
     SuSample.GLOBAL_CACHE = None
-    SuSample.rebin = 4
+    SuSample.rebin = 1
     SuSample.hsource = '%s/st_w_final/00_wmt/asym_abseta'
     for i,hh in enumerate(hs):
         SuSample.hsourcedata = SuSample.hsource%hh[1]
@@ -472,9 +480,35 @@ if mode==924: # asymmetry, at reco/particle level: systematic variations in bg-s
             h[i][q].SetMarkerSize(sizes[i])
         hasym.append(c.WAsymmetry(h[i][POS],h[i][NEG]))
         hasym[i].Draw() if i==0 else hasym[i].Draw('A same')
-        leg.AddEntry(hasym[i],hh[0],'LP')
-    
+        leg.AddEntry(hasym[i],hh[0],'LP')    
     hasym[0].GetXaxis().SetRangeUser(0,2.4)
+    # overlay signal templates?
+    if True:
+        SuSample.hsource = None
+        names_mc = ('pythia','mcnlo','alpgen')
+        labels_mc = ('Pythia(MRST)','MC@NLO(CTEQ6.6)','Alpgen(CTEQ6.1)')
+        colors_mc = (ROOT.kRed,ROOT.kBlue,8,ROOT.kBlack)
+        sizes_mc = (msize*0.7,msize*0.7,msize*0.7,msize*0.5)
+        mstyle_mc = 22
+        hasym_mc = []
+        h_mc = []
+        for i in range(3):
+            h_mc.append([None,None])
+            for q in (0,1):
+                pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre)
+                if opts.effroot and False:
+                    pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,fortruth(opts.pre))
+                    h_mc[i][q] = po.histo(names_mc[i],'truth_%s_%d'%(names_mc[i],q),opts.var,opts.bin,pre,path=path_truth)
+                else:
+                    h_mc[i][q] = po.histo(names_mc[i],'truth_%s_%d'%(names_mc[i],q),opts.var,opts.bin,pre,path=path_reco)
+                h_mc[i][q].SetLineColor(colors_mc[i])
+                h_mc[i][q].SetMarkerColor(colors_mc[i])
+                h_mc[i][q].SetMarkerStyle(mstyle_mc)
+                h_mc[i][q].SetMarkerSize(sizes_mc[i])
+            hasym_mc.append(c.WAsymmetry(h_mc[i][POS],h_mc[i][NEG]))
+            hasym_mc[i].Draw('A same')
+            leg.AddEntry(hasym_mc[i],labels_mc[i],'LP')
+    # plot everything and scale y axis
     def hmaximum(h):
         res=[]
         for i in xrange(1,h.GetNbinsX()+1):
@@ -653,32 +687,19 @@ if mode in (101,102): # tag and probe
     c.plotTagProbe(hda_bef,hda_aft,hmc_bef,hmc_aft,xtitle=opts.var)
 
 if mode == 1012: # 10/12/2011: MCP group studies of Z mass peak in data and MC
-    #TODO work in progress!
     assert opts.ntuple=='z','ERROR: MCP Z studies can only be computed for the z ntuple'
+    tagcentral = False
     c = SuCanvas()
-    c.buildDefault(width=800,height=600)
+    c.buildDefault(title='mZ',width=800,height=600)
     cc = c.cd_canvas()
-    #cc.Divide(2,1)
-    cc.cd(1)
-    pre_tmp = 'lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>20.0 && fabs(lP_eta)<2.4 && lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0 && fabs(lN_eta)<2.4 && Z_m>70 && Z_m<110 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && lP_ptiso20/lP_pt<0.1 && lN_ptiso20/lN_pt<0.1'
-    pre = pre_tmp
-    hdata = po.histo('2011 data','data',opts.var,opts.bin,pre,path=path_reco)
-    hsig =  po.sig('signal',opts.var,opts.bin,pre,path=path_reco)
-    import Fit
-    rdata = Fit.load_histo( hdata,float(opts.bin.split(',')[1]) , float(opts.bin.split(',')[2]) )
-
-if mode == 1013: # 10/13/2011: MCP group studies that do not require a Z peak (MS-ID-CB comparisons)
-    # we still use Z events to ensure little QCD contamination
-    assert opts.ntuple=='z','ERROR: MCP Z studies can only be computed for the z ntuple'
-    c = SuCanvas()
-    c.buildDefault(title='pT_CB-pT_ID',width=800,height=600)
-    cc = c.cd_canvas()
-    pre_tag = 'lX_idhits==1 && fabs(lX_z0)<10. && fabs(lX_eta)<2.4 && lX_pt>20.0 && (lX_q*lY_q)<0 && fabs(lX_z0-lY_z0)<3 && fabs(lX_d0-lY_d0)<2 && lX_ptiso20/lX_pt<0.1 && Z_m>70 && Z_m<110'
+    pre_tag = 'lX_idhits==1 && fabs(lX_z0)<10. && fabs(lX_eta)<%.1f && lX_pt>20.0 && (lX_q*lY_q)<0 && fabs(lX_z0-lY_z0)<3 && fabs(lX_d0-lY_d0)<2 && lX_ptiso20/lX_pt<0.1&& Z_m>70 && Z_m<110'%(1.0 if tagcentral else 2.4)
     pre_pro = 'lY_idhits==1 && fabs(lY_z0)<10. && lY_pt>20.0 && lX_ptiso20/lX_pt<0.1'
-    bin = '200,-10,10'
+    bin = '100,70,110'
+    mymin=float(bin.split(',')[1])
+    mymax=float(bin.split(',')[2])
     rms_scale=1.0
-    hPOS = ROOT.TH1F('ptCB_ptID+','ptCB_ptID+',25,-2.5,2.5)
-    hNEG = ROOT.TH1F('ptCB_ptID-','ptCB_ptID-',25,-2.5,2.5)
+    hPOS = ROOT.TH1F('mZ+','mZ+',25,-2.5,2.5)
+    hNEG = ROOT.TH1F('mZ-','mZ-',25,-2.5,2.5)
     hPOS.SetLineColor(ROOT.kRed)
     hPOS.SetMarkerColor(ROOT.kRed)
     hNEG.SetLineColor(ROOT.kBlue)
@@ -686,8 +707,92 @@ if mode == 1013: # 10/13/2011: MCP group studies that do not require a Z peak (M
     result = [[],[]]
     cscan = ROOT.TCanvas('scan','scan',1500,1500)
     cscan.Divide(5,5)
+    import Fit
+    from Fit import w
+    w.factory('x[%s,%s]'%(mymin,mymax))
+    # choose fit shape
+    func,res='gaus',0
+    if opts.func[-1].isdigit():
+        func = opts.func[:-1]
+        res = int(opts.func[-1])
+    else:
+        func = opts.func
+    if func=='gaus':
+        model,isExt = Fit.make_gaus(mymin,mymax)
+    elif func=='bw':
+        model,isExt = Fit.make_bw(mymin,mymax,res)
+    elif func=='egge':
+        model,isExt = Fit.make_egge(mymin,mymax,res)
+    elif func=='bwfull':
+        model,isExt = Fit.make_bwfull(mymin,mymax,res)
+    elif func=='voig':
+        model,isExt = Fit.make_voig(mymin,mymax)
+    elif func=='voigbg':
+        model,isExt = Fit.make_voigbg(mymin,mymax)
+    else:
+        print 'Wrong --func (%s). Exiting...'%opts.func
+        sys.exit(0)
     for i,eta in enumerate([-2.5+ibin*0.2 for ibin in range(25)]):
         cscan.cd(i+1)
+        h = []
+        f = []
+        for iqp in (POS,NEG):
+            iqt = 0 if iqp==1 else 1
+            var = 'Z_m'
+            pre = (' && '.join([pre_tag,pre_pro,'lY_eta>%f && lY_eta<%f'%(eta,eta+0.2)])).replace('lX',QMAPZ[iqt][2]).replace('lY',QMAPZ[iqp][2])
+            h.append( po.data('data%d_q%d'%(i,iqp),var,bin,pre) )
+            rdata = Fit.load_histo( h[-1],mymin,mymax)
+            fullbins = fitbins = (mymin,mymax)
+            r,frame,chi2ndf,ndf,xtra,res1st = Fit.Fit(model,rdata,isExt,fullbins,fitbins,ncpus=16,gaus=(func=='gaus'))
+            frame.SetTitle(opts.tag)
+            if iqp==NEG:
+                frame.Draw()
+            gbg.append(frame)
+            print 'SAVING VALUES: ',w.var('m').getVal(),w.var('m').getError()
+            if iqp==POS:
+                hPOS.SetBinContent(i,w.var('m').getVal())
+                hPOS.SetBinError(i,w.var('m').getError())
+            else:
+                hNEG.SetBinContent(i,w.var('m').getVal())
+                hNEG.SetBinError(i,w.var('m').getError())
+    cscan.SaveAs('scan_mZ.png')
+    cc.cd()
+    hPOS.Draw()
+    hPOS.GetYaxis().SetRangeUser(89,103)
+    hNEG.Draw('SAME')
+    if True:
+        line = ROOT.TGraph(2)
+        line.SetPoint(0,-2.5,0)
+        line.SetPoint(1,2.5,0)
+        line.SetLineWidth(1)
+        line.SetLineColor(ROOT.kBlack)
+        line.Draw('l')
+        gbg.append(line)
+
+if mode == 1013: # 10/13/2011: MCP group studies that do not require a Z peak (MS-ID-CB comparisons)
+    # we still use Z events to ensure little QCD contamination
+    assert opts.ntuple=='z','ERROR: MCP Z studies can only be computed for the z ntuple'
+    tagcentral = False
+    rms_scale=0.7
+    c = SuCanvas()
+    c.buildDefault(title='pT_CB-pT_ID',width=800,height=600)
+    cc = c.cd_canvas()
+    pre_tag = 'lX_idhits==1 && fabs(lX_z0)<10. && fabs(lX_eta)<%f && lX_pt>20.0 && (lX_q*lY_q)<0 && fabs(lX_z0-lY_z0)<3 && fabs(lX_d0-lY_d0)<2 && lX_ptiso20/lX_pt<0.1 && Z_m>70 && Z_m<110'%(1.0 if tagcentral else 2.4)
+    pre_pro = 'lY_idhits==1 && fabs(lY_z0)<10. && lY_pt>20.0 && lX_ptiso20/lX_pt<0.1'
+    bin = '200,-10,10'
+    hPOS = ROOT.TH1F('ptCB_ptID+','ptCB_ptID+',25,-2.5,2.5)
+    hNEG = ROOT.TH1F('ptCB_ptID-','ptCB_ptID-',25,-2.5,2.5)
+    hPOS.SetLineColor(ROOT.kRed)
+    hPOS.SetMarkerColor(ROOT.kRed)
+    hNEG.SetLineColor(ROOT.kBlue)
+    hNEG.SetMarkerColor(ROOT.kBlue)
+    result = [[],[]]
+    cscan = SuCanvas()
+    cscan.buildDefault(title='scan',width=1500,height=1500)
+    ccscan = cscan.cd_canvas()
+    ccscan.Divide(5,5)
+    for i,eta in enumerate([-2.5+ibin*0.2 for ibin in range(25)]):
+        ccscan.cd(i+1)
         h = []
         f = []
         for iqp in (POS,NEG):
@@ -716,7 +821,7 @@ if mode == 1013: # 10/13/2011: MCP group studies that do not require a Z peak (M
         h[0].Draw()
         h[1].Draw('SAME')
         gbg += h
-    cscan.SaveAs('scan_ptCB_ptID.png')
+    cscan.SaveAs('%s%s_cscan_%d'%(opts.tag,opts.input,mode),'png')
     cc.cd()
     hPOS.Draw()
     hPOS.GetYaxis().SetRangeUser(-0.5,0.5)
