@@ -14,6 +14,9 @@ Suggestions for analysis:
 * charge mis-id plots
 * z tag-probe vs muon p (not pt)
 * add yields
+* Efficiency unfolding - careful with different generators.
+* Repeat with 2010 binning (use TTree::Draw('var >> +h'))
+
 
 
 Suggestions for MCP:
