@@ -46,14 +46,15 @@ function run_z_stacks () {
 # QCD studies: comparing shapes after inversion of certain cuts
 # QCD template: bbar
 # TODO - work in progress!
-if [ "0" -eq "1" ]; then
-    common="${common} --qcd AUTO"
+if [ "1" -eq "1" ]; then
+    common="${common}"
     pre="${wpre_jordan}"
-    m=920
+    m=matrix_2010inc
     # default plots:
     cut="mcw*puw"
     tag=QCD
-    ./stack2.py ${common} -b -m${m} --var 'w_mt' --bin '50,0,200' -t ${tag} --pre "${pre}" --cut "${cut}" &
+    ./stack2.py ${common} -b -m${m} --var 'l_eta' --bin '20,-2.5,2.5' -t ${tag} --pre "${pre}" --cut "${cut}" --charge 0 &
+    #./stack2.py ${common} -b -m${m} --var 'met' --bin '20,25,100' -t ${tag} --pre "${pre}" --cut "${cut}" --charge 0 &
     wait
 fi
 
@@ -63,6 +64,7 @@ fi
 if [ "0" -eq "1" ]; then
     m=1013
     m=1012
+    m=1111
     i=0
     gput tagzmcp ${i} ZMCP_default "--pre \"${zpre_jordan}\" --cut \"mcw*puw\""
     ((i++))

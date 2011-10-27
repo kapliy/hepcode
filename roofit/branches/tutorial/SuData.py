@@ -16,8 +16,6 @@ class SuSample:
     """
     GLOBAL_CACHE = 'cache.root' # if None, global cache is disabled
     cache = None
-    _evcounts = ("nevts","nevts_eff","nevts_trig","nevts_efftrig","nevts_unw")
-    seen_samples = []
     rootpath = None
     lumi = None
     # for direct histogram access:
@@ -35,6 +33,8 @@ class SuSample:
         s.nevt = {}
         s.files = []
         s.flags = []
+        s._evcounts = ("nevts","nevts_eff","nevts_trig","nevts_efftrig","nevts_unw")
+        s.seen_samples = []
         # volatile
         s.path = None  # current ntuple path
         # fast histogram cache
@@ -104,10 +104,11 @@ class SuSample:
                         print 'Number of GRL events:',n
                 else:
                     print 'WARNING: failed to find object [%s] in file [%s]'%(hname,file)
-                if ev in s.nevt[s.path]:
-                    s.nevt[s.path][ev] += n
-                else:
-                    s.nevt[s.path][ev] = n
+                for path in s.nt.keys():
+                    if ev in s.nevt[path]:
+                        s.nevt[path][ev] += n
+                    else:
+                        s.nevt[path][ev] = n
             #f.Close()
     def nentries(s,path=None):
         """ compute number of entries in TNtuple """
