@@ -60,6 +60,12 @@ def eranges(name):
     """ Converts a string like /BB/ into a range of etas """
     if islen2(name):
         return erange(name[0]),erange(name[1])
+    elif name[0] == 'E': # only allows to specify both muons in the same eta bin! E20E
+        bn = int(name[1:-1])
+        NN = 25; bwidth = 5.0/NN
+        bnr = (-2.5 + 1.0*bn*bwidth , -2.5 + (bn+1.0)*bwidth)
+        return (bnr,bnr)
+        # narrow binning
     elif name[:3] == 'ALL':
         return ((-10.0,10.0),(-10.0,10.0))
     elif name[:3] == 'FWC':

@@ -13,7 +13,7 @@ import sys,math
 import antondb
 from optparse import OptionParser
 
-dbname = 'out1003'
+dbname = 'out1023L7'
 
 from optparse import OptionParser
 parser = OptionParser()
@@ -44,6 +44,10 @@ a.load()
 dets = ['cmb','exms','id']
 dets_map = {'cmb' : 'Combined muons', 'id' : 'ID muons', 'exms' : 'MS muons'}
 regs_map = {'AA' : 'Endcap-A', 'BB' : 'Barrel', 'CC' : 'Endcap-C', 'Bcc' : 'Barrel C-side ($-1.05 < \eta < 0.0$)', 'Baa' : 'Barrel A-side ($0.0 < \eta < 1.05$)', 'FWC' : r'Endcap C-side ($-2.4 < \eta < -2.0$)', 'FWA' : r'Endcap A-side ($2.0 < \eta < 2.4$)', 'MWC' : r'Endcap C-side ($-2.0 < \eta < -1.05$)', 'MWA' : r'Endcap A-side ($1.05 < \eta < 2.0$)'}
+regsR = range(0,25)
+for bn in regsR:
+    NN = len(regsR); bwidth = 5.0/NN
+    regs_map['E%dE'%bn] = r'$%.1f < \eta < %.1f$'%(-2.5 + 1.0*bn*bwidth , -2.5 + (bn+1.0)*bwidth )
 
 def scales(R,eR,mz,emz,mz0):
     sqrt=math.sqrt
@@ -167,10 +171,25 @@ def latex_sysdev(db1,db2,regs,ptype1='ksf',ptype2='ksf'):
 
 # load everything into dictionaries
 alg='staco' if algo==0 else 'muid'
-default = load_all(pattern_R0='/keysfit/r%d_default_%s'%(rel,alg)+'/%s/%s/R0',pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
-klu = load_all(pattern_R0='/keysfit/r%d_klu_%s'%(rel,alg)+'/%s/%s/R0',pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
-R70 = load_all(pattern_R0='/keysfit/r%d_m70110_%s'%(rel,alg)+'/%s/%s/R0',pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
-egge = load_all(pattern_R0='/keysfit/r%d_default_%s'%(rel,alg)+'/%s/%s/R0',pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/egge3')
+default,klu,R70,egge = [None]*4
+regs = ['E%dE'%i for i in regsR] # FIXME - add other regions
+try:
+    default = load_all(regs=regs,pattern_R0='/keysfit/r%d_default_%s'%(rel,alg)+'/%s/%s/R0',pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
+except:
+    print 'Failed to load default values'
+    raise
+try:
+    klu = load_all(regs=regs,pattern_R0='/keysfit/r%d_klu_%s'%(rel,alg)+'/%s/%s/R0',pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
+except:
+    print 'Failed to load klu'
+try:
+    R70 = load_all(regs=regs,pattern_R0='/keysfit/r%d_m70110_%s'%(rel,alg)+'/%s/%s/R0',pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
+except:
+    print 'Failed to load R70'
+try:
+    egge = load_all(regs=regs,pattern_R0='/keysfit/r%d_default_%s'%(rel,alg)+'/%s/%s/R0',pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/egge3')
+except:
+    print 'Failed to load egge'
     
 # dump scales as C++ arrays
 if mode==0:
@@ -182,11 +201,15 @@ if mode==3:
     latex_R(default,['AA','BB','CC'])
 if mode==4:
     latex_R(default,['FWA','MWA','Baa','Bcc','MWC','FWC'])
-# latex kp/km table
 if mode==5:
-    latex_k(default,['AA','BB','CC'])
+    latex_R(default,['E%dE'%i for i in regsR])
+# latex kp/km table
 if mode==6:
+    latex_k(default,['AA','BB','CC'])
+if mode==7:
     latex_k(default,['FWA','MWA','Baa','Bcc','MWC','FWC'])
+if mode==8:
+    latex_k(default,['E%dE'%i for i in regsR])
     
 def print_syst(regs):
     print '==================SYS1================='

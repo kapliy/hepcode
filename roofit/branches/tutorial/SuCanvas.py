@@ -138,6 +138,58 @@ class SuCanvas:
     s.hratio.Draw("AP same");
     s.update()
 
+
+  def Matrix_loose(s,Nt,Nl,er,ef):
+    """ Matrix method estimate of QCD - formula from W inclusive measurement
+    This method returns the QCD histogram BEFORE the tight cut
+    I.e., this gives N_QCD, pre-isolation
+    """
+    hsum = Nt.Clone(Nt.GetName()+"_matrix_looose")
+    hsum.Reset()
+    for i in xrange(1,hsum.GetNbinsX()+1):
+      nis,snis = Nt.GetBinContent(i),Nt.GetBinError(i)
+      nlo,snlo = Nl.GetBinContent(i),Nl.GetBinError(i)
+      enon,senon = er.GetBinContent(i),er.GetBinError(i)
+      eqcd,seqcd = ef.GetBinContent(i),ef.GetBinError(i)
+      a = nis*1.0/nlo
+      sa = a * math.sqrt( (snis/nis)**2 + (snlo/nlo)**2 )
+      mean = (nlo*enon - nis) / (enon-eqcd)
+      err = 0
+      try:
+        errM = [1/math.sqrt(nlo),senon/(enon-a) - senon/(enon-eqcd),sa/(enon-a),seqcd/(enon-eqcd)]
+        err = mean * math.sqrt(sum([z*z for z in errM]))
+      except:
+        print 'Bad bin:',i
+        err = 0
+      hsum.SetBinContent(i,mean)
+      hsum.SetBinError(i,err)
+    return hsum
+  def Matrix_tight(s,Nt,Nl,er,ef):
+    """ Matrix method estimate of QCD - formula from W inclusive measurement
+    This method returns the QCD histogram AFTER the tight cut
+    I.e., this gives N_QCD, post-isolation
+    """
+    hsum = Nt.Clone(Nt.GetName()+"_matrix_tight")
+    hsum.Reset()
+    for i in xrange(1,hsum.GetNbinsX()+1):
+      nis,snis = Nt.GetBinContent(i),Nt.GetBinError(i)
+      nlo,snlo = Nl.GetBinContent(i),Nl.GetBinError(i)
+      enon,senon = er.GetBinContent(i),er.GetBinError(i)
+      eqcd,seqcd = ef.GetBinContent(i),ef.GetBinError(i)
+      a = nis*1.0/nlo
+      sa = a * math.sqrt( (snis/nis)**2 + (snlo/nlo)**2 )
+      mean = eqcd * (nlo*enon - nis) / (enon-eqcd)
+      err = 0
+      try:
+        errM = [1/math.sqrt(nlo),senon*(a-eqcd)/((enon-a)*(enon-eqcd)),sa/(enon-a),seqcd*enon/((enon-eqcd)*eqcd)]
+        err = mean * math.sqrt(sum([z*z for z in errM]))
+      except:
+        print 'Bad bin:',i
+        err = 0
+      hsum.SetBinContent(i,mean)
+      hsum.SetBinError(i,err)
+    return hsum
+
   def Efficiency_old(s,hatot,hntot):
     """ Binomial errors """
     hsum = hatot.Clone()
@@ -146,7 +198,7 @@ class SuCanvas:
     
   def Efficiency(s,hatot,hntot):
     """ Acceptance/efficiency workhorse function with correct errors """
-    #return s.Efficiency_old(hatot,hntot) # FIXME
+    return s.Efficiency_old(hatot,hntot) # FIXME
     import SuEfficiency
     oef = SuEfficiency.SuEfficiency()
     hsum = hntot.Clone(hntot.GetName()+"_efficiency")

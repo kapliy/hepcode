@@ -15,7 +15,7 @@ from optparse import OptionParser
 import antondb
 parser = OptionParser()
 parser.add_option("-m", "--mode",dest="mode",
-                  type="int", default=1,
+                  type="string", default='1',
                   help="Plot mode")
 parser.add_option("--type",dest="type",
                   type="int", default=1,
@@ -65,6 +65,7 @@ parser.add_option("--effroot",dest="effroot",
 #832854.0 up to H1 (183602) EF_mu20_MG
 #1035040.0 up to H4 (184169) EF_mu18_MG
 #1340030.0 up to I4 (186493) EF_mu18_MG
+#1469.13+2128.61 = B-I + J-L (L7). mu18_MG, followed by mu18_MG_medium
 _DATA_PERIODS = ('B','D','E','F','G','H','I')
 parser.add_option("--lumi",dest="lumi",
                   type="float", default=1340030.0,
@@ -99,15 +100,23 @@ parser.add_option('-f',"--func",dest="func",
 (opts, args) = parser.parse_args()
 mode = opts.mode
 print "MODE =",mode
-print "PRE =",opts.pre
-print "BEF =",opts.prebef
-print "AFT =",opts.preaft
+#print "PRE =",opts.pre
+#print "BEF =",opts.prebef
+#print "AFT =",opts.preaft
 gbg = []; COUT = [];
 # antondb containers
 VMAP = {}; OMAP = []
 VMAP['cmd']=' '.join(sys.argv)
 
-import ROOT
+#import ROOT
+import os,sys
+if not 'libPyRoot' in sys.modules: #hack to get rid of TenvRec warnings
+    from ROOT import gROOT
+    sys.modules['libPyROOT'].gROOT.GetListOfGlobals().FindObject('gErrorIgnoreLevel').GetAddress().__setitem__(0,3000)
+    import ROOT
+    gErrorIgnoreLevel=ROOT.kInfo
+    sys.modules['libPyROOT'].gROOT.GetListOfGlobals().FindObject('gErrorAbortLevel').GetAddress().__setitem__(0,5001)
+
 from MC import *
 #ROOT.TH1.AddDirectory(ROOT.kFALSE)    # ensure that we own all the histograms
 ROOT.gROOT.SetBatch(opts.batch)
@@ -126,6 +135,75 @@ SuSample.hcharge = opts.charge
 SuSample.lumi = opts.lumi
 SuSample.rebin = opts.rebin
 SuSample.qcdscale = float(opts.qcdscale) if not opts.qcdscale in ('AUTO','auto','Auto') else 1.0
+
+#SetStyle()
+def QAPP(path,iq):
+    htmp = path.split('/');
+    htmp.insert(-1,QMAP[iq][1])
+    return '/'.join(htmp) if iq in (0,1) else path
+
+POS,NEG,ALL=range(3)
+QMAP = {}
+QMAP[POS] = (0,'POS','(l_q>0)','mu+ only')
+QMAP[NEG] = (1,'NEG','(l_q<0)','mu- only')
+QMAP[ALL] = (2,'ALL','(l_q!=0)','mu+ and mu-')
+QMAPZ = {}
+QMAPZ[POS] = (0,'POS','lP','mu+')
+QMAPZ[NEG] = (1,'NEG','lN','mu-')
+
+def prunesub(pre,lvar,sub):
+    """ substitutes all instances of 'lvar' in pre with 'sub' """
+    res = []
+    lvars=[]
+    if type(lvar)==type([]) or type(lvar)==type(()):
+        lvars = lvar
+    else:
+        lvars = (lvar,)
+    already_subbed = False
+    for elm in pre.split(' && '):
+        keep = True
+        for lvar in lvars:
+            if re.match(lvar,elm):
+                print '-> pruning away: ',elm
+                keep = False
+                break
+        if keep:
+            res.append(elm)
+        elif sub and not already_subbed:
+            res.append(sub)
+            already_subbed = True
+    return ' && '.join(res)
+
+def prune(pre,lvar):
+    """ removes all instances of 'lvar' from pre """
+    return prunesub(pre,lvar,None)
+
+w2zsub = []
+w2zsub.append(('ptiso','lX_ptiso'))
+w2zsub.append(('etiso','lX_etiso'))
+w2zsub.append(('l_q','lX_q'))
+w2zsub.append(('l_pt','lX_pt'))
+w2zsub.append(('l_eta','lX_eta'))
+w2zsub.append(('l_phi','lX_phi'))
+w2zsub.append(('idhits','lX_idhits'))
+w2zsub.append(('d0','lX_d0'))
+w2zsub.append(('z0','lX_z0'))
+def pre_w2z(pre):
+    """ Converts a pre string for w ntuple into a corresponding one for z """
+    pre = prune(pre,('met','w_mt'))
+    xtra = "Z_m>70 && Z_m<110 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0"
+    res = []
+    for elm in pre.split(' && '):
+        changed = False
+        for isub in w2zsub:
+            if re.search(isub[0],elm):
+                elm = elm.replace(isub[0],isub[1]).replace('l_pt','lX_pt')
+                res.append ( elm.replace('lX',QMAPZ[0][2]) + ' && ' + elm.replace('lX',QMAPZ[1][2]) )
+                changed = True
+                break
+        if not changed:
+            res.append(elm)
+    return ' && '.join(res) + ' && ' + xtra
 
 def fortruth(pre):
     """ removes pre variables that are not applicable to truth tracks """
@@ -174,21 +252,9 @@ def revisoreg(pre):
             res.append(elm)
     return ' && '.join(res)
 
-#SetStyle()
-def QAPP(path,iq):
-    htmp = path.split('/');
-    htmp.insert(-1,QMAP[iq][1])
-    return '/'.join(htmp) if iq in (0,1) else path
-
-POS,NEG,ALL=range(3)
-QMAP = {}
-QMAP[POS] = (0,'POS','(l_q>0)','mu+ only')
-QMAP[NEG] = (1,'NEG','(l_q<0)','mu- only')
-QMAP[ALL] = (2,'ALL','(l_q!=0)','mu+ and mu-')
-QMAPZ = {}
-QMAPZ[POS] = (0,'POS','lP','mu+')
-QMAPZ[NEG] = (1,'NEG','lN','mu-')
-
+def looseisoreg(pre):
+    """ Loose sample needed for matrix method QCD estimation """
+    return prune(pre, ('ptiso','lP_ptiso','l_ptiso','etiso','lP_etiso','lN_etiso') )
 
 def run_fit(pre,var='met',bin='100,5,100',cut='mcw*puw'):
     import SuFit
@@ -301,10 +367,12 @@ elif opts.bgsig in (3,): # z+jets
 # Pre-load the ntuples
 path_truth = 'truth/st_truth_reco_%s/ntuple'%opts.ntuple
 path_reco  = 'st_%s_final/ntuple'%opts.ntuple
-for px in (pw,pz):
+for it,px in enumerate((pw,pz)):
+    ptruth = 'truth/st_truth_reco_%s/ntuple'%('w' if it==0 else 'z')
+    preco  = 'st_%s_final/ntuple'%('w' if it==0 else 'z')
     px.add(label='2011 data',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kBlack,flags=['data'])
-    px.addchain(path_truth)
-    px.addchain(path_reco)
+    px.addchain(ptruth)
+    px.addchain(preco)
     px.auto()
 
 # select main ntuple
@@ -322,7 +390,7 @@ if False:
 gbg = []
 q = opts.charge
 
-if mode==922: # compares, at truth level, different monte-carlos.
+if mode in ('922','gen_det_kin'): # compares, at truth level, different monte-carlos.
     renormalize()
     c = SuCanvas()
     c.buildDefault(width=800,height=600)
@@ -359,7 +427,7 @@ if mode==922: # compares, at truth level, different monte-carlos.
     leg.AddEntry(halpgen,lab[2],'LP')
     leg.Draw('same')
 
-if mode==921: # asymmetry, at truth level, of different monte-carlos.
+if mode=='921': # asymmetry, at truth level, of different monte-carlos.
     renormalize()
     c = SuCanvas()
     c.buildDefault(width=800,height=600)
@@ -391,7 +459,7 @@ if mode==921: # asymmetry, at truth level, of different monte-carlos.
     hasym[0].GetYaxis().SetRangeUser(0,max(hasym[0].GetMaximum(),hasym[1].GetMaximum(),hasym[2].GetMaximum())*1.5)
     leg.Draw('same')
 
-if mode==923: # asymmetry, at reco/particle level, of different monte-carlos. Compared to BG-subtracted data
+if mode=='923': # asymmetry, at reco/particle level, of different monte-carlos. Compared to BG-subtracted data
     renormalize()
     c = SuCanvas()
     c.buildDefault(width=800,height=600)
@@ -434,7 +502,7 @@ if mode==923: # asymmetry, at reco/particle level, of different monte-carlos. Co
     leg.Draw('same')
 
 # WARNING: this function is very specific to the TrigFTKAna ntuple (ie, manually refers to many folders!)
-if mode==924: # asymmetry, at reco/particle level: systematic variations in bg-subtracted data
+if mode=='924': # asymmetry, at reco/particle level: systematic variations in bg-subtracted data
     renormalize()
     qcdscale = SuSample.qcdscale
     c = SuCanvas()
@@ -518,52 +586,99 @@ if mode==924: # asymmetry, at reco/particle level: systematic variations in bg-s
     hasym[0].GetYaxis().SetRangeUser(0,max([hmaximum(hh) for hh in hasym])*1.5)
     leg.Draw('same')
 
-if mode==920: # QCD data-driven template studies
-    renormalize()
+if mode=='matrix_2010inc': # QCD estimation using matrix method
     c = SuCanvas()
-    c.buildDefault(width=1024,height=400)
+    c.buildDefault(width=1600,height=768)
     cc = c.cd_canvas()
-    cc.Divide(2,1)
+    cc.Divide(3,2)
     cc.cd(1)
-    pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre)
-    pre_qcd = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,qcdreg(opts.pre))
-    pre_reviso = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,revisoreg(opts.pre))
-    pres = (pre,pre_qcd,pre_reviso)
-    labels = ('Default','Reverse d0/z0', 'Reverse iso')
-    colors = (ROOT.kBlack,ROOT.kBlue,ROOT.kRed)
-    sizes = (1.0,0.6,0.3)
-    mstyle = 20
-    msize = 1.5
-    hdata = []
-    hqcd = []
-    maxdata = []
-    maxqcd = []
-    for i in range(3):
-        hdata.append( po.histo('2011 data','data%d'%i,opts.var,opts.bin,pre,path=path_reco,norm=True) )
-        hqcd.append( po.histo('qcd','qcd%d'%i,opts.var,opts.bin,pre,path=path_reco,norm=True) )
-        maxdata.append(hdata[-1].GetMaximum())
-        maxqcd.append(hqcd[-1].GetMaximum())
-        hqcd[-1].SetLineStyle(2)
-        hdata[-1].SetLineColor(ROOT.kRed)
-        hdata[-1].SetMarkerColor(ROOT.kRed)
-        hqcd[-1].SetLineColor(ROOT.kBlue)
-        hqcd[-1].SetMarkerColor(ROOT.kBlue)
-        hdata[-1].SetMarkerStyle(mstyle)
-        hdata[-1].SetMarkerSize(msize*sizes[0])
-    for i,iv in enumerate((1,2)):
-        leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
-        cc.cd(i+1)
-        hdata[iv].Draw('')
-        hdata[iv].GetYaxis().SetRangeUser(0,max(maxdata[iv],maxqcd[iv])*1.5)
-        hdata[iv].GetXaxis().SetTitle(opts.var);
-        hqcd[iv].Draw('same')
-        leg.SetHeader('QCD fit:')
-        leg.AddEntry(hdata[iv],'Data Template','LP')
-        leg.AddEntry(hqcd[iv],'QCD MC (bbar)','LP')
-        leg.Draw('same')
-        gbg.append(leg)
+    # Get heff_real from Z tag and probe
+    print 'Obtaining heff_real template via Z tag and probe'
+    pre_z_aft = pre_w2z(opts.pre)
+    hz_bef = []
+    hz_aft = []
+    for iq in xrange(2):
+        iqp = iq
+        iqt = 0 if iq==1 else 1
+        var = None
+        for isub in w2zsub:
+            if re.search(isub[0],opts.var):
+                var = opts.var.replace(isub[0],isub[1]).replace('lX',QMAPZ[iqp][2])
+                break
+        if not var:
+            print 'This variable cannot be automatrically translated between w and z ntuples: %s'%opts.var
+            var = opts.var
+        pre_z_bef = prune(pre_z_aft,'lX_ptiso20'.replace('lX',QMAPZ[iqp][2]))
+        hz_bef.append( pz.data('data_bef_%s'%QMAPZ[iq][1],var,opts.bin,'(%s) * (%s)'%(opts.cut,pre_z_bef)) )
+        hz_aft.append( pz.data('data_aft_%s'%QMAPZ[iq][1],var,opts.bin,'(%s) * (%s)'%(opts.cut,pre_z_aft)) )
+    iq = 1 if opts.charge==1 else 0  # both-charges case: use mu+ template
+    heff_real = c.Efficiency(hz_aft[0],hz_bef[0])
+    heff_real.Draw('')
+    heff_real.GetYaxis().SetRangeUser(0.98,1.02)
+    heff_real.GetYaxis().SetTitle('Efficiency for non-QCD')
+    heff_real.GetXaxis().SetTitle(opts.var)
+    #pw.data = pw.qcd
+    # Get heff_fake from a fakes-dominated region
+    print 'Obtaining heff_fake template using W candidates in a QCD-enriched region'
+    cc.cd(2)
+    pre_fake_toppair1 = prunesub(opts.pre,('fabs\(d0sig\)'),'fabs(d0sig)>5')
+    pre_fake_winc = prunesub(opts.pre,('l_pt','met','w_mt','fabs\(d0sig\)'),'l_pt>15 && l_pt<20 && met<25 && w_mt<40')
+    pre_fake_aft = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,pre_fake_winc)
+    pre_fake_bef = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,prune(pre_fake_winc,'ptiso'))
+    hfake_bef = pw.data('fdata_bef',opts.var,opts.bin,pre_fake_bef)
+    hfake_aft = pw.data('fdata_aft',opts.var,opts.bin,pre_fake_aft)
+    heff_fake = c.Efficiency(hfake_aft,hfake_bef)
+    heff_fake.Draw('')
+    heff_fake.GetYaxis().SetRangeUser(0.3,0.5)
+    heff_fake.GetYaxis().SetTitle('Efficiency for QCD')
+    heff_fake.GetXaxis().SetTitle(opts.var)
+    # Get h_isol, h_loose directly from data
+    print 'Obtaining overall loose and isolated templates from data'
+    cc.cd(3)
+    pre_isol = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre)
+    pre_loose = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,looseisoreg(opts.pre))
+    pres = (pre_isol,pre_loose)
+    hNdata = []
+    for i in range(len(pres)):
+        hNdata.append( po.data('data%d'%i,opts.var,opts.bin,pres[i],path=path_reco) )
+    hN_isol,hN_loose = hNdata[0],hNdata[1]
+    msize=1.3
+    hN_loose.SetLineColor(ROOT.kGray)
+    hN_isol.SetLineColor(ROOT.kBlack)
+    hN_loose.Draw('')
+    hN_loose.GetXaxis().SetTitle(opts.var)
+    hN_loose.GetYaxis().SetRangeUser(0,max(hN_loose.GetMaximum(),hN_isol.GetMaximum())*1.5)
+    hN_loose.GetYaxis().SetTitle('Loose and Isolated muons')
+    hN_isol.Draw('same A')
+    leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
+    leg.AddEntry(hN_loose,'Loose muons','LP')
+    leg.AddEntry(hN_isol,'Isolated muons','LP')
+    leg.Draw('same')
+    gbg.append(leg)
+    # Pre-isolated QCD template histogram
+    cc.cd(4)
+    hqcd_loose = c.Matrix_loose(hN_isol,hN_loose,heff_real,heff_fake)
+    hqcd_loose.Draw()
+    hqcd_loose.GetYaxis().SetRangeUser(0,hqcd_loose.GetMaximum()*1.2)
+    hqcd_loose.GetYaxis().SetTitle('QCD template before isolation cut')
+    hqcd_loose.GetXaxis().SetTitle(opts.var)
+    # Final QCD template histogram, overlaid on top of the bb/cc prediction
+    cc.cd(5)
+    hqcd_tight = c.Matrix_tight(hN_isol,hN_loose,heff_real,heff_fake)
+    hqcd_mc = po.qcd('data_mcqcd',opts.var,opts.bin,pre_isol,path=path_reco)
+    hqcd_mc.SetLineColor(ROOT.kGray)
+    haxis = hqcd_tight.DrawNormalized()
+    haxis2 = hqcd_mc.DrawNormalized('same A')
+    haxis.GetYaxis().SetRangeUser(0,max(haxis.GetMaximum(),haxis2.GetMaximum())*1.5)
+    haxis.GetYaxis().SetTitle('QCD template after isolation cut')
+    haxis.GetXaxis().SetTitle(opts.var)
+    leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
+    leg.AddEntry(hqcd_tight,'Matrix-method QCD','LP')
+    leg.AddEntry(hqcd_mc,'MC QCD (bb/cc mu15x)','LP')
+    leg.Draw('same')
+    gbg.append(leg)
 
-if mode==1: # total stack histo
+if mode=='1': # total stack histo
     renormalize()
     c = SuCanvas()
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
@@ -576,7 +691,7 @@ if mode==1: # total stack histo
         hdata = po.data('data',opts.var,opts.bin,'(%s) * (%s)'%(opts.cut,opts.pre),leg=leg)
     c.plotStackHisto(hmc,hdata,leg)
 
-if mode==2: # signal - directly from MC, or bg-subtracted data - allow application of efficiency histogram
+if mode=='2': # signal - directly from MC, or bg-subtracted data - allow application of efficiency histogram
     assert opts.ntuple=='w','Only w ntuple supported for now'
     renormalize()
     c = SuCanvas()
@@ -603,7 +718,7 @@ if mode==2: # signal - directly from MC, or bg-subtracted data - allow applicati
         hsig_eff.Draw('A same')
         #hd_sig_eff.Draw('A same')
 
-if mode==100: # creates efficiency histogram (corrects back to particle level)
+if mode=='100': # creates efficiency histogram (corrects back to particle level)
     renormalize()
     c = SuCanvas()
     c.buildDefault(width=1024,height=400)
@@ -635,7 +750,7 @@ if mode==100: # creates efficiency histogram (corrects back to particle level)
             heff.Write(key_str,ROOT.TObject.kOverwrite)
             f.Close()
 
-if mode==11: # asymmetry (not bg-subtracted)
+if mode=='11': # asymmetry (not bg-subtracted)
     assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
     hsig,hd    = [None]*2,[None]*2
     SuSample.hcharge = POS
@@ -647,7 +762,7 @@ if mode==11: # asymmetry (not bg-subtracted)
     c = SuCanvas()
     c.plotAsymmetry(hd[POS],hd[NEG],hsig[POS],hsig[NEG])
 
-if mode==12: # asymmetry (bg-subtracted)
+if mode=='12': # asymmetry (bg-subtracted)
     assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
     renormalize()
     hsig,hd_sig  = [None]*2,[None]*2
@@ -660,7 +775,7 @@ if mode==12: # asymmetry (bg-subtracted)
     c = SuCanvas()
     c.plotAsymmetry(hd_sig[POS],hd_sig[NEG],hsig[POS],hsig[NEG])
 
-if mode in (101,102): # tag and probe
+if mode in ('101','102'): # tag and probe
     assert opts.ntuple=='z','ERROR: tag-and-probe can only be computed for the z ntuple'
     #renormalize()
     hda_bef = [None]*2
@@ -675,10 +790,10 @@ if mode in (101,102): # tag and probe
         pre_aft = opts.preaft.replace('lX',QMAPZ[iqt][2]).replace('lY',QMAPZ[iqp][2])
         hmc_bef[iq] = po.sig('mc_bef_%s'%QMAPZ[iq][1],var,opts.bin,'(%s) * (%s)'%(opts.cut,pre_bef))
         hmc_aft[iq] = po.sig('mc_aft_%s'%QMAPZ[iq][1],var,opts.bin,'(%s) * (%s)'%(opts.cut,pre_aft))
-        if mode==101:   # default data
+        if mode=='101':   # default data
             hda_bef[iq] = po.data('da_bef_%s'%QMAPZ[iq][1],var,opts.bin,'(%s) * (%s)'%(opts.cut,pre_bef))
             hda_aft[iq] = po.data('da_aft_%s'%QMAPZ[iq][1],var,opts.bin,'(%s) * (%s)'%(opts.cut,pre_aft))
-        elif mode==102: # bg-subtracted data
+        elif mode=='102': # bg-subtracted data
             hda_bef[iq] = po.data_sub('da_bef_%s'%QMAPZ[iq][1],var,opts.bin,'(%s) * (%s)'%(opts.cut,pre_bef))
             hda_aft[iq] = po.data_sub('da_aft_%s'%QMAPZ[iq][1],var,opts.bin,'(%s) * (%s)'%(opts.cut,pre_aft))
         else:
@@ -686,7 +801,7 @@ if mode in (101,102): # tag and probe
     c = SuCanvas()
     c.plotTagProbe(hda_bef,hda_aft,hmc_bef,hmc_aft,xtitle=opts.var)
 
-if mode == 1012: # 10/12/2011: MCP group studies of Z mass peak in data and MC
+if mode == '1012': # 10/12/2011: MCP group studies of Z mass peak in data and MC
     assert opts.ntuple=='z','ERROR: MCP Z studies can only be computed for the z ntuple'
     tagcentral = False
     c = SuCanvas()
@@ -758,7 +873,7 @@ if mode == 1012: # 10/12/2011: MCP group studies of Z mass peak in data and MC
     cscan.SaveAs('scan_mZ.png')
     cc.cd()
     hPOS.Draw()
-    hPOS.GetYaxis().SetRangeUser(89,103)
+    hPOS.GetYaxis().SetRangeUser(89,93)
     hNEG.Draw('SAME')
     if True:
         line = ROOT.TGraph(2)
@@ -769,7 +884,60 @@ if mode == 1012: # 10/12/2011: MCP group studies of Z mass peak in data and MC
         line.Draw('l')
         gbg.append(line)
 
-if mode == 1013: # 10/13/2011: MCP group studies that do not require a Z peak (MS-ID-CB comparisons)
+def loop_zbins(pre_in,lvar='lY_eta',lvarbins='-2.5,2.5,25'):
+    """ A general-purpose function to loop over Z events in bins of something else """
+    pre_in = prune(pre_in,lvar)
+    lmin,lmax,nbins = [ int(zz) if i==2 else float(zz) for i,zz in enumerate(lvarbins.split(','))]
+    lbinw = (lmax-lmin)*1.0/nbins
+    npads = int(math.ceil(math.sqrt(nbins)))
+    cscan = SuCanvas()
+    cscan.buildDefault(title='scan',width=1500,height=1500)
+    ccscan = cscan.cd_canvas()
+    ccscan.Divide(npads,npads)
+    for i in xrange(nbins):
+        lL = lmin + i*lbinw
+        lR = lL + lbinw
+        ccscan.cd(i+1)
+        h = []
+        f = []
+        for iqp in (POS,NEG):
+            iqt = 0 if iqp==1 else 1
+            var = lvar.replace('lX',QMAPZ[iqt][2]).replace('lY',QMAPZ[iqp][2])
+            pre = ' && '.join(pre_in,'(%s)>%.2f'%(lvar,lL),'(%s)<=%.2f'%(lvar,lR)).replace('lX',QMAPZ[iqt][2]).replace('lY',QMAPZ[iqp][2])
+            h.append( po.data('data%d_q%d'%(i,iqp),var,bin,pre) )
+            rms,mean=h[-1].GetRMS(),h[-1].GetMean()
+            FITMIN=mean-rms*rms_scale
+            FITMAX=mean+rms*rms_scale
+            h[-1].Fit('gaus','S','',FITMIN,FITMAX)
+            f.append( h[-1].GetFunction('gaus') )
+        f[0].SetLineColor(ROOT.kRed)
+        f[1].SetLineColor(ROOT.kBlue)
+        hPOS.SetBinContent(i,f[0].GetParameter(1))
+        hPOS.SetBinError(i,f[0].GetParError(1))
+        hNEG.SetBinContent(i,f[1].GetParameter(1))
+        hNEG.SetBinError(i,f[1].GetParError(1))
+        if False: # simple mean
+            hPOS.SetBinContent(i,h[0].GetMean())
+            hNEG.SetBinContent(i,h[1].GetMean())
+        h[0].SetLineColor(ROOT.kRed)
+        h[0].SetMarkerColor(ROOT.kRed)
+        h[1].SetLineColor(ROOT.kBlue)
+        h[1].SetMarkerColor(ROOT.kBlue)
+        h[0].Draw()
+        h[1].Draw('SAME')
+        gbg += h
+    return cscan
+
+if mode == '1111':
+    c = SuCanvas()
+    c.buildDefault(title='canvas',width=800,height=600)
+    tagcentral = False
+    pre = 'lX_idhits==1 && fabs(lX_z0)<10. && fabs(lX_eta)<%f && lX_pt>20.0 && (lX_q*lY_q)<0 && fabs(lX_z0-lY_z0)<3 && fabs(lX_d0-lY_d0)<2 && lX_ptiso20/lX_pt<0.1 && Z_m>70 && Z_m<110'%(1.0 if tagcentral else 2.4)
+    pre += 'lY_idhits==1 && fabs(lY_z0)<10. && lY_pt>20.0 && lX_ptiso20/lX_pt<0.1'
+    loop_zbins(pre)
+    pass
+
+if mode == '1013': # 10/13/2011: MCP group studies that do not require a Z peak (MS-ID-CB comparisons)
     # we still use Z events to ensure little QCD contamination
     assert opts.ntuple=='z','ERROR: MCP Z studies can only be computed for the z ntuple'
     tagcentral = False
@@ -821,7 +989,7 @@ if mode == 1013: # 10/13/2011: MCP group studies that do not require a Z peak (M
         h[0].Draw()
         h[1].Draw('SAME')
         gbg += h
-    cscan.SaveAs('%s%s_cscan_%d'%(opts.tag,opts.input,mode),'png')
+    cscan.SaveAs('%s%s_cscan_%s'%(opts.tag,opts.input,mode),'png')
     cc.cd()
     hPOS.Draw()
     hPOS.GetYaxis().SetRangeUser(-0.5,0.5)
@@ -835,12 +1003,12 @@ if mode == 1013: # 10/13/2011: MCP group studies that do not require a Z peak (M
         line.Draw('l')
         gbg.append(line)
 
-if mode==99: # Floating QCD normalization
+if mode=='99': # Floating QCD normalization
     renormalize()  # for testing - only activated when --qcd=auto
     c,frame,scalef = run_fit(metfitreg(opts.pre),opts.var,opts.bin,opts.cut)
 
 if not opts.antondb:
-    c.SaveAs('%s_%s_%s_%s_%s_%d'%(opts.tag,opts.input,QMAP[opts.charge][1],opts.var,opts.cut,mode),'png')
+    c.SaveAs('%s_%s_%s_%s_%s_%s'%(opts.tag,opts.input,QMAP[opts.charge][1],opts.var,opts.cut,mode),'png')
 
 # save everything
 if len(COUT)>0:
@@ -848,7 +1016,7 @@ if len(COUT)>0:
     for l in COUT:
         print l
         VMAP['COUT'].append(l)
-c._canvas.SetName('%s_m%d_%s'%(opts.tag,mode,opts.var))
+c._canvas.SetName('%s_m%s_%s'%(opts.tag,mode,opts.var))
 OMAP += [c._canvas,]
 if (len(VMAP)>0 or len(OMAP)>0) and opts.antondb:
     a = antondb.antondb(opts.antondb)

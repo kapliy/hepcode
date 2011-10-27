@@ -1,13 +1,18 @@
-TODO: (look into efficiency calculation and why histograms turn negative!)
+TODO: add ability to make PDFs of tables in tb_* executable
+TODO: fit particle level via iterative gaussian (includes FSR/ISR), confirm it's close to PDF.
+TODO: Z mass fit in bins of eta/phi - including on MC (confirm Kluit's problem)
+TODO: do delta-Q over P correction, too! - this is what needs to go to SmearingClass
+
+TODO: move to staco loose for analysis; add trigger words.
 
 conversion to truth level. Resolution is not negligible in MET. unfolding.
 Peter: METRefFinal - METTruth; split into parallel and perpendicular to lepton axis components (later)
 Handle bad charge-dependent modeling - even though QCD is fit in a charge-dependent fasion.
 
-
 Issues:
 * choose generator that models missing et best (!!!)
 * alternate higher order generators for w production - ? powheg? Read about generators!
+* look into efficiency calculation and why histograms turn negative if i use eff error!
 
 Suggestions for analysis:
 * z0/d0 vs nvtx plots
@@ -18,14 +23,12 @@ Suggestions for analysis:
 * Repeat with 2010 binning (use TTree::Draw('var >> +h'))
 
 
-
 Suggestions for MCP:
 * Add fitted-z-mass in phi/eta bins plot!
   https://indico.cern.ch/getFile.py/access?subContId=3&contribId=7&resId=1&materialId=slides&confId=157170
 * Add p_cmb-p_ID feature
   https://indico.cern.ch/getFile.py/access?subContId=0&contribId=7&resId=0&materialId=slides&confId=157170
 * Do Peter-style W analysis (should be easy, given what i have!)
-
 
 print keysfit id/exms string modification to make sure it is correct.
 * Add data-driven QCD template capability to SuData
