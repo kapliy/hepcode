@@ -43,10 +43,9 @@ function run_z_stacks () {
     eval ./stack2.py ${common} --ntuple z -b --var 'fabs\(lP_phi-lN_phi\)' --bin '50,0,6.3' -t ${tag} $@ &
 }
 
-# QCD studies: comparing shapes after inversion of certain cuts
-# QCD template: bbar
-# TODO - work in progress!
-if [ "1" -eq "1" ]; then
+# QCD data-driven methods
+# TODO - work in progress! Need to integrate!
+if [ "0" -eq "1" ]; then
     common="${common}"
     pre="${wpre_jordan}"
     m=matrix_2010inc

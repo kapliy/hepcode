@@ -9,7 +9,8 @@ try:
 except ImportError:
     pass
 
-import sys,math
+import os,sys,math
+stdout = sys.stdout
 import antondb
 from optparse import OptionParser
 
@@ -18,7 +19,7 @@ dbname = 'out1023L7'
 from optparse import OptionParser
 parser = OptionParser()
 parser.add_option("-m", "--mode",dest="mode",
-                  type="int", default=0,
+                  type="int", default=2,
                   help="Plot mode")
 parser.add_option("-a", "--algo",dest="algo",
                   type="int", default=0,
@@ -27,7 +28,7 @@ parser.add_option("-d", "--dets",dest="dets",
                   type="int", default=0,
                   help="For printing syst tables: 0=ALL,1=cmb,2=exms,3=id")
 parser.add_option("-r", "--release",dest="rel",
-                  type="int", default=16,
+                  type="int", default=17,
                   help="Athena release: 16 or 17")
 parser.add_option("--antondb",dest="antondb",
                   type="string", default=dbname,
@@ -40,6 +41,18 @@ dbname = opts.antondb
 
 a = antondb.antondb(dbname)
 a.load()
+
+os.system('mkdir -p latex/')
+algos = { 0 : 'STACO', 1 : 'MuID' }
+fname = '/not/exists'
+latex_head = r"""
+\documentclass[a4paper]{article}
+% Shorthand for \phantom to use in tables
+\newcommand{\pho}{\phantom{0}}
+\begin{document}
+"""
+latex_tail = r"""
+\end{document}"""
 
 dets = ['cmb','exms','id']
 dets_map = {'cmb' : 'Combined muons', 'id' : 'ID muons', 'exms' : 'MS muons'}
@@ -73,7 +86,7 @@ def scales(R,eR,mz,emz,mz0):
     t['ekm2']=ekm2*100.0
     return t
 
-def load_all(regs=['AA','BB','CC']+['FWA','MWA','Baa','Bcc','MWC','FWC'], pattern_R0='/default/%s/%s/R0',pattern_Z='/default/%s/%s/Z/gaus0'):
+def load_all(regs=[], pattern_R0='/default/%s/%s/R0',pattern_Z='/default/%s/%s/Z/gaus0'):
     res = {}
     for det in dets:
         res[det] = {}
@@ -120,16 +133,38 @@ def print_cpp(db,regs):
             i+=1
 
 def latex_R(db,regs,ptype='ksf'):
+    print latex_head
     for det in dets:
+        print r"""
+\begin{table}[htb]
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+Region    &   $R_{0}$     & $\delta R_{0}$   \\
+\hline\hline"""
         print r'\multicolumn{3}{|c|}{'+'%s'%dets_map[det]+r'}     \\ \hline'
         for reg in regs:
             s=db[det][reg][ptype]
             #Endcap-A  &   $100.1 \pm 0.4\%$  &  $    100.0 \pm 0.4\%$     \\ \hline
             print '%s'%regs_map[reg]+r'  &  ' + '%.2f'%(s['R'])+r'\%  &   '+'%.2f'%(s['eR'])+r'\%     \\ \hline'
         print r'\hline'
+        print r"\end{tabular}"
+        print r"\caption{%s: release-%d relative scales}"%(algos[opts.algo],opts.rel)
+        print r"\label{tab:" + 'relative%srel%d'%(algos[opts.algo],opts.rel) + r'}'
+        print r"\end{center}"
+        print r"\end{table}"
+    print latex_tail
 
 def latex_k(db,regs,ptype='ksf'):
+    print latex_head
     for det in dets:
+        print r"""
+\begin{table}[htb]
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+Region    &  $k_{+}$ & $k_{-}$ \\
+\hline\hline"""
         print r'\multicolumn{3}{|c|}{'+'%s'%dets_map[det]+r'}     \\ \hline'
         for reg in regs:
             s=db[det][reg][ptype]
@@ -138,6 +173,12 @@ def latex_k(db,regs,ptype='ksf'):
             pho2='    ' if s['km']>100.0 else '\pho '
             print '%s'%regs_map[reg]+r'  &   $' + '%s%.2f'%(pho1,s['kp'])+r' \pm '+'%.2f'%s['ekp']+r'\%$  &  $    '+'%s%.2f'%(pho2,s['km'])+r' \pm '+'%.2f'%s['ekm']+r'\%$     \\ \hline'
         print r'\hline'
+        print r"\end{tabular}"
+        print r"\caption{%s: release-%d absolute scales}"%(algos[opts.algo],opts.rel)
+        print r"\label{tab:" + 'absolute%srel%d'%(algos[opts.algo],opts.rel) + r'}'
+        print r"\end{center}"
+        print r"\end{table}"
+    print latex_tail
 
 def get_statdev(db,regs,ptype='ksf'):
     stat1 = [],[]
@@ -196,21 +237,33 @@ if mode==0:
     print_cpp(default,['AA','BB','CC'])
 if mode==1:
     print_cpp(default,['FWA','MWA','Baa','Bcc','MWC','FWC'])
+if mode==2:
+    print_cpp(default,['E%dE'%i for i in regsR])
 # latex R0 table
 if mode==3:
     latex_R(default,['AA','BB','CC'])
 if mode==4:
     latex_R(default,['FWA','MWA','Baa','Bcc','MWC','FWC'])
 if mode==5:
+    fname = 'latex/table_R0_r%d_%s.tex'%(opts.rel,opts.algo)
+    fout = open(fname,'w')
+    sys.stdout = fout
     latex_R(default,['E%dE'%i for i in regsR])
+    fout.close()
+    sys.stdout = stdout
 # latex kp/km table
 if mode==6:
     latex_k(default,['AA','BB','CC'])
 if mode==7:
     latex_k(default,['FWA','MWA','Baa','Bcc','MWC','FWC'])
 if mode==8:
+    fname = 'latex/table_kpkm_r%d_%s.tex'%(opts.rel,opts.algo)
+    fout = open(fname,'w')
+    sys.stdout = fout
     latex_k(default,['E%dE'%i for i in regsR])
-    
+    fout.close()
+    sys.stdout = stdout
+
 def print_syst(regs):
     print '==================SYS1================='
     sys1 = latex_sysdev(default,klu,regs)
@@ -268,3 +321,5 @@ if mode==07252:
     latex_R(default,['FWA','MWA','Baa','Bcc','MWC','FWC'])
     print 'NOMSID:'
     latex_R(nomsid,['FWA','MWA','Baa','Bcc','MWC','FWC'])
+
+os.system('if [ -f %s ]; then pdflatex -output-directory latex/ %s; fi'%(fname,fname))
