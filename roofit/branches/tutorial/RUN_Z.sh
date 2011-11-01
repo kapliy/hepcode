@@ -47,6 +47,7 @@ fi;
 tts="cmb id exms"
 #regs="AA BB CC Bcc Baa FWC FWA MWC MWA" # "FWC0 FWC1 FWC2 FWC3 FWA0 FWA1 FWA2 FWA3"
 regs="`echo E{0..25}E`"
+regs="`echo T{0..13}T`"
 xtra="--ext eps"
 i=0
 

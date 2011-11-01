@@ -1,9 +1,25 @@
-TODO: add ability to make PDFs of tables in tb_* executable
-TODO: fit particle level via iterative gaussian (includes FSR/ISR), confirm it's close to PDF.
 TODO: Z mass fit in bins of eta/phi - including on MC (confirm Kluit's problem)
+TODO: fit particle level via iterative gaussian (includes FSR/ISR), confirm it's close to PDF.
 TODO: do delta-Q over P correction, too! - this is what needs to go to SmearingClass
 
-TODO: move to staco loose for analysis; add trigger words.
+TrigFTKAna:
+* move to staco loose for analysis; make use of mutype word;
+* add muon-jet overlap checking
+* add robust trigger words
+* add a word to AnaWCrossSectionCandidate saying if it's the best candidate at preselection level (compare results with/without)
+* move reco, trigger, isolation efficiencies into Study* classes and save on per-W and per-Z basis!
+* come up with a way to combine truth and reco ntuples:
+  Keep default truth ntuples
+  Add (if MC) additional words to primary ntuple: keeping relevant information from truth ntuple
+  This would need some matching: for a given W/Z candidate, it will seek the closest truth candidate.
+* ID efficiency via tag and probe
+  Create a completely separate ntuple. The idea is to create mu-ID candidates. The AOD::id muons would 
+  have a link to the closest-matched full muon (if any)
+
+Make bin-by-bin efficiency corrections for isolation (wrt combined) and trigger (wrt isolated).
+
+Kristin:
+Add necessary missing info to ntuple (parton momentum fraction etc)
 
 conversion to truth level. Resolution is not negligible in MET. unfolding.
 Peter: METRefFinal - METTruth; split into parallel and perpendicular to lepton axis components (later)

@@ -56,6 +56,11 @@ def islen2(name):
         return True
     except:
         return False
+def ordered_pairs(lst):
+    """ input: [a1,a2,a3]
+        output: [a1,a2], [a2,a3]
+    """
+    return zip(lst,lst[1:])
 def eranges(name):
     """ Converts a string like /BB/ into a range of etas """
     if islen2(name):
@@ -65,7 +70,24 @@ def eranges(name):
         NN = 25; bwidth = 5.0/NN
         bnr = (-2.5 + 1.0*bn*bwidth , -2.5 + (bn+1.0)*bwidth)
         return (bnr,bnr)
-        # narrow binning
+    elif name[0] == 'T':
+        bn = int(name[1:-1])
+        #boundsP = [0.25,0.45,0.60,0.75,0.9,1.30,1.60,2.00,2.50]
+        boundsP = [0.30,0.60,0.9,1.30,1.60,2.00,2.50]
+        boundsA = [-z for z in reversed(boundsP)] + [0.00,] + boundsP
+        bounds = ordered_pairs(boundsA)
+        NN = len(bounds);
+        print 'Spectrometer-motivated binning with %d bins'%NN
+        assert bn < NN, 'Requested an eta bin beyond limits'
+        return (bounds[bn],bounds[bn])
+        cands = [ran for i,ran in enumerate(bounds) if ran[0] <= eta < ran[1]]
+        bnr = None
+        if len(cands)==0:
+            if eta<0: bnr = bounds[0]
+            if eta>0: bnr = bounds[NN-1]
+        else:
+            bnr = cands[0]
+        return (bnr,bnr)
     elif name[:3] == 'ALL':
         return ((-10.0,10.0),(-10.0,10.0))
     elif name[:3] == 'FWC':
@@ -76,14 +98,6 @@ def eranges(name):
         return ((-2.0,-1.05),(-2.0,-1.05))
     elif name[:3] == 'MWA':
         return ((1.05,2.0),(1.05,2.0))
-    elif name[:5] == 'TRFWC':
-        return ((-2.0,-1.7),(-2.0,-1.7))
-    elif name[:5] == 'TRFWA':
-        return ((1.7,2.0),(1.7,2.0))
-    elif name[:5] == 'TRMWC':
-        return ((-1.7,-1.05),(-1.7,-1.05))
-    elif name[:5] == 'TRMWA':
-        return ((1.05,1.7),(1.05,1.7))
     elif name[:3] == 'Bcc':
         return ((-1.05,0.0),(-1.05,0.0))
     elif name[:3] == 'Baa':
@@ -117,6 +131,7 @@ def get_prange(name):
     return rp
 
 def repl_dic(v,tt):
+    """ appends _id _exms strings to ntuple variable names, when necessary"""
     rdic = ["Z_m","Z_pt","lP_pt","lP_eta","lP_phi","lN_pt","lN_eta","lN_phi"]
     if tt in ('id','exms'):
         try: # simple string, including &&-separated cuts
