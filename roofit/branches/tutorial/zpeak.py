@@ -44,7 +44,10 @@ parser.add_option("--pre",dest="pre",
                   help="Preliminary cuts to select final W candidates")
 parser.add_option("--data",dest="data",
                   type="string", default='dg/st_z_final/ntuple',
-                  help="TGraph containing data histograms")
+                  help="ntuple name for data")
+parser.add_option("--mc",dest="mc",
+                  type="string", default='dg/st_z_final/ntuple',
+                  help="ntuple name for MC")
 parser.add_option("--region",dest="region",
                   type="string", default='BB',
                   help="Where each leg of a Z must fall")
@@ -382,7 +385,7 @@ def load_histo(hz,xmin,xmax,auto=None):
 
 # getting data
 if True:
-    print 'Ntuple path:',opts.data
+    print 'Ntuple path (data):',opts.data
     # load data
     hdata = ROOT.TChain(opts.data)
     for fname in glob.glob(opts.rootdata):
@@ -397,13 +400,14 @@ if True:
     # load MC
     mc = None
     if opts.rootmc:
-        hmc = ROOT.TChain(opts.data)
+        print 'Ntuple path (mc):',opts.mc
+        hmc = ROOT.TChain(opts.mc)
         for fname in glob.glob(opts.rootmc):
             print 'Adding to TChain:',fname
             nadd = hmc.Add(fname)
             assert nadd>0,'Failed to add file %s'%fname
         print 'Loaded data trees with %d entries'%hmc.GetEntries()
-        assert hmc.GetEntries()>0, 'Error loading data object %s from file %s'%(opts.data,opts.rootmc)
+        assert hmc.GetEntries()>0, 'Error loading data object %s from file %s'%(opts.mc,opts.rootmc)
         cname = hmc.ClassName()
         if cname in ('TGraph','TNtuple','TTree','TChain'):
             mc,crap = load_unbinned(hmc,opts.tt,opts.pre,opts.region,opts.min,opts.max,opts.ndata,opts.scale)
