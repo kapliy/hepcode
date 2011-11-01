@@ -15,6 +15,7 @@ import antondb
 from optparse import OptionParser
 
 dbname = 'out1023L7'
+_DISABLE_KLU = False
 
 from optparse import OptionParser
 parser = OptionParser()
@@ -159,6 +160,18 @@ def max_pair(s):
     s1,s2=s[0],s[1]
     assert len(s1)==len(s2),'Error: wrong array sizes'
     return [max(s) for s in zip([math.fabs(a) for a in s1],[math.fabs(b) for b in s2])]
+def first_pair(s):
+    s1,s2=s[0],s[1]
+    assert len(s1)==len(s2),'Error: wrong array sizes'
+    return [s[0] for s in zip([math.fabs(a) for a in s1],[math.fabs(b) for b in s2])]
+def second_pair(s):
+    s1,s2=s[0],s[1]
+    assert len(s1)==len(s2),'Error: wrong array sizes'
+    return [s[1] for s in zip([math.fabs(a) for a in s1],[math.fabs(b) for b in s2])]
+def min_pair(s):
+    s1,s2=s[0],s[1]
+    assert len(s1)==len(s2),'Error: wrong array sizes'
+    return [min(s) for s in zip([math.fabs(a) for a in s1],[math.fabs(b) for b in s2])]
 
 def sumsq(s):
     grps = zip(*s)
@@ -215,11 +228,37 @@ def latex_R(db,regs,ptype='ksf'):
         print r'\hline'
         print r"\end{tabular}"
         if shift:
-            print r"\caption{%s: release-%d curvature splitting}"%(algos[opts.algo],opts.rel)
+            print r"\caption{%s: release-%d curvature splitting (stat error)}"%(algos[opts.algo],opts.rel)
             print r"\label{tab:" + 'curvsplit%srel%d'%(algos[opts.algo],opts.rel) + r'}'
         else:
-            print r"\caption{%s: release-%d relative scales}"%(algos[opts.algo],opts.rel)
+            print r"\caption{%s: release-%d relative scales (stat error)}"%(algos[opts.algo],opts.rel)
             print r"\label{tab:" + 'relative%srel%d'%(algos[opts.algo],opts.rel) + r'}'
+        print r"\end{center}"
+        print r"\end{table}"
+        print r"\clearpage"
+
+def latex_C_syst(db,regs,ptype='ksf'):
+    assert shift
+    err = get_syst_curv(regs)
+    z=0
+    for det in dets:
+        print r"""
+\begin{table}[htb]
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline"""
+        print r"Region    &   $C$     & $\delta C$   \\"
+        print r"\hline\hline"
+        print r'\multicolumn{3}{|c|}{'+'%s'%dets_map[det]+r'}     \\ \hline'
+        for reg in regs:
+            s=db[det][reg][ptype]
+            #Endcap-A  &   $100.1 \pm 0.4\%$  &  $    100.0 \pm 0.4\%$     \\ \hline
+            print '%s'%regs_map[reg]+r'  &  $' + '%.1f'%(s['s'])+r'*10^{-6}/GeV$  &   $'+err[z]+r'*10^{-6}/GeV$     \\ \hline'
+            z+=1
+        print r'\hline'
+        print r"\end{tabular}"
+        print r"\caption{%s: release-%d curvature splitting (total error)}"%(algos[opts.algo],opts.rel)
+        print r"\label{tab:" + 'curvsplit%srel%d'%(algos[opts.algo],opts.rel) + r'}'
         print r"\end{center}"
         print r"\end{table}"
         print r"\clearpage"
@@ -241,7 +280,33 @@ Region    &   $k$     & $\delta k$   \\
             print '%s'%regs_map[reg]+r'  &  ' + '%.2f'%(s['k'])+r'\%  &   '+'%.2f'%(s['ek'])+r'\%     \\ \hline'
         print r'\hline'
         print r"\end{tabular}"
-        print r"\caption{%s: release-%d overall scale}"%(algos[opts.algo],opts.rel)
+        print r"\caption{%s: release-%d overall scale (stat error)}"%(algos[opts.algo],opts.rel)
+        print r"\label{tab:" + 'overallscale%srel%d'%(algos[opts.algo],opts.rel) + r'}'
+        print r"\end{center}"
+        print r"\end{table}"
+        print r"\clearpage"
+
+def latex_k_syst(db,regs):
+    assert shift
+    err = get_syst_scale(regs)
+    z=0
+    for det in dets:
+        print r"""
+\begin{table}[htb]
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+Region    &   $k$     & $\delta k$   \\
+\hline\hline"""
+        print r'\multicolumn{3}{|c|}{'+'%s'%dets_map[det]+r'}     \\ \hline'
+        for reg in regs:
+            s=db[det][reg]
+            #Endcap-A  &   $100.1 \pm 0.4\%$  &  $    100.0 \pm 0.4\%$     \\ \hline
+            print '%s'%regs_map[reg]+r'  &  ' + '%.2f'%(s['k'])+r'\%  &   '+err[z]+r'\%     \\ \hline'
+            z+=1
+        print r'\hline'
+        print r"\end{tabular}"
+        print r"\caption{%s: release-%d overall scale (total error)}"%(algos[opts.algo],opts.rel)
         print r"\label{tab:" + 'overallscale%srel%d'%(algos[opts.algo],opts.rel) + r'}'
         print r"\end{center}"
         print r"\end{table}"
@@ -265,12 +330,38 @@ Region    &  $k_{+}$ & $k_{-}$ \\
             print '%s'%regs_map[reg]+r'  &   $' + '%s%.2f'%(pho1,s['kp'])+r' \pm '+'%.2f'%s['ekp']+r'\%$  &  $    '+'%s%.2f'%(pho2,s['km'])+r' \pm '+'%.2f'%s['ekm']+r'\%$     \\ \hline'
         print r'\hline'
         print r"\end{tabular}"
-        print r"\caption{%s: release-%d absolute scales}"%(algos[opts.algo],opts.rel)
+        print r"\caption{%s: release-%d absolute scales (stat error)}"%(algos[opts.algo],opts.rel)
         print r"\label{tab:" + 'absolute%srel%d'%(algos[opts.algo],opts.rel) + r'}'
         print r"\end{center}"
         print r"\end{table}"
         print r"\clearpage"
-    print latex_tail
+
+def latex_kpkm_syst(db,regs,ptype='ksf'):
+    corr1,acorr1,corr2,acorr2 = get_syst_kpkm(regs)
+    z=0
+    for det in dets:
+        print r"""
+\begin{table}[htb]
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+Region    &  $k_{+}$ & $k_{-}$ \\
+\hline\hline"""
+        print r'\multicolumn{3}{|c|}{'+'%s'%dets_map[det]+r'}     \\ \hline'
+        for reg in regs:
+            s=db[det][reg][ptype]
+            #Endcap-A  &   $100.1 \pm 0.4\%$  &  $    100.0 \pm 0.4\%$     \\ \hline
+            pho1='    ' if s['kp']>100.0 else '\pho '
+            pho2='    ' if s['km']>100.0 else '\pho '
+            print '%s'%regs_map[reg]+r'  &   $' + '%s%.2f'%(pho1,s['kp'])+r' \pm '+corr1[z]+r' \pm '+acorr1[z]+r'\%$  &  $    '+'%s%.2f'%(pho2,s['km'])+r' \pm '+corr2[z]+r' \pm '+acorr2[z]+r'\%$     \\ \hline'
+            z+=1
+        print r'\hline'
+        print r"\end{tabular}"
+        print r"\caption{%s: release-%d absolute scales (total error)}"%(algos[opts.algo],opts.rel)
+        print r"\label{tab:" + 'absolute%srel%d'%(algos[opts.algo],opts.rel) + r'}'
+        print r"\end{center}"
+        print r"\end{table}"
+        print r"\clearpage"
 
 def get_statdev_kpkm(db,regs,ptype='ksf'):
     stat1 = [],[]
@@ -283,6 +374,20 @@ def get_statdev_kpkm(db,regs,ptype='ksf'):
             stat2[0].append(s['ekp2'])
             stat2[1].append(s['ekm2'])
     return stat1,stat2
+def get_sysdev_kpkm(db1,db2,regs,ptype1='ksf',ptype2='ksf',caption=""):
+    mysys = [],[]
+    for det in dets:
+        for reg in regs:
+            s1=db1[det][reg][ptype1]
+            s2=db2[det][reg][ptype2]
+            s=[]
+            dlP=s2['kp']-s1['kp']
+            dlN=s2['km']-s1['km']
+            mysys[0].append(dlP)
+            mysys[1].append(dlN)
+            s.append('%s%.2f'%('' if dlP<0 else '+',dlP))
+            s.append('%s%.2f'%('' if dlN<0 else '+',dlN))
+    return mysys
 def latex_sysdev_kpkm(db1,db2,regs,ptype1='ksf',ptype2='ksf',caption=""):
     print r"""
 \begin{table}[htb]
@@ -312,6 +417,7 @@ Region  & $\Delta k_{+}$ & $\Delta k_{-}$ \\
     print r'\label{tab:systvarkpkm}'
     print r'\end{center}'
     print r'\end{table}'
+    print r"\clearpage"
     return mysys
 
 def get_statdev_k(db_scale,db_shift,regs,ptype='ksf'):
@@ -321,6 +427,22 @@ def get_statdev_k(db_scale,db_shift,regs,ptype='ksf'):
             stat1[0].append(db_scale[det][reg]['ek']) #scale
             stat1[1].append(db_shift[det][reg][ptype]['es']) #shift
     return stat1
+def get_sysdev_k(db1_scale,db1_shift,db2_scale,db2_shift,regs,ptype1='ksf',ptype2='ksf',caption=""):
+    mysys = [],[]
+    for det in dets:
+        for reg in regs:
+            s1_scale=db1_scale[det][reg]
+            s2_scale=db2_scale[det][reg]
+            s1_shift=db1_shift[det][reg][ptype1]
+            s2_shift=db2_shift[det][reg][ptype2]
+            s=[]
+            dlP=s2_scale['k']-s1_scale['k']
+            dlN=s2_shift['s']-s1_shift['s']
+            mysys[0].append(dlP)
+            mysys[1].append(dlN)
+            s.append('%s%.2f'%('' if dlP<0 else '+',dlP))
+            s.append('%s%.1f'%('' if dlN<0 else '+',dlN))
+    return mysys
 def latex_sysdev_k(db1_scale,db1_shift,db2_scale,db2_shift,regs,ptype1='ksf',ptype2='ksf',caption=""):
     print r"""
 \begin{table}[htb]
@@ -353,86 +475,22 @@ Region  & $\Delta k$ & $\Delta C$ \\
 \label{tab:systvarkC}
 \end{center}
 \end{table}"""
+        print r"\clearpage"
     return mysys
 
-# load everything into dictionaries
-alg='staco' if algo==0 else 'muid'
-default,klu,R70,egge = [None]*4
-default_shifts,klu_shifts,R70_shifts,egge_shifts = [None]*4
-default_scales,klu_scales,R70_scales,egge_scales = [None]*4
-regs = ['T%dT'%i for i in regsR]
-try:
-    if shift:
-        default_scales = load_scale(regs=regs,pattern='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
-        default_shifts = load_shift(regs=regs,pattern='/keysfit/r%d_default_%s'%(rel,alg)+'/%s/%s/SHIFT')
-    else:
-        default = load_discales(regs=regs,pattern_R0='/keysfit/r%d_default_%s'%(rel,alg)+'/%s/%s/R0',
-                                pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
-except:
-    print 'Failed to load default values'
-    raise
-try:
-    if shift:
-        klu_shifts = load_shift(regs=regs,pattern='/keysfit/r%d_klu_%s'%(rel,alg)+'/%s/%s/SHIFT')
-    else:
-        klu = load_discales(regs=regs,pattern_R0='/keysfit/r%d_klu_%s'%(rel,alg)+'/%s/%s/R0',
-                            pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
-except:
-    print 'Failed to load klu'
-try:
-    if shift:
-        R70_shifts = load_shift(regs=regs,pattern='/keysfit/r%d_m70110_%s'%(rel,alg)+'/%s/%s/SHIFT')
-    else:
-        R70 = load_discales(regs=regs,pattern_R0='/keysfit/r%d_m70110_%s'%(rel,alg)+'/%s/%s/R0',
-                            pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
-except:
-    print 'Failed to load R70'
-try:
-    if shift:
-        egge_scales = load_scale(regs=regs,pattern='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/egge3')
-    else:
-        egge = load_discales(regs=regs,pattern_R0='/keysfit/r%d_default_%s'%(rel,alg)+'/%s/%s/R0',
-                             pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/egge3')
-except:
-    print 'Failed to load egge'
-    
-# dump scales as C++ arrays
-if mode==0:
-    if shift:
-        print_cpp(default_scales,default_shifts,regs)
-    else:
-        print_discale_cpp(default,regs)
-# latex R0 table
-if mode==5:
-    ttype = 'C' if shift else 'R0' 
-    fname = 'latex/table_%s_r%d_%s.tex'%(ttype,opts.rel,opts.algo)
-    fout = open(fname,'w')
-    sys.stdout = fout
-    print latex_head
-    if shift:
-        latex_R(default_shifts,regs)
-    else:
-        latex_R(default,regs)
-    print latex_tail
-    fout.close()
-    sys.stdout = stdout
-# latex kp/km table
-if mode==8:
-    ttype = 'k' if shift else 'kpkm' 
-    fname = 'latex/table_%s_r%d_%s.tex'%(ttype,opts.rel,opts.algo)
-    fout = open(fname,'w')
-    sys.stdout = fout
-    print latex_head
-    if shift:
-        latex_R(default_shifts,regs)
-        latex_k(default_scales,regs)
-    else:
-        latex_kpkm(default,regs)
-    print latex_tail
-    fout.close()
-    sys.stdout = stdout
+def get_syst_kpkm(regs):
+    sys1 = get_sysdev_kpkm(default,klu,regs,caption=syscap[0])
+    sys2 = get_sysdev_kpkm(default,R70,regs,caption=syscap[1])
+    sys3 = get_sysdev_kpkm(default,default,regs,ptype2='chif',caption=syscap[2])
+    sys4 = get_sysdev_kpkm(default,egge,regs,caption=syscap[3])
+    stat1,stat2 = get_statdev_kpkm(default,regs)
+    corr1 =  ['%.2f'%s for s in sumsq([first_pair(stat1),first_pair(sys4)])]
+    acorr1 = ['%.2f'%s for s in sumsq([first_pair(stat2),first_pair(sys1),first_pair(sys2),first_pair(sys3)])]
+    corr2 =  ['%.2f'%s for s in sumsq([second_pair(stat1),second_pair(sys4)])]
+    acorr2 = ['%.2f'%s for s in sumsq([second_pair(stat2),second_pair(sys1),second_pair(sys2),second_pair(sys3)])]
+    return corr1,acorr1,corr2,acorr2
 
-def print_syst(regs):
+def print_syst_kpkm(regs):
     sys1 = latex_sysdev_kpkm(default,klu,regs,caption=syscap[0])
     sys2 = latex_sysdev_kpkm(default,R70,regs,caption=syscap[1])
     sys3 = latex_sysdev_kpkm(default,default,regs,ptype2='chif',caption=syscap[2])
@@ -474,6 +532,17 @@ def print_syst(regs):
     print r'\end{center}'
     print r'\end{table}'
 
+def get_syst_curv(regs):
+    sys1 = get_sysdev_k(default_scales,default_shifts,default_scales,klu_shifts,regs,caption=syscap[0])
+    sys2 = get_sysdev_k(default_scales,default_shifts,default_scales,R70_shifts,regs,caption=syscap[1])
+    sys3 = get_sysdev_k(default_scales,default_shifts,default_scales,default_shifts,regs,ptype2='chif',caption=syscap[2])
+    stat1 = get_statdev_k(default_scales,default_shifts,regs)
+    return ['%.1f'%s for s in sumsq([stat1[1],sys1[1],sys2[1],sys3[1]])]
+def get_syst_scale(regs):
+    sys4 = get_sysdev_k(default_scales,default_shifts,egge_scales,default_shifts,regs,caption=syscap[3])
+    stat1 = get_statdev_k(default_scales,default_shifts,regs)
+    return ['%.2f'%s for s in sumsq([stat1[0],sys4[0]])]
+
 # TODO: add proper latex to all of these
 def print_syst_curv(regs):
     sys1 = latex_sysdev_k(default_scales,default_shifts,default_scales,klu_shifts,regs,caption=syscap[0])
@@ -491,7 +560,7 @@ def print_syst_curv(regs):
     print r'\multicolumn{'+'10'+r'}{c}{Summary}\\'
     print r'\hline'
     print r'Total uncertainty & ' + ' & '.join(['%.1f'%s for s in sumsq([stat1[1],sys1[1],sys2[1],sys3[1]])]) + r'\\'
-
+# TODO: add proper latex to all of these
 def print_syst_scale(regs):
     sys4 = latex_sysdev_k(default_scales,default_shifts,egge_scales,default_shifts,regs,caption=syscap[3])
     stat1 = get_statdev_k(default_scales,default_shifts,regs)
@@ -505,6 +574,101 @@ def print_syst_scale(regs):
     print r'\hline'
     print r'     Total uncertainty & ' + ' & '.join(['%.2f'%s for s in sumsq([stat1[0],sys4[0]])]) + r'\\'
 
+# load everything into dictionaries
+alg='staco' if algo==0 else 'muid'
+default,klu,R70,egge = [None]*4
+default_shifts,klu_shifts,R70_shifts,egge_shifts = [None]*4
+default_scales,klu_scales,R70_scales,egge_scales = [None]*4
+regs = ['T%dT'%i for i in regsR]
+try:
+    if shift:
+        default_scales = load_scale(regs=regs,pattern='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
+        default_shifts = load_shift(regs=regs,pattern='/keysfit/r%d_default_%s'%(rel,alg)+'/%s/%s/SHIFT')
+    else:
+        default = load_discales(regs=regs,pattern_R0='/keysfit/r%d_default_%s'%(rel,alg)+'/%s/%s/R0',
+                                pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
+except:
+    print 'Failed to load default values'
+    raise
+try:
+    if shift:
+        klu_shifts = load_shift(regs=regs,pattern='/keysfit/r%d_klu_%s'%(rel,alg)+'/%s/%s/SHIFT')
+    else:
+        klu = load_discales(regs=regs,pattern_R0='/keysfit/r%d_klu_%s'%(rel,alg)+'/%s/%s/R0',
+                            pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
+    if _DISABLE_KLU:
+        klu_shifts = default_shifts
+        klu = default
+except:
+    print 'Failed to load klu'
+try:
+    if shift:
+        R70_shifts = load_shift(regs=regs,pattern='/keysfit/r%d_m70110_%s'%(rel,alg)+'/%s/%s/SHIFT')
+    else:
+        R70 = load_discales(regs=regs,pattern_R0='/keysfit/r%d_m70110_%s'%(rel,alg)+'/%s/%s/R0',
+                            pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
+except:
+    print 'Failed to load R70'
+try:
+    if shift:
+        egge_scales = load_scale(regs=regs,pattern='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/egge3')
+    else:
+        egge = load_discales(regs=regs,pattern_R0='/keysfit/r%d_default_%s'%(rel,alg)+'/%s/%s/R0',
+                             pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/egge3')
+except:
+    print 'Failed to load egge'
+    
+# dump scales as C++ arrays
+if mode==0:
+    if shift:
+        print_cpp(default_scales,default_shifts,regs)
+    else:
+        print_discale_cpp(default,regs)
+# latex R0 table
+if mode==5:
+    ttype = 'C' if shift else 'R0' 
+    fname = 'latex/table_%s_r%d_%s.tex'%(ttype,opts.rel,algos[algo])
+    fout = open(fname,'w')
+    sys.stdout = fout
+    print latex_head
+    if shift:
+        latex_R(default_shifts,regs)
+    else:
+        latex_R(default,regs)
+    print latex_tail
+    fout.close()
+    sys.stdout = stdout
+# latex kp/km table
+if mode==8:
+    ttype = 'kC' if shift else 'kpkm' 
+    fname = 'latex/table_%s_r%d_%s_STAT.tex'%(ttype,opts.rel,algos[algo])
+    fout = open(fname,'w')
+    sys.stdout = fout
+    print latex_head
+    if shift:
+        latex_R(default_shifts,regs)
+        latex_k(default_scales,regs)
+    else:
+        latex_kpkm(default,regs)
+    print latex_tail
+    fout.close()
+    sys.stdout = stdout
+if mode==80:
+    ttype = 'kC' if shift else 'kpkm' 
+    fname = 'latex/table_%s_r%d_%s_TOT.tex'%(ttype,opts.rel,algos[algo])
+    fout = open(fname,'w')
+    sys.stdout = fout
+    print latex_head
+    if shift:
+        latex_C_syst(default_shifts,regs)
+        latex_k_syst(default_scales,regs)
+    else:
+        latex_kpkm_syst(default,regs)
+    print latex_tail
+    fout.close()
+    sys.stdout = stdout
+
+# todo: add shift version
 if mode==10:
     if opts.dets==0:
         pass
@@ -516,11 +680,11 @@ if mode==10:
         dets = ['id',]
     else:
         assert False,'Unknown --dets'
-    fname = 'latex/table_syst_r%d_%s.tex'%(opts.rel,opts.algo)
+    fname = 'latex/table_syst%d_r%d_%s.tex'%(opts.dets,opts.rel,algos[algo])
     fout = open(fname,'w')
     sys.stdout = fout
     print latex_head
-    print_syst(regs)
+    print_syst_kpkm(regs)
     print latex_tail
     fout.close()
     sys.stdout = stdout
