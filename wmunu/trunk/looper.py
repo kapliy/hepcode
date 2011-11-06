@@ -45,6 +45,7 @@ parser.add_option("--truthcuts",
 _DATA = opts.data
 _MC = not _DATA
 _TRUTHCUTS = opts.truthcuts
+trigger = opts.trigger
 from helpers import *
 try:
     ROOT.PyConfig.IgnoreCommandLineOptions = True
@@ -145,11 +146,9 @@ for evt in xrange(niters):
     # mc truth
     if _MC:
         nmc,mc_status,mc_pdgid,mc_e,mc_pt,mc_eta,mc_phi,mc_parent = t.nmc,t.mc_status,t.mc_pdgid,t.mc_e,t.mc_pt,t.mc_eta,t.mc_phi,t.mc_parent
-        print 'NMC',nmc
         for m in xrange(nmc):
             if mc_status[m]!=3:
                 continue
-            print m,mc_pdgid[m],mc_pt[m],mc_eta[m],mc_phi[m],mc_e[m]
             # w's don't have a parent with mc_status==3
             if mc_pdgid[m] in (WPLUS,WMINUS):
                 v = ROOT.TLorentzVector()
@@ -203,9 +202,18 @@ for evt in xrange(niters):
             ef.bcid+=1
             continue
 
+    if False:
+        for v in t.trig_ef:
+            if re.search('mu',v) or re.search('MU',v):
+                print v
+        for v in t.trig_l1:
+            if re.search('mu',v) or re.search('MU',v):
+                print v
+        sys.exit(0)
+
     # trigger
     if True:
-        if opts.trigger not in t.trig_l1 and opts.trigger not in t.trig_ef:
+        if trigger not in t.trig_l1 and trigger not in t.trig_ef:
             ef.trigger+=1
             continue
 
