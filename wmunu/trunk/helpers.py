@@ -179,19 +179,21 @@ class PlotOrder:
             s.mcg.append([samples])
         s.mcgc.append(color)
 
-def SetTreeBranches_V11(t,doTruth=False):
+def SetTreeBranches_V27(t,doTruth=True,doReco=False):
     """ Sets branches for v11 peter ntuple """
     t.SetBranchStatus("*", 0)
     br = []
-    br.append(['run','event','lb','bcid'])
+    br.append(['run','event'])
+    if doReco:
+        br.append(['lb','bcid'])
+        br.append(['njet','jet_n90','jet_quality','jet_time','jet_emf','jet_hecf','jet_pt_em'])
+        br.append(['trig_l1','trig_ef'])
+        br.append(['nvx','vx_type','vx_ntracks','vx_sumpt','vx_z'])
+        br.append(['met_reffinal','met_reffinal_phi'])
+        br.append(['nmu','mu_author','mu_class','mu_q','mu_pt','mu_eta','mu_phi','mu_ptcone40','mu_ptms','mu_ptexms','mu_qms','mu_ptid','mu_qid','mu_z0'])
     if doTruth:
         br.append(['nmc','mc_status','mc_pdgid','mc_e','mc_pt','mc_eta','mc_phi','mc_parent'])
-    br.append(['njet','jet_n90','jet_quality','jet_time','jet_emf','jet_hecf','jet_pt_em'])
-    br.append(['trig_l1','trig_ef'])
-    br.append(['nvx','vx_type','vx_ntracks','vx_z'])
-    #br.append(['nvx','vx_type','vx_ntracks','vx_sumpt','vx_z'])
-    br.append(['met_ichep','met_ichep_phi'])
-    br.append(['nmu','mu_author','mu_class','mu_q','mu_pt','mu_eta','mu_phi','mu_ptcone40','mu_ptms','mu_ptexms','mu_qms','mu_ptid','mu_qid','mu_z0'])
+        br.append(['met_truth','met_truth_phi'])
     [t.SetBranchStatus(v,1) for v in xflatten(br)]
 
 def RecoW(emu,pmux,pmuy,pmuz,pnux,pnuy,mW=wMASS):
@@ -362,6 +364,8 @@ def addDcachePrefix(p):
     """If path starts with /pnfs, prepend dcap:// to it"""
     if re.match('/pnfs',p):
         return 'dcap://'+p
+    elif re.match('/atlas',p):
+        return 'root://uct3-xrd.mwt2.org//atlas'+p
     else:
         return p
     

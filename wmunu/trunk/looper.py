@@ -5,7 +5,7 @@ try:
 except ImportError:
     pass
 
-_BCIDs = (1, 201, 301, 101, 1786, 1886, 1986, 2086)  #up to run 156682
+_BCIDs = []
 
 _INPUTS = None
 from optparse import OptionParser
@@ -115,7 +115,7 @@ inputs = opts.input.split(',')
 for input in inputs:
     for file in glob.glob(input):
         t.Add(addDcachePrefix(file))
-SetTreeBranches_V11(t,doTruth=_MC)
+SetTreeBranches_V27(t,doTruth=True,doReco=False)
 
 # prepare cutflow
 cuts=['truthmet','truthmu','truthwmt','grl','bcid','trigger','vertex','jetclean','muonpresel','muonqual','muonpt','muoniso','met','zcut','wmt','ok']
@@ -190,6 +190,8 @@ for evt in xrange(niters):
         if _TWs[0].Mt()<40*GeV:
             ef.truthwmt+=1
             continue
+
+    continue
 
     # GRL cuts
     if _DATA and not PassRunLB(t.run,t.lb):
@@ -410,7 +412,7 @@ for evt in xrange(niters):
 # merge per-charge histograms
 MergeHistoQ()
 
-if True:
+if False:
     # plot distributions overlayed
     if hgood("TMU_eta_p"):
         PlotOverlayHistos(h["TMU_eta_p"],h["TMU_eta_m"],'True muon eta: red=mu+, blue=mu-','TMU_eta__overlay')
