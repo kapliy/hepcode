@@ -1,0 +1,1 @@
+./looper.py -i '/pnfs/uct3/data/users/antonk/ANALYSIS/ICHEP_DATA/user.ponyisi.data10_7TeV.period[ABC]*/*root*' --trigger L1_MU0 --data -x 'xml/*.xml'
