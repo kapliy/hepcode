@@ -1,13 +1,16 @@
 #!/usr/bin/env python
+import sys
+print sys.argv
+
 try:
     import psyco
     psyco.full()
 except ImportError:
     pass
 
-_BCIDs = []
+_INPUTS = '/atlas/uct3/data/users/antonk/NTUPLE/v1_27e_pdf/user.kapliy.mc11_7TeV.106044.PythiaWmunu_no_filter.merge.AOD.e815_s1272_s1274_r2730_r2700.ntuple.v1_27e.111105023134/user.kapliy.005352.flatntuple._00003.root'
+_INPUTS = ','.join(['/atlas/uct3/data/users/antonk/NTUPLE/v1_27e_pdf/user.kapliy.mc11_7TeV.106044.PythiaWmunu_no_filter.merge.AOD.e815_s1272_s1274_r2730_r2700.ntuple.v1_27e.111105023134/user.kapliy.005352.flatntuple._000%02d.root'%j for j in range(1,21)])
 
-_INPUTS = None
 from optparse import OptionParser
 parser = OptionParser()
 parser.add_option("-n", "--nevents",dest="nevents",
@@ -40,11 +43,15 @@ parser.add_option("--trigger",dest="trigger",
 parser.add_option("--truthcuts",
                   action="store_true",dest="truthcuts",
                   help="Enable truth cut studies when running over MC")
+parser.add_option("-p", "--pdfset",dest="pdfset",
+                  type="int", default=0,
+                  help="pdfset to reweight to")
 
 (opts, args) = parser.parse_args()
 _DATA = opts.data
 _MC = not _DATA
-_TRUTHCUTS = opts.truthcuts
+_TRUTHCUTS = True
+_PDFWEIGHT = True
 trigger = opts.trigger
 from helpers import *
 try:
@@ -67,58 +74,87 @@ if not os.path.isdir(plotdir):
 out = AnaFile(os.path.join(plotdir,'./out.root'),mode="RECREATE")
 out.MakeCandTree()
 
-# truth
-HistoQ("TRUTH_mu_pt",ptbins)
-HistoQ("TRUTH_mu_eta",etabins)
-HistoQ("TRUTH_mu_phi",phibins)
-HistoQ("TRUTH_w_pt",ptbins)
-HistoQ("TRUTH_w_eta",etabins)
-HistoQ("TRUTH_w_phi",phibins)
-HistoQ("TRUTH_w_mt",phibins)
-# after event-quality cuts but before any muon / met cuts
-Histo("EVENT_njets",nobjbins)
-Histo("EVENT_nmus",nobjbins)
-Histo("EVENT_met",metbins)
-Histo('EVENT_mu_ptms_ptid',dptbins)
-# preselection
-HistoQ("PRESEL_mu_pt",ptbins)
-HistoQ("PRESEL_mu_eta",etabins)
-HistoQ("PRESEL_mu_etavar",etavarbins)
-HistoQ("PRESEL_mu_phi",phibins)
-HistoQ("PRESEL_mu_ptiso",ptisobins)
-HistoQ("PRESEL_met",metbins)
-HistoQ("PRESEL_mu_pt_vs_met",ptbins,metbins)
-HistoQ("PRESEL_mu_iso_vs_met",ptisobins,metbins)
-HistoQ("PRESEL_mu_eta_vs_phi",etabins,phibins)
-Histo("PRESEL_njets",nobjbins)
-# pre-analysis (before mT cut) and analysis (after all cuts)
-for lvl in ('PREANA','ANA'):
-    HistoQ("%s_mu_pt"%lvl,ptbins)
-    HistoQ("%s_mu_eta"%lvl,etabins)
-    HistoQ("%s_mu_phi"%lvl,phibins)
-    HistoQ("%s_mu_ptiso"%lvl,ptisobins)
-    HistoQ("%s_met"%lvl,metbins)
-    HistoQ("%s_mu_pt_vs_met"%lvl,ptbins,metbins)
-    HistoQ("%s_mu_iso_vs_met"%lvl,ptisobins,metbins)
-    HistoQ("%s_w_mt_vs_met"%lvl,mtbins,metbins)
-    HistoQ("%s_w_mt"%lvl,mtbins)
-    HistoQ("%s_w_pt"%lvl,ptbins)
-    HistoQ("%s_mu_etavar"%lvl,etavarbins)
-    Histo("%s_mu_q"%lvl,qbins)
-    Histo("%s_njets"%lvl,nobjbins)
+HistoQ("TD0_mu_eta",etabins)
+HistoQ("TD0_mu_abseta",absetabins)
+HistoQ("TD0_w_mt",mtbins)
+
+if False:
+    # truth
+    HistoQ("TRUTH_mu_pt",ptbins)
+    HistoQ("TRUTH_mu_eta",etabins)
+    HistoQ("TRUTH_mu_phi",phibins)
+    HistoQ("TRUTH_w_pt",ptbins)
+    HistoQ("TRUTH_w_eta",etabins)
+    HistoQ("TRUTH_w_phi",phibins)
+    HistoQ("TRUTH_w_mt",phibins)
+    # after event-quality cuts but before any muon / met cuts
+    Histo("EVENT_njets",nobjbins)
+    Histo("EVENT_nmus",nobjbins)
+    Histo("EVENT_met",metbins)
+    Histo('EVENT_mu_ptms_ptid',dptbins)
+    # preselection
+    HistoQ("PRESEL_mu_pt",ptbins)
+    HistoQ("PRESEL_mu_eta",etabins)
+    HistoQ("PRESEL_mu_etavar",etavarbins)
+    HistoQ("PRESEL_mu_phi",phibins)
+    HistoQ("PRESEL_mu_ptiso",ptisobins)
+    HistoQ("PRESEL_met",metbins)
+    HistoQ("PRESEL_mu_pt_vs_met",ptbins,metbins)
+    HistoQ("PRESEL_mu_iso_vs_met",ptisobins,metbins)
+    HistoQ("PRESEL_mu_eta_vs_phi",etabins,phibins)
+    Histo("PRESEL_njets",nobjbins)
+    # pre-analysis (before mT cut) and analysis (after all cuts)
+    for lvl in ('PREANA','ANA'):
+        HistoQ("%s_mu_pt"%lvl,ptbins)
+        HistoQ("%s_mu_eta"%lvl,etabins)
+        HistoQ("%s_mu_phi"%lvl,phibins)
+        HistoQ("%s_mu_ptiso"%lvl,ptisobins)
+        HistoQ("%s_met"%lvl,metbins)
+        HistoQ("%s_mu_pt_vs_met"%lvl,ptbins,metbins)
+        HistoQ("%s_mu_iso_vs_met"%lvl,ptisobins,metbins)
+        HistoQ("%s_w_mt_vs_met"%lvl,mtbins,metbins)
+        HistoQ("%s_w_mt"%lvl,mtbins)
+        HistoQ("%s_w_pt"%lvl,ptbins)
+        HistoQ("%s_mu_etavar"%lvl,etavarbins)
+        Histo("%s_mu_q"%lvl,qbins)
+        Histo("%s_njets"%lvl,nobjbins)
 
 # prepare input
 t = ROOT.TChain('tree')
 print 'Adding files to TChain:'
-print opts.input
+print '['+opts.input+']'
 inputs = opts.input.split(',')
+totinputs = 0
 for input in inputs:
     for file in glob.glob(input):
         t.Add(addDcachePrefix(file))
+        totinputs+=1
+print 'Added a total of %d files'%totinputs
 SetTreeBranches_V27(t,doTruth=True,doReco=False)
 
+# prepare PDF reweighting stuff
+pdfsets = []
+if _PDFWEIGHT:
+    import lhapdf
+    LHPDF,LHGRID=0,1
+    pdfsets = ['HERAPDF10_EIG','MSTW2008nlo68cl','NNPDF21_100','cteq66','MRST2007lomod']
+    pdfname_orig=pdfsets[3] #kristin (MC@NLO?)
+    pdfname_orig=pdfsets[4] #pythia
+    pdfname_reweight = pdfsets[1]
+    lhapdf.initPDFSetByName(1,pdfname_orig,LHGRID);
+    lhapdf.initPDFSetByName(2,pdfname_reweight,LHGRID);
+    pdfnum1 = lhapdf.numberPDF(1)+1
+    pdfnum2 = lhapdf.numberPDF(2)+1
+    print 'Loaded PDF sets of length:',pdfnum1,pdfnum2
+    pdfsets = [opts.pdfset,]
+    for j in pdfsets:
+        HistoQ("TW%d_mu_eta"%j,etabins)
+        HistoQ("TW%d_mu_abseta"%j,absetabins)
+        HistoQ("TW%d_w_mt"%j,mtbins)
+
 # prepare cutflow
-cuts=['truthmet','truthmu','truthwmt','grl','bcid','trigger','vertex','jetclean','muonpresel','muonqual','muonpt','muoniso','met','zcut','wmt','ok']
+#cuts=['truthmet','truthmu','truthwmt','grl','bcid','trigger','vertex','jetclean','muonpresel','muonqual','muonpt','muoniso','met','zcut','wmt','ok']
+cuts = ['mcevt','met','muon','wmt','ok']
 ef = EventFlow(cuts)
 
 nentries = t.GetEntries()
@@ -127,71 +163,126 @@ import SimpleProgressBar
 bar = SimpleProgressBar.SimpleProgressBar(20,niters)
 print 'Starting loop over',niters,'/',nentries,'entries'
 t1 = time.time()
+nstat=1000
+sys.stderr.flush()
 for evt in xrange(niters):
-    if evt%5000==0:
+    if evt%nstat==0:
         if evt!=0:
-            print "%s: event %6d, rate %.1f Hz"%(bar.show(evt),evt+opts.nskip,5000.0/(time.time()-t1))
+            print "%s: event %6d, rate %.1f Hz"%(bar.show(evt),evt+opts.nskip,nstat*1.0/(time.time()-t1))
+            sys.stdout.flush()
         t1 = time.time()
     t.GetEntry(evt+opts.nskip)
 
     # per-event arrays of objects
     _ivertex = None; _zvertex = None
-    _met = None
+    _Tmet = None
     _Tmus=[]
     _Tnus=[]
     _TWs=[]
-    _Rmus=[]
-    _RWs=[]
 
-    # mc truth
     if _MC:
+        # variables for PDF re-weighting
+        nmcevt,amcevt_pdf_scale,amcevt_pdf_x1,amcevt_pdf_x2,amcevt_pdf_id1,amcevt_pdf_id2 = t.nmcevt,t.mcevt_pdf_scale,t.mcevt_pdf_x1,t.mcevt_pdf_x2,t.mcevt_pdf_id1,t.mcevt_pdf_id2
+        if nmcevt<=0:
+            ef.mcevt+=1
+            continue
+        mcevt_pdf_scale,mcevt_pdf_x1,mcevt_pdf_x2,mcevt_pdf_id1,mcevt_pdf_id2 = amcevt_pdf_scale[0],amcevt_pdf_x1[0],amcevt_pdf_x2[0],amcevt_pdf_id1[0],amcevt_pdf_id2[0]
+
+        # truth-MET
         nmc,mc_status,mc_pdgid,mc_e,mc_pt,mc_eta,mc_phi,mc_parent = t.nmc,t.mc_status,t.mc_pdgid,t.mc_e,t.mc_pt,t.mc_eta,t.mc_phi,t.mc_parent
+        met_truth,met_truth_phi = t.met_truth,t.met_truth_phi
+        if met_truth<25*GeV:
+            ef.met+=1
+            continue
+        _Tmet=ROOT.TVector2()
+        _Tmet.SetMagPhi(met_truth,met_truth_phi)
+        _Tmet.Pt = _Tmet.Mod  # define Pt() since TVector2 doesn't have it
+
+        # truth particles
         for m in xrange(nmc):
-            if mc_status[m]!=3:
+            if mc_status[m]!=1:  #3
                 continue
             # w's don't have a parent with mc_status==3
             if mc_pdgid[m] in (WPLUS,WMINUS):
                 v = ROOT.TLorentzVector()
                 v.SetPtEtaPhiE(mc_pt[m],mc_eta[m],mc_phi[m],mc_e[m])
                 v.charge = charge = 'p' if mc_pdgid[m]==WPLUS else 'm'
-                FillQ('TRUTH_w_pt',charge,mc_pt[m])
-                FillQ('TRUTH_w_phi',charge,mc_phi[m])
-                FillQ('TRUTH_w_eta',charge,mc_eta[m])
-                FillQ('TRUTH_w_mt',charge,v.Mt())
                 _TWs.append(v)
-            if mc_parent[m]==-1:
-                continue
             mp = mc_parent[m]
-            if mc_pdgid[m] in (MUON,-MUON) and mc_pdgid[mp] in (WPLUS,WMINUS):
+            if False and mp:
+                continue
+            if mc_pdgid[m] in (MUON,-MUON): # and mc_pdgid[mp] in (WPLUS,WMINUS):
                 if fabs(mc_pt[m])>=20.0*GeV and fabs(mc_eta[m])<2.4:
                     v = ROOT.TLorentzVector()
                     v.SetPtEtaPhiE(mc_pt[m],mc_eta[m],mc_phi[m],mc_e[m])
                     v.charge = charge = 'm' if mc_pdgid[m]==MUON else 'p'
                     _Tmus.append(v)
-                    FillQ('TRUTH_mu_pt',charge,mc_pt[m])
-                    FillQ('TRUTH_mu_phi',charge,mc_phi[m])
-                    FillQ('TRUTH_mu_eta',charge,mc_eta[m])
-            if mc_status[m]==3 and mc_pdgid[m] in (NEUTRINOS) and mc_pdgid[mp] in (WPLUS,WMINUS):
+            if False and mp>0 and mc_status[m]==3 and mc_pdgid[m] in (NEUTRINOS) and mc_pdgid[mp] in (WPLUS,WMINUS):
                 v = ROOT.TLorentzVector()
                 v.SetPtEtaPhiE(mc_pt[m],mc_eta[m],mc_phi[m],mc_e[m])
                 v.charge = charge = 'p' if mc_pdgid[m] in NEUTRINOS[3:] else 'm'
                 _Tnus.append(v)
+
+        # truth cuts
+        if len(_Tmus)==0:
+            ef.muon+=1
+            continue
         _Tmus.sort(key=lambda p: p.Pt(),reverse=True)
         _TWs.sort(key=lambda p: p.Pt(),reverse=True)
-        _Tnus.sort(key=lambda p: p.Pt(),reverse=True)
-    # truth cuts
-    if _TRUTHCUTS and _MC:
-        if len(_Tnus)==0 or _Tnus[0].Pt()<25*GeV:
-            ef.truthmet+=1
-            continue
-        if len(_Tmus)==0 or len(_TWs)==0:
-            ef.truthmu+=1
-            continue
-        if _TWs[0].Mt()<40*GeV:
-            ef.truthwmt+=1
-            continue
 
+        # only the highest-pt muon is used to construct W candidates:
+        _Tmus = _Tmus[:1]
+        cands=[]  # [mu_index,mW]
+        for i,mu in enumerate(_Tmus):
+            if True: #fabs(mu.Phi()-_Tmet.Phi())>math.pi/2.0:  # dPhi cut on MET and muon
+                mW=sqrt( 2*mu.Pt()*_Tmet.Pt()*(1-cos(_Tmet.Phi()-mu.Phi())) )
+                cands.append((i,mW))
+        # choose the closest W candidate:
+        mdiff,mtW,i=closest(wMASS,cands)
+        mu,met =_Tmus[cands[i][0]],_Tmet.Pt()
+        charge = mu.charge
+        eta = mu.Eta()
+        ptW = sqrt(mu.Pt()**2+met**2+2*mu.Pt()*met*cos(mu.Phi()-_Tmet.Phi()))
+
+        # pdf reweighting
+        if _PDFWEIGHT:
+            weights = []
+            partonID1 = mcevt_pdf_id1
+            if partonID1==21:
+                partonID1=0 # gluon is ==0 in LHAPDF, but in normal HepMC it is stored as 21 --> so redefine!
+            partonID2 = mcevt_pdf_id2
+            if partonID2==21:
+                partonID2=0
+            partonX1 = mcevt_pdf_x1
+            partonX2 = mcevt_pdf_x2
+            eventQ = mcevt_pdf_scale
+            lhapdf.initPDF(1,0)
+            p1density_orig = lhapdf.xfx(1,partonX1, eventQ, partonID1)
+            p2density_orig = lhapdf.xfx(1,partonX2, eventQ, partonID2)
+            for j in pdfsets:
+                lhapdf.initPDF(2,j)
+                p1density = lhapdf.xfx(2, partonX1, eventQ, partonID1);
+                p2density = lhapdf.xfx(2, partonX2, eventQ, partonID2);
+                pdfweight = (p1density*p2density)/(p1density_orig*p2density_orig);
+                weights.append(pdfweight);
+                FillQ1D("TW%d_mu_eta"%j,charge,eta,pdfweight)
+                FillQ1D("TW%d_mu_abseta"%j,charge,fabs(eta),pdfweight)
+                FillQ1D("TW%d_w_mt"%j,charge,mtW,pdfweight)
+        # save histograms
+        FillQ1D("TD0_mu_eta",charge,eta)
+        FillQ1D("TD0_mu_abseta",charge,fabs(eta))
+        FillQ1D("TD0_w_mt",charge,mtW)
+
+    ef.ok += 1
     continue
+
+
+    # RECO STUFF KEPT BELOW FOR HISTORICAL PURPOSES;
+    # IT IS NOW RUN INSIDE TRIGFTKANA INSTEAD
+
+    _met = None
+    _Rmus=[]
+    _RWs=[]
 
     # GRL cuts
     if _DATA and not PassRunLB(t.run,t.lb):
@@ -451,12 +542,17 @@ elif _TRUTHCUTS and _MC:
             continue
 
 # asymmetries, ratios, efficiencies (uncorrected for relative W+/W- reconstruction efficiency)
-if False:
-    for var in 'eta','pt':
+if True:
+    for var in 'eta','abseta':
         try:
-            MakeAsymmRatioHistos(h["ANA_mu_%s_p"%var],h["ANA_mu_%s_m"%var],'ANA_%s__uncorrected'%var)
+            MakeAsymmRatioHistos(h["TD0_mu_%s_p"%var],h["TD0_mu_%s_m"%var],'TD0_mu_%s'%var)
         except KeyError:
             continue
+        for j in pdfsets:
+            try:
+                MakeAsymmRatioHistos(h["TW%d_mu_%s_p"%(j,var)],h["TW%d_mu_%s_m"%(j,var)],'TW%d_mu_%s'%(j,var))
+            except KeyError:
+                continue
 
 # save all output
 ef.Print(open(os.path.join(plotdir,'./cuts.txt'),'w'))
