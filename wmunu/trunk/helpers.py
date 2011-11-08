@@ -45,7 +45,8 @@ etisobins = (100,0.,8.,'Et isolation, [GeV]')
 ptisobins = (20,0.,1.,'Pt isolation')
 wmassbins = (100,0.,200.,'Mass [GeV]');
 metbins = (100,0.,200.,'Missing Et [GeV]')
-etabins = (50,-3.0,3.0,'Eta')
+etabins = (50,-2.5,2.5,'#eta')
+absetabins = (25,0,2.5,'|#eta|')
 ybins = (50,-3.0,3.0,'Rapidity')
 asbins = (50,-3.0,3.0,'Eta')
 phibins = (50,-math.pi,math.pi,'Phi')
@@ -82,7 +83,7 @@ def xflatten(seq):
         else:
             yield x
 
-_WEIGHT = 1
+_WEIGHT = 1.0
 h = {}
 _ext = 'png'
 
@@ -194,6 +195,7 @@ def SetTreeBranches_V27(t,doTruth=True,doReco=False):
     if doTruth:
         br.append(['nmc','mc_status','mc_pdgid','mc_e','mc_pt','mc_eta','mc_phi','mc_parent'])
         br.append(['met_truth','met_truth_phi'])
+        br.append(['nmcevt','mcevt_pdf_scale','mcevt_pdf_x1','mcevt_pdf_x2','mcevt_pdf_id1','mcevt_pdf_id2'])
     [t.SetBranchStatus(v,1) for v in xflatten(br)]
 
 def RecoW(emu,pmux,pmuy,pmuz,pnux,pnuy,mW=wMASS):
@@ -234,8 +236,8 @@ def MakeAsymmRatioHistos(hplus,hminus,label):
     """ Makes an asymmetry histogram from a + and - histo """
     histo_asymm=WAsymmetry(hplus,hminus,"ASYMM_%s"%label)
     Histo(histo_asymm.GetTitle(),histo=histo_asymm)
-    histo_ratio=WRatio(hplus,hminus,"RATIO_%s"%label)
-    Histo(histo_ratio.GetTitle(),histo=histo_ratio)
+    #histo_ratio=WRatio(hplus,hminus,"RATIO_%s"%label)
+    #Histo(histo_ratio.GetTitle(),histo=histo_ratio)
 
 def MakeEffHistos(hreco,htruth,label):
     """ Makes efficiency histograms in various parameter bins """
@@ -251,13 +253,38 @@ def WRatio(hplus,hminus,title,label='ratio'):
     hratio.SetTitle(title)
     return hratio
 
-def WAsymmetry(hplus,hminus,title):
+def WAsymmetry_old(hplus,hminus,title):
     """ (W+ - W-)/(W+ + W-) workhorse function """
     hsum = hplus.Clone(hplus.GetName()+" asymmetry")
     hsum.Add(hminus,-1.0)
     hdiff = hplus.Clone(hplus.GetName()+" asymmetry diff")
     hdiff.Add(hminus)
     hsum.Divide(hdiff)
+    hsum.SetTitle(title)
+    return hsum
+
+def asym_error(Np,sNp,Nm,sNm):
+    """ Error propagation formula for (N+ - N-)/(N+ + N-) """
+    t = (Np+Nm)**2
+    if t==0:
+        return 0
+    res2 = (2*Nm/t)**2 * sNp**2 + (-2*Np/t)**2 * sNm**2
+    return math.sqrt(res2) if res2>0 else 0.0
+def asym_value(Np,sNp,Nm,sNm):
+    """ returns (N+ - N-)/(N+ + N-) """
+    res = (Np-Nm)/(Np+Nm) if Np+Nm>0 else 0
+    return res
+def WAsymmetry(hplus,hminus,title='asymmetry'):
+    """ (W+ - W-)/(W+ + W-) workhorse function with correct errors """
+    hsum = hplus.Clone(hplus.GetName()+"_asymmetry")
+    hsum.Reset()
+    for i in xrange(1,hsum.GetNbinsX()+1):
+        Np  = hplus.GetBinContent(i)
+        sNp = hplus.GetBinError(i)
+        Nm  = hminus.GetBinContent(i)
+        sNm = hminus.GetBinError(i)
+        hsum.SetBinContent(i,asym_value(Np,sNp,Nm,sNm))
+        hsum.SetBinError(i,asym_error(Np,sNp,Nm,sNm))
     hsum.SetTitle(title)
     return hsum
 
@@ -310,6 +337,10 @@ def FillQ(title,q,*args):
     """ Fill per-charge histograms """
     h['%s_%s'%(title,q)].Fill(*args)
     #h['%s_%s'%(title,q)].Fill(*args,_WEIGHT)
+
+def FillQ1D(title,q,x,w=1.0):
+    """ Fill per-charge histograms """
+    h['%s_%s'%(title,q)].Fill(x,w)
 
 _qhistos = []
 def HistoQ(*args,**kwargs):
@@ -365,7 +396,7 @@ def addDcachePrefix(p):
     if re.match('/pnfs',p):
         return 'dcap://'+p
     elif re.match('/atlas',p):
-        return 'root://uct3-xrd.mwt2.org//atlas'+p
+        return 'root://uct3-xrd.mwt2.org/'+p
     else:
         return p
     
@@ -426,7 +457,7 @@ class EventFlow:
                 npassed_prev = sum(o) - (sum(o[:i-1]) if i>0 else sum(o[:i]))
                 return (npassed),100.0*npassed/ntotal,100.0*npassed/npassed_prev
             except ZeroDivisionError:
-                print 'WARNING: zero division error'
+                #print 'WARNING: zero division error'
                 return (0,0,0)
         for icut,cut in enumerate((['total']+s.cuts)[:-1]):
             print >>fout,str('After %s:'%cut).ljust(22),
