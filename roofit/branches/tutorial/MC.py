@@ -160,8 +160,6 @@ mc.append(MCR(107704,'mc_jimmy_wtaunu_np4','*',0.031400,1.0,500000))
 mc.append(MCR(107705,'mc_jimmy_wtaunu_np5','*',0.008500,1.0,500000))
 #zmumu
 mc.append(MCR(107660,'mc_jimmy_zmumu_np0','*',0.66868,1.25,500000))
-mc.append(MCR(107660,'mc_jimmy_zmumu_np0a','*',0.66868/2.0,1.25,500000))
-mc.append(MCR(107660,'mc_jimmy_zmumu_np0b','*',0.66868/2.0,1.25,500000))
 mc.append(MCR(107661,'mc_jimmy_zmumu_np1','*',0.13414,1.25,500000))
 mc.append(MCR(107662,'mc_jimmy_zmumu_np2','*',0.04033,1.25,500000))
 mc.append(MCR(107663,'mc_jimmy_zmumu_np3','*',0.01119,1.25,500000))
