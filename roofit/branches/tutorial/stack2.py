@@ -32,6 +32,12 @@ parser.add_option("--var",dest="var",
 parser.add_option("--bin",dest="bin",
                   type="string", default='50,-2.5,2.5',
                   help="Binning for var")
+parser.add_option("--lvar",dest="lvar",
+                  type="string", default='lY_eta',
+                  help="Variable that slices the dataset in Z studies")
+parser.add_option("--lbin",dest="lbin",
+                  type="string", default='25,-2.5,2.5',
+                  help="Binning for lvar")
 parser.add_option("--pre",dest="pre",
                   type="string", default=_PRE_PETER,
                   help="Preliminary cuts to select final W candidates")
@@ -119,6 +125,7 @@ if not 'libPyRoot' in sys.modules: #hack to get rid of TenvRec warnings
 
 from MC import *
 #ROOT.TH1.AddDirectory(ROOT.kFALSE)    # ensure that we own all the histograms
+ROOT.SetSignalPolicy(ROOT.kSignalFast)
 ROOT.gROOT.SetBatch(opts.batch)
 ROOT.TH1.SetDefaultSumw2()
 SetStyle("AtlasStyle.C")
@@ -856,7 +863,7 @@ if mode == '1012': # 10/12/2011: MCP group studies of Z mass peak in data and MC
             var = 'Z_m'
             pre = (' && '.join([pre_tag,pre_pro,'lY_eta>%f && lY_eta<%f'%(eta,eta+0.2)])).replace('lX',QMAPZ[iqt][2]).replace('lY',QMAPZ[iqp][2])
             h.append( po.data('data%d_q%d'%(i,iqp),var,bin,pre) )
-            rdata = Fit.load_histo( h[-1],mymin,mymax)
+            rdata = Fit.import_histo( h[-1],mymin,mymax)
             fullbins = fitbins = (mymin,mymax)
             r,frame,chi2ndf,ndf,xtra,res1st = Fit.Fit(model,rdata,isExt,fullbins,fitbins,ncpus=16,gaus=(func=='gaus'))
             frame.SetTitle(opts.tag)
@@ -884,17 +891,31 @@ if mode == '1012': # 10/12/2011: MCP group studies of Z mass peak in data and MC
         line.Draw('l')
         gbg.append(line)
 
-def loop_zbins(pre_in,lvar='lY_eta',lvarbins='-2.5,2.5,25'):
-    """ A general-purpose function to loop over Z events in bins of something else """
+def loop_zbins(w, pre_in,
+               lvar='lY_eta',lvarbins='25,-2.5,2.5',
+               pvar='Z_m',pvarbins='50,70,110',
+               tagreq=False):
+    """ A general-purpose function to loop over Z events in bins of something
+        Supports requiring both legs to be in a particular region.
+    """
+    import Fit
     pre_in = prune(pre_in,lvar)
-    lmin,lmax,nbins = [ int(zz) if i==2 else float(zz) for i,zz in enumerate(lvarbins.split(','))]
-    lbinw = (lmax-lmin)*1.0/nbins
-    npads = int(math.ceil(math.sqrt(nbins)))
+    lbins,lmin,lmax = [ int(zz) if i==0 else float(zz) for i,zz in enumerate(lvarbins.split(','))]
+    lbinw = (lmax-lmin)*1.0/lbins
+    pbins,pmin,pmax = [ int(zz) if i==0 else float(zz) for i,zz in enumerate(pvarbins.split(','))]
+    pbinw = (pmax-pmin)*1.0/pbins
+    npads = int(math.ceil(math.sqrt(lbins)))
     cscan = SuCanvas()
     cscan.buildDefault(title='scan',width=1500,height=1500)
     ccscan = cscan.cd_canvas()
     ccscan.Divide(npads,npads)
-    for i in xrange(nbins):
+    hPOS = ROOT.TH1F('mu+','mu+',lbins,lmin,lmax)
+    hNEG = ROOT.TH1F('mu-','mu-',lbins,lmin,lmax)
+    hPOS.SetLineColor(ROOT.kRed)
+    hPOS.SetMarkerColor(ROOT.kRed)
+    hNEG.SetLineColor(ROOT.kBlue)
+    hNEG.SetMarkerColor(ROOT.kBlue)
+    for i in xrange(lbins):
         lL = lmin + i*lbinw
         lR = lL + lbinw
         ccscan.cd(i+1)
@@ -903,38 +924,48 @@ def loop_zbins(pre_in,lvar='lY_eta',lvarbins='-2.5,2.5,25'):
         for iqp in (POS,NEG):
             iqt = 0 if iqp==1 else 1
             var = lvar.replace('lX',QMAPZ[iqt][2]).replace('lY',QMAPZ[iqp][2])
-            pre = ' && '.join(pre_in,'(%s)>%.2f'%(lvar,lL),'(%s)<=%.2f'%(lvar,lR)).replace('lX',QMAPZ[iqt][2]).replace('lY',QMAPZ[iqp][2])
-            h.append( po.data('data%d_q%d'%(i,iqp),var,bin,pre) )
-            rms,mean=h[-1].GetRMS(),h[-1].GetMean()
-            FITMIN=mean-rms*rms_scale
-            FITMAX=mean+rms*rms_scale
-            h[-1].Fit('gaus','S','',FITMIN,FITMAX)
-            f.append( h[-1].GetFunction('gaus') )
-        f[0].SetLineColor(ROOT.kRed)
-        f[1].SetLineColor(ROOT.kBlue)
-        hPOS.SetBinContent(i,f[0].GetParameter(1))
-        hPOS.SetBinError(i,f[0].GetParError(1))
-        hNEG.SetBinContent(i,f[1].GetParameter(1))
-        hNEG.SetBinError(i,f[1].GetParError(1))
-        if False: # simple mean
-            hPOS.SetBinContent(i,h[0].GetMean())
-            hNEG.SetBinContent(i,h[1].GetMean())
-        h[0].SetLineColor(ROOT.kRed)
-        h[0].SetMarkerColor(ROOT.kRed)
-        h[1].SetLineColor(ROOT.kBlue)
-        h[1].SetMarkerColor(ROOT.kBlue)
-        h[0].Draw()
-        h[1].Draw('SAME')
-        gbg += h
-    return cscan
+            prelist = [pre_in,'(%s)>%.2f'%(lvar,lL),'(%s)<=%.2f'%(lvar,lR)]
+            if tagreq:
+                varX = lvar.replace('Y','X')
+                prelist += ['(%s)>%.2f'%(lvar,lL),'(%s)<=%.2f'%(lvar,lR)]
+            pre = ' && '.join(prelist).replace('lX',QMAPZ[iqt][2]).replace('lY',QMAPZ[iqp][2])
+            h.append( po.data('data%d_q%d'%(i,iqp),pvar,pvarbins,pre) )
+            ipvarbins = ifitbins = (pbins,pmin,pmax)
+            if w.func=='gaus':
+                dGeV = 6.0  # 4.0
+                peak = h[-1].GetMean()
+                ifitbins = (int(2*dGeV/pbinw),peak - dGeV, peak + dGeV)
+                ifitbins = (-1,80.00,100.00)
+                print 'Reducing gaus0 fit window: [%.2f,%.2f] --> [%.2f,%.2f]'%(ipvarbins[1],ipvarbins[2],ifitbins[1],ifitbins[2])
+            r,frame,chi2ndf,ndf,xtra,res1st = Fit.Fit(w,h[-1],ipvarbins,ifitbins)
+            frame.Draw()
+            if iqp==POS:
+                hPOS.SetBinContent(i,w.var('m').getVal())
+                hPOS.SetBinError(i,w.var('m').getError())
+            else:
+                hNEG.SetBinContent(i,w.var('m').getVal())
+                hNEG.SetBinError(i,w.var('m').getError())
+    return cscan,hPOS,hNEG
 
 if mode == '1111':
+    pvar,pvarbins = opts.var,opts.bin
+    lvar,lvarbins = opts.lvar,opts.lbin
+    pbins,pmin,pmax = [ int(zz) if i==0 else float(zz) for i,zz in enumerate(pvarbins.split(','))]
+    import Fit
+    w = Fit.RooWorkspace('w',ROOT.kTRUE)
+    w.factory('x[%s,%s]'%(pmin,pmax))
+    w.model = Fit.make_fit_function(w,opts.func,pvarbins)
     c = SuCanvas()
     c.buildDefault(title='canvas',width=800,height=600)
+    cc = c.cd_canvas()
     tagcentral = False
     pre = 'lX_idhits==1 && fabs(lX_z0)<10. && fabs(lX_eta)<%f && lX_pt>20.0 && (lX_q*lY_q)<0 && fabs(lX_z0-lY_z0)<3 && fabs(lX_d0-lY_d0)<2 && lX_ptiso20/lX_pt<0.1 && Z_m>70 && Z_m<110'%(1.0 if tagcentral else 2.4)
-    pre += 'lY_idhits==1 && fabs(lY_z0)<10. && lY_pt>20.0 && lX_ptiso20/lX_pt<0.1'
-    loop_zbins(pre)
+    pre += '&& lY_idhits==1 && fabs(lY_z0)<10. && lY_pt>20.0 && lX_ptiso20/lX_pt<0.1'
+    cscan,hPOS,hNEG = loop_zbins(w,pre,pvar=pvar,pvarbins=pvarbins,lvar=lvar,lvarbins=lvarbins)
+    cc.cd()
+    hPOS.Draw()
+    hNEG.Draw('SAME')
+    OMAP.append( cscan )
     pass
 
 if mode == '1013': # 10/13/2011: MCP group studies that do not require a Z peak (MS-ID-CB comparisons)
@@ -1009,6 +1040,11 @@ if mode=='99': # Floating QCD normalization
 
 if not opts.antondb:
     c.SaveAs('%s_%s_%s_%s_%s_%s'%(opts.tag,opts.input,QMAP[opts.charge][1],opts.var,opts.cut,mode),'png')
+    for i,obj in enumerate(OMAP):
+        if hasattr(obj,'InheritsFrom') and obj.InheritsFrom('TPad'):
+            obj.SaveAs('%s_%s_%s_%s_%s_%s__%d.png'%(opts.tag,opts.input,QMAP[opts.charge][1],opts.var,opts.cut,mode,i))
+        elif hasattr(obj,'SaveAs'): # SuCanvas
+            obj.SaveAs('%s_%s_%s_%s_%s_%s__%d'%(opts.tag,opts.input,QMAP[opts.charge][1],opts.var,opts.cut,mode,i),'png')
 
 # save everything
 if len(COUT)>0:

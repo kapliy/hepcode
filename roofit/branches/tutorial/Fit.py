@@ -4,7 +4,6 @@ from ROOT import RooGaussModel,RooAddModel,RooRealVar,RooAbsReal,RooRealSumPdf
 from ROOT import kTRUE,kFALSE,kDashed,gStyle,gPad
 from ROOT import TFile,TH1,TH1F,TH1D
 from ROOT import RooFit as RF
-w = RooWorkspace('w',kTRUE)
 mz0 = 91.1876
 
 def cmd_none():
@@ -46,7 +45,7 @@ gam['CC'] = -1.16
 gam['AA'] = 1.10
 
 # Voigtian with exponential
-def make_voigbg(minZ,maxZ,m=mz0,fixw=False):
+def make_voigbg(w,minZ,maxZ,m=mz0,fixw=False):
     """ Returns PDF and YES/NO whether it is an extended likelihood fit"""
     cmds = []
     cmds.append('m[%s,%s,%s]'%(m,minZ,maxZ))
@@ -64,7 +63,7 @@ def make_voigbg(minZ,maxZ,m=mz0,fixw=False):
     return w.pdf('voigbg'), kTRUE
 
 # Simple voigtian
-def make_voig(minZ,maxZ,m=mz0,fixw=False):
+def make_voig(w,minZ,maxZ,m=mz0,fixw=False):
     """ Returns PDF and YES/NO whether it is an extended likelihood fit"""
     cmds = []
     cmds.append('m[%s,%s,%s]'%(m,minZ,maxZ))
@@ -77,7 +76,7 @@ def make_voig(minZ,maxZ,m=mz0,fixw=False):
     return w.pdf('voig'), kFALSE
 
 # Simple gaussian
-def make_gaus(minZ,maxZ,m=mz0):
+def make_gaus(w,minZ,maxZ,m=mz0):
     cmds = []
     cmds.append('m[%s,%s,%s]'%(m,minZ,maxZ))
     cmds.append('s[1.0,0,5.0]')
@@ -87,7 +86,7 @@ def make_gaus(minZ,maxZ,m=mz0):
 
 # fancy shape with interference term, but no BG - via AmplitudeFit
 #https://kyoko.web.cern.ch/KYOKO/DiffZ/KyokoYamamoto_DiffZ_20101217.pdf
-def make_egge(minZ,maxZ,ires=1,m=mz0):
+def make_egge(w,minZ,maxZ,ires=1,m=mz0):
     """ Dimuon mass spectrum before FSR - includes photon and interference terms """
     cmds = []
     # coefficients for the amplitudes
@@ -117,7 +116,7 @@ def make_egge(minZ,maxZ,ires=1,m=mz0):
     return pdf, kFALSE
 
 # fancy shape with interference term, but no BG - via AmplitudeFit
-def make_bwfull(minZ,maxZ,ires=1,fixw=False,m=mz0):
+def make_bwfull(w,minZ,maxZ,ires=1,fixw=False,m=mz0):
     """ isDouble enabled a double-gaussian resolution model """
     cmds = []
     # coefficients for the amplitudes
@@ -152,7 +151,7 @@ def make_bwfull(minZ,maxZ,ires=1,fixw=False,m=mz0):
     return pdf, kFALSE
 
 # Just clear bw with gaussian
-def make_bw(minZ,maxZ,ires=0,m=mz0):
+def make_bw(w,minZ,maxZ,ires=0,m=mz0):
     cmds = []
     # amplitudes
     cmds.append('m[%s,%s,%s]'%(m,minZ,maxZ))
@@ -171,25 +170,59 @@ def make_bw(minZ,maxZ,ires=0,m=mz0):
         pdf = w.pdf('sum')
     return pdf, kFALSE
 
+# Parse command line option "--func" and create appropriate fit function
+def make_fit_function(w,funcin,bins):
+    func,res,isExt = funcin,None,False
+    mymin = float(bins.split(',')[1])
+    mymax = float(bins.split(',')[2])
+    if funcin[-1].isdigit():
+        func = funcin[:-1]
+        res = int(funcin[-1])
+    if func=='gaus':
+        model,isExt = make_gaus(w,mymin,mymax)
+    elif func=='bw':
+        model,isExt = make_bw(w,mymin,mymax,res)
+    elif func=='egge':
+        model,isExt = make_egge(w,mymin,mymax,res)
+    elif func=='bwfull':
+        model,isExt = make_bwfull(w,mymin,mymax,res)
+    elif func=='voig':
+        model,isExt = make_voig(w,mymin,mymax)
+    elif func=='voigbg':
+        model,isExt = make_voigbg(w,mymin,mymax)
+    else:
+        print 'Wrong --func (%s). Exiting...'%funcin
+        sys.exit(0)
+    model.isExt = isExt
+    w.func = func
+    w.model = model
+    return model
+
 def PrintVariables(model):
     #model.Print('t')
     vars = model.getVariables()
     vars.Print('v')
 
-def Fit(model,data,isExt,fullbins,fitbins,ncpus=4,extras=False,gaus=False):
+def Fit(w,data,fullbins,fitbins,ncpus=4,extras=False,gaus=False):
     # plot the data first
     x = w.var('x'); xtra = None
+    assert x
     frame = x.frame(RF.Title('Invariant mass fit using'))
+    if data.InheritsFrom('TH1'):
+        print 'INFO: automatically converting %s to RooDataHist'%data.ClassName()
+        #x.setRange(fullbins[1],fullbins[2])
+        data = import_histo(w,data,fullbins[1],fullbins[2])
     if data.ClassName()=='RooDataSet':
-        RooAbsData.plotOn(data,frame,RF.Name('dataZ'),RF.Binning(int((fullbins[1]-fullbins[0])/0.5)) )
+        RooAbsData.plotOn(data,frame,RF.Name('dataZ'),RF.Binning(fullbins[0]))
     else:
         RooAbsData.plotOn(data,frame,RF.Name('dataZ'))
-    x.setRange('it1',fitbins[0],fitbins[1])
+    x.setRange('it1',fitbins[1],fitbins[2])
     RF.Hesse(kTRUE)
-    r = model.fitTo(data,RF.PrintLevel(1),RF.Extended(isExt),RF.NumCPU(ncpus),RF.Save(),RF.Range('it1'))
-    model.plotOn(frame,RF.Name('mit1'),RF.Range('it1'),RF.NormRange('it1'))
+    r = w.model.fitTo(data,RF.PrintLevel(1),RF.Extended(w.model.isExt),RF.NumCPU(ncpus),RF.Save(),RF.Range('it1'))
+    w.model.plotOn(frame,RF.Name('mit1'),RF.Range('it1'),RF.NormRange('it1'))
+    return (r,frame,None,None,None,None) # FIXME - problem fitting!
     res1st = []
-    if gaus:
+    if gaus and False:
         nsc = 1.0  #1.25
         mean=w.var('m').getVal()
         sigma=w.var('s').getVal()
@@ -199,27 +232,27 @@ def Fit(model,data,isExt,fullbins,fitbins,ncpus=4,extras=False,gaus=False):
         res1st += [mean,sigma,chi2ndf,ndf]
         print 'SECOND ITERATION: mean =',mean,'sigma =',sigma,'chi2dof =',chi2ndf
         x.setRange('it2',mean-sigma*nsc,mean+sigma*nsc)
-        r = model.fitTo(data,RF.LineColor(ROOT.kRed),RF.PrintLevel(1),RF.Extended(isExt),RF.NumCPU(ncpus),RF.Save(),RF.Range('it2'))
-        model.plotOn(frame,RF.Name('mit2'),RF.Range('it2'),RF.NormRange('it2'),RF.LineColor(ROOT.kRed))
+        r = w.model.fitTo(data,RF.LineColor(ROOT.kRed),RF.PrintLevel(1),RF.Extended(model.isExt),RF.NumCPU(ncpus),RF.Save(),RF.Range('it2'))
+        w.model.plotOn(frame,RF.Name('mit2'),RF.Range('it2'),RF.NormRange('it2'),RF.LineColor(ROOT.kRed))
     ndf = r.floatParsFinal().getSize()
     chi2ndf = frame.chiSquare(ndf)
     # wildcards or comma-separated components are allowed:
-    if isExt:
-        model.plotOn(frame,RF.Components('exp*'),RF.LineStyle(kDashed))
+    if w.model.isExt:
+        w.model.plotOn(frame,RF.Components('exp*'),RF.LineStyle(kDashed))
     if extras:
-        model.plotOn(frame,RF.VisualizeError(r))
-        model.paramOn(frame,data)
+        w.model.plotOn(frame,RF.VisualizeError(r))
+        w.model.paramOn(frame,data)
     return (r,frame,chi2ndf,ndf,xtra,res1st)
 
-def load_unbinned(hz,tt,pre,reg,xmin,xmax,ndata,scale=1.0):
-    """ Load TGraph from a file. Note that we manually drop the points outside [xmin,xmax] range """
+def import_unbinned(w,hz,tt,pre,reg,xmin,xmax,ndata,scale=1.0):
+    """ Load TTree from a file. Note that all selection cuts must be pre-filled in the 'pre' cut """
     if hz.ClassName() in ('TNtuple','TTree','TChain'):
         N,v1 = ntuple_to_array1(hz,tt,reg,xmin,xmax,ndata,pre=pre)
     else:
         print 'Problem loading class',hz.ClassName()
         sys.exit(0)
+    # FIXME TODO
     print 'Loaded raw unbinned data with',N,'entries'
-    w.factory('x[%s,%s]'%(xmin,xmax))
     ds1 = RooDataSet('ds1','ds1',RooArgSet(w.var('x')))
     ds2 = RooDataSet('ds2','ds2',RooArgSet(w.var('x')))
     nmax = min(N,ndata); nmaxp10 = nmax if nmax>10 else 10
@@ -239,14 +272,8 @@ def load_unbinned(hz,tt,pre,reg,xmin,xmax,ndata,scale=1.0):
     #getattr(w,'import')(ds2,RF.Rename('ds2'))
     return ds1,ds2
 
-def load_histo(hz,xmin,xmax,auto=None):
+def import_histo(w,hz,xmin,xmax):
     """ Load TH1 histogram from a file """
     print 'Loading histogram with',hz.GetEntries(),'entries'
-    if auto:
-        mean,width = hz.GetMean(),hz.GetRMS()
-        xmin = mean-width*auto
-        xmax = mean+width*auto
-        print 'Limiting range to:',xmin,xmax
-    w.factory('x[%s,%s]'%(xmin,xmax))
     data = RooDataHist('data','Zmumu MC',RooArgList(w.var('x')),hz)
     return data

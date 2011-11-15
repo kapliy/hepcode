@@ -1,25 +1,41 @@
+Mel:
+come up with a precise list of things TODO
+
+MCP mtg:
+Oliver: apply this *before* smearing?
+* technical implementation - in SmearingClass
+* understand systematics using special MC
+* run this method on MC directly
+effect on the order of 0.2 TeV-1.
+!!Validate the method by putting a shift by hand. Massimo will make samples
+
+KS toy-MC study (performing a fit) - see if errors are correct. If yes, drop chi2 method.
+For the "bad" cmb bin, look at a variation of akluit where the other muon is forced into a particular region.
+Peter: does z resolution improve in data following the correction?
+
 TODO: Z mass fit in bins of eta/phi - including on MC (confirm Kluit's problem)
-TODO: fit particle level via iterative gaussian (includes FSR/ISR), confirm it's close to PDF.
-TODO: do delta-Q over P correction, too! - this is what needs to go to SmearingClass
+      Z mass peak fit with alpgen; fit with/without pileup factors.
+      Z mass peak at particle level (which is, however, after FSR/ISR)
+
+Re-write db_* executable using classes that will automatically write out all latex output.
+Basically, create python abstraction classes for every table. They can reference the database in the constructor.
+Printing will occur in a correct manner automatically.
+Use sequence of inheritance, starting from top-level document (that includes facilities to save and compile)
 
 TrigFTKAna:
-* move to staco loose for analysis; make use of mutype word;
-* add muon-jet overlap checking
-* add robust trigger words
+* add muon-jet overlap checking (remove jet is dR<0.5)
 * add a word to AnaWCrossSectionCandidate saying if it's the best candidate at preselection level (compare results with/without)
 * move reco, trigger, isolation efficiencies into Study* classes and save on per-W and per-Z basis!
+* Rename ntuple variables for consistency (e.g., l_ prefix for isolation)
+* ID efficiency via tag and probe (lX, lY, lZ)
+  Create a completely separate ntuple (manually turned on though). The idea is to create mu-ID candidates. The AOD::id muons would 
+  have a link to the closest-matched full muon (if any). Make sure smearing class can smear ID muons, too!
 * come up with a way to combine truth and reco ntuples:
   Keep default truth ntuples
   Add (if MC) additional words to primary ntuple: keeping relevant information from truth ntuple
   This would need some matching: for a given W/Z candidate, it will seek the closest truth candidate.
-* ID efficiency via tag and probe
-  Create a completely separate ntuple. The idea is to create mu-ID candidates. The AOD::id muons would 
-  have a link to the closest-matched full muon (if any)
 
 Make bin-by-bin efficiency corrections for isolation (wrt combined) and trigger (wrt isolated).
-
-Kristin:
-Add necessary missing info to ntuple (parton momentum fraction etc)
 
 conversion to truth level. Resolution is not negligible in MET. unfolding.
 Peter: METRefFinal - METTruth; split into parallel and perpendicular to lepton axis components (later)

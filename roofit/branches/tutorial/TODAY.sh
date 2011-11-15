@@ -71,8 +71,7 @@ if [ "1" -eq "1" ]; then
     for itag in `gkeys tagzmcp`; do
 	tag=`ggeta tagzmcp $itag`
 	opts=`ggetb tagzmcp $itag`
-	#eval ./stack2.py ${common} -m${m} --ntuple z -b --var 'Z_m' -t ${tag} ${opts} --func egge3 &
-	eval ./stack2.py ${common} -m${m} --ntuple z -b --var 'Z_m' -t ${tag} ${opts} --func gaus0 &
+	eval ./stack2.py ${common} -m${m} --ntuple z -b --var 'Z_m' --bin '50,70,110' --lvar lY_eta --lbin '1,-2.5,2.5' -t ${tag} ${opts} --func gaus &
 	wait
 	((i++))
     done
