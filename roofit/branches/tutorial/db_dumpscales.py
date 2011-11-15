@@ -16,6 +16,7 @@ from optparse import OptionParser
 
 dbname = 'out1023L7'
 _DISABLE_KLU = False
+_DISABLE_CHI = False
 
 from optparse import OptionParser
 parser = OptionParser()
@@ -117,7 +118,10 @@ def load_discales(regs=[], pattern_R0='/default/%s/%s/R0',pattern_Z='/default/%s
             if True:  # False if z peak fit was not run
                 aZ = a.data[pattern_Z%(det,reg)];  assert aZ
                 res[det][reg]['ksf'] = scales(aR0['ksf'],aR0['chie'],aZ['data_mz'],aZ['data_emz'],aZ['mc_mz'])
-                res[det][reg]['chif'] = scales(aR0['chif'],aR0['chie'],aZ['data_mz'],aZ['data_emz'],aZ['mc_mz'])
+                if _DISABLE_CHI:
+                    res[det][reg]['chif'] = scales(aR0['ksf'],aR0['chie'],aZ['data_mz'],aZ['data_emz'],aZ['mc_mz'])
+                else:
+                    res[det][reg]['chif'] = scales(aR0['chif'],aR0['chie'],aZ['data_mz'],aZ['data_emz'],aZ['mc_mz'])
                 res[det][reg]['ksp'] = scales(aR0['ksp'],aR0['chie'],aZ['data_mz'],aZ['data_emz'],aZ['mc_mz'])
                 res[det][reg]['chip'] = scales(aR0['chip'],aR0['chie'],aZ['data_mz'],aZ['data_emz'],aZ['mc_mz'])
             else:
@@ -136,7 +140,10 @@ def load_shift(regs=[], pattern='/default/%s/%s/R0'):
             res[det][reg] = {}
             d = a.data[pattern%(det,reg)];  assert d
             res[det][reg]['ksf'] = { 's' : d['ksf']*1e6/2.0 , 'es' : d['chie']*1e6/2.0 }
-            res[det][reg]['chif'] = { 's' : d['chif']*1e6/2.0 , 'es' : d['chie']*1e6/2.0 }
+            if _DISABLE_CHI:
+                res[det][reg]['chif'] = { 's' : d['ksf']*1e6/2.0 , 'es' : d['chie']*1e6/2.0 }
+            else:
+                res[det][reg]['chif'] = { 's' : d['chif']*1e6/2.0 , 'es' : d['chie']*1e6/2.0 }
             res[det][reg]['ksp'] = { 's' : d['ksp']*1e6/2.0 , 'es' : d['chie']*1e6/2.0 }
             res[det][reg]['chip'] = { 's' : d['chip']*1e6/2.0 , 'es' : d['chie']*1e6/2.0 }
             if True: # default:
