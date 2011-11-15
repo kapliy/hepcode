@@ -61,7 +61,7 @@ parser.add_option("--nskip",dest="nskip",
                   type="int", default=0,
                   help="Number of data points to skip load")
 parser.add_option("--antondb",dest="antondb",
-                  type="string", default='output',
+                  type="string", default=None,
                   help="Tag for antondb output container")
 # parameters
 parser.add_option("--auto",dest="auto",
@@ -383,6 +383,17 @@ def load_histo(hz,xmin,xmax,auto=None):
     data = RooDataHist('data','Zmumu MC',RooArgList(w.var('x')),hz)
     return data
 
+def fortruth(pre):
+    """ removes pre variables that are not applicable to truth tracks """
+    res = []
+    for elm in pre.split(' && '):
+        if re.search('iso',elm) or re.search('idhits',elm) or re.search('d0',elm) or re.search('z0',elm) or re.search('exms',elm):
+            continue
+        res.append(elm)
+    out = ' && '.join(res)
+    print 'PRE : ', out
+    return out
+
 # getting data
 if True:
     print 'Ntuple path (data):',opts.data
@@ -396,6 +407,8 @@ if True:
     assert hdata.GetEntries()>0, 'Error loading data object %s from file %s'%(opts.data,opts.rootdata)
     cname = hdata.ClassName()
     if cname in ('TGraph','TNtuple','TTree','TChain'):
+        if re.search('truth',opts.data):
+            opts.pre = fortruth(opts.pre)
         data,crap = load_unbinned(hdata,opts.tt,opts.pre,opts.region,opts.min,opts.max,opts.nmc,opts.scale)
     # load MC
     mc = None
@@ -533,7 +546,12 @@ if len(COUT)>0:
         print l
         VMAP['COUT'].append(l)
 
-if len(VMAP)>0 or len(OMAP)>0:
+if not opts.antondb:
+    for i,obj in enumerate(OMAP):
+        if obj.InheritsFrom('TPad'):
+            obj.SaveAs('%s_%s_%s_%s__%d.png'%(opts.tag,opts.tt,opts.region,opts.func,i))
+
+if opts.antondb and (len(VMAP)>0 or len(OMAP)>0):
     a = antondb(opts.antondb)
     path = os.path.join('/zpeak/',opts.tag,opts.tt,opts.region,opts.func)
     if len(VMAP)>0:
