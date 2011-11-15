@@ -2,19 +2,21 @@
 source bashmap.sh
 ROOTDIR=$PWD
 
-antondb=out1023L7
+antondb=out1113mcpupdate
+flabel=1113_mcpupdate
+
 # Specify the list of tags
 i=0
 
 if [ "1" -eq "1" ]; then
-    data="--root '/share/ftkdata1/antonk/ana_v27_1023_L7_noscale_stacoCB/data_period*/root_data_period*.root'"
+    data="--root '/share/ftkdata1/antonk/ana_v27_${flabel}_noscale_stacoCB/data_period*/root_data_period*.root'"
     gput tags $i r17_default_staco    "${data} --zmin 80 --zmax 100"
     ((i++))
     gput tags $i r17_m70110_staco     "${data} --zmin 70 --zmax 110"
     ((i++))
     gput tags $i r17_klu_staco        "${data} --zmin 80 --zmax 100 --kluit"
     ((i++))
-    data="--root '/share/ftkdata1/antonk/ana_v27_1023_L7_noscale_muidCB/data_period*/root_data_period*.root'"
+    data="--root '/share/ftkdata1/antonk/ana_v27_${flabel}_noscale_muidCB/data_period*/root_data_period*.root'"
     gput tags $i r17_default_muid    "${data} --zmin 80 --zmax 100"
     ((i++))
     gput tags $i r17_m70110_muid     "${data} --zmin 70 --zmax 110"
@@ -23,15 +25,15 @@ if [ "1" -eq "1" ]; then
     ((i++))
 fi;
 
-if [ "1" -eq "1" ]; then
-    data="--root '/share/ftkdata1/antonk/ana_v27_1023_L7_noscale_stacoCB/mc_zmumu/root_mc_zmumu*.root'"
+if [ "0" -eq "1" ]; then
+    data="--root '/share/ftkdata1/antonk/ana_v27_${flabel}_noscale_stacoCB/mc_zmumu/root_mc_zmumu*.root'"
     gput tags $i r17_MCdefault_staco    "${data} --zmin 80 --zmax 100"
     ((i++))
     gput tags $i r17_MCm70110_staco     "${data} --zmin 70 --zmax 110"
     ((i++))
     gput tags $i r17_MCklu_staco        "${data} --zmin 80 --zmax 100 --kluit"
     ((i++))
-    data="--root '/share/ftkdata1/antonk/ana_v27_1023_L7_noscale_muidCB/mc_zmumu/root_mc_zmumu*.root'"
+    data="--root '/share/ftkdata1/antonk/ana_v27_${flabel}_noscale_muidCB/mc_zmumu/root_mc_zmumu*.root'"
     gput tags $i r17_MCdefault_muid    "${data} --zmin 80 --zmax 100"
     ((i++))
     gput tags $i r17_MCm70110_muid     "${data} --zmin 70 --zmax 110"
@@ -44,6 +46,7 @@ tts="cmb id exms"
 #regs="AA BB CC Bcc Baa FWC FWA MWC MWA" # "FWC0 FWC1 FWC2 FWC3 FWA0 FWA1 FWA2 FWA3"
 regs="`echo E{0..25}E`"
 regs="`echo T{0..13}T`"
+regs="`echo S{0..7}S`"
 xtra="--template --ext eps --shift"
 i=0
 
