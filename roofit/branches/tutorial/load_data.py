@@ -88,6 +88,23 @@ def eranges(name):
         else:
             bnr = cands[0]
         return (bnr,bnr)
+    elif name[0] == 'S':
+        bn = int(name[1:-1])
+        boundsP = [0.50,1.05,1.70,2.51]
+        boundsA = [-z for z in reversed(boundsP)] + [0.00,] + boundsP
+        bounds = ordered_pairs(boundsA)
+        NN = len(bounds);
+        print 'Spectrometer-motivated binning with %d bins'%NN
+        assert bn < NN, 'Requested an eta bin beyond limits'
+        return (bounds[bn],bounds[bn])
+        cands = [ran for i,ran in enumerate(bounds) if ran[0] <= eta < ran[1]]
+        bnr = None
+        if len(cands)==0:
+            if eta<0: bnr = bounds[0]
+            if eta>0: bnr = bounds[NN-1]
+        else:
+            bnr = cands[0]
+        return (bnr,bnr)
     elif name[:3] == 'ALL':
         return ((-10.0,10.0),(-10.0,10.0))
     elif name[:3] == 'FWC':
