@@ -15,6 +15,7 @@ import antondb
 from optparse import OptionParser
 
 dbname = 'out1023L7'
+dbname = 'out1113mcpupdate'
 _DISABLE_KLU = False
 _DISABLE_CHI = False
 
@@ -97,8 +98,8 @@ class Table:
     """ A list of Values across several eta regions
         (CB/MS/ID each gets its own Table level)
     """
-    boundsP = [0.50,1.05,1.70,2.51]
-    boundsP = [0.30,0.60,0.9,1.30,1.60,2.00,2.50]
+    boundsP = [0.30,0.60,0.9,1.30,1.60,2.00,2.50] #[TxT]
+    boundsP = [0.50,1.05,1.70,2.51] #[SxS]
     def ordered_pairs(s,lst):
         """ input: [a1,a2,a3]
         output: [a1,a2], [a2,a3]
@@ -251,13 +252,14 @@ def ordered_pairs(lst):
         output: [a1,a2], [a2,a3]
     """
     return zip(lst,lst[1:])
-boundsP = [0.30,0.60,0.9,1.30,1.60,2.00,2.50]
+boundsP = [0.30,0.60,0.9,1.30,1.60,2.00,2.50] #[TxT]
+boundsP = [0.50,1.05,1.70,2.51] #[SxS]
 boundsA = [-z for z in reversed(boundsP)] + [0.00,] + boundsP
 bounds = ordered_pairs(boundsA)
 regsR = range(0,len(bounds))
 for bn in regsR:
     bb = bounds[bn]
-    regs_map['T%dT'%bn] = r'$%.1f < \eta < %.1f$'%(bb[0],bb[1])
+    regs_map['S%dS'%bn] = r'$%.1f < \eta < %.1f$'%(bb[0],bb[1])
 
 def scales(R,eR,mz,emz,mz0):
     """ Does the math to deduce k+ and k-, along with associated errors """
@@ -762,7 +764,7 @@ def print_syst_scale(regs):
 default,klu,R70,egge = [None]*4
 default_shifts,klu_shifts,R70_shifts,egge_shifts = [None]*4
 default_scales,klu_scales,R70_scales,egge_scales = [None]*4
-regs = ['T%dT'%i for i in regsR]
+regs = ['S%dS'%i for i in regsR]
 try:
     if shift:
         default_scales = load_scale(regs=regs,pattern='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')

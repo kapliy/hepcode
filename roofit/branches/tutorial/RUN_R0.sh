@@ -2,8 +2,8 @@
 source bashmap.sh
 ROOTDIR=$PWD
 
-antondb=out1113mcpupdate
-flabel=1113_mcpupdate
+antondb=out1113mcpupdate_ptsmear
+flabel=1113_mcpupdate_ptsmear
 
 # Specify the list of tags
 i=0

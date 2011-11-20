@@ -1,5 +1,8 @@
-Mel:
-come up with a precise list of things TODO
+IMMEDIATE:
+* make a test case for stand-alone smearing class; do a few debug printout to make sure direction is correct
+* Check on MC and some data events (low stats) that pt smearing actually adds something. Check newly wired-in scale.
+* come up with a detailed list of things TODO for Mel
+* Manually debug what's going on with pu reweighting (saw a series of contant weights!)
 
 MCP mtg:
 Oliver: apply this *before* smearing?
@@ -17,6 +20,7 @@ TODO: Z mass fit in bins of eta/phi - including on MC (confirm Kluit's problem)
       Z mass peak fit with alpgen; fit with/without pileup factors.
       Z mass peak at particle level (which is, however, after FSR/ISR)
 
+IN PROGRESS:
 Re-write db_* executable using classes that will automatically write out all latex output.
 Basically, create python abstraction classes for every table. They can reference the database in the constructor.
 Printing will occur in a correct manner automatically.
@@ -25,7 +29,6 @@ Use sequence of inheritance, starting from top-level document (that includes fac
 TrigFTKAna:
 * add muon-jet overlap checking (remove jet is dR<0.5)
 * add a word to AnaWCrossSectionCandidate saying if it's the best candidate at preselection level (compare results with/without)
-* move reco, trigger, isolation efficiencies into Study* classes and save on per-W and per-Z basis!
 * Rename ntuple variables for consistency (e.g., l_ prefix for isolation)
 * ID efficiency via tag and probe (lX, lY, lZ)
   Create a completely separate ntuple (manually turned on though). The idea is to create mu-ID candidates. The AOD::id muons would 
