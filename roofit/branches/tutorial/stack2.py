@@ -65,16 +65,16 @@ parser.add_option("--antondb",dest="antondb",
 parser.add_option("--effroot",dest="effroot",
                   type="string", default=None,
                   help="Location of acceptance efficiency histograms (correction to truth level)")
-#329602.0 up to F3 (182519) EF_mu18_MG
-#490814.0 up to G3 (183021) EF_mu18_MG
-#689279.0 up to G5 (183347) EF_mu20_MG
-#832854.0 up to H1 (183602) EF_mu20_MG
+parser.add_option("-d","--dataperiods",dest="dataperiods",
+                  type="string", default=None,
+                  help="Comma-separated list of data periods to process")
 #1035040.0 up to H4 (184169) EF_mu18_MG
 #1340030.0 up to I4 (186493) EF_mu18_MG
 #1469.13+2128.61 = B-I + J-L (L7). mu18_MG, followed by mu18_MG_medium
-_DATA_PERIODS = ('B','D','E','F','G','H','I')
+#2269.38*1000.0 - DtoK
+_DATA_PERIODS_DEFAULT = ('D','E','F','G','H','I','J','K') # default
 parser.add_option("--lumi",dest="lumi",
-                  type="float", default=1340030.0,
+                  type="float", default=2269.38*1000.0,
                   help="Integrated luminosity for data (in nb^-1)")
 parser.add_option("--qcd",dest="qcdscale",
                   type="string", default='1.0',
@@ -106,6 +106,7 @@ parser.add_option('-f',"--func",dest="func",
 (opts, args) = parser.parse_args()
 mode = opts.mode
 print "MODE =",mode
+_DATA_PERIODS = opts.dataperiods.split(',') if opts.dataperiods else _DATA_PERIODS_DEFAULT
 #print "PRE =",opts.pre
 #print "BEF =",opts.prebef
 #print "AFT =",opts.preaft
@@ -114,14 +115,8 @@ gbg = []; COUT = [];
 VMAP = {}; OMAP = []
 VMAP['cmd']=' '.join(sys.argv)
 
-#import ROOT
-import os,sys
-if not 'libPyRoot' in sys.modules: #hack to get rid of TenvRec warnings
-    from ROOT import gROOT
-    sys.modules['libPyROOT'].gROOT.GetListOfGlobals().FindObject('gErrorIgnoreLevel').GetAddress().__setitem__(0,3000)
-    import ROOT
-    gErrorIgnoreLevel=ROOT.kInfo
-    sys.modules['libPyROOT'].gROOT.GetListOfGlobals().FindObject('gErrorAbortLevel').GetAddress().__setitem__(0,5001)
+#import ROOT and disable warning messages
+from common import *
 
 from MC import *
 #ROOT.TH1.AddDirectory(ROOT.kFALSE)    # ensure that we own all the histograms
@@ -309,7 +304,7 @@ pw,pz = [SuStack() for zz in xrange(2)]
 # w samples:
 if opts.bgsig in (0,1,2): # w inclusive
     pw.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
-    if False: # until this is run by Antonio in v1_26
+    if True: # broken until V28 ntuple
         pw.add(label='Z#rightarrow#tau#tau',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta,flags=['bg','mc','ewk'])
     else:
         pw.add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
@@ -332,20 +327,20 @@ if opts.bgsig in (0,1,2): # w inclusive
     pw.add(label='qcd',samples=['mc_bbmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd','no'])
 elif opts.bgsig in (3,): # w+jets
     pw.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
-    #pw.add(label='Z#rightarrow#tau#tau+jets',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta)
-    pw.add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
-    #pw.add(label='W#rightarrow#tau#nu+jets',samples=['mc_jimmy_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow)
-    pw.add(label='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow,flags=['bg','mc','ewk'])
+    pw.add(label='Z#rightarrow#tau#tau+jets',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta)
+    #pw.add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
+    pw.add(label='W#rightarrow#tau#nu+jets',samples=['mc_jimmy_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow)
+    #pw.add(label='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow,flags=['bg','mc','ewk'])
     pw.add(label='Z#rightarrow#mu#mu+jets',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['bg','mc','ewk'])
-    pw.add(label='WZ/ZZ',samples=['mc_jimmy_wz_np%d'%v for v in range(4)]+['mc_jimmy_zz_np%d'%v for v in range(4)],color=11,flags=['bg','mc','ewk'])
-    pw.add(label='WW',samples=['mc_jimmy_ww_np%d'%v for v in range(4)],color=12,flags=['bg','mc','ewk'])
+    pw.add(label='WZ/ZZ',samples=['mc_herwig_wz','mc_herwig_zz'],color=11,flags=['bg','mc','ewk'])
+    pw.add(label='WW',samples='mc_herwig_ww',color=12,flags=['bg','mc','ewk'])
     pw.add(label='bbmu15X/ccmu15X',samples=['mc_bbmu15x','mc_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     pw.add(label='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk'])
 # z samples:
 if opts.bgsig in (0,1,2): # z inclusive
     pz.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
     pz.add(label='W#rightarrow#mu#nu',samples='mc_wmunu',color=10,flags=['bg','mc','ewk'])
-    if False: # until this is run by Antonio in v1_26
+    if True: # broken until V28 ntuple
         pz.add(label='Z#rightarrow#tau#tau',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta,flags=['bg','mc','ewk'])
     else:
         pz.add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
@@ -363,12 +358,12 @@ if opts.bgsig in (0,1,2): # z inclusive
 elif opts.bgsig in (3,): # z+jets
     pz.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
     pz.add(label='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['bg','mc','ewk'])
-    #pz.add(label='Z#rightarrow#tau#tau+jets',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta)
-    pz.add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
-    #pz.add(label='W#rightarrow#tau#nu+jets',samples=['mc_jimmy_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow)
-    pz.add(label='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow,flags=['bg','mc','ewk'])
-    pz.add(label='WZ/ZZ',samples=['mc_jimmy_wz_np%d'%v for v in range(4)]+['mc_jimmy_zz_np%d'%v for v in range(4)],color=11,flags=['bg','mc','ewk'])
-    pz.add(label='WW',samples=['mc_jimmy_ww_np%d'%v for v in range(4)],color=12,flags=['bg','mc','ewk'])
+    pz.add(label='Z#rightarrow#tau#tau+jets',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta)
+    #pz.add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
+    pz.add(label='W#rightarrow#tau#nu+jets',samples=['mc_jimmy_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow)
+    #pz.add(label='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow,flags=['bg','mc','ewk'])
+    pz.add(label='WZ/ZZ',samples=['mc_herwig_wz','mc_herwig_zz'],color=11,flags=['bg','mc','ewk'])
+    pz.add(label='WW',samples='mc_herwig_ww',color=12,flags=['bg','mc','ewk'])
     pz.add(label='bbmu15X/ccmu15X',samples=['mc_bbmu15x','mc_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     pz.add(label='Z#rightarrow#mu#mu+jets',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['sig','mc','ewk'])
 # Pre-load the ntuples

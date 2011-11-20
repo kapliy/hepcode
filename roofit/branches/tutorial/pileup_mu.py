@@ -6,7 +6,7 @@ import ROOT
 fnames='/share/ftkdata/antonk/DATA/v1_26/user.ponyisi.mc11_7TeV.106047.PythiaZmumu_no_filter.merge.AOD.e815_s1272_s1274_r2730_r2700*.ntuple.v1_27*/user.ponyisi.*.flatntuple.*.root'
 fnames='/share/ftkdata1/boveia/samples/v1_26/user.boveia.mc10_7TeV.106044.PythiaWmunu_no_filter.merge.AOD.e574_s933_s946_r2302_r2300.ntuple.v1_26.110804091002_r1/user.boveia.00*.flatntuple._006*.root*'
 
-fnames='/atlas/uct3/data/users/antonk/NTUPLE/v1_27/user.kapliy.mc11_7TeV.106044.PythiaWmunu_no_filter.merge.AOD.*v1_27*/user.kapliy*flatntuple._*.root*'
+fnames='/atlas/uct3/data/users/antonk/NTUPLE/v1_27/user.kapliy.mc11_7TeV.*/user.kapliy*flatntuple._*.root*'
 
 t = ROOT.TChain('tree','tree')
 itot=0
