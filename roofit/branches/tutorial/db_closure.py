@@ -64,10 +64,12 @@ for det in ['cmb','exms','id']:
         if False: # main closure result
             print regs_map[reg],pad1,'\t\t','%.2f%%'%s(vdef),pad2,'\t','%.2f%%'%s(vKCmc),pad3,'\t','%.2f%%'%s(vdefaultmc)
         else:     # comparison with true z mass
+            pad15 = '' if float(m(vdef))>=100.0 else ' '
+            pad16 = '' if float(m(vdef))-MZ0<0 else ' '
             pad2 = '' if float(d(vdef))>=100.0 else ' '
             pad3 = '' if float(m(vKCmc))>=100.0 else ' '
             #errt=math.sqrt(ed(vdef)**2 + em(vKCmc)**2)
             errt=math.sqrt(ed(vdef)**2 + 0)
             pad4 = '' if float(errt)>=100.0 else ' '
             #print regs_map[reg],pad1,'\t\t','%.2f'%d(vdef),pad2,'\t','%.2f'%m(vKCmc),pad3,'\t','%.2f'%errt,pad4,'%.2f'%(m(vKCmc)-MZ0)
-            print regs_map[reg],pad1,'\t\t','%.2f'%d(vdef),pad2,'\t','%.2f'%errt,pad4,'\t\t','%.2f'%(d(vdef)-MZ0)
+            print regs_map[reg],pad1,'\t\t','%.2f'%m(vdef),pad15,'\t','%.2f'%(m(vdef)-MZ0),pad16,'\t\t','%.2f'%d(vdef),pad2,'\t','%.2f'%(d(vdef)-MZ0)

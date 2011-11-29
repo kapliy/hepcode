@@ -83,7 +83,7 @@ class SuCanvas:
     hdiff.Add(hminus)
     hsum.Divide(hdiff)
     hsum.SetTitle(title)
-    #TODO : correct the errors via 2*sqrt(Np*Nm/(Np+Nm)^3)
+    #note: errors are incorrect here
     return hsum
 
   def asym_error(s,Np,sNp,Nm,sNm):

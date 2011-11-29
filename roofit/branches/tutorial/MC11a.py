@@ -73,101 +73,114 @@ mc = MC_samples()
 
 #from http://cdsweb.cern.ch/record/1282370/files/ATL-CAL-PROC-2010-001.pdf?version=3
 #from http://cdsweb.cern.ch/record/1298803/files/ATL-COM-PHYS-2010-836.pdf
+#http://www.dspace.cam.ac.uk/bitstream/1810/236979/1/tomthesis.pdf
 
-mc.append(MCR(106044,'mc_wmunu','*',8894.06*1.17/1000,1.000000,6993798))
+# THESE ARE NOT UPDATED!
+mc.append(MCR(106044,'mc_wmunu','*',8874.06*1.17/1000,1.000000,6993798))
 mc.append(MCR(107054,'mc_wtaunu','*',8941.45*1.17/1000,1.0,999874)) # inclusive wtaunu
 mc.append(MCR(106022,'mc_wtaunu_1Lepton','*',8916.33*1.17*3.068E-01/1000,1.0,999874)) #actual xs for this is 8.916E3*0.35 (tau is forced to decay into e/mu)
-mc.append(MCR(106047,'mc_zmumu','*',851.011*1.15/1000.0,1.000000,4998410))
+mc.append(MCR(106047,'mc_zmumu','*',851.011*1.17/1000.0,1.000000,4998410))
 mc.append(MCR(106052,'mc_ztautau','*',8.56967E+2*1.25/1000.0,1.000000,1998598))
-# these are likely incorrect by now:
-mc.append(MCR(109276,'mc_J0','*',9752970.000000,0.000079,500000))
-mc.append(MCR(109277,'mc_J1','*',673020.000000,0.001233,500000))
-mc.append(MCR(109278,'mc_J2','*',41194.700000,0.005443,500000))
-mc.append(MCR(109279,'mc_J3','*',2193.250000,0.012949,500000))
-mc.append(MCR(109280,'mc_J4','*',87.848700,0.022156,500000))
-mc.append(MCR(109281,'mc_J5','*',2.328560,0.029753,500000))
+
+#QCD
+# herwig multi-jet (https://savannah.cern.ch/task/?14846, plus request sheet on savannah)
+mc.append(MCR(113204,'mc_herwig_J0','*',9.60E06,1.0,500000))
+mc.append(MCR(113205,'mc_herwig_J1','*',0.745E06,1.0,500000))
+mc.append(MCR(113206,'mc_herwig_J2','*',44.4E03,1.0,500000))
+mc.append(MCR(113207,'mc_herwig_J3','*',2.36E03,1.0,500000))
+mc.append(MCR(113208,'mc_herwig_J4','*',94.7E00,1.0,500000))
+mc.append(MCR(113209,'mc_herwig_J5','*',2.58E00,1.0,500000))
+mc.append(MCR(113210,'mc_herwig_J6','*',0.039E00,1.0,500000))
 # approximate (from peter):
 mc.append(MCR(108405,'mc_bbmu15x','*',7.39E+04/1000,1.0,500000)) 
 mc.append(MCR(106059,'mc_ccmu15x','*',2.84E+04/1000,1.0,500000))
 
-# MC@NLO samples (must be wrong)
-mc.append(MCR(106083,'mc_wminmunu','*',3.9607,1.000000,6993798))
-mc.append(MCR(106084,'mc_wplusmunu','*',5.8414,1.000000,6993798))
+# MC@NLO samples (updated from Physics_mc11_7TeV.xls, but not usings its 0.9 efficiency factor)
+mc.append(MCR(106083,'mc_wminmunu','*',3.99,1.000000,6993798))
+mc.append(MCR(106084,'mc_wplusmunu','*',5.87,1.000000,6993798))
+mc.append(MCR(106088,'mc_mcnlo_zmumu','*',0.952,1.000000,4998410))
 
 # W/Z + jets samples:
 # From Jordan's SuPlot; also xcheck with Sam and webpage
 # https://svnweb.cern.ch/trac/atlasgrp/browser/Physics/StandardModel/ElectroWeak/Analyses/Winter2012/Common/mc11a_p756_info.txt
 # https://svnweb.cern.ch/trac/atlasgrp/browser/Physics/StandardModel/ElectroWeak/Analyses/Summer2011/Common/mc10b_p591_info.txt
-#ttbar
+#ttbar (ATL-COM-PHYS-2011-1522.pdf)
 mc.append(MCR(105200,'mc_jimmy_ttbar','*',0.16457,0.5551,500000))
-#wmunu
+#wmunu (ATL-COM-PHYS-2011-1522.pdf)
 mc.append(MCR(107690,'mc_jimmy_wmunu_np0','*',6.91960,1.2,500000))
 mc.append(MCR(107691,'mc_jimmy_wmunu_np1','*',1.30420,1.2,500000))
 mc.append(MCR(107692,'mc_jimmy_wmunu_np2','*',0.37783,1.2,500000))
 mc.append(MCR(107693,'mc_jimmy_wmunu_np3','*',0.10188,1.2,500000))
 mc.append(MCR(107694,'mc_jimmy_wmunu_np4','*',0.02575,1.2,500000))
 mc.append(MCR(107695,'mc_jimmy_wmunu_np5','*',0.00692,1.2,500000))
-#wtaunu
+#wtaunu (ATL-COM-PHYS-2011-1522.pdf)
 mc.append(MCR(107700,'mc_jimmy_wtaunu_np0','*',6918.60*1.2/1000.0,1.0,500000))
 mc.append(MCR(107701,'mc_jimmy_wtaunu_np1','*',1303.20*1.2/1000.0,1.0,500000))
 mc.append(MCR(107702,'mc_jimmy_wtaunu_np2','*',378.18*1.2/1000.0,1.0,500000))
 mc.append(MCR(107703,'mc_jimmy_wtaunu_np3','*',101.51*1.2/1000.0,1.0,500000))
 mc.append(MCR(107704,'mc_jimmy_wtaunu_np4','*',25.64*1.2/1000.0,1.0,500000))
 mc.append(MCR(107705,'mc_jimmy_wtaunu_np5','*',7.04*1.2/1000.0,1.0,500000))
-#zmumu
+#zmumu (mc11a_p756_info.txt, ATL-COM-PHYS-2011-1522.pdf)
 mc.append(MCR(107660,'mc_jimmy_zmumu_np0','*',0.66868*1.25,1.0,500000))
 mc.append(MCR(107661,'mc_jimmy_zmumu_np1','*',0.13414*1.25,1.0,500000))
 mc.append(MCR(107662,'mc_jimmy_zmumu_np2','*',0.04033*1.25,1.0,500000))
 mc.append(MCR(107663,'mc_jimmy_zmumu_np3','*',0.01119*1.25,1.0,500000))
 mc.append(MCR(107664,'mc_jimmy_zmumu_np4','*',0.00275*1.25,1.0,500000))
 mc.append(MCR(107665,'mc_jimmy_zmumu_np5','*',0.00077*1.25,1.0,500000))
-#ztautau
+#ztautau (mc11a_p756_info.txt, ATL-COM-PHYS-2011-1522.pdf)
 mc.append(MCR(107670,'mc_jimmy_ztautau_np0','*',6.684E+2*1.25/1000.0,1.0,6600000))
 mc.append(MCR(107671,'mc_jimmy_ztautau_np1','*',1.3481E+2*1.25/1000.0,1.0,1300000))
 mc.append(MCR(107672,'mc_jimmy_ztautau_np2','*',4.036E+1*1.25/1000.0,1.0,400000))
 mc.append(MCR(107673,'mc_jimmy_ztautau_np3','*',1.125E+1*1.25/1000.0,1.0,110000))
 mc.append(MCR(107674,'mc_jimmy_ztautau_np4','*',2.79E+0*1.25/1000.0,1.0,30000))
 mc.append(MCR(107675,'mc_jimmy_ztautau_np5','*',7.7E-1*1.25/1000.0,1.0,10000))
+
 # out-of-date jimmy diboson samples:
-#WW
-mc.append(MCR(107100,'mc_jimmy_ww_np0','*',0.002095,1.0,500000))
-mc.append(MCR(107101,'mc_jimmy_ww_np1','*',0.00099623,1.0,500000))
-mc.append(MCR(107102,'mc_jimmy_ww_np2','*',0.0004547,1.0,500000))
-mc.append(MCR(107103,'mc_jimmy_ww_np3','*',0.0001581,1.0,500000))
-#WZ
-mc.append(MCR(107104,'mc_jimmy_wz_np0','*',0.00067183,1.0,500000))
-mc.append(MCR(107105,'mc_jimmy_wz_np1','*',0.00041376,1.0,500000))
-mc.append(MCR(107106,'mc_jimmy_wz_np2','*',0.00022493,1.0,500000))
-mc.append(MCR(107107,'mc_jimmy_wz_np3','*',0.000094977,1.0,500000))
-#ZZ
-mc.append(MCR(107108,'mc_jimmy_zz_np0','*',0.00050861,1.0,500000))
-mc.append(MCR(107109,'mc_jimmy_zz_np1','*',0.00023417,1.0,500000))
-mc.append(MCR(107110,'mc_jimmy_zz_np2','*',0.000088623,1.0,500000))
-mc.append(MCR(107111,'mc_jimmy_zz_np3','*',0.000031388,1.0,500000))
+if False:
+    #WW
+    mc.append(MCR(107100,'mc_jimmy_ww_np0','*',0.002095,1.0,500000))
+    mc.append(MCR(107101,'mc_jimmy_ww_np1','*',0.00099623,1.0,500000))
+    mc.append(MCR(107102,'mc_jimmy_ww_np2','*',0.0004547,1.0,500000))
+    mc.append(MCR(107103,'mc_jimmy_ww_np3','*',0.0001581,1.0,500000))
+    #WZ
+    mc.append(MCR(107104,'mc_jimmy_wz_np0','*',0.00067183,1.0,500000))
+    mc.append(MCR(107105,'mc_jimmy_wz_np1','*',0.00041376,1.0,500000))
+    mc.append(MCR(107106,'mc_jimmy_wz_np2','*',0.00022493,1.0,500000))
+    mc.append(MCR(107107,'mc_jimmy_wz_np3','*',0.000094977,1.0,500000))
+    #ZZ
+    mc.append(MCR(107108,'mc_jimmy_zz_np0','*',0.00050861,1.0,500000))
+    mc.append(MCR(107109,'mc_jimmy_zz_np1','*',0.00023417,1.0,500000))
+    mc.append(MCR(107110,'mc_jimmy_zz_np2','*',0.000088623,1.0,500000))
+    mc.append(MCR(107111,'mc_jimmy_zz_np3','*',0.000031388,1.0,500000))
 
-# MC11A 
-
-# McAtNLO diboson
+# McAtNLO diboson (mc11a_p756_info.txt, ATL-COM-PHYS-2011-1522.pdf)
 mc.append(MCR(105922,'mc_mcnlo_WpWm_enumunu','*',0.50377/1000.0,1.0,200000))
 mc.append(MCR(105923,'mc_mcnlo_WpWm_enutaunu','*',0.50377/1000.0,1.0,200000))
 mc.append(MCR(105924,'mc_mcnlo_WpWm_munumunu','*',0.50377/1000.0,1.0,200000))
 mc.append(MCR(105925,'mc_mcnlo_WpWm_munuenu','*',0.50377/1000.0,1.0,200000))
 mc.append(MCR(105926,'mc_mcnlo_WpWm_munutaunu','*',0.50377/1000.0,1.0,200000))
-mc.append(MCR(105927,'mc_mcnlo_WpWm_taunuenu','*',0.50377/1000.0,1.0,200000))
-mc.append(MCR(105928,'mc_mcnlo_WpWm_taunumunu','*',0.50377/1000.0,1.0,200000))
-mc.append(MCR(105929,'mc_mcnlo_WpWm_taunutaunu','*',0.50377/1000.0,1.0,200000))
+mc.append(MCR(105927,'mc_mcnlo_WpWm_taunutaunu','*',0.50377/1000.0,1.0,200000))
+mc.append(MCR(105928,'mc_mcnlo_WpWm_taunuenu','*',0.50377/1000.0,1.0,200000))
+mc.append(MCR(105929,'mc_mcnlo_WpWm_taunumunu','*',0.50377/1000.0,1.0,200000))
 
-# Herwig diboson
-mc.append(MCR(105985,'mc_herwig_wz','*',29.592*1.52/1000.0,0.38863,250000))
+# Herwig diboson (mc11a_p756_info.txt, except ww)
+mc.append(MCR(105985,'mc_herwig_ww','*',29.592*1.52/1000.0,0.38863,250000))
 mc.append(MCR(105987,'mc_herwig_wz','*',11.245*1.58/1000.0,0.1924,250000))
 mc.append(MCR(105986,'mc_herwig_zz','*',4.596*1.41/1000.0,0.2784,250000))
 
-#single top
-mc.append(MCR(117361,'mc_acer_tchan_munu','*',8.0/1000.0,1.0,200000))
-mc.append(MCR(117362,'mc_acer_tchan_taunu','*',8.0/1000.0,1.0,200000))
-mc.append(MCR(108344,'mc_acer_schan_munu','*',0.468/1000.0,1.0,300000))
-mc.append(MCR(108345,'mc_acer_schan_taunu','*',0.468/1000.0,1.0,300000))
-mc.append(MCR(105500,'mc_acer_wt','*',14.7/1000.0,1.0,200000))
+# single top (mc11a_p756_info.txt)
+if False:
+    mc.append(MCR(117361,'mc_acer_tchan_munu','*',8.0/1000.0,1.0,200000))
+    mc.append(MCR(117362,'mc_acer_tchan_taunu','*',8.0/1000.0,1.0,200000))
+    mc.append(MCR(108344,'mc_acer_schan_munu','*',0.468/1000.0,1.0,300000))
+    mc.append(MCR(108345,'mc_acer_schan_taunu','*',0.468/1000.0,1.0,300000))
+    mc.append(MCR(105500,'mc_acer_wt','*',14.7/1000.0,1.0,200000))
+# single top (ATL-COM-PHYS-2011-1522.pdf)
+mc.append(MCR(117361,'mc_acer_tchan_munu','*',6.93/1000.0,1.0,200000))
+mc.append(MCR(117362,'mc_acer_tchan_taunu','*',6.93/1000.0,1.0,200000))
+mc.append(MCR(108344,'mc_acer_schan_munu','*',0.5/1000.0,1.0,300000))
+mc.append(MCR(108345,'mc_acer_schan_taunu','*',0.5/1000.0,1.0,300000))
+mc.append(MCR(105500,'mc_acer_wt','*',15.6/1000.0,1.0,200000))
 
 if False:
     print 'Registered',mc.nruns(),'runs:'
