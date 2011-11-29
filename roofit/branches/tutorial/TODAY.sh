@@ -6,13 +6,14 @@ wpre_jordan="${wpre_preiso} && ptiso20/l_pt<0.1"
 wpre_peter="${wpre_preiso} && ptiso30<1.125 && etiso30<1.125"
 zpre_preiso='lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>20.0 && fabs(lP_eta)<2.4 && fabs(lP_pt_id-lP_pt_exms)/lP_pt_id<0.5    &&     lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0 && fabs(lN_eta)<2.4 && fabs(lN_pt_id-lN_pt_exms)/lN_pt_id<0.5    &&     Z_m>70 && Z_m<110 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0'
 zpre_jordan="${zpre_preiso} && lP_ptiso20/lP_pt<0.1 && lN_ptiso20/lN_pt<0.1"
-zpre_peter="${zpre_preiso} && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0"
+zpre_peter="${zpre_preiso} && lP_ptiso30<1.125 && lP_etiso30<1.125 && lN_ptiso30<1.125 && lN_etiso30<1.125"
 
 common="--input /share/ftkdata1/antonk/ana_v26_0930_all_stacoCB_10GeV/"
-common="--input /share/ftkdata1/antonk/ana_v27_0930_all_stacoCB_10GeV_mc11pu/"
+#common="--input /share/ftkdata1/antonk/ana_v27_0930_all_stacoCB_10GeV_mc11pu/"
 
 # MC11A with proper reweighting
 common="--input /share/ftkdata1/antonk/ana_v27_1118_newpu_stacoCB_all/"
+common="--input /share/ftkdata1/antonk/ana_v28_1128_BtoM_stacoCB_all/"
 
 function run_d0_stacks () {
     refl="--refline 0.5,3.0"
@@ -84,19 +85,22 @@ fi
 if [ "1" -eq "1" ]; then
     common="${common} --qcd AUTO"
     i=0
-    gput tagss ${i} J_pythia_q2 "--pre \"${wpre_jordan}\" --cut \"mcw*puw\" --charge 2"
+    cut="mcw"
+    cut="mcw*puw2*febw"
+    cut="mcw*puw"
+    gput tagss ${i} WJ_pythia_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 2"
     ((i++))
-    gput tagss ${i} J_pythia_q0 "--pre \"${wpre_jordan}\" --cut \"mcw*puw\" --charge 0"
+    gput tagss ${i} WJ_pythia_q0 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 0"
     ((i++))
-    gput tagss ${i} J_pythia_q1 "--pre \"${wpre_jordan}\" --cut \"mcw*puw\" --charge 1"
+    gput tagss ${i} WJ_pythia_q1 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 1"
     ((i++))
-    gput tagss ${i} J_alpgen_q2 "--pre \"${wpre_jordan}\" --cut \"mcw*puw\" --bgsig 3 --charge 2"
+    gput tagss ${i} WJ_alpgen_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 3 --charge 2"
     ((i++))
-    gput tagss ${i} J_mcnlo_q2 "--pre \"${wpre_jordan}\" --cut \"mcw*puw\" --bgsig 1 -charge 2"
+    gput tagss ${i} WJ_mcnlo_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 1 --charge 2"
     ((i++))
-    gput tagss ${i} P_pythia_q2 "--pre \"${wpre_peter}\" --cut \"mcw*puw\" --charge 2"
+    gput tagss ${i} WP_pythia_q2 "--pre \"${wpre_peter}\" --cut \"${cut}\" --charge 2"
     ((i++))
-    gput tagss ${i} P_alpgen_q2 "--pre \"${wpre_peter}\" --cut \"mcw*puw\" --bgsig 3 -charge 2"
+    gput tagss ${i} WP_alpgen_q2 "--pre \"${wpre_peter}\" --cut \"${cut}\" --bgsig 3 --charge 2"
     ((i++))
     # run all jobs
     i=0
@@ -111,6 +115,37 @@ if [ "1" -eq "1" ]; then
 	wait
 	((i++))
     done
+    echo DONE
+fi
+
+# Z stack histos
+if [ "1" -eq "1" ]; then
+    i=0
+    cut="mcw"
+    cut="mcw*puw2*febw"
+    cut="mcw*puw"
+    gput tagzz ${i} ZJ_pythia_uncut "--pre \"${zpre_preiso}\" --cut \"${cut}\""
+    ((i++))
+    gput tagzz ${i} ZJ_pythia_all "--pre \"${zpre_jordan}\" --cut \"${cut}\""
+    ((i++))
+    gput tagzz ${i} ZP_pythia_all "--pre \"${zpre_peter}\" --cut \"${cut}\""
+    ((i++))
+    # note that alpgen gives a much better agreement for Zs!
+    gput tagzz ${i} ZJ_alpgen_all "--pre \"${zpre_jordan}\" --cut \"${cut}\" --bgsig 3"
+    ((i++))
+    gput tagzz ${i} ZP_alpgen_all "--pre \"${zpre_peter}\" --cut \"${cut}\" --bgsig 3"
+    ((i++))
+    # run all jobs
+    i=0
+    for itag in `gkeys tagzz`; do
+	tag=`ggeta tagzz $itag`
+	opts=`ggetb tagzz $itag`
+	run_z_stacks -m1 "${opts}"
+	wait
+	((i++))
+    done
+
+    wait
     echo DONE
 fi
 
@@ -259,30 +294,6 @@ if [ "0" -eq "1" ]; then
 	opts=`ggetb tagsq $itag`
 	eval ./stack2.py ${common} -b -m99 --var 'met' ${opts} -t ${tag} &
     done
-    wait
-    echo DONE
-fi
-
-# Z stack histos
-if [ "0" -eq "1" ]; then
-    i=0
-    gput tagzz ${i} ZST_uncut "--pre \"${zpre_preiso}\" --cut \"mcw*puw\""
-    ((i++))
-    gput tagzz ${i} ZST_jordan_pythia "--pre \"${zpre_jordan}\" --cut \"mcw*puw\""
-    ((i++))
-    # note that alpgen gives a much better agreement for Zs!
-    gput tagzz ${i} ZST_jordan_alpgen "--pre \"${zpre_jordan}\" --cut \"mcw*puw\" --bgsig 3"
-    ((i++))
-    # run all jobs
-    i=0
-    for itag in `gkeys tagzz`; do
-	tag=`ggeta tagzz $itag`
-	opts=`ggetb tagzz $itag`
-	run_z_stacks -m1 "${opts}"
-	wait
-	((i++))
-    done
-
     wait
     echo DONE
 fi

@@ -2,13 +2,32 @@
 source bashmap.sh
 ROOTDIR=$PWD
 
-antondb=out1113mcpupdate_ptsmear
-flabel=1113_mcpupdate_ptsmear
+antondb=out1123v27closure
+flabel=1118_newpu
 
 # Specify the list of tags
 i=0
 
 if [ "1" -eq "1" ]; then
+    data="--root '/share/ftkdata1/antonk/ana_v27_1118_newpu_stacoCB_all/data_period*/root_data_period*.root'"
+    gput tags $i r17_default_staco    "${data} --zmin 80 --zmax 100"
+    ((i++))
+    gput tags $i r17_m70110_staco     "${data} --zmin 70 --zmax 110"
+    ((i++))
+    gput tags $i r17_klu_staco        "${data} --zmin 80 --zmax 100 --kluit"
+    ((i++))
+
+    data="--root '/share/ftkdata1/antonk/ana_v27_1118_newpu_stacoCB_scaleDATA_kpkm/data_period*/root_data_period*.root'"
+    gput tags $i r17_default_staco_kpkm    "${data} --zmin 80 --zmax 100"
+    ((i++))
+    data="--root '/share/ftkdata1/antonk/ana_v27_1118_newpu_stacoCB_scaleDATA_KC/data_period*/root_data_period*.root'"
+    gput tags $i r17_default_staco_KC    "${data} --zmin 80 --zmax 100"
+    ((i++))
+    
+fi;
+
+
+if [ "0" -eq "1" ]; then
     data="--root '/share/ftkdata1/antonk/ana_v27_${flabel}_noscale_stacoCB/data_period*/root_data_period*.root'"
     gput tags $i r17_default_staco    "${data} --zmin 80 --zmax 100"
     ((i++))

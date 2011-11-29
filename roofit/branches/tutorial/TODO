@@ -2,7 +2,6 @@ IMMEDIATE:
 * make a test case for stand-alone smearing class; do a few debug printout to make sure direction is correct
 * Check on MC and some data events (low stats) that pt smearing actually adds something. Check newly wired-in scale.
 * come up with a detailed list of things TODO for Mel
-* Manually debug what's going on with pu reweighting (saw a series of contant weights!)
 
 MCP mtg:
 Oliver: apply this *before* smearing?

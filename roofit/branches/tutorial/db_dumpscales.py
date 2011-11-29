@@ -14,8 +14,9 @@ stdout = sys.stdout
 import antondb
 from optparse import OptionParser
 
-dbname = 'out1023L7'
-dbname = 'out1113mcpupdate'
+dbname = 'out1023L7' # original presentation in MCP mtg on Nov 01 are from here
+dbname = 'out1122v27closure' # closure tests on periods D..K with v27 ntuples
+dbname = 'out1113mcpupdate' # published constants in MuonMomentumCorrections come from here
 _DISABLE_KLU = False
 _DISABLE_CHI = False
 
@@ -482,7 +483,7 @@ def latex_k_syst(db,regs):
 \begin{center}
 \begin{tabular}{|c|c|c|}
 \hline
-Region    &   $k$     & $\delta k$   \\
+Region    &   $K$     & $\delta K$   \\
 \hline\hline"""
         print r'\multicolumn{3}{|c|}{'+'%s'%dets_map[det]+r'}     \\ \hline'
         for reg in regs:
