@@ -68,13 +68,11 @@ parser.add_option("--effroot",dest="effroot",
 parser.add_option("-d","--dataperiods",dest="dataperiods",
                   type="string", default=None,
                   help="Comma-separated list of data periods to process")
-#1035040.0 up to H4 (184169) EF_mu18_MG
-#1340030.0 up to I4 (186493) EF_mu18_MG
-#1469.13+2128.61 = B-I + J-L (L7). mu18_MG, followed by mu18_MG_medium
-#2269.38*1000.0 - DtoK
-_DATA_PERIODS_DEFAULT = ('D','E','F','G','H','I','J','K') # default
+#1340.03*1000.0 - BtoI with pro08
+#2269.38*1000.0 - BtoM with pro10
+_DATA_PERIODS_DEFAULT = ('B','D','E','F','G','H','I','J','K','L','M') # default
 parser.add_option("--lumi",dest="lumi",
-                  type="float", default=2269.38*1000.0,
+                  type="float", default=4713.11*1000.0,
                   help="Integrated luminosity for data (in nb^-1)")
 parser.add_option("--qcd",dest="qcdscale",
                   type="string", default='1.0',
@@ -107,9 +105,6 @@ parser.add_option('-f',"--func",dest="func",
 mode = opts.mode
 print "MODE =",mode
 _DATA_PERIODS = opts.dataperiods.split(',') if opts.dataperiods else _DATA_PERIODS_DEFAULT
-#print "PRE =",opts.pre
-#print "BEF =",opts.prebef
-#print "AFT =",opts.preaft
 gbg = []; COUT = [];
 # antondb containers
 VMAP = {}; OMAP = []
@@ -117,19 +112,17 @@ VMAP['cmd']=' '.join(sys.argv)
 
 #import ROOT and disable warning messages
 from common import *
-
-from MC import *
 #ROOT.TH1.AddDirectory(ROOT.kFALSE)    # ensure that we own all the histograms
 ROOT.SetSignalPolicy(ROOT.kSignalFast)
 ROOT.gROOT.SetBatch(opts.batch)
 ROOT.TH1.SetDefaultSumw2()
-SetStyle("AtlasStyle.C")
 #ROOT.gStyle.SetOptFit(1111);
 
 from FileLock import FileLock
 from SuCanvas import *
 SuCanvas._refLineMin = float(opts.refline.split(',')[0])
 SuCanvas._refLineMax = float(opts.refline.split(',')[1])
+SetStyle("AtlasStyle.C")
 from SuData import *
 SuSample.rootpath = opts.input
 SuSample.hsource = opts.hsource
@@ -281,6 +274,8 @@ def renormalize():
     """ Normalizes MET template """
     if not opts.qcdscale in ('AUTO','auto','Auto'):
         return
+    if opts.ntuple=='z': # TODO: choose a good region to normalize Z QCD contribution
+        return
     fitpre = metfitreg(opts.pre)
     dum1,dum2,scale = run_fit(pre=fitpre)
     SuSample.qcdscale = 1.0
@@ -304,10 +299,8 @@ pw,pz = [SuStack() for zz in xrange(2)]
 # w samples:
 if opts.bgsig in (0,1,2): # w inclusive
     pw.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
-    if True: # broken until V28 ntuple
-        pw.add(label='Z#rightarrow#tau#tau',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta,flags=['bg','mc','ewk'])
-    else:
-        pw.add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
+    pw.add(label='Z#rightarrow#tau#tau',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta,flags=['bg','mc','ewk'])
+    #pw.add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
     pw.add(label='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow,flags=['bg','mc','ewk'])
     pw.add(label='Z#rightarrow#mu#mu',samples='mc_zmumu',color=ROOT.kRed,flags=['bg','mc','ewk'])
     if opts.bgqcd==0:
@@ -328,9 +321,7 @@ if opts.bgsig in (0,1,2): # w inclusive
 elif opts.bgsig in (3,): # w+jets
     pw.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
     pw.add(label='Z#rightarrow#tau#tau+jets',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta)
-    #pw.add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
     pw.add(label='W#rightarrow#tau#nu+jets',samples=['mc_jimmy_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow)
-    #pw.add(label='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow,flags=['bg','mc','ewk'])
     pw.add(label='Z#rightarrow#mu#mu+jets',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['bg','mc','ewk'])
     pw.add(label='WZ/ZZ',samples=['mc_herwig_wz','mc_herwig_zz'],color=11,flags=['bg','mc','ewk'])
     pw.add(label='WW',samples='mc_herwig_ww',color=12,flags=['bg','mc','ewk'])
@@ -340,10 +331,8 @@ elif opts.bgsig in (3,): # w+jets
 if opts.bgsig in (0,1,2): # z inclusive
     pz.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
     pz.add(label='W#rightarrow#mu#nu',samples='mc_wmunu',color=10,flags=['bg','mc','ewk'])
-    if True: # broken until V28 ntuple
-        pz.add(label='Z#rightarrow#tau#tau',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta,flags=['bg','mc','ewk'])
-    else:
-        pz.add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
+    pz.add(label='Z#rightarrow#tau#tau',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta,flags=['bg','mc','ewk'])
+    #pz.add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
     pz.add(label='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow,flags=['bg','mc','ewk'])
     if opts.bgqcd==0:
         pz.add(label='bbmu15X/ccmu15X',samples=['mc_bbmu15x','mc_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
@@ -353,6 +342,8 @@ if opts.bgsig in (0,1,2): # z inclusive
         pz.add(label='QCD data-driven',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kCyan,flags=['bg','mc','qcd','driven'])
     if opts.bgsig==0:
         pz.add(label='Z#rightarrow#mu#mu',samples='mc_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
+    elif opts.bgsig==1:
+        pz.add(label='Z#rightarrow#mu#mu',samples='mc_mcnlo_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
     elif opts.bgsig==2:
         pz.add(label='Z#rightarrow#mu#mu+jets',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['sig','mc','ewk'])
 elif opts.bgsig in (3,): # z+jets

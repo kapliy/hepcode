@@ -33,7 +33,7 @@ class SuSample:
         s.nevt = {}
         s.files = []
         s.flags = []
-        s._evcounts = ("nevts","nevts_eff","nevts_trig","nevts_efftrig","nevts_unw")
+        s._evcounts = ("nevts","nevts_eff","nevts_trig","nevts_efftrig","nevts_unw","nevts_mcw")
         s.seen_samples = []
         # volatile
         s.path = None  # current ntuple path
@@ -51,6 +51,7 @@ class SuSample:
         UPDATE: this should alwats be nevts - otherwise it would revert the scale correction
         """
         return 'nevts'
+        return 'nevts_mcw' if 'nevts_mcw' in s.nevt[s.path].keys() else 'nevts_unw'
         effw = re.search('effw',cut)
         trigw = re.search('trigw',cut)
         if effw and not trigw:
@@ -98,17 +99,18 @@ class SuSample:
                 hist = f.Get(hname)
                 n = 0
                 if hist:
-                    #n = hist.GetEntries()  # had this here before!
-                    n = hist.GetBinContent(1)
+                    #n = hist.GetEntries()  # unweighted
+                    n = hist.GetBinContent(1) # weighted (needed for MC@NLO)
                     if ii==0 and SuSample.debug:
                         print 'Number of GRL events:',n
-                else:
+                    # fill nevt arrays
+                    for path in s.nt.keys():
+                        if ev in s.nevt[path]:
+                            s.nevt[path][ev] += n
+                        else:
+                            s.nevt[path][ev] = n
+                elif SuSample.debug:
                     print 'WARNING: failed to find object [%s] in file [%s]'%(hname,file)
-                for path in s.nt.keys():
-                    if ev in s.nevt[path]:
-                        s.nevt[path][ev] += n
-                    else:
-                        s.nevt[path][ev] = n
             #f.Close()
     def nentries(s,path=None):
         """ compute number of entries in TNtuple """
@@ -317,6 +319,7 @@ class SuStack:
             res.SetMarkerSize(0)
             if norm:
                 res.Scale(1/res.Integral())
+                #res.Scale(1/res.GetSumOfWeights())
         return res
     def data(s,hname,var,bin,cut,path=None,leg=None):
         """ data summed histogram """

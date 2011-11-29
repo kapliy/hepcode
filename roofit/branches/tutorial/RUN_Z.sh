@@ -2,10 +2,41 @@
 source bashmap.sh
 ROOTDIR=$PWD
 
-antondb=out1113mcpupdate_ptsmear
-flabel=1113_mcpupdate_ptsmear
+antondb=out1123v27closure
+flabel=1118_newpu
+
 # Specify the list of tags
 i=0
+
+
+if [ "1" -eq "1" ]; then
+    data="--rootdata '/share/ftkdata1/antonk/ana_v27_1118_newpu_stacoCB_all/data_period*/root_data_period*.root'"
+    mc="--rootmc '/share/ftkdata1/antonk/ana_v27_1118_newpu_stacoCB_noscale/mc_zmumu/root_mc_zmumu.root'" #noscale
+    gput tags $i r17_default_staco     "${data} ${mc} --func gaus0 --min 70 --max 110"
+    ((i++))
+    gput tags $i r17_default_staco     "${data} ${mc} --func egge3 --min 70 --max 110"
+    ((i++))
+    gput tags $i r17_m80100_staco      "${data} ${mc} --func egge3 --min 80 --max 100"
+    ((i++))
+    
+    datakpkm="--rootdata '/share/ftkdata1/antonk/ana_v27_1118_newpu_stacoCB_scaleDATA_kpkm/data_period*/root_data_period*.root'"
+    dataKC="--rootdata '/share/ftkdata1/antonk/ana_v27_1118_newpu_stacoCB_scaleDATA_KC/data_period*/root_data_period*.root'"
+    mckpkm="--rootmc '/share/ftkdata1/antonk/ana_v27_1118_newpu_stacoCB_scaleMC_kpkm/mc_zmumu/root_mc_zmumu.root'"
+    mcKC="--rootmc '/share/ftkdata1/antonk/ana_v27_1118_newpu_stacoCB_scaleMC_KC/mc_zmumu/root_mc_zmumu.root'"
+    mcdefault="--rootmc '/share/ftkdata1/antonk/ana_v27_1118_newpu_stacoCB_all/mc_zmumu/root_mc_zmumu.root'"
+    gput tags $i r17_default_staco_mckpkm     "${data} ${mckpkm} --func gaus0 --min 70 --max 110"
+    ((i++))
+    gput tags $i r17_default_staco_mcKC     "${data} ${mcKC} --func gaus0 --min 70 --max 110"
+    ((i++))
+    gput tags $i r17_default_staco_mcdefault     "${data} ${mcdefault} --func gaus0 --min 70 --max 110"
+    ((i++))
+    gput tags $i r17_default_staco_datakpkm     "${datakpkm} ${mc} --func gaus0 --min 70 --max 110"
+    ((i++))
+    gput tags $i r17_default_staco_dataKC     "${dataKC} ${mc} --func gaus0 --min 70 --max 110"
+    ((i++))
+    
+fi
+
 
 if [ "0" -eq "1" ]; then
     data="--rootdata '/share/ftkdata1/antonk/ana_v26_0930_noscale_stacoCB_10GeV/data_period*/root_data_period*.root'"
@@ -26,7 +57,7 @@ if [ "0" -eq "1" ]; then
     ((i++))
 fi;
 
-if [ "1" -eq "1" ]; then
+if [ "0" -eq "1" ]; then
     data="--rootdata '/share/ftkdata1/antonk/ana_v27_${flabel}_noscale_stacoCB/data_period*/root_data_period*.root'"
     mc="--rootmc '/share/ftkdata1/antonk/ana_v27_${flabel}_noscale_stacoCB/mc_zmumu/root_mc_zmumu*.root'"
     gput tags $i r17_default_staco     "${data} ${mc} --func gaus0 --min 70 --max 110"
