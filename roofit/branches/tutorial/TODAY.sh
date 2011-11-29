@@ -85,8 +85,6 @@ fi
 if [ "1" -eq "1" ]; then
     common="${common} --qcd AUTO"
     i=0
-    cut="mcw"
-    cut="mcw*puw2*febw"
     cut="mcw*puw"
     gput tagss ${i} WJ_pythia_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 2"
     ((i++))
@@ -115,14 +113,13 @@ if [ "1" -eq "1" ]; then
 	wait
 	((i++))
     done
+    wait
     echo DONE
 fi
 
 # Z stack histos
 if [ "1" -eq "1" ]; then
     i=0
-    cut="mcw"
-    cut="mcw*puw2*febw"
     cut="mcw*puw"
     gput tagzz ${i} ZJ_pythia_uncut "--pre \"${zpre_preiso}\" --cut \"${cut}\""
     ((i++))
@@ -134,6 +131,8 @@ if [ "1" -eq "1" ]; then
     gput tagzz ${i} ZJ_alpgen_all "--pre \"${zpre_jordan}\" --cut \"${cut}\" --bgsig 3"
     ((i++))
     gput tagzz ${i} ZP_alpgen_all "--pre \"${zpre_peter}\" --cut \"${cut}\" --bgsig 3"
+    ((i++))
+    gput tagzz ${i} ZJ_mcnlo_all "--pre \"${zpre_jordan}\" --cut \"${cut}\" --bgsig 1"
     ((i++))
     # run all jobs
     i=0
