@@ -28,9 +28,9 @@ if [ "1" -eq "1" ]; then
     ((i++))
     gput tags $i staco_mc_default    "${staco_mcnoscale0} ${staco_mcdefault1} --zmin 80 --zmax 100"
     ((i++))
-    gput tags $i staco_mc_kpkm       "${staco_mcnoscale0} ${staco_mckpkm1} --zmin 80 --zmax 100"
+    #gput tags $i staco_mc_kpkm       "${staco_mcnoscale0} ${staco_mckpkm1} --zmin 80 --zmax 100"
     ((i++))
-    gput tags $i staco_mc_KC         "${staco_mcnoscale0} ${staco_mcKC1} --zmin 80 --zmax 100"
+    #gput tags $i staco_mc_KC         "${staco_mcnoscale0} ${staco_mcKC1} --zmin 80 --zmax 100"
     ((i++))
 fi;
 
@@ -63,7 +63,7 @@ for itag in `gkeys tags`; do
 	    ((i++))
 	done
     done
-    #wait #dangerous!
+    wait
 done
 wait
 echo "Done up to ${i}"
