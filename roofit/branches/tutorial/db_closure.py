@@ -61,7 +61,7 @@ for det in ['cmb','exms','id']:
         pad1 = '' if i<=2 else (' ' if i==3 else '  ')
         pad2 = '' if float(s(vdef))>=100.0 else ' '
         pad3 = '' if float(s(vKCmc))>=100.0 else ' '
-        if False: # main closure result
+        if True: # main closure result
             print regs_map[reg],pad1,'\t\t','%.2f%%'%s(vdef),pad2,'\t','%.2f%%'%s(vKCmc),pad3,'\t','%.2f%%'%s(vdefaultmc)
         else:     # comparison with true z mass
             pad15 = '' if float(m(vdef))>=100.0 else ' '
