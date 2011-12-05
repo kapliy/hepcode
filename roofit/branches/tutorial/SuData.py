@@ -25,6 +25,7 @@ class SuSample:
     hsourcemc = None
     hsourcedata = None
     debug = False
+    unitize = False
     def __init__(s,name):
         """ constructor """
         s.name = name
@@ -249,6 +250,8 @@ class SuStackElm:
             res.SetLineColor(ROOT.kBlack)
             res.SetFillColor(s.color)
             res.SetMarkerSize(0)
+        if SuSample.unitize:
+            res.Scale(1/res.Integral())
         return res
 
 class SuStack:
@@ -317,7 +320,7 @@ class SuStack:
         if res:
             res.SetName(hname)
             res.SetMarkerSize(0)
-            if norm:
+            if norm or SuSample.unitize:
                 res.Scale(1/res.Integral())
                 #res.Scale(1/res.GetSumOfWeights())
         return res
