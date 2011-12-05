@@ -57,7 +57,7 @@ class SuCanvas:
     # mc
     stack.Draw("HIST")
     s.FixupHisto(stack)
-    stack.SetMinimum(0.1)
+    stack.SetMinimum(0.0) # was: 0.1
     maximum = max((data.GetMaximum(),stack.GetMaximum()))
     stack.SetMaximum(maximum*1.5)
     #data
