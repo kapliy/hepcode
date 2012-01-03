@@ -198,7 +198,7 @@ class SuCanvas:
     
   def Efficiency(s,hatot,hntot):
     """ Acceptance/efficiency workhorse function with correct errors """
-    return s.Efficiency_old(hatot,hntot) # FIXME
+    return s.Efficiency_old(hatot,hntot) # per Lauren, just use Binomial errors
     import SuEfficiency
     oef = SuEfficiency.SuEfficiency()
     hsum = hntot.Clone(hntot.GetName()+"_efficiency")
@@ -375,8 +375,11 @@ class SuCanvas:
     s._ratioXtitleOffset = 1.;
     s._ratioYtitleOffset = 0.5;
 
+  @staticmethod
+  def cleanse(name2):
+    return re.sub(r'[^\w]', '_', name2)
   def SaveAs(s,name2,ext='png'):
-    name = re.sub(r'[^\w]', '_', name2)
+    name = s.cleanse(name2)
     c = s._canvas
     c.SaveAs('%s.%s'%(name,ext))
     if ext=='eps':

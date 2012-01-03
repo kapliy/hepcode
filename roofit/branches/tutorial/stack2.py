@@ -231,6 +231,11 @@ def qcdreg(pre):
             res.append(elm)
     return ' && '.join(res)
 
+def samesignreg(pre):
+    """ removes the Z charge constraint and explicitly reverses it"""
+    newpre = prunesub(pre,('lP_q\*lN_q','\(lP_q\*lN_q'),'(lP_q*lN_q)>0')
+    return newpre
+
 def revisoreg(pre):
     """ qcd-enriched sample to get data-driven template
     This version reverses isolation, which allegedly affects pt spectrum
@@ -781,13 +786,17 @@ if mode=='12': # asymmetry (bg-subtracted)
     c = SuCanvas()
     c.plotAsymmetry(hd_sig[POS],hd_sig[NEG],hsig[POS],hsig[NEG])
 
-if mode in ('101','102'): # tag and probe
+if mode in ('101','102','103'): # tag and probe
     assert opts.ntuple=='z','ERROR: tag-and-probe can only be computed for the z ntuple'
     #renormalize()
     hda_bef = [None]*2
     hda_aft = [None]*2
     hmc_bef = [None]*2
     hmc_aft = [None]*2
+    hda_bef_pl = [None]*2
+    hda_aft_pl = [None]*2
+    hmc_bef_pl = [None]*2
+    hmc_aft_pl = [None]*2
     for iq in xrange(2): # probe charge (what we're measuring)
         iqp = iq
         iqt = 0 if iq==1 else 1
@@ -799,11 +808,64 @@ if mode in ('101','102'): # tag and probe
         if mode=='101':   # default data
             hda_bef[iq] = po.data('da_bef_%s'%QMAPZ[iq][1],var,opts.bin,'(%s) * (%s)'%(opts.cut,pre_bef))
             hda_aft[iq] = po.data('da_aft_%s'%QMAPZ[iq][1],var,opts.bin,'(%s) * (%s)'%(opts.cut,pre_aft))
-        elif mode=='102': # bg-subtracted data
+        elif mode=='102': # bg-subtracted data (using MC)
             hda_bef[iq] = po.data_sub('da_bef_%s'%QMAPZ[iq][1],var,opts.bin,'(%s) * (%s)'%(opts.cut,pre_bef))
             hda_aft[iq] = po.data_sub('da_aft_%s'%QMAPZ[iq][1],var,opts.bin,'(%s) * (%s)'%(opts.cut,pre_aft))
+        elif mode=='103': # bg-subtracted data (using same-sign Z pairs in data)
+            hda_bef[iq] = po.data('da_bef_%s'%QMAPZ[iq][1],var,opts.bin,'(%s) * (%s)'%(opts.cut,pre_bef))
+            hda_aft[iq] = po.data('da_aft_%s'%QMAPZ[iq][1],var,opts.bin,'(%s) * (%s)'%(opts.cut,pre_aft))
+            pre_bef_ss = samesignreg(pre_bef)
+            pre_aft_ss = samesignreg(pre_aft)
+            hda_bef_ss = po.data('da_bef_%s'%QMAPZ[iq][1],var,opts.bin,'(%s) * (%s)'%(opts.cut,pre_bef_ss))
+            hda_aft_ss = po.data('da_aft_%s'%QMAPZ[iq][1],var,opts.bin,'(%s) * (%s)'%(opts.cut,pre_aft_ss))
+            hda_bef[iq].Add(hda_bef_ss,-1)
+            hda_aft[iq].Add(hda_aft_ss,-1)
         else:
             assert False,'Unknown tag-and-probe mode'
+        if True: # extra plots
+            cn = SuCanvas()
+            cn.buildDefault(width=1024,height=600,title='ztagprobe%d'%iq)
+            cc = cn.cd_canvas()
+            cc.Divide(2,1)
+            color = (ROOT.kRed,ROOT.kBlue,46,38)
+            # copy
+            hmc_bef_pl[iq] = hmc_bef[iq].Clone(hmc_bef[iq].GetName()+'_pl')
+            hmc_aft_pl[iq] = hmc_aft[iq].Clone(hmc_aft[iq].GetName()+'_pl')
+            hda_bef_pl[iq] = hda_bef[iq].Clone(hda_bef[iq].GetName()+'_pl')
+            hda_aft_pl[iq] = hda_aft[iq].Clone(hda_aft[iq].GetName()+'_pl')
+            # scale
+            hmc_bef_pl[iq].Scale(1/hmc_bef_pl[iq].Integral())
+            hmc_aft_pl[iq].Scale(1/hmc_aft_pl[iq].Integral())
+            hda_bef_pl[iq].Scale(1/hda_bef_pl[iq].Integral())
+            hda_aft_pl[iq].Scale(1/hda_aft_pl[iq].Integral())
+            # plot style
+            hmc_bef_pl[iq].SetLineColor(color[iq+2])
+            hmc_bef_pl[iq].SetMarkerColor(color[iq+2])
+            hmc_bef_pl[iq].SetMarkerSize(0.8);
+            hda_bef_pl[iq].SetLineColor(color[iq])
+            hda_bef_pl[iq].SetMarkerColor(color[iq])
+            hda_bef_pl[iq].SetMarkerSize(1.0);
+            hda_bef_pl[iq].SetMarkerStyle(22);
+            hmc_aft_pl[iq].SetLineColor(color[iq+2])
+            hmc_aft_pl[iq].SetMarkerColor(color[iq+2])
+            hmc_aft_pl[iq].SetMarkerSize(0.8);
+            hda_aft_pl[iq].SetLineColor(color[iq])
+            hda_aft_pl[iq].SetMarkerColor(color[iq])
+            hda_aft_pl[iq].SetMarkerSize(1.0);
+            hda_aft_pl[iq].SetMarkerStyle(22);
+            # drawing
+            cc.cd(1)
+            hda_bef_pl[iq].Draw('')
+            hmc_bef_pl[iq].Draw('A SAME')
+            hda_bef_pl[iq].GetYaxis().SetRangeUser(0.0,max(hda_bef_pl[iq].GetMaximum(),hmc_bef_pl[iq].GetMaximum())*1.3);
+            hda_bef_pl[iq].GetXaxis().SetTitle('%s before cut'%var);
+            cc.cd(2)
+            hda_aft_pl[iq].Draw('')
+            hmc_aft_pl[iq].Draw('A SAME')
+            hda_aft_pl[iq].GetYaxis().SetRangeUser(0.0,max(hda_aft_pl[iq].GetMaximum(),hmc_aft_pl[iq].GetMaximum())*1.3);
+            hda_aft_pl[iq].GetXaxis().SetTitle('%s after cut'%var);
+            gbg.append(cn)
+            OMAP.append( cc )
     c = SuCanvas()
     c.plotTagProbe(hda_bef,hda_aft,hmc_bef,hmc_aft,xtitle=opts.var)
 
@@ -1038,12 +1100,12 @@ if mode=='99': # Floating QCD normalization
     c,frame,scalef = run_fit(metfitreg(opts.pre),opts.var,opts.bin,opts.cut)
 
 if not opts.antondb:
-    c.SaveAs('%s_%s_%s_%s_%s_%s'%(opts.tag,opts.input,QMAP[opts.charge][1],opts.var,opts.cut,mode),'png')
+    c.SaveAs('%s_%s_%s_%s_%s_%s'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode),'png')
     for i,obj in enumerate(OMAP):
         if hasattr(obj,'InheritsFrom') and obj.InheritsFrom('TPad'):
-            obj.SaveAs('%s_%s_%s_%s_%s_%s__%d.png'%(opts.tag,opts.input,QMAP[opts.charge][1],opts.var,opts.cut,mode,i))
+            obj.SaveAs(SuCanvas.cleanse('%s_%s_%s_%s_%s_%s__%d'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode,i))+'.png')
         elif hasattr(obj,'SaveAs'): # SuCanvas
-            obj.SaveAs('%s_%s_%s_%s_%s_%s__%d'%(opts.tag,opts.input,QMAP[opts.charge][1],opts.var,opts.cut,mode,i),'png')
+            obj.SaveAs('%s_%s_%s_%s_%s_%s__%d'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode,i),'png')
 
 # save everything
 if len(COUT)>0:
@@ -1059,4 +1121,4 @@ if (len(VMAP)>0 or len(OMAP)>0) and opts.antondb:
     if len(VMAP)>0:
         a.add(path,VMAP)
     if len(OMAP)>0:
-        a.add_root(path,OMAP)
+        a.add_root(path,[oo for oo in OMAP if hasattr(oo,'InheritsFrom')])

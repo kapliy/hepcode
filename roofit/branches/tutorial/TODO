@@ -1,15 +1,32 @@
-IMMEDIATE:
-* make a test case for stand-alone smearing class; do a few debug printout to make sure direction is correct
-* Check on MC and some data events (low stats) that pt smearing actually adds something. Check newly wired-in scale.
-* come up with a detailed list of things TODO for Mel
+pileup nmu correction: 0.88 - ID people
+                       0.83 - penn people, makes slopes the same
+		       0.80 - best improvement in MET, et isolation variables (all calo distributions)
+
+TODO: make overall agreement work for W plots (play with different values of pileup reweighting)
+      apply trigger scale factors from the new package.
+      study w_mt w_pt resolution
+      njet - peter not as excited about
+      bins of lepton pt (easiest)
+
+roofit:
+Check that Z TP errors don't change if I scale the lumi by a factor of 10
+   (or alternatively, if I actually normalize the histograms)
+
+Changes:
+* DONE:  enable new pt scales by default
+* DONE: New isolation per Lauren and Peter's slides
+* DONE:  New pileup reweighting: scale the TTree
+
+Peter: nuclear option = mc11c - switch minbias back to pythia6 (for higgs analysis)
+whichever one looks better and is used for the trigger efficiency
+charge mis-id - won't work from Z's. Flip probability. Can't look at same-sign Z's
++ add bins of lepton pt
+* TODO: use calo muons in tag-and-probe.
 
 MCP mtg:
-Oliver: apply this *before* smearing?
-* technical implementation - in SmearingClass
-* understand systematics using special MC
+* understand systematics using special MC !!Validate the method by putting a shift by hand. Massimo will make samples
 * run this method on MC directly
 effect on the order of 0.2 TeV-1.
-!!Validate the method by putting a shift by hand. Massimo will make samples
 
 KS toy-MC study (performing a fit) - see if errors are correct. If yes, drop chi2 method.
 For the "bad" cmb bin, look at a variation of akluit where the other muon is forced into a particular region.
@@ -84,14 +101,10 @@ MCP hits that fail - vs eta/phi in 2d (suspect specific modules)!
 Muon scales:
 * Investigate RooEggePdf - see if it is indeed compatible with my implementation!
   Test by fitting the same event!
-* Add to template the CDF plot before and after either chi2 or ks
-* !!! Relax eta to 2.5 - apply at plot level. Add to wasym definitions
-* !!! Start using mutag muons
-
 * Applying absolute scale: perhaps going about it the wrong way? Use the KS statistic between data and MC
   to find the location of the peak?
 * in zpeak.py: automatically apply defaults depending on region and type of muon!
 
-ANALYSIS:
+MCP scales:
 * Check if RooKeysPDF rho can be chosen smartly - Jahred's thesis.
 * Repeat a study to verify sqrt(A*B) works if one leg in barrel, another in endcap
