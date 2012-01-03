@@ -7,6 +7,7 @@ wpre_peter="${wpre_preiso} && ptiso30<1.125 && etiso30<1.125"
 zpre_preiso='lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>20.0 && fabs(lP_eta)<2.4 && fabs(lP_pt_id-lP_pt_exms)/lP_pt_id<0.5    &&     lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0 && fabs(lN_eta)<2.4 && fabs(lN_pt_id-lN_pt_exms)/lN_pt_id<0.5    &&     Z_m>70 && Z_m<110 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0'
 zpre_jordan="${zpre_preiso} && lP_ptiso20/lP_pt<0.1 && lN_ptiso20/lN_pt<0.1"
 zpre_peter="${zpre_preiso} && lP_ptiso30<1.125 && lP_etiso30<1.125 && lN_ptiso30<1.125 && lN_etiso30<1.125"
+wcorriso='ptiso40/l_pt<0.1 && etiso30corr<-0.25+0.058*l_pt'
 
 common="--input /share/ftkdata1/antonk/ana_v26_0930_all_stacoCB_10GeV/"
 #common="--input /share/ftkdata1/antonk/ana_v27_0930_all_stacoCB_10GeV_mc11pu/"
@@ -14,6 +15,12 @@ common="--input /share/ftkdata1/antonk/ana_v26_0930_all_stacoCB_10GeV/"
 # MC11A with proper reweighting
 common="--input /share/ftkdata1/antonk/ana_v27_1118_newpu_stacoCB_all/"
 common="--input /share/ftkdata1/antonk/ana_v28_1128_BtoM_stacoCB_all/"
+
+# MC11B
+common="--input /share/ftkdata1/antonk/ana_v28C_01012012_BtoM_mc11c_stacoCB_all/"
+
+# MC11C
+common="--input /share/ftkdata1/antonk/ana_v28C_01012012_BtoM_mc11c_stacoCB_all/"
 
 function run_d0_stacks () {
     refl="--refline 0.5,3.0"
@@ -37,6 +44,7 @@ function run_w_asym_min () {
     eval ./stack2.py ${common}  -b --var "\"fabs(l_eta)\"" --bin '25,0.0,2.5' -t ${tag} $@ &
 }
 function run_z_stacks () {
+    eval ./stack2.py ${common} --ntuple z -b --var 'nvtxs' --bin '20,0,20' -t ${tag} $@ &
     eval ./stack2.py ${common} --ntuple z -b --var 'lP_pt' --bin '50,0,100' -t ${tag} $@ &
     eval ./stack2.py ${common} --ntuple z -b --var 'lN_pt' --bin '50,0,100' -t ${tag} $@ &
     eval ./stack2.py ${common} --ntuple z -b --var 'met' --bin '50,0,200' -t ${tag} $@ &
@@ -143,7 +151,6 @@ if [ "1" -eq "1" ]; then
 	wait
 	((i++))
     done
-
     wait
     echo DONE
 fi
@@ -302,12 +309,22 @@ if [ "0" -eq "1" ]; then
     ncut='mcw*puw'
     # Select cuts against which we measure efficiency:
     i=0
-    BEF="lX_idhits==1 && fabs(lP_z0)<10. && lX_pt>10.0 && fabs(lX_eta)<2.4 && lY_idhits==1 && fabs(lN_z0)<10. && lY_pt>10.0 && fabs(lY_eta)<2.4 && Z_m>81.0 && Z_m<101.0 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0 && lX_ptiso40<2.0 && lX_etiso40<2.0"
-    gput tags ${i} etiso40  "--prebef \"${BEF}\" --preaft \"${BEF} && lY_etiso40<2.0\""
+    # iso relative
+    BEF="lX_idhits==1 && fabs(lP_z0)<10. && lX_pt>20.0 && fabs(lX_eta)<2.4 && lY_idhits==1 && fabs(lN_z0)<10. && lY_pt>20.0 && fabs(lY_eta)<2.4 && Z_m>81.0 && Z_m<101.0 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0 && lX_ptiso20/lX_pt<0.1"
+    gput tags ${i} ptrel20  "--prebef \"${BEF}\" --preaft \"${BEF} && lY_ptiso20/lY_pt<0.1\""
     ((i++))
-    gput tags ${i} ptiso40  "--prebef \"${BEF}\" --preaft \"${BEF} && lY_ptiso40<2.0\""
+    # trigger
+    BEF="lX_idhits==1 && fabs(lP_z0)<10. && lX_pt>20.0 && fabs(lX_eta)<2.4 && lY_idhits==1 && fabs(lN_z0)<10. && lY_pt>20.0 && fabs(lY_eta)<2.4 && Z_m>81.0 && Z_m<101.0 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0 && lX_ptiso20/lX_pt<0.1 && lY_ptiso20/lY_pt<0.1"
+    gput tags ${i} trigEF  "--prebef \"${BEF}\" --preaft \"${BEF} && (lY_trigEF<0.2 || lY_trigEFb<0.2)\""
     ((i++))
-    BEF='lX_idhits==1 && fabs(lP_z0)<10. && lX_pt>10.0 && fabs(lX_eta)<2.4 && fabs(lN_z0)<10. && lY_pt>10.0 && fabs(lY_eta)<2.4 && Z_m>81.0 && Z_m<101.0 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0 && lX_ptiso40<2.0 && lX_etiso40<2.0'
+    # iso absolute
+    BEF="lX_idhits==1 && fabs(lP_z0)<10. && lX_pt>20.0 && fabs(lX_eta)<2.4 && lY_idhits==1 && fabs(lN_z0)<10. && lY_pt>20.0 && fabs(lY_eta)<2.4 && Z_m>81.0 && Z_m<101.0 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0 && lX_ptiso40<2.0 && lX_etiso40<2.0"
+    #gput tags ${i} etiso40  "--prebef \"${BEF}\" --preaft \"${BEF} && lY_etiso40<2.0\""
+    ((i++))
+    #gput tags ${i} ptiso40  "--prebef \"${BEF}\" --preaft \"${BEF} && lY_ptiso40<2.0\""
+    ((i++))
+    # MCP (on isolated muons)
+    BEF='lX_idhits==1 && fabs(lP_z0)<10. && lX_pt>20.0 && fabs(lX_eta)<2.4 && fabs(lN_z0)<10. && lY_pt>20.0 && fabs(lY_eta)<2.4 && Z_m>81.0 && Z_m<101.0 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0 && lX_ptiso20/lX_pt<0.1 && lY_ptiso20/lY_pt<0.1'
     gput tags ${i} mcphits  "--prebef \"${BEF}\" --preaft \"${BEF} && lY_idhits==1\""
     ((i++))
     # run all jobs
@@ -315,12 +332,10 @@ if [ "0" -eq "1" ]; then
 	tag=`ggeta tags $itag`
 	opts=`ggetb tags $itag`
 	for bgsig in 0 3; do  # Pythia or Alpgen MC
-	    for m in 101 102; do  # Use BG subtraction?
+	    for m in 101 103; do  # Use BG subtraction?
 		eval ./stack2.py ${common} ${opts} --bgsig ${bgsig} --cut ${ncut} -m${m} --ntuple z -b --var 'lY_pt'  --bin '32,10,140' -t ${tag}_pt_MC${bgsig}&
 		eval ./stack2.py ${common} ${opts} --bgsig ${bgsig} --cut ${ncut} -m${m} --ntuple z -b --var 'lY_eta' --bin '30,-2.5,2.5' -t ${tag}_eta_MC${bgsig} &
-		break
 	    done
-	    break
 	done
 	wait
     done

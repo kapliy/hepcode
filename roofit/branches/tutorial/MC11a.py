@@ -76,11 +76,11 @@ mc = MC_samples()
 #http://www.dspace.cam.ac.uk/bitstream/1810/236979/1/tomthesis.pdf
 
 # THESE ARE NOT UPDATED!
-mc.append(MCR(106044,'mc_wmunu','*',8874.06*1.17/1000,1.000000,6993798))
-mc.append(MCR(107054,'mc_wtaunu','*',8941.45*1.17/1000,1.0,999874)) # inclusive wtaunu
-mc.append(MCR(106022,'mc_wtaunu_1Lepton','*',8916.33*1.17*3.068E-01/1000,1.0,999874)) #actual xs for this is 8.916E3*0.35 (tau is forced to decay into e/mu)
-mc.append(MCR(106047,'mc_zmumu','*',851.011*1.17/1000.0,1.000000,4998410))
-mc.append(MCR(106052,'mc_ztautau','*',8.56967E+2*1.25/1000.0,1.000000,1998598))
+mc.append(MCR(106044,'mc_pythia_wmunu','*',8874.06*1.17/1000,1.000000,6993798))
+mc.append(MCR(107054,'mc_pythia_wtaunu','*',8941.45*1.17/1000,1.0,999874)) # inclusive wtaunu
+mc.append(MCR(106022,'mc_pythia_wtaunu_1Lepton','*',8916.33*1.17*3.068E-01/1000,1.0,999874)) #actual xs for this is 8.916E3*0.35 (tau is forced to decay into e/mu)
+mc.append(MCR(106047,'mc_pythia_zmumu','*',851.011*1.17/1000.0,1.000000,4998410))
+mc.append(MCR(106052,'mc_pythia_ztautau','*',8.56967E+2*1.25/1000.0,1.000000,1998598))
 
 #QCD
 # herwig multi-jet (https://savannah.cern.ch/task/?14846, plus request sheet on savannah)
@@ -92,12 +92,12 @@ mc.append(MCR(113208,'mc_herwig_J4','*',94.7E00,1.0,500000))
 mc.append(MCR(113209,'mc_herwig_J5','*',2.58E00,1.0,500000))
 mc.append(MCR(113210,'mc_herwig_J6','*',0.039E00,1.0,500000))
 # approximate (from peter):
-mc.append(MCR(108405,'mc_bbmu15x','*',7.39E+04/1000,1.0,500000)) 
-mc.append(MCR(106059,'mc_ccmu15x','*',2.84E+04/1000,1.0,500000))
+mc.append(MCR(108405,'mc_pythia_bbmu15x','*',7.39E+04/1000,1.0,500000)) 
+mc.append(MCR(106059,'mc_pythia_ccmu15x','*',2.84E+04/1000,1.0,500000))
 
 # MC@NLO samples (updated from Physics_mc11_7TeV.xls, but not usings its 0.9 efficiency factor)
-mc.append(MCR(106083,'mc_wminmunu','*',3.99,1.000000,6993798))
-mc.append(MCR(106084,'mc_wplusmunu','*',5.87,1.000000,6993798))
+mc.append(MCR(106083,'mc_mcnlo_wminmunu','*',3.99,1.000000,6993798))
+mc.append(MCR(106084,'mc_mcnlo_wplusmunu','*',5.87,1.000000,6993798))
 mc.append(MCR(106088,'mc_mcnlo_zmumu','*',0.952,1.000000,4998410))
 
 # W/Z + jets samples:
@@ -192,7 +192,7 @@ def is_wmunu(iname):
     return any( [re.search(v,iname) for v in ('wmunu','wminmunu','wplusmunu')] )
 
 def is_qcd(iname):
-    return any( [re.search(v,iname) for v in ('mc_bbmu15x','mc_ccmu15x','mc_J')] )
+    return any( [re.search(v,iname) for v in ('bbmu15x','ccmu15x','herwig_J','pythia_J')] )
 
 def WSum(hplus,hminus,hname):
     """ Just a sum of two histograms """
