@@ -2,17 +2,16 @@
 source bashmap.sh
 ROOTDIR=$PWD
 
-antondb=out1130v28closureBtoKalp
-flabel=v28_1128_BtoM
+antondb=out01012012mc11b
+flabel=v28B_01012012_BtoM_mc11b
 
 # Specify the list of tags
 i=0
 
-if [ "1" -eq "1" ]; then
+if [ "0" -eq "1" ]; then
     data="--rootdata '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_default/data_period*/root_data_period*.root'"
-    mc="--rootmc '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_noscale/mc_zmumu/root_mc_zmumu.root'" #noscale
-    # FIXME: alpgen
-    mc="--rootmc '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_noscale/mc_jimmy_zmumu*/root_mc*.root'"
+    mc="--rootmc '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_noscale/mc_pythia_zmumu/root_mc_pythia_zmumu.root'" #noscale
+    #mc="--rootmc '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_noscale/mc_jimmy_zmumu*/root_mc*.root'"
     gput tags $i r17_default_staco     "${data} ${mc} --func gaus0 --min 70 --max 110"
     ((i++))
     gput tags $i r17_default_staco     "${data} ${mc} --func egge3 --min 70 --max 110"
@@ -20,11 +19,10 @@ if [ "1" -eq "1" ]; then
     gput tags $i r17_m80100_staco      "${data} ${mc} --func egge3 --min 80 --max 100"
     ((i++))
     
-    mcKC="--rootmc '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_scaleMC_KC/mc_zmumu/root_mc_zmumu.root'"
-    mcdefault="--rootmc '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_default/mc_zmumu/root_mc_zmumu.root'"
-    # FIXME: alpgen
-    mcKC="--rootmc '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_scaleMC_KC/mc_jimmy_zmumu*/root_mc*.root'"
-    mcdefault="--rootmc '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_default/mc_jimmy_zmumu*/root_mc*.root'"
+    mcKC="--rootmc '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_scaleMC_KC/mc_pythia_zmumu/root_mc_pythia_zmumu.root'"
+    mcdefault="--rootmc '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_default/mc_pythia_zmumu/root_mc_pythia_zmumu.root'"
+    #mcKC="--rootmc '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_scaleMC_KC/mc_jimmy_zmumu*/root_mc*.root'"
+    #mcdefault="--rootmc '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_default/mc_jimmy_zmumu*/root_mc*.root'"
 
     gput tags $i r17_default_staco_mcKC     "${data} ${mcKC} --func gaus0 --min 70 --max 110"
     ((i++))
@@ -37,42 +35,22 @@ if [ "1" -eq "1" ]; then
     
 fi
 
-
-if [ "0" -eq "1" ]; then
-    data="--rootdata '/share/ftkdata1/antonk/ana_v26_0930_noscale_stacoCB_10GeV/data_period*/root_data_period*.root'"
-    mc="--rootmc '/share/ftkdata1/antonk/ana_v26_0930_noscale_stacoCB_10GeV/mc_zmumu/root_mc_zmumu*.root'"
-    gput tags $i r16_default_staco     "${data} ${mc} --func gaus0 --min 70 --max 110"
-    ((i++))
-    gput tags $i r16_default_staco     "${data} ${mc} --func egge3 --min 70 --max 110"
-    ((i++))
-    gput tags $i r16_m80100_staco      "${data} ${mc} --func egge3 --min 80 --max 100"
-    ((i++))
-    data="--rootdata '/share/ftkdata1/antonk/ana_v26_0930_noscale_muidCB_10GeV/data_period*/root_data_period*.root'"
-    mc="--rootmc '/share/ftkdata1/antonk/ana_v26_0930_noscale_muidCB_10GeV/mc_zmumu/root_mc_zmumu*.root'"
-    gput tags $i r16_default_muid     "${data} ${mc} --func gaus0 --min 70 --max 110"
-    ((i++))
-    gput tags $i r16_default_muid     "${data} ${mc} --func egge3 --min 70 --max 110"
-    ((i++))
-    gput tags $i r16_m80100_muid      "${data} ${mc} --func egge3 --min 80 --max 100"
-    ((i++))
-fi;
-
-if [ "0" -eq "1" ]; then
-    data="--rootdata '/share/ftkdata1/antonk/ana_${flabel}_noscale_stacoCB/data_period*/root_data_period*.root'"
-    mc="--rootmc '/share/ftkdata1/antonk/ana_${flabel}_noscale_stacoCB/mc_zmumu/root_mc_zmumu*.root'"
+if [ "1" -eq "1" ]; then
+    data="--rootdata '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_all/data_period*/root_data_period*.root'"
+    mc="--rootmc '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_noscale/mc_pythia_zmumu/root_mc_pythia_zmumu*.root'"
     gput tags $i r17_default_staco     "${data} ${mc} --func gaus0 --min 70 --max 110"
     ((i++))
     gput tags $i r17_default_staco     "${data} ${mc} --func egge3 --min 70 --max 110"
     ((i++))
     gput tags $i r17_m80100_staco      "${data} ${mc} --func egge3 --min 80 --max 100"
     ((i++))
-    data="--rootdata '/share/ftkdata1/antonk/ana_${flabel}_noscale_muidCB/data_period*/root_data_period*.root'"
-    mc="--rootmc '/share/ftkdata1/antonk/ana_${flabel}_noscale_muidCB/mc_zmumu/root_mc_zmumu*.root'"
-    gput tags $i r17_default_muid     "${data} ${mc} --func gaus0 --min 70 --max 110"
+    data="--rootdata '/share/ftkdata1/antonk/ana_${flabel}_muidCB_all/data_period*/root_data_period*.root'"
+    mc="--rootmc '/share/ftkdata1/antonk/ana_${flabel}_muidCB_noscale/mc_pythia_zmumu/root_mc_pythia_zmumu*.root'"
+    #gput tags $i r17_default_muid     "${data} ${mc} --func gaus0 --min 70 --max 110"
     ((i++))
-    gput tags $i r17_default_muid     "${data} ${mc} --func egge3 --min 70 --max 110"
+    #gput tags $i r17_default_muid     "${data} ${mc} --func egge3 --min 70 --max 110"
     ((i++))
-    gput tags $i r17_m80100_muid      "${data} ${mc} --func egge3 --min 80 --max 100"
+    #gput tags $i r17_m80100_muid      "${data} ${mc} --func egge3 --min 80 --max 100"
     ((i++))
 fi;
 

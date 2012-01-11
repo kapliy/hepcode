@@ -2,13 +2,13 @@
 source bashmap.sh
 ROOTDIR=$PWD
 
-antondb=out1130v28closureBtoK
-flabel=v28_1128_BtoM
+antondb=out01012012mc11b
+flabel=v28B_01012012_BtoM_mc11b
 
 # Specify the list of tags
 i=0
 
-if [ "1" -eq "1" ]; then
+if [ "0" -eq "1" ]; then
     data="--root '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_default/data_period*/root_data_period*.root'"
     gput tags $i r17_default_staco    "${data} --zmin 80 --zmax 100"
     ((i++))
@@ -16,7 +16,6 @@ if [ "1" -eq "1" ]; then
     ((i++))
     gput tags $i r17_klu_staco        "${data} --zmin 80 --zmax 100 --kluit"
     ((i++))
-
     #data="--root '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_scaleDATA_KC/data_period*/root_data_period*.root'"
     #gput tags $i r17_default_staco_KC    "${data} --zmin 80 --zmax 100"
     #((i++))
@@ -24,20 +23,20 @@ if [ "1" -eq "1" ]; then
 fi;
 
 
-if [ "0" -eq "1" ]; then
-    data="--root '/share/ftkdata1/antonk/ana_${flabel}_noscale_stacoCB/data_period*/root_data_period*.root'"
+if [ "1" -eq "1" ]; then
+    data="--root '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_all/data_period*/root_data_period*.root'"
     gput tags $i r17_default_staco    "${data} --zmin 80 --zmax 100"
     ((i++))
     gput tags $i r17_m70110_staco     "${data} --zmin 70 --zmax 110"
     ((i++))
     gput tags $i r17_klu_staco        "${data} --zmin 80 --zmax 100 --kluit"
     ((i++))
-    data="--root '/share/ftkdata1/antonk/ana_${flabel}_noscale_muidCB/data_period*/root_data_period*.root'"
-    gput tags $i r17_default_muid    "${data} --zmin 80 --zmax 100"
+    data="--root '/share/ftkdata1/antonk/ana_${flabel}_muidCB_all/data_period*/root_data_period*.root'"
+    #gput tags $i r17_default_muid    "${data} --zmin 80 --zmax 100"
     ((i++))
-    gput tags $i r17_m70110_muid     "${data} --zmin 70 --zmax 110"
+    #gput tags $i r17_m70110_muid     "${data} --zmin 70 --zmax 110"
     ((i++))
-    gput tags $i r17_klu_muid        "${data} --zmin 80 --zmax 100 --kluit"
+    #gput tags $i r17_klu_muid        "${data} --zmin 80 --zmax 100 --kluit"
     ((i++))
 fi;
 

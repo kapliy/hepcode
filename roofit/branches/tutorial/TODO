@@ -1,9 +1,13 @@
+* After mc11 rerun: update MC11B bad-jet cleaning functions using the new LarQmean variable
+* Add overlap removal
+* Trig efficiency correction port (minimally invasive!)
+* Upgrade to the latest ROOT version (for anaquick) - when 17.0.6.X is available on tier3
+
 pileup nmu correction: 0.88 - ID people
                        0.83 - penn people, makes slopes the same
 		       0.80 - best improvement in MET, et isolation variables (all calo distributions)
 
 TODO: make overall agreement work for W plots (play with different values of pileup reweighting)
-      apply trigger scale factors from the new package.
       study w_mt w_pt resolution
       njet - peter not as excited about
       bins of lepton pt (easiest)
@@ -11,11 +15,6 @@ TODO: make overall agreement work for W plots (play with different values of pil
 roofit:
 Check that Z TP errors don't change if I scale the lumi by a factor of 10
    (or alternatively, if I actually normalize the histograms)
-
-Changes:
-* DONE:  enable new pt scales by default
-* DONE: New isolation per Lauren and Peter's slides
-* DONE:  New pileup reweighting: scale the TTree
 
 Peter: nuclear option = mc11c - switch minbias back to pythia6 (for higgs analysis)
 whichever one looks better and is used for the trigger efficiency

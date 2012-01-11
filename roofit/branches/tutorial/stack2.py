@@ -68,11 +68,12 @@ parser.add_option("--effroot",dest="effroot",
 parser.add_option("-d","--dataperiods",dest="dataperiods",
                   type="string", default=None,
                   help="Comma-separated list of data periods to process")
+_DATA_PERIODS_DEFAULT = ('D','E','F','G','H','I','J','K','L','M') # default
 #1340.03*1000.0 - BtoI with pro08
-#2269.38*1000.0 - BtoM with pro10
-_DATA_PERIODS_DEFAULT = ('B','D','E','F','G','H','I','J','K','L','M') # default
+#4713.11*1000.0 - BtoM with pro10
+#4701.37*1000.0 - DtoM with pro10
 parser.add_option("--lumi",dest="lumi",
-                  type="float", default=4713.11*1000.0,
+                  type="float", default=4701.37*1000.0,
                   help="Integrated luminosity for data (in nb^-1)")
 parser.add_option("--qcd",dest="qcdscale",
                   type="string", default='1.0',
@@ -306,25 +307,25 @@ pw,pz = [SuStack() for zz in xrange(2)]
 if opts.bgsig in (0,1,2): # w inclusive
     pw.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
     pw.add(label='Z#rightarrow#tau#tau',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta,flags=['bg','mc','ewk'])
-    #pw.add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
+    #pw.add(label='Z#rightarrow#tau#tau',samples='mc_pythia_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
     pw.add(label='W#rightarrow#tau#nu',samples=['mc_jimmy_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow,flags=['bg','mc','ewk'])
-    #pw.add(label='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow,flags=['bg','mc','ewk'])
-    pw.add(label='Z#rightarrow#mu#mu',samples='mc_zmumu',color=ROOT.kRed,flags=['bg','mc','ewk'])
+    #pw.add(label='W#rightarrow#tau#nu',samples='mc_pythia_wtaunu',color=ROOT.kYellow,flags=['bg','mc','ewk'])
+    pw.add(label='Z#rightarrow#mu#mu',samples='mc_pythia_zmumu',color=ROOT.kRed,flags=['bg','mc','ewk'])
     if opts.bgqcd==0:
-        pw.add(label='bbmu15X/ccmu15X',samples=['mc_bbmu15x','mc_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
+        pw.add(label='bbmu15X/ccmu15X',samples=['mc_pythia_bbmu15x','mc_pythia_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     elif opts.bgqcd==1:
-        pw.add(label='QCD J0..J5',samples=['mc_J%d'%v for v in xrange(5)],color=ROOT.kCyan,flags=['bg','mc','qcd'])
+        pw.add(label='QCD J0..J5',samples=['mc_pythia_J%d'%v for v in xrange(5)],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     if opts.bgsig==0:
-        pw.add(label='W#rightarrow#mu#nu',samples='mc_wmunu',color=10,flags=['sig','mc','ewk'])
+        pw.add(label='W#rightarrow#mu#nu',samples='mc_pythia_wmunu',color=10,flags=['sig','mc','ewk'])
     elif opts.bgsig==1:
-        pw.add(label='W#rightarrow#mu#nu',samples=['mc_wminmunu','mc_wplusmunu'],color=10,flags=['sig','mc','ewk'])
+        pw.add(label='W#rightarrow#mu#nu',samples=['mc_mcnlo_wminmunu','mc_mcnlo_wplusmunu'],color=10,flags=['sig','mc','ewk'])
     elif opts.bgsig==2:
         pw.add(label='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk'])
     # cache some samples for special studies. Disabled from stacks using a 'no' flag.
-    pw.add(label='pythia',samples='mc_wmunu',color=10,flags=['sig','mc','ewk','no'])
-    pw.add(label='mcnlo',samples=['mc_wminmunu','mc_wplusmunu'],color=10,flags=['sig','mc','ewk','no'])
+    pw.add(label='pythia',samples='mc_pythia_wmunu',color=10,flags=['sig','mc','ewk','no'])
+    pw.add(label='mcnlo',samples=['mc_mcnlo_wminmunu','mc_mcnlo_wplusmunu'],color=10,flags=['sig','mc','ewk','no'])
     pw.add(label='alpgen',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk','no'])
-    pw.add(label='qcd',samples=['mc_bbmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd','no'])
+    pw.add(label='qcd',samples=['mc_pythia_bbmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd','no'])
 elif opts.bgsig in (3,): # w+jets
     pw.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
     pw.add(label='Z#rightarrow#tau#tau+jets',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta,flags=['bg','mc','ewk'])
@@ -332,26 +333,26 @@ elif opts.bgsig in (3,): # w+jets
     pw.add(label='Z#rightarrow#mu#mu+jets',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['bg','mc','ewk'])
     pw.add(label='WZ/ZZ',samples=['mc_herwig_wz','mc_herwig_zz'],color=11,flags=['bg','mc','ewk'])
     pw.add(label='WW',samples='mc_herwig_ww',color=12,flags=['bg','mc','ewk'])
-    pw.add(label='bbmu15X/ccmu15X',samples=['mc_bbmu15x','mc_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
+    pw.add(label='bbmu15X/ccmu15X',samples=['mc_pythia_bbmu15x','mc_pythia_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     pw.add(label='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk'])
 else:
     pass
 # z samples:
 if opts.bgsig in (0,1,2): # z inclusive
     pz.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
-    pz.add(label='W#rightarrow#mu#nu',samples='mc_wmunu',color=10,flags=['bg','mc','ewk'])
+    pz.add(label='W#rightarrow#mu#nu',samples='mc_pythia_wmunu',color=10,flags=['bg','mc','ewk'])
     pz.add(label='Z#rightarrow#tau#tau',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta,flags=['bg','mc','ewk'])
-    #pz.add(label='Z#rightarrow#tau#tau',samples='mc_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
+    #pz.add(label='Z#rightarrow#tau#tau',samples='mc_pythia_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
     pz.add(label='W#rightarrow#tau#nu',samples=['mc_jimmy_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow,flags=['bg','mc','ewk'])
-    #pz.add(label='W#rightarrow#tau#nu',samples='mc_wtaunu',color=ROOT.kYellow,flags=['bg','mc','ewk'])
+    #pz.add(label='W#rightarrow#tau#nu',samples='mc_pythia_wtaunu',color=ROOT.kYellow,flags=['bg','mc','ewk'])
     if opts.bgqcd==0:
-        pz.add(label='bbmu15X/ccmu15X',samples=['mc_bbmu15x','mc_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
+        pz.add(label='bbmu15X/ccmu15X',samples=['mc_pythia_bbmu15x','mc_pythia_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     elif opts.bgqcd==1:
-        pz.add(label='QCD J0..J5',samples=['mc_J%d'%v for v in xrange(5)],color=ROOT.kCyan,flags=['bg','mc','qcd'])
+        pz.add(label='QCD J0..J5',samples=['mc_pythia_J%d'%v for v in xrange(5)],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     elif opts.bgqcd==2:
         pz.add(label='QCD data-driven',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kCyan,flags=['bg','mc','qcd','driven'])
     if opts.bgsig==0:
-        pz.add(label='Z#rightarrow#mu#mu',samples='mc_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
+        pz.add(label='Z#rightarrow#mu#mu',samples='mc_pythia_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
     elif opts.bgsig==1:
         pz.add(label='Z#rightarrow#mu#mu',samples='mc_mcnlo_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
     elif opts.bgsig==2:
@@ -363,11 +364,11 @@ elif opts.bgsig in (3,): # z+jets
     pz.add(label='W#rightarrow#tau#nu+jets',samples=['mc_jimmy_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow,flags=['bg','mc','ewk'])
     pz.add(label='WZ/ZZ',samples=['mc_herwig_wz','mc_herwig_zz'],color=11,flags=['bg','mc','ewk'])
     pz.add(label='WW',samples='mc_herwig_ww',color=12,flags=['bg','mc','ewk'])
-    pz.add(label='bbmu15X/ccmu15X',samples=['mc_bbmu15x','mc_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
+    pz.add(label='bbmu15X/ccmu15X',samples=['mc_pythia_bbmu15x','mc_pythia_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     pz.add(label='Z#rightarrow#mu#mu+jets',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['sig','mc','ewk'])
 elif opts.bgsig in (10,11,12,13): # Z->mumu signal only (for normalized plots)
     if opts.bgsig==10: #Pythia
-        pz.add(label='Z#rightarrow#mu#mu',samples='mc_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
+        pz.add(label='Z#rightarrow#mu#mu',samples='mc_pythia_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
     elif opts.bgsig==11: # MC@NLO
         pz.add(label='Z#rightarrow#mu#mu',samples='mc_mcnlo_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
     elif opts.bgsig in (12,13): #Alpgen
