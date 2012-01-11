@@ -1,7 +1,12 @@
 #!/bin/bash
 
-periods="B,D,E,F,G,H,I,J,K"
-periods="L,M"
+if [ "1" -eq "0" ]; then
+    periods="B,D,E,F,G,H,I,J,K"
+    lumi=4701370
+else
+    periods="L,M"
+    lumi=2290000
+fi
 
 label=v28B_01062012_BtoM_mc11b
 
