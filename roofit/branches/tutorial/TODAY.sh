@@ -17,10 +17,12 @@ common="--input /share/ftkdata1/antonk/ana_v27_1118_newpu_stacoCB_all/"
 common="--input /share/ftkdata1/antonk/ana_v28_1128_BtoM_stacoCB_all/"
 
 # MC11B
-common="--input /share/ftkdata1/antonk/ana_v28C_01012012_BtoM_mc11c_stacoCB_all/"
+common="--input /share/ftkdata1/antonk/ana_v28B_01062012_BtoM_mc11b_stacoCB_all/"
+
+common="--input /share/ftkdata1/antonk/ana_v28B_01062012_BtoM_mc11bPS1_stacoCB_all/"
 
 # MC11C
-common="--input /share/ftkdata1/antonk/ana_v28C_01012012_BtoM_mc11c_stacoCB_all/"
+#common="--input /share/ftkdata1/antonk/ana_v28C_01062012_BtoM_mc11c_stacoCB_all/"
 
 function run_d0_stacks () {
     refl="--refline 0.5,3.0"
@@ -29,7 +31,15 @@ function run_d0_stacks () {
     eval ./stack2.py ${common}  -b --var 'z0' --bin '100,-1.0,1.0' -t ${tag} $@ ${refl}
     eval ./stack2.py ${common}  -b --var 'fabs\(l_pt_id-l_pt_exms\)/l_pt_id' --bin '50,0,2' -t ${tag} $@ &
 }
+function run_w_quick_stacks () {
+    eval ./stack2.py ${common}  -b --var 'nvtxs_all' --bin '20,0,20' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var 'l_pt' --bin '50,0,100' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var 'met' --bin '50,0,200' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var 'w_mt' --bin '50,0,200' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var 'l_eta' --bin '50,-2.5,2.5' -t ${tag} $@ &
+}
 function run_w_stacks () {
+    eval ./stack2.py ${common}  -b --var 'nvtxs_all' --bin '20,0,20' -t ${tag} $@ &
     eval ./stack2.py ${common}  -b --var 'l_pt' --bin '50,0,100' -t ${tag} $@ &
     eval ./stack2.py ${common}  -b --var 'met' --bin '50,0,200' -t ${tag} $@ &
     eval ./stack2.py ${common}  -b --var 'w_mt' --bin '50,0,200' -t ${tag} $@ &
@@ -44,7 +54,7 @@ function run_w_asym_min () {
     eval ./stack2.py ${common}  -b --var "\"fabs(l_eta)\"" --bin '25,0.0,2.5' -t ${tag} $@ &
 }
 function run_z_stacks () {
-    eval ./stack2.py ${common} --ntuple z -b --var 'nvtxs' --bin '20,0,20' -t ${tag} $@ &
+    eval ./stack2.py ${common} --ntuple z -b --var 'nvtxs_all' --bin '20,0,20' -t ${tag} $@ &
     eval ./stack2.py ${common} --ntuple z -b --var 'lP_pt' --bin '50,0,100' -t ${tag} $@ &
     eval ./stack2.py ${common} --ntuple z -b --var 'lN_pt' --bin '50,0,100' -t ${tag} $@ &
     eval ./stack2.py ${common} --ntuple z -b --var 'met' --bin '50,0,200' -t ${tag} $@ &
@@ -96,13 +106,13 @@ if [ "1" -eq "1" ]; then
     cut="mcw*puw"
     gput tagss ${i} WJ_pythia_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 2"
     ((i++))
-    gput tagss ${i} WJ_pythia_q0 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 0"
+    #gput tagss ${i} WJ_pythia_q0 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 0"
     ((i++))
-    gput tagss ${i} WJ_pythia_q1 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 1"
+    #gput tagss ${i} WJ_pythia_q1 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 1"
     ((i++))
     gput tagss ${i} WJ_alpgen_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 3 --charge 2"
     ((i++))
-    gput tagss ${i} WJ_mcnlo_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 1 --charge 2"
+    #gput tagss ${i} WJ_mcnlo_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 1 --charge 2"
     ((i++))
     gput tagss ${i} WP_pythia_q2 "--pre \"${wpre_peter}\" --cut \"${cut}\" --charge 2"
     ((i++))
@@ -113,12 +123,14 @@ if [ "1" -eq "1" ]; then
     for itag in `gkeys tagss`; do
 	tag=`ggeta tagss $itag`
 	opts=`ggetb tagss $itag`
-	run_w_stacks -m1 "${opts}"
+	run_w_quick_stacks -m1 "${opts}"
+	#run_w_stacks -m1 "${opts}"
 	if [ "${i}" -eq "0" ]; then
-	    run_d0_stacks -m1 "${opts}"
-	    run_w_asym -m12 "${opts}"
+	    #run_d0_stacks -m1 "${opts}"
+	    #run_w_asym -m12 "${opts}"
+	    true
 	fi;
-	wait
+	#wait
 	((i++))
     done
     wait
@@ -126,7 +138,7 @@ if [ "1" -eq "1" ]; then
 fi
 
 # Z stack histos
-if [ "1" -eq "1" ]; then
+if [ "0" -eq "1" ]; then
     i=0
     cut="mcw*puw"
     gput tagzz ${i} ZJ_pythia_uncut "--pre \"${zpre_preiso}\" --cut \"${cut}\""

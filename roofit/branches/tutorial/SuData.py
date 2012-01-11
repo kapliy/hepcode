@@ -250,8 +250,9 @@ class SuStackElm:
             res.SetLineColor(ROOT.kBlack)
             res.SetFillColor(s.color)
             res.SetMarkerSize(0)
-        if SuSample.unitize:
-            res.Scale(1/res.Integral())
+            if SuSample.unitize:
+                res.Scale(1/res.Integral())
+        assert res,'Failed to create: ' + hname
         return res
 
 class SuStack:
