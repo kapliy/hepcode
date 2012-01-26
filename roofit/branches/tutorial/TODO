@@ -1,6 +1,6 @@
-* After mc11 rerun: update MC11B bad-jet cleaning functions using the new LarQmean variable
 * Add overlap removal
 * Trig efficiency correction port (minimally invasive!)
+* Implement MissingETUtility
 * Upgrade to the latest ROOT version (for anaquick) - when 17.0.6.X is available on tier3
 
 pileup nmu correction: 0.88 - ID people

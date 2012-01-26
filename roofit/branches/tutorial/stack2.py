@@ -79,7 +79,7 @@ parser.add_option("--qcd",dest="qcdscale",
                   type="string", default='1.0',
                   help="QCD scale factor")
 parser.add_option("-o", "--output",dest="output",
-                  type="string", default="",
+                  type="string", default=None,
                   help="Name of output dir for plots")
 parser.add_option("--root", default=False,
                   action="store_true",dest="root",
@@ -1101,12 +1101,17 @@ if mode=='99': # Floating QCD normalization
     c,frame,scalef = run_fit(metfitreg(opts.pre),opts.var,opts.bin,opts.cut)
 
 if not opts.antondb:
-    c.SaveAs('%s_%s_%s_%s_%s_%s'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode),'png')
+    DIR='./'
+    if opts.output:
+        if not os.path.isdir(opts.output):
+            os.makedirs(opts.output)
+        DIR=opts.output+'/'
+    c.SaveAs('%s_%s_%s_%s_%s_%s'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode),'png',DIR=DIR)
     for i,obj in enumerate(OMAP):
         if hasattr(obj,'InheritsFrom') and obj.InheritsFrom('TPad'):
-            obj.SaveAs(SuCanvas.cleanse('%s_%s_%s_%s_%s_%s__%d'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode,i))+'.png')
+            obj.SaveAs(DIR+SuCanvas.cleanse('%s_%s_%s_%s_%s_%s__%d'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode,i))+'.png')
         elif hasattr(obj,'SaveAs'): # SuCanvas
-            obj.SaveAs('%s_%s_%s_%s_%s_%s__%d'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode,i),'png')
+            obj.SaveAs('%s_%s_%s_%s_%s_%s__%d'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode,i),'png',DIR=DIR)
 
 # save everything
 if len(COUT)>0:
