@@ -1,28 +1,27 @@
 #!/bin/bash
 source bashmap.sh
 
-wpre_preiso='l_pt>20.0 && fabs(l_eta)<2.4 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'
+wpre_preiso='l_pt>20.0 && fabs(l_eta)<2.4 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5' #old
+wpre_preiso='l_pt>20.0 && fabs(l_eta)<2.4 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && fabs(d0sig)<3.0' #WW/WZ
 wpre_jordan="${wpre_preiso} && ptiso20/l_pt<0.1"
-wpre_peter="${wpre_preiso} && ptiso30<1.125 && etiso30<1.125"
-zpre_preiso='lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>20.0 && fabs(lP_eta)<2.4 && fabs(lP_pt_id-lP_pt_exms)/lP_pt_id<0.5    &&     lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0 && fabs(lN_eta)<2.4 && fabs(lN_pt_id-lN_pt_exms)/lN_pt_id<0.5    &&     Z_m>70 && Z_m<110 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0'
+wpre_peter="${wpre_preiso} && ptiso30<1.125 && etiso30<1.125" #old
+wpre_peter="${wpre_preiso} && ptiso30/l_pt<0.15 && etiso30corr/l_pt<0.14" #WW/WZ
+zpre_preiso='lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>20.0 && fabs(lP_eta)<2.4 && fabs(lP_pt_id-lP_pt_exms)/lP_pt_id<0.5    &&     lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0 && fabs(lN_eta)<2.4 && fabs(lN_pt_id-lN_pt_exms)/lN_pt_id<0.5    &&     Z_m>70 && Z_m<110 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0' #old
+zpre_preiso='lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>20.0 && fabs(lP_eta)<2.4 && fabs(lP_d0sig)<3.0    &&    lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0 && fabs(lN_eta)<2.4 && fabs(lN_d0sig)<3.0    &&     Z_m>70 && Z_m<110 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0' #WW/WZ
 zpre_jordan="${zpre_preiso} && lP_ptiso20/lP_pt<0.1 && lN_ptiso20/lN_pt<0.1"
-zpre_peter="${zpre_preiso} && lP_ptiso30<1.125 && lP_etiso30<1.125 && lN_ptiso30<1.125 && lN_etiso30<1.125"
+zpre_peter="${zpre_preiso} && lP_ptiso30<1.125 && lP_etiso30<1.125 && lN_ptiso30<1.125 && lN_etiso30<1.125" #old
+zpre_peter="${zpre_preiso} && lP_ptiso30/lP_pt<0.15 && lP_etiso30corr/lP_pt<0.14 && lN_ptiso30/lN_pt<0.15 && lN_etiso30corr/lN_pt<0.14" #WW/WZ
 wcorriso='ptiso40/l_pt<0.1 && etiso30corr<-0.25+0.058*l_pt'
-
-common="--input /share/ftkdata1/antonk/ana_v26_0930_all_stacoCB_10GeV/"
-#common="--input /share/ftkdata1/antonk/ana_v27_0930_all_stacoCB_10GeV_mc11pu/"
 
 # MC11A with proper reweighting
 common="--input /share/ftkdata1/antonk/ana_v27_1118_newpu_stacoCB_all/"
 common="--input /share/ftkdata1/antonk/ana_v28_1128_BtoM_stacoCB_all/"
 
 # MC11B
-common="--input /share/ftkdata1/antonk/ana_v28B_01062012_BtoM_mc11b_stacoCB_all/"
-
-common="--input /share/ftkdata1/antonk/ana_v28B_01062012_BtoM_mc11bPS1_stacoCB_all/"
-
+commonB="--input /share/ftkdata1/antonk/ana_v28HB_01212012_DtoM_jetupd_stacoCB_all/ -o mc11b"
 # MC11C
-#common="--input /share/ftkdata1/antonk/ana_v28C_01062012_BtoM_mc11c_stacoCB_all/"
+commonC="--input /share/ftkdata1/antonk/ana_v28HC_01212012_DtoM_jetupd_stacoCB_all/ -o mc11c"
+common="${commonB}"
 
 function run_d0_stacks () {
     refl="--refline 0.5,3.0"
@@ -106,13 +105,13 @@ if [ "1" -eq "1" ]; then
     cut="mcw*puw"
     gput tagss ${i} WJ_pythia_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 2"
     ((i++))
-    #gput tagss ${i} WJ_pythia_q0 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 0"
+    gput tagss ${i} WJ_pythia_q0 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 0"
     ((i++))
-    #gput tagss ${i} WJ_pythia_q1 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 1"
+    gput tagss ${i} WJ_pythia_q1 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 1"
     ((i++))
     gput tagss ${i} WJ_alpgen_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 3 --charge 2"
     ((i++))
-    #gput tagss ${i} WJ_mcnlo_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 1 --charge 2"
+    gput tagss ${i} WJ_mcnlo_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 1 --charge 2"
     ((i++))
     gput tagss ${i} WP_pythia_q2 "--pre \"${wpre_peter}\" --cut \"${cut}\" --charge 2"
     ((i++))
@@ -124,13 +123,13 @@ if [ "1" -eq "1" ]; then
 	tag=`ggeta tagss $itag`
 	opts=`ggetb tagss $itag`
 	run_w_quick_stacks -m1 "${opts}"
-	#run_w_stacks -m1 "${opts}"
-	if [ "${i}" -eq "0" ]; then
-	    #run_d0_stacks -m1 "${opts}"
-	    #run_w_asym -m12 "${opts}"
+	run_w_stacks -m1 "${opts}"
+	if [ "${i}" -eq "1" ]; then
+	    run_d0_stacks -m1 "${opts}"
+	    run_w_asym -m12 "${opts}"
 	    true
 	fi;
-	#wait
+	wait
 	((i++))
     done
     wait
@@ -138,7 +137,7 @@ if [ "1" -eq "1" ]; then
 fi
 
 # Z stack histos
-if [ "0" -eq "1" ]; then
+if [ "1" -eq "1" ]; then
     i=0
     cut="mcw*puw"
     gput tagzz ${i} ZJ_pythia_uncut "--pre \"${zpre_preiso}\" --cut \"${cut}\""

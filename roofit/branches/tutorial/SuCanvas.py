@@ -378,12 +378,12 @@ class SuCanvas:
   @staticmethod
   def cleanse(name2):
     return re.sub(r'[^\w]', '_', name2)
-  def SaveAs(s,name2,ext='png'):
+  def SaveAs(s,name2,ext='png',DIR='./'):
     name = s.cleanse(name2)
     c = s._canvas
-    c.SaveAs('%s.%s'%(name,ext))
+    c.SaveAs(DIR+'%s.%s'%(name,ext))
     if ext=='eps':
-        c.SaveAs('%s.%s'%(name,'png'))
+        c.SaveAs(DIR+'%s.%s'%(name,'png'))
   def saveAs( s, fullname ):
     """ save the canvas """
     s._canvas.SaveAs( fullname );
