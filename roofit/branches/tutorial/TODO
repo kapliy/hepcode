@@ -1,6 +1,13 @@
-* Add overlap removal
-* Trig efficiency correction port (minimally invasive!)
+* Update Z event veto properly. Use baseline selection for the veto.
+  Also, use z veto: 3rd lepton
+* met cleaning addition: jet within cone 0.3 of lepton
+* Trig efficiency correction port (minimally invasive - just use ROOT histograms)
+* Fix default (systematic) histogram cuts in AnaVCrossSectionCandidate; add histos for trigger/efficiency variations
 * Implement MissingETUtility
+
+
+
+* Add overlap removal
 * Upgrade to the latest ROOT version (for anaquick) - when 17.0.6.X is available on tier3
 
 pileup nmu correction: 0.88 - ID people
