@@ -531,8 +531,17 @@ if mode=='924': # asymmetry, at reco/particle level: systematic variations in bg
     leg = ROOT.TLegend(0.55-0.4,0.70-0.11,0.88-0.4,0.92,QMAP[q][3],"brNDC")
     leg.SetHeader('Systematic variations:')
     hs = [('nominal','WJ','WJ',''),]  # format: (data,mc) histo
-    hs += [('mu scale 00','WJ_sc00','WJ',''),('mu scale 10','WJ_sc10','WJ',''),('mu scale 11','WJ_sc11','WJ','')] # data scales
-    hs += [('mu smear %d'%i,'WJ','WJ_sm%d'%i,'') for i in xrange(2,6)] # mc smears
+    # MCP momentum scale
+    hs += [('KLOW','WJ','WJ_mc_KC_SCALEKLOW',''),]
+    hs += [('KUP','WJ','WJ_mc_KC_SCALEKUP',''),]
+    hs += [('CLOW','WJ','WJ_mc_KC_SCALECLOW',''),]
+    hs += [('CUP','WJ','WJ_mc_KC_SCALECUP',''),]
+    # MCP smearing
+    hs += [('MSLOW','WJ','WJ_mc_KC_MSLOW',''),]
+    hs += [('MSUP','WJ','WJ_mc_KC_MSUP',''),]
+    hs += [('IDLOW','WJ','WJ_mc_KC_IDLOW',''),]
+    hs += [('IDUP','WJ','WJ_mc_KC_IDUP',''),]
+    # QCD
     hs += [('QCD +20%','WJ','WJ','qcd+'),('QCD -20%','WJ','WJ','qcd-')]
     hs += [('Isolation','WP','WP','qcdP'),]
     SuSample.GLOBAL_CACHE = None

@@ -2,26 +2,37 @@
 source bashmap.sh
 
 wpre_preiso='l_pt>20.0 && fabs(l_eta)<2.4 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5' #old
-wpre_preiso='l_pt>20.0 && fabs(l_eta)<2.4 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && fabs(d0sig)<3.0' #WW/WZ
+wpre_preiso='l_pt>20.0 && fabs(l_eta)<2.4 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && fabs(d0sig)<10.0' #WW/WZ (d0sig)<3.0
 wpre_jordan="${wpre_preiso} && ptiso20/l_pt<0.1"
 wpre_peter="${wpre_preiso} && ptiso30<1.125 && etiso30<1.125" #old
 wpre_peter="${wpre_preiso} && ptiso30/l_pt<0.15 && etiso30corr/l_pt<0.14" #WW/WZ
 zpre_preiso='lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>20.0 && fabs(lP_eta)<2.4 && fabs(lP_pt_id-lP_pt_exms)/lP_pt_id<0.5    &&     lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0 && fabs(lN_eta)<2.4 && fabs(lN_pt_id-lN_pt_exms)/lN_pt_id<0.5    &&     Z_m>70 && Z_m<110 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0' #old
-zpre_preiso='lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>20.0 && fabs(lP_eta)<2.4 && fabs(lP_d0sig)<3.0    &&    lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0 && fabs(lN_eta)<2.4 && fabs(lN_d0sig)<3.0    &&     Z_m>70 && Z_m<110 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0' #WW/WZ
+zpre_preiso='lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>20.0 && fabs(lP_eta)<2.4 && fabs(lP_d0sig)<10.0    &&    lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0 && fabs(lN_eta)<2.4 && fabs(lN_d0sig)<10.0    &&     Z_m>70 && Z_m<110 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0' #WW/WZ (d0sig<3.0)
 zpre_jordan="${zpre_preiso} && lP_ptiso20/lP_pt<0.1 && lN_ptiso20/lN_pt<0.1"
 zpre_peter="${zpre_preiso} && lP_ptiso30<1.125 && lP_etiso30<1.125 && lN_ptiso30<1.125 && lN_etiso30<1.125" #old
 zpre_peter="${zpre_preiso} && lP_ptiso30/lP_pt<0.15 && lP_etiso30corr/lP_pt<0.14 && lN_ptiso30/lN_pt<0.15 && lN_etiso30corr/lN_pt<0.14" #WW/WZ
-wcorriso='ptiso40/l_pt<0.1 && etiso30corr<-0.25+0.058*l_pt'
-
-# MC11A with proper reweighting
-common="--input /share/ftkdata1/antonk/ana_v27_1118_newpu_stacoCB_all/"
-common="--input /share/ftkdata1/antonk/ana_v28_1128_BtoM_stacoCB_all/"
 
 # MC11B
-commonB="--input /share/ftkdata1/antonk/ana_v28HB_01212012_DtoM_jetupd_stacoCB_all/ -o mc11b"
+commonB="--input /share/ftkdata1/antonk/ana_v28HB_01212012_DtoM_jetupd_stacoCB_all/"
 # MC11C
-commonC="--input /share/ftkdata1/antonk/ana_v28HC_01212012_DtoM_jetupd_stacoCB_all/ -o mc11c"
-common="${commonB}"
+commonC="--input /share/ftkdata1/antonk/ana_v28HC_01212012_DtoM_jetupd_stacoCB_all/"
+common="${commonC}"
+
+###############################################################################
+# Parse command line
+###############################################################################
+mode=none
+while getopts ":i:o:m:" optionslist; do
+    case $optionslist in
+	i ) common="--input $OPTARG"
+	    echo "Input folder: $OPTARG";;
+	o ) common="${common} -o $OPTARG"
+	    echo "Output folder: $OPTARG";;
+	m ) mode=$OPTARG
+	    echo "Mode: $mode";;
+    esac
+done;
+
 
 function run_d0_stacks () {
     refl="--refline 0.5,3.0"
@@ -63,7 +74,7 @@ function run_z_stacks () {
 
 # QCD data-driven methods
 # TODO - work in progress! Need to integrate!
-if [ "0" -eq "1" ]; then
+if [ "$mode" == "matrix" ]; then
     common="${common}"
     pre="${wpre_jordan}"
     m=matrix_2010inc
@@ -78,7 +89,7 @@ fi
 # Z MCP studies
 # TODO - work in progress!
 # TODO: merge in a single framework to do these kinds of plots; fix gaussian fit 
-if [ "0" -eq "1" ]; then
+if [ "$mode" == "MCP" ]; then
     m=1013
     m=1012
     m=1111
@@ -99,17 +110,21 @@ if [ "0" -eq "1" ]; then
 fi
 
 # stack plots and single-MC asymmetry
-if [ "1" -eq "1" ]; then
+if [ "$mode" == "w" ]; then
     common="${common} --qcd AUTO"
     i=0
     cut="mcw*puw"
     gput tagss ${i} WJ_pythia_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 2"
     ((i++))
-    gput tagss ${i} WJ_pythia_q0 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 0"
-    ((i++))
     gput tagss ${i} WJ_pythia_q1 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 1"
     ((i++))
+    gput tagss ${i} WJ_pythia_q0 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 0"
+    ((i++))
     gput tagss ${i} WJ_alpgen_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 3 --charge 2"
+    ((i++))
+    gput tagss ${i} WJ_alpgen_q1 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 3 --charge 1"
+    ((i++))
+    gput tagss ${i} WJ_alpgen_q0 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 3 --charge 0"
     ((i++))
     gput tagss ${i} WJ_mcnlo_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 1 --charge 2"
     ((i++))
@@ -137,7 +152,7 @@ if [ "1" -eq "1" ]; then
 fi
 
 # Z stack histos
-if [ "1" -eq "1" ]; then
+if [ "$mode" == "z" ]; then
     i=0
     cut="mcw*puw"
     gput tagzz ${i} ZJ_pythia_uncut "--pre \"${zpre_preiso}\" --cut \"${cut}\""
@@ -167,7 +182,7 @@ if [ "1" -eq "1" ]; then
 fi
 
 # truth plots for multiple generators
-if [ "0" -eq "1" ]; then
+if [ "$mode" == "truth" ]; then
     common="${common} --qcd AUTO"
     pre="${wpre_jordan}"
     m=1
@@ -178,9 +193,9 @@ if [ "0" -eq "1" ]; then
     run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 2 "
     tag=QPOS
     run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 0 "
-    wait
     tag=QNEG
     run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 1 "
+    wait
 
     cut="mcw*puw"
     m=921
@@ -192,12 +207,13 @@ if [ "0" -eq "1" ]; then
 fi
 
 # creation and verification of unfolding efficiency histograms
-if [ "0" -eq "1" ]; then
+if [ "$mode" == "unfold" ]; then
     common="${common} --qcd AUTO"
     pre="${wpre_jordan}"
     cut="mcw*puw"
-    common="${common} --effroot oct20_eff.root"
+    common="${common} --effroot asymmetry_eff.root"
 
+    # make eff histogram from Pythia?
     if [ "dome" == "dome" ]; then
 	m=100
 	tag=EFF_q0
@@ -211,12 +227,28 @@ if [ "0" -eq "1" ]; then
 	run_w_asym "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 2 "
 	wait
     fi;
+    # make eff histogram from Alpgen?
+    if [ "dome" == "domeNOT" ]; then
+	m=100
+	tag=EFF_q0
+	run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 0 --bgsig 3"
+	run_w_asym "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 0 --bgsig 3"
+	tag=EFF_q1
+	run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 1 --bgsig 3"
+	run_w_asym "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 1 --bgsig 3"
+	tag=EFF_q2
+	run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 2 --bgsig 3"
+	run_w_asym "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 2 --bgsig 3"
+	wait
+    fi;
 
     m=2
     tag=EFFDO_q2_pythia
     run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 2 "
     tag=EFFDO_q2_alpgen
-    run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 2 --bgsig 2"
+    run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 2 --bgsig 3"
+    tag=EFFDO_q2_mcnlo
+    run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 2 --bgsig 1"
     wait
     
 fi;
@@ -224,7 +256,7 @@ fi;
 # FINAL OUTPUT:
 # reco-level asymmetry plots for multiple generators
 # also allows to perform a correction to particle level
-if [ "0" -eq "1" ]; then
+if [ "$mode" == "final" ]; then
     common="${common} --qcd AUTO"
     pre="${wpre_jordan}"
     cut="mcw*puw"
@@ -235,23 +267,29 @@ if [ "0" -eq "1" ]; then
     gput tagsF ${i} RASYM  "--pre \"${pre}\" --cut \"${cut}\" -m ${m} "
     ((i++))
     # unfolded to particle level
-    gput tagsF ${i} UASYM  "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --effroot oct20_eff.root"
+    gput tagsF ${i} UASYM  "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --effroot asymmetry_eff.root"
     ((i++))
     # additional variations - for run
-    if [ "0" -eq "2" ]; then
+    if [ "2" -eq "2" ]; then
 	gput tagsF ${i} RASYM_nj0  "--pre \"${pre} && njets==0\" --cut \"${cut}\" -m ${m} "
 	((i++))
 	gput tagsF ${i} RASYM_nj1  "--pre \"${pre} && njets==1\" --cut \"${cut}\" -m ${m} "
+	((i++))
+	gput tagsF ${i} RASYM_nj2  "--pre \"${pre} && njets==2\" --cut \"${cut}\" -m ${m} "
+	((i++))
+	gput tagsF ${i} RASYM_lpt2050  "--pre \"${pre} && l_pt>20 && l_pt<50\" --cut \"${cut}\" -m ${m} "
+	((i++))
+	gput tagsF ${i} RASYM_lpt5080  "--pre \"${pre} && l_pt>50 && l_pt<80\" --cut \"${cut}\" -m ${m} "
+	((i++))
+	gput tagsF ${i} RASYM_lpt80200  "--pre \"${pre} && l_pt>80 && l_pt<200\" --cut \"${cut}\" -m ${m} "
 	((i++))
 	gput tagsF ${i} RASYM_wpt0015  "--pre \"${pre} && w_pt>0 && w_pt<15\" --cut \"${cut}\" -m ${m} "
 	((i++))
 	gput tagsF ${i} RASYM_wpt1580  "--pre \"${pre} && w_pt>15 && w_pt<80\" --cut \"${cut}\" -m ${m} "
 	((i++))
     fi
-    if [ "0" -eq "1" ]; then
+    if [ "1" -eq "1" ]; then
 	gput tagsF ${i} RASYM_met4080  "--pre \"${pre} && met>40 && met<80\" --cut \"${cut}\" -m ${m} "
-	((i++))
-	gput tagsF ${i} RASYM_nj2  "--pre \"${pre} && njets==2\" --cut \"${cut}\" -m ${m} "
 	((i++))
 	gput tagsF ${i} RASYM_wmt4060  "--pre \"${pre} && w_mt>40 && w_mt<80\" --cut \"${cut}\" -m ${m} "
 	((i++))
@@ -274,7 +312,7 @@ fi
 
 
 # reco-level asymmetry: systematic variations
-if [ "0" -eq "1" ]; then
+if [ "$mode" == "syst" ]; then
     common="${common} --qcd AUTO"
     pre="${wpre_jordan}"
     cut="mcw*puw"
@@ -297,7 +335,7 @@ if [ "0" -eq "1" ]; then
 fi
 
 # W QCD FITS
-if [ "0" -eq "1" ]; then
+if [ "$mode" == "qcd" ]; then
     common="${common} --qcd AUTO"
     #./stack2.py -b -m99 --var 'met' --bin '50,25,100' --hsource WJ/st_w_final/00_wmt/met --rebin 4
     i=0
@@ -316,7 +354,7 @@ if [ "0" -eq "1" ]; then
 fi
 
 # Z tag and probe
-if [ "0" -eq "1" ]; then
+if [ "$mode" == "tag" ]; then
     ncut='mcw*puw'
     # Select cuts against which we measure efficiency:
     i=0
