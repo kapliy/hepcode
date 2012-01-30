@@ -279,9 +279,9 @@ if [ "$mode" == "final" ]; then
 	((i++))
 	gput tagsF ${i} RASYM_nj2  "--pre \"${pre} && njets==2\" --cut \"${cut}\" -m ${m} "
 	((i++))
-	gput tagsF ${i} RASYM_lpt2050  "--pre \"${pre} && l_pt>20 && l_pt<50\" --cut \"${cut}\" -m ${m} "
+	gput tagsF ${i} RASYM_lpt2050  "--pre \"${pre} && l_pt>20 && l_pt<40\" --cut \"${cut}\" -m ${m} "
 	((i++))
-	gput tagsF ${i} RASYM_lpt5080  "--pre \"${pre} && l_pt>50 && l_pt<80\" --cut \"${cut}\" -m ${m} "
+	gput tagsF ${i} RASYM_lpt5080  "--pre \"${pre} && l_pt>40 && l_pt<80\" --cut \"${cut}\" -m ${m} "
 	((i++))
 	gput tagsF ${i} RASYM_lpt80200  "--pre \"${pre} && l_pt>80 && l_pt<200\" --cut \"${cut}\" -m ${m} "
 	((i++))
@@ -291,13 +291,13 @@ if [ "$mode" == "final" ]; then
 	((i++))
     fi
     if [ "1" -eq "1" ]; then
-	gput tagsF ${i} RASYM_met4080  "--pre \"${pre} && met>40 && met<80\" --cut \"${cut}\" -m ${m} "
+	gput tagsF ${i} RASYM_met4060  "--pre \"${pre} && met>40 && met<60\" --cut \"${cut}\" -m ${m} "
+	((i++))
+	gput tagsF ${i} RASYM_met60200  "--pre \"${pre} && met>60 && met<200\" --cut \"${cut}\" -m ${m} "
 	((i++))
 	gput tagsF ${i} RASYM_wmt4060  "--pre \"${pre} && w_mt>40 && w_mt<80\" --cut \"${cut}\" -m ${m} "
 	((i++))
-	gput tagsF ${i} RASYM_wmt4080  "--pre \"${pre} && w_mt>40 && w_mt<80\" --cut \"${cut}\" -m ${m} "
-	((i++))
-	gput tagsF ${i} RASYM_wmt80120  "--pre \"${pre} && w_mt>80 && w_mt<120\" --cut \"${cut}\" -m ${m} "
+	gput tagsF ${i} RASYM_wmt60200  "--pre \"${pre} && w_mt>60 && w_mt<200\" --cut \"${cut}\" -m ${m} "
 	((i++))
     fi;
 
