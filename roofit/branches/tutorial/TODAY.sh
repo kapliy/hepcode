@@ -1,6 +1,8 @@
 #!/bin/bash
 source bashmap.sh
 
+#note: saw better agreement with d0sig<3.0 AND fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5
+
 wpre_preiso='l_pt>20.0 && fabs(l_eta)<2.4 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5' #old
 wpre_preiso='l_pt>20.0 && fabs(l_eta)<2.4 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && fabs(d0sig)<10.0' #WW/WZ (d0sig)<3.0
 wpre_jordan="${wpre_preiso} && ptiso20/l_pt<0.1"
