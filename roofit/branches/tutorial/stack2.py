@@ -210,8 +210,10 @@ def fortruth(pre):
         res.append(elm)
     return ' && '.join(res)
 
-def metfitreg(pre):
-    """ met fit region from w+jets 2010 analysis """
+def metfitreg_auto(pre):
+    """ met fit region from w+jets 2010 analysis
+    This is a version that automatically modifies the 'pre' string
+    """
     res = []
     for elm in pre.split(' && '):
         if re.match('w_mt',elm):
@@ -220,7 +222,30 @@ def metfitreg(pre):
             res.append('met>15.0')
         else:
             res.append(elm)
-    return ' && '.join(res)
+    result = ' && '.join(res)
+    print 'INFO: QCD fit in MET variable with the following cuts:'
+    print result
+    return result
+
+def metfitreg(pre):
+    """ met fit region from w+jets 2010 analysis
+    This is the version that hardcodes everything except for isolation.
+    Useful to produce double-differential asymmetry plots """
+    _default = 'l_pt>20.0 && fabs(l_eta)<2.4 && met>15.0 && w_mt>35.0 && idhits==1 && fabs(z0)<10.0 && fabs(d0sig)<10.0 && ptiso20/l_pt<0.1'
+    res = []
+    # first fill with _default values (minus isolation)
+    for elm in _default.split(' && '):
+        if re.match('ptiso',elm) or re.match('etiso',elm):
+            continue
+        res.append(elm)
+    # next, take isolation cuts from the actual pre string
+    for elm in pre.split(' && '):
+        if re.match('ptiso',elm) or re.match('etiso',elm):
+            res.append(elm)
+    result = ' && '.join(res)
+    print 'INFO: QCD fit in MET variable with the following cuts:'
+    print result
+    return result
 
 def qcdreg(pre):
     """ qcd-enriched sample to get data-driven template """
