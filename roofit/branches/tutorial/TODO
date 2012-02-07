@@ -1,13 +1,19 @@
-* Update Z event veto properly. Use baseline selection for the veto.
-  Also, use z veto: 3rd lepton
-* met cleaning addition: jet within cone 0.3 of lepton
-* Trig efficiency correction port (minimally invasive - just use ROOT histograms)
-* Fix default (systematic) histogram cuts in AnaVCrossSectionCandidate; add histos for trigger/efficiency variations
+* Add systematic histos for trigger/efficiency variations. This just changes weights, so fill at last step!
 * Implement MissingETUtility
+  Look at what variables are missing in FlatNtupler for METUtils!!!
+* met cleaning addition: jet within cone 0.3 of lepton
+* Add overlap removal (remove jets near electrons?)
+* Choose MC truth correctly: Alpgen status != 1, but 123/124 (see google docs!)
+
+Mel meeting:
+* lepton pt and njet bins
+* Look at distributions in high lepton pt bin - see if everything is alright.
+* Tight isolation issue: add ptcone/etcone plots, as well as relative plots
+* MET resolution near 25 GeV
+* pdf reweighting : add to ntuple; compare pythia with alpgen with same pdf
 
 
 
-* Add overlap removal
 * Upgrade to the latest ROOT version (for anaquick) - when 17.0.6.X is available on tier3
 
 pileup nmu correction: 0.88 - ID people

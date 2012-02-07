@@ -101,7 +101,12 @@ mc.append(MCR(106059,'mc_pythia_ccmu15x','*',2.84E+04/1000,1.0,500000))
 # zmumu sample seems to be wrong based on data/mc agreements
 mc.append(MCR(106083,'mc_mcnlo_wminmunu','*',3.99,1.000000,6993798))
 mc.append(MCR(106084,'mc_mcnlo_wplusmunu','*',5.87,1.000000,6993798))
-mc.append(MCR(106088,'mc_mcnlo_zmumu','*',0.952,1.000000,4998410))
+mc.append(MCR(106088,'mc_mcnlo_zmumu','*',4.93,0.9,4998410))
+
+# PowHeg NLO samples - copied from MC@NLO for now
+mc.append(MCR(108301,'mc_powheg_wminmunu','*',3.99,1.000000,6993798))
+mc.append(MCR(108298,'mc_powheg_wplusmunu','*',5.87,1.000000,6993798))
+mc.append(MCR(108304,'mc_powheg_zmumu','*',4.93,0.9,4998410))
 
 # W/Z + jets samples:
 # https://svnweb.cern.ch/trac/atlasgrp/browser/Physics/StandardModel/Common/Winter2012/mc11c_p833_info.txt
