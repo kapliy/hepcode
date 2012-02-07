@@ -18,6 +18,8 @@ zpre_peter="${zpre_preiso} && lP_ptiso30/lP_pt<0.15 && lP_etiso30corr/lP_pt<0.14
 commonB="--input /share/ftkdata1/antonk/ana_v28HB_01212012_DtoM_jetupd_stacoCB_all/"
 # MC11C
 commonC="--input /share/ftkdata1/antonk/ana_v28HC_01212012_DtoM_jetupd_stacoCB_all/"
+
+commonC="--input /share/ftkdata1/antonk/ana_v28HC_02042012_DtoM_cernupd_stacoCB_all/"
 common="${commonC}"
 
 ###############################################################################
@@ -130,6 +132,8 @@ if [ "$mode" == "w" ]; then
     ((i++))
     gput tagss ${i} WJ_mcnlo_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 1 --charge 2"
     ((i++))
+    gput tagss ${i} WJ_powheg_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 4 --charge 2"
+    ((i++))
     gput tagss ${i} WP_pythia_q2 "--pre \"${wpre_peter}\" --cut \"${cut}\" --charge 2"
     ((i++))
     gput tagss ${i} WP_alpgen_q2 "--pre \"${wpre_peter}\" --cut \"${cut}\" --bgsig 3 --charge 2"
@@ -169,6 +173,8 @@ if [ "$mode" == "z" ]; then
     gput tagzz ${i} ZP_alpgen_all "--pre \"${zpre_peter}\" --cut \"${cut}\" --bgsig 3"
     ((i++))
     gput tagzz ${i} ZJ_mcnlo_all "--pre \"${zpre_jordan}\" --cut \"${cut}\" --bgsig 1"
+    ((i++))
+    gput tagzz ${i} ZJ_powheg_all "--pre \"${zpre_jordan}\" --cut \"${cut}\" --bgsig 4"
     ((i++))
     # run all jobs
     i=0
@@ -251,6 +257,8 @@ if [ "$mode" == "unfold" ]; then
     run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 2 --bgsig 3"
     tag=EFFDO_q2_mcnlo
     run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 2 --bgsig 1"
+    tag=EFFDO_q2_powheg
+    run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 2 --bgsig 4"
     wait
     
 fi;
@@ -258,7 +266,7 @@ fi;
 # FINAL OUTPUT:
 # reco-level asymmetry plots for multiple generators
 # also allows to perform a correction to particle level
-if [ "$mode" == "final" ]; then
+if [ "$mode" == "asym" ]; then
     common="${common} --qcd AUTO"
     pre="${wpre_jordan}"
     cut="mcw*puw"

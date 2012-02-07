@@ -329,7 +329,7 @@ def particle(h,inp=opts.input,var=opts.var,bin=opts.bin,q=opts.charge):
 # MC stack order
 pw,pz = [SuStack() for zz in xrange(2)]
 # w samples:
-if opts.bgsig in (0,1,2): # w inclusive
+if opts.bgsig in (0,1,2,4): # w inclusive
     pw.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
     pw.add(label='Z#rightarrow#tau#tau',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta,flags=['bg','mc','ewk'])
     #pw.add(label='Z#rightarrow#tau#tau',samples='mc_pythia_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
@@ -346,10 +346,13 @@ if opts.bgsig in (0,1,2): # w inclusive
         pw.add(label='W#rightarrow#mu#nu',samples=['mc_mcnlo_wminmunu','mc_mcnlo_wplusmunu'],color=10,flags=['sig','mc','ewk'])
     elif opts.bgsig==2:
         pw.add(label='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk'])
+    elif opts.bgsig==4:
+        pw.add(label='W#rightarrow#mu#nu',samples=['mc_powheg_wminmunu','mc_powheg_wplusmunu'],color=10,flags=['sig','mc','ewk'])
     # cache some samples for special studies. Disabled from stacks using a 'no' flag.
     pw.add(label='pythia',samples='mc_pythia_wmunu',color=10,flags=['sig','mc','ewk','no'])
     pw.add(label='mcnlo',samples=['mc_mcnlo_wminmunu','mc_mcnlo_wplusmunu'],color=10,flags=['sig','mc','ewk','no'])
     pw.add(label='alpgen',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk','no'])
+    pw.add(label='powheg',samples=['mc_powheg_wminmunu','mc_powheg_wplusmunu'],color=10,flags=['sig','mc','ewk','no'])
     pw.add(label='qcd',samples=['mc_pythia_bbmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd','no'])
 elif opts.bgsig in (3,): # w+jets
     pw.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
@@ -362,8 +365,9 @@ elif opts.bgsig in (3,): # w+jets
     pw.add(label='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk'])
 else:
     pass
+
 # z samples:
-if opts.bgsig in (0,1,2): # z inclusive
+if opts.bgsig in (0,1,2,4): # z inclusive
     pz.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
     pz.add(label='W#rightarrow#mu#nu',samples='mc_pythia_wmunu',color=10,flags=['bg','mc','ewk'])
     pz.add(label='Z#rightarrow#tau#tau',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta,flags=['bg','mc','ewk'])
@@ -382,6 +386,8 @@ if opts.bgsig in (0,1,2): # z inclusive
         pz.add(label='Z#rightarrow#mu#mu',samples='mc_mcnlo_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
     elif opts.bgsig==2:
         pz.add(label='Z#rightarrow#mu#mu+jets',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['sig','mc','ewk'])
+    elif opts.bgsig==4:
+        pz.add(label='Z#rightarrow#mu#mu',samples='mc_powheg_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
 elif opts.bgsig in (3,): # z+jets
     pz.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
     pz.add(label='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['bg','mc','ewk'])
@@ -391,13 +397,15 @@ elif opts.bgsig in (3,): # z+jets
     pz.add(label='WW',samples='mc_herwig_ww',color=12,flags=['bg','mc','ewk'])
     pz.add(label='bbmu15X/ccmu15X',samples=['mc_pythia_bbmu15x','mc_pythia_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     pz.add(label='Z#rightarrow#mu#mu+jets',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['sig','mc','ewk'])
-elif opts.bgsig in (10,11,12,13): # Z->mumu signal only (for normalized plots)
+elif opts.bgsig in (10,11,12,13,14): # Z->mumu signal only (for normalized plots)
     if opts.bgsig==10: #Pythia
         pz.add(label='Z#rightarrow#mu#mu',samples='mc_pythia_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
     elif opts.bgsig==11: # MC@NLO
         pz.add(label='Z#rightarrow#mu#mu',samples='mc_mcnlo_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
     elif opts.bgsig in (12,13): #Alpgen
         pz.add(label='Z#rightarrow#mu#mu+jets',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['sig','mc','ewk'])
+    elif opts.bgsig==14: #PowHeg
+        pz.add(label='Z#rightarrow#mu#mu',samples='mc_powheg_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
     SuSample.unitize = True
 
 
@@ -437,6 +445,7 @@ if mode in ('922','gen_det_kin'): # compares, at truth level, different monte-ca
     hpythia = po.histo('pythia','truth_pythia',opts.var,opts.bin,pre,path=path_truth,norm=True)
     hmcnlo  = po.histo('mcnlo', 'truth_mcnlo', opts.var,opts.bin,pre,path=path_truth,norm=True)
     halpgen = po.histo('alpgen','truth_alpgen',opts.var,opts.bin,pre,path=path_truth,norm=True)
+    #hpowheg = po.histo('powheg','truth_powheg',opts.var,opts.bin,pre,path=path_truth,norm=True)
     mstyle = 20
     msize = 1.5
     hpythia.SetLineColor(ROOT.kRed)
