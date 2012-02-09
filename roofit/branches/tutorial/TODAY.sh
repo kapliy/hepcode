@@ -18,9 +18,8 @@ zpre_peter="${zpre_preiso} && lP_ptiso30/lP_pt<0.15 && lP_etiso30corr/lP_pt<0.14
 commonB="--input /share/ftkdata1/antonk/ana_v28HB_01212012_DtoM_jetupd_stacoCB_all/"
 # MC11C
 commonC="--input /share/ftkdata1/antonk/ana_v28HC_01212012_DtoM_jetupd_stacoCB_all/"
-
 commonC="--input /share/ftkdata1/antonk/ana_v28HC_02042012_DtoM_cernupd_stacoCB_all/"
-common="${commonC}"
+common="SET_FROM_COMMAND_LINE"
 
 ###############################################################################
 # Parse command line
