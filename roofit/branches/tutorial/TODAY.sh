@@ -114,7 +114,7 @@ if [ "$mode" == "MCP" ]; then
 fi
 
 # stack plots and single-MC asymmetry
-if [ "$mode" == "w" ]; then
+if [ "$mode" == "wstack" ]; then
     common="${common} --qcd AUTO"
     i=0
     cut="mcw*puw"
@@ -158,7 +158,7 @@ if [ "$mode" == "w" ]; then
 fi
 
 # Z stack histos
-if [ "$mode" == "z" ]; then
+if [ "$mode" == "zstack" ]; then
     i=0
     cut="mcw*puw"
     gput tagzz ${i} ZJ_pythia_uncut "--pre \"${zpre_preiso}\" --cut \"${cut}\""
