@@ -445,7 +445,7 @@ if mode in ('922','gen_det_kin'): # compares, at truth level, different monte-ca
     hpythia = po.histo('pythia','truth_pythia',opts.var,opts.bin,pre,path=path_truth,norm=True)
     hmcnlo  = po.histo('mcnlo', 'truth_mcnlo', opts.var,opts.bin,pre,path=path_truth,norm=True)
     halpgen = po.histo('alpgen','truth_alpgen',opts.var,opts.bin,pre,path=path_truth,norm=True)
-    #hpowheg = po.histo('powheg','truth_powheg',opts.var,opts.bin,pre,path=path_truth,norm=True)
+    hpowheg = po.histo('powheg','truth_powheg',opts.var,opts.bin,pre,path=path_truth,norm=True)
     mstyle = 20
     msize = 1.5
     hpythia.SetLineColor(ROOT.kRed)
@@ -453,24 +453,30 @@ if mode in ('922','gen_det_kin'): # compares, at truth level, different monte-ca
     hpythia.SetMarkerStyle(mstyle)
     hpythia.SetMarkerSize(msize*1.0)
     hpythia.Draw('')
-    hpythia.GetYaxis().SetRangeUser(0,max(hpythia.GetMaximum(),hmcnlo.GetMaximum(),halpgen.GetMaximum())*1.5)
+    hpythia.GetYaxis().SetRangeUser(0,max(hpythia.GetMaximum(),hmcnlo.GetMaximum(),halpgen.GetMaximum(),hpowheg.GetMaximum())*1.5)
     hpythia.GetXaxis().SetTitle(opts.var);
     hmcnlo.SetLineColor(ROOT.kBlue)
     hmcnlo.SetMarkerColor(ROOT.kBlue)
     hmcnlo.SetMarkerStyle(mstyle)
-    hmcnlo.SetMarkerSize(msize*0.6)
+    hmcnlo.SetMarkerSize(msize*0.7)
     hmcnlo.Draw('A same')
     halpgen.SetLineColor(8)
     halpgen.SetMarkerColor(8)
     halpgen.SetMarkerStyle(mstyle)
-    halpgen.SetMarkerSize(msize*0.30)
+    halpgen.SetMarkerSize(msize*0.50)
     halpgen.Draw('A same')
+    hpowheg.SetLineColor(9)
+    hpowheg.SetMarkerColor(9)
+    hpowheg.SetMarkerStyle(mstyle)
+    hpowheg.SetMarkerSize(msize*0.3)
+    hpowheg.Draw('A same')
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
     leg.SetHeader('Different generators:')
-    lab = ('Pythia(MRST)','MC@NLO(CTEQ6.6)','Alpgen(CTEQ6.1)')
+    lab = ('Pythia(MRST)','MC@NLO(CTEQ6.6)','Alpgen(CTEQ6.1)','PowHeg()')
     leg.AddEntry(hpythia,lab[0],'LP')
     leg.AddEntry(hmcnlo,lab[1],'LP')
     leg.AddEntry(halpgen,lab[2],'LP')
+    leg.AddEntry(hpowheg,lab[3],'LP')
     leg.Draw('same')
 
 if mode=='921': # asymmetry, at truth level, of different monte-carlos.
@@ -479,17 +485,17 @@ if mode=='921': # asymmetry, at truth level, of different monte-carlos.
     c.buildDefault(width=800,height=600)
     cc = c.cd_canvas()
     cc.cd(1)
-    names = ('pythia','mcnlo','alpgen')
-    labels = ('Pythia(MRST)','MC@NLO(CTEQ6.6)','Alpgen(CTEQ6.1)')
+    names = ('pythia','mcnlo','alpgen','powheg')
+    labels = ('Pythia(MRST)','MC@NLO(CTEQ6.6)','Alpgen(CTEQ6.1)','PowHeg()')
     mstyle = 20
     msize = 1.5
-    colors = (ROOT.kRed,ROOT.kBlue,8)
-    sizes = (msize*1.0,msize*0.6,msize*0.3)
+    colors = (ROOT.kRed,ROOT.kBlue,8,9)
+    sizes = (msize*1.0,msize*0.7,msize*0.5,msize*0.3)
     h = []
     hasym = []
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
     leg.SetHeader('Asymmetry:')
-    for i in range(3):
+    for i in range(4):
         h.append([None,None])
         for q in (0,1):
             print 'Creating:',i,q
@@ -502,7 +508,7 @@ if mode=='921': # asymmetry, at truth level, of different monte-carlos.
         hasym.append(c.WAsymmetry(h[i][POS],h[i][NEG]))
         hasym[i].Draw() if i==0 else hasym[i].Draw('A same')
         leg.AddEntry(hasym[i],labels[i],'LP')
-    hasym[0].GetYaxis().SetRangeUser(0,max(hasym[0].GetMaximum(),hasym[1].GetMaximum(),hasym[2].GetMaximum())*1.5)
+    hasym[0].GetYaxis().SetRangeUser(0,max(hasym[0].GetMaximum(),hasym[1].GetMaximum(),hasym[2].GetMaximum(),hasym[3].GetMaximum())*1.5)
     leg.Draw('same')
 
 if mode=='923': # asymmetry, at reco/particle level, of different monte-carlos. Compared to BG-subtracted data
@@ -511,12 +517,12 @@ if mode=='923': # asymmetry, at reco/particle level, of different monte-carlos. 
     c.buildDefault(width=800,height=600)
     cc = c.cd_canvas()
     cc.cd(1)
-    names = ('pythia','mcnlo','alpgen','datasub')
-    labels = ('Pythia(MRST)','MC@NLO(CTEQ6.6)','Alpgen(CTEQ6.1)','Data')
+    names = ('pythia','mcnlo','alpgen','powheg','datasub')
+    labels = ('Pythia(MRST)','MC@NLO(CTEQ6.6)','Alpgen(CTEQ6.1)','PowHeg()','Data')
     msize = 1.5
-    colors = (ROOT.kRed,ROOT.kBlue,8,ROOT.kBlack)
-    sizes = (msize*0.7,msize*0.7,msize*0.7,msize*0.5)
-    mstyles = (20,20,20,21)
+    colors = (ROOT.kRed,ROOT.kBlue,8,9,ROOT.kBlack)
+    sizes = (msize*0.7,msize*0.7,msize*0.7,msize*0.7,msize*0.5)
+    mstyles = (20,20,20,20,21)
     h = []
     hasym = []
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
@@ -544,7 +550,7 @@ if mode=='923': # asymmetry, at reco/particle level, of different monte-carlos. 
         else:
             hasym[i].Draw('A same')
         leg.AddEntry(hasym[i],labels[i],'LP')
-    hasym[0].GetYaxis().SetRangeUser(0,max(hasym[0].GetMaximum(),hasym[1].GetMaximum(),hasym[2].GetMaximum())*1.5)
+    hasym[0].GetYaxis().SetRangeUser(0,max(hasym[0].GetMaximum(),hasym[1].GetMaximum(),hasym[2].GetMaximum(),hasym[3].GetMaximum())*1.5)
     leg.Draw('same')
 
 # WARNING: this function is very specific to the TrigFTKAna ntuple (ie, manually refers to many folders!)
