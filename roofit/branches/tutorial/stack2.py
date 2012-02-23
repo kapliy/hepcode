@@ -472,7 +472,7 @@ if mode in ('922','gen_det_kin'): # compares, at truth level, different monte-ca
     hpowheg.Draw('A same')
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
     leg.SetHeader('Different generators:')
-    lab = ('Pythia(MRST)','MC@NLO(CTEQ6.6)','Alpgen(CTEQ6.1)','PowHeg()')
+    lab = ('Pythia(MRST)','MC@NLO(CT10)','Alpgen(CTEQ6.1)','PowHeg(CT10)')
     leg.AddEntry(hpythia,lab[0],'LP')
     leg.AddEntry(hmcnlo,lab[1],'LP')
     leg.AddEntry(halpgen,lab[2],'LP')
@@ -486,7 +486,7 @@ if mode=='921': # asymmetry, at truth level, of different monte-carlos.
     cc = c.cd_canvas()
     cc.cd(1)
     names = ('pythia','mcnlo','alpgen','powheg')
-    labels = ('Pythia(MRST)','MC@NLO(CTEQ6.6)','Alpgen(CTEQ6.1)','PowHeg()')
+    labels = ('Pythia(MRST)','MC@NLO(CT10)','Alpgen(CTEQ6.1)','PowHeg(CT10)')
     mstyle = 20
     msize = 1.5
     colors = (ROOT.kRed,ROOT.kBlue,8,9)
@@ -518,7 +518,7 @@ if mode=='923': # asymmetry, at reco/particle level, of different monte-carlos. 
     cc = c.cd_canvas()
     cc.cd(1)
     names = ('pythia','mcnlo','alpgen','powheg','datasub')
-    labels = ('Pythia(MRST)','MC@NLO(CTEQ6.6)','Alpgen(CTEQ6.1)','PowHeg()','Data')
+    labels = ('Pythia(MRST)','MC@NLO(CT10)','Alpgen(CTEQ6.1)','PowHeg(CT10)','Data')
     msize = 1.5
     colors = (ROOT.kRed,ROOT.kBlue,8,9,ROOT.kBlack)
     sizes = (msize*0.7,msize*0.7,msize*0.7,msize*0.7,msize*0.5)
@@ -615,7 +615,7 @@ if mode=='924': # asymmetry, at reco/particle level: systematic variations in bg
     if True:
         SuSample.hsource = None
         names_mc = ('pythia','mcnlo','alpgen')
-        labels_mc = ('Pythia(MRST)','MC@NLO(CTEQ6.6)','Alpgen(CTEQ6.1)')
+        labels_mc = ('Pythia(MRST)','MC@NLO(CT10)','Alpgen(CTEQ6.1)')
         colors_mc = (ROOT.kRed,ROOT.kBlue,8,ROOT.kBlack)
         sizes_mc = (msize*0.7,msize*0.7,msize*0.7,msize*0.5)
         mstyle_mc = 22

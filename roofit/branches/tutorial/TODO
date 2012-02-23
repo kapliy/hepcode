@@ -1,25 +1,40 @@
+TrigFTKAna updates:
+* DONE: Add PDF weights to ntuple
+* DONE: truth particle jets for njet plots at truth level!
+* LATER: Add capability to make study plots with different weight (pass array of weights?) - if it doesn't affect speed.  
+         Can add in StudyWCrossSection to be automated, like POS/NEG
+* LATER: jet smear/scale stuff
+* LATER: Add truth-level 4-momentum and njets to reco ntuple (maybe implement global passing via a map in DgEventInfo?)
+* LATER: Add FSR tool; add FSR-present flag; add FSR-corrected Z
+* LATER: add dressed truth leptons
+* LATE: overlap removal
+
+The scale factors do not depent on pT, but the errors do. So to get
+the right errors with the scale factors,  you must use the
+fourmomentum before the smearing.
+
+
+* etconecorr plot: make in qcd control region; expand below zero.
+  powheg - change color to orange
+  powheg+pythia, but mc@NLO+herwig
+
+
 * Mel: compare Pythia and Alpgen pre-FSR distributions.
   Peter: identify and veto events that have an FSR photon around the mu
-
 * Note: got worse agreement; differences are:
-  - bug in hfor - was applied to regular alpgen samples
+  - CULPRIT: bug in hfor - was applied to regular alpgen samples
   - trigger: removed barrel40 trigger (substantial difference noted!)
   - missing Z veto - NOPE, NOT IT; also wrong veto (used presel muons - i.e., veto too strong)
   - Removed fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5 cut
   - relaxed (d0sig)<3.0 to be (d0sig)<10.0
-DEBUG: problem with cutflow (unable to disable cuts - big bug in handling of AnaWCandidates????)
-DEBUG: make sure nmuons cut doesn't impede on truth cuts. Perhaps add it to truth-pre exclusion list
-
 * Add systematic histos for trigger/efficiency variations. This just changes weights, so fill at last step!
-* Implement MissingETUtility
-  Look at what variables are missing in FlatNtupler for METUtils!!!
 * met cleaning addition: jet within cone 0.3 of lepton
 * Add overlap removal (remove jets near electrons?)
 * Choose MC truth correctly: Alpgen status != 1, but 123/124 (see google docs!)
 
 Mel meeting:
 * lepton pt and njet bins
-* Look at distributions in high lepton pt bin - see if everything is alright.
+* TODO: Look at distributions in high lepton pt bin - see if everything is alright.
 * Tight isolation issue: add ptcone/etcone plots, as well as relative plots
 * MET resolution near 25 GeV
 * pdf reweighting : add to ntuple; compare pythia with alpgen with same pdf

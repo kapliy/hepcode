@@ -14,18 +14,19 @@ zpre_jordan="${zpre_preiso} && lP_ptiso20/lP_pt<0.1 && lN_ptiso20/lN_pt<0.1"
 zpre_peter="${zpre_preiso} && lP_ptiso30<1.125 && lP_etiso30<1.125 && lN_ptiso30<1.125 && lN_etiso30<1.125" #old
 zpre_peter="${zpre_preiso} && lP_ptiso30/lP_pt<0.15 && lP_etiso30corr/lP_pt<0.14 && lN_ptiso30/lN_pt<0.15 && lN_etiso30corr/lN_pt<0.14" #WW/WZ
 
-# MC11B
+# default cut
+cut="mcw*puw*effw*trigw"
+# MC11B/MC11C
 commonB="--input /share/ftkdata1/antonk/ana_v28HB_01212012_DtoM_jetupd_stacoCB_all/"
-# MC11C
 commonC="--input /share/ftkdata1/antonk/ana_v28HC_01212012_DtoM_jetupd_stacoCB_all/"
-commonC="--input /share/ftkdata1/antonk/ana_v28HC_02042012_DtoM_cernupd_stacoCB_all/"
-common="SET_FROM_COMMAND_LINE"
+
+common="--input /share/ftkdata1/antonk/ana_v28HC_02092012_DtoM_cernupd_stacoCB_all"
 
 ###############################################################################
 # Parse command line
 ###############################################################################
 mode=none
-while getopts ":i:o:m:" optionslist; do
+while getopts ":i:o:m:c:" optionslist; do
     case $optionslist in
 	i ) common="--input $OPTARG"
 	    echo "Input folder: $OPTARG";;
@@ -33,6 +34,8 @@ while getopts ":i:o:m:" optionslist; do
 	    echo "Output folder: $OPTARG";;
 	m ) mode=$OPTARG
 	    echo "Mode: $mode";;
+	c ) cut="$OPTARG"
+	    echo "Cut: ${cut}"
     esac
 done;
 
@@ -44,13 +47,6 @@ function run_d0_stacks () {
     eval ./stack2.py ${common}  -b --var 'z0' --bin '100,-1.0,1.0' -t ${tag} $@ ${refl}
     eval ./stack2.py ${common}  -b --var 'fabs\(l_pt_id-l_pt_exms\)/l_pt_id' --bin '50,0,2' -t ${tag} $@ &
 }
-function run_w_quick_stacks () {
-    eval ./stack2.py ${common}  -b --var 'nvtxs_all' --bin '20,0,20' -t ${tag} $@ &
-    eval ./stack2.py ${common}  -b --var 'l_pt' --bin '50,0,100' -t ${tag} $@ &
-    eval ./stack2.py ${common}  -b --var 'met' --bin '50,0,200' -t ${tag} $@ &
-    eval ./stack2.py ${common}  -b --var 'w_mt' --bin '50,0,200' -t ${tag} $@ &
-    eval ./stack2.py ${common}  -b --var 'l_eta' --bin '50,-2.5,2.5' -t ${tag} $@ &
-}
 function run_w_stacks () {
     eval ./stack2.py ${common}  -b --var 'nvtxs_all' --bin '20,0,20' -t ${tag} $@ &
     eval ./stack2.py ${common}  -b --var 'l_pt' --bin '50,0,100' -t ${tag} $@ &
@@ -58,6 +54,9 @@ function run_w_stacks () {
     eval ./stack2.py ${common}  -b --var 'w_mt' --bin '50,0,200' -t ${tag} $@ &
     eval ./stack2.py ${common}  -b --var 'l_eta' --bin '50,-2.5,2.5' -t ${tag} $@ &
     eval ./stack2.py ${common}  -b --var 'w_pt' --bin '50,0,200' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var 'ptiso20/l_pt' --bin '100,0,0.2' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var 'ptiso30/l_pt' --bin '100,0,0.2' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var 'etiso30corr/l_pt' --bin '100,0,0.2' -t ${tag} $@ &
 }
 function run_w_asym () {
     eval ./stack2.py ${common}  -b --var "\"fabs(l_eta)\"" --bin '25,0.0,2.5' -t ${tag} $@ &
@@ -65,6 +64,7 @@ function run_w_asym () {
 }
 function run_w_asym_min () {
     eval ./stack2.py ${common}  -b --var "\"fabs(l_eta)\"" --bin '25,0.0,2.5' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var "\"fabs(l_eta+0)\"" --bin '10,0.0,2.5' -t ${tag} $@ &
 }
 function run_z_stacks () {
     eval ./stack2.py ${common} --ntuple z -b --var 'nvtxs_all' --bin '20,0,20' -t ${tag} $@ &
@@ -82,7 +82,6 @@ if [ "$mode" == "matrix" ]; then
     pre="${wpre_jordan}"
     m=matrix_2010inc
     # default plots:
-    cut="mcw*puw"
     tag=QCD
     ./stack2.py ${common} -b -m${m} --var 'l_eta' --bin '20,-2.5,2.5' -t ${tag} --pre "${pre}" --cut "${cut}" --charge 0 &
     #./stack2.py ${common} -b -m${m} --var 'met' --bin '20,25,100' -t ${tag} --pre "${pre}" --cut "${cut}" --charge 0 &
@@ -97,7 +96,7 @@ if [ "$mode" == "MCP" ]; then
     m=1012
     m=1111
     i=0
-    gput tagzmcp ${i} ZMCP_default "--pre \"${zpre_jordan}\" --cut \"mcw*puw\""
+    gput tagzmcp ${i} ZMCP_default "--pre \"${zpre_jordan}\" --cut \"${cut}\""
     ((i++))
     i=0
     for itag in `gkeys tagzmcp`; do
@@ -116,7 +115,6 @@ fi
 if [ "$mode" == "wstack" ]; then
     common="${common} --qcd AUTO"
     i=0
-    cut="mcw*puw"
     gput tagss ${i} WJ_pythia_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 2"
     ((i++))
     gput tagss ${i} WJ_pythia_q1 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 1"
@@ -142,12 +140,12 @@ if [ "$mode" == "wstack" ]; then
     for itag in `gkeys tagss`; do
 	tag=`ggeta tagss $itag`
 	opts=`ggetb tagss $itag`
-	run_w_quick_stacks -m1 "${opts}"
 	run_w_stacks -m1 "${opts}"
 	if [ "${i}" -eq "1" ]; then
+	    wait
 	    run_d0_stacks -m1 "${opts}"
+	    wait
 	    run_w_asym -m12 "${opts}"
-	    true
 	fi;
 	wait
 	((i++))
@@ -159,7 +157,6 @@ fi
 # Z stack histos
 if [ "$mode" == "zstack" ]; then
     i=0
-    cut="mcw*puw"
     gput tagzz ${i} ZJ_pythia_uncut "--pre \"${zpre_preiso}\" --cut \"${cut}\""
     ((i++))
     gput tagzz ${i} ZJ_pythia_all "--pre \"${zpre_jordan}\" --cut \"${cut}\""
@@ -194,7 +191,6 @@ if [ "$mode" == "truth" ]; then
     pre="${wpre_jordan}"
     m=1
 
-    cut="mcw*puw"
     m=922
     tag=QALL
     run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 2 "
@@ -204,7 +200,6 @@ if [ "$mode" == "truth" ]; then
     run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 1 "
     wait
 
-    cut="mcw*puw"
     m=921
     tag=ASYM
     run_w_asym  "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 1 "
@@ -217,7 +212,6 @@ fi
 if [ "$mode" == "unfold" ]; then
     common="${common} --qcd AUTO"
     pre="${wpre_jordan}"
-    cut="mcw*puw"
     common="${common} --effroot asymmetry_eff.root"
 
     # make eff histogram from Pythia?
@@ -268,7 +262,6 @@ fi;
 if [ "$mode" == "asym" ]; then
     common="${common} --qcd AUTO"
     pre="${wpre_jordan}"
-    cut="mcw*puw"
     m=923
 
     i=0
@@ -291,6 +284,18 @@ if [ "$mode" == "asym" ]; then
 	gput tagsF ${i} RASYM_lpt5080  "--pre \"${pre} && l_pt>40 && l_pt<80\" --cut \"${cut}\" -m ${m} "
 	((i++))
 	gput tagsF ${i} RASYM_lpt80200  "--pre \"${pre} && l_pt>80 && l_pt<200\" --cut \"${cut}\" -m ${m} "
+	((i++))
+	gput tagsF ${i} RASYM_lpt2050_nj0  "--pre \"${pre} && l_pt>20 && l_pt<40 && njets==0\" --cut \"${cut}\" -m ${m} "
+	((i++))
+	gput tagsF ${i} RASYM_lpt5080_nj0  "--pre \"${pre} && l_pt>40 && l_pt<80 && njets==0\" --cut \"${cut}\" -m ${m} "
+	((i++))
+	gput tagsF ${i} RASYM_lpt80200_nj0  "--pre \"${pre} && l_pt>80 && l_pt<200 && njets==0\" --cut \"${cut}\" -m ${m} "
+	((i++))
+	gput tagsF ${i} RASYM_lpt2050_nj1  "--pre \"${pre} && l_pt>20 && l_pt<40 && njets==1\" --cut \"${cut}\" -m ${m} "
+	((i++))
+	gput tagsF ${i} RASYM_lpt5080_nj1  "--pre \"${pre} && l_pt>40 && l_pt<80 && njets==1\" --cut \"${cut}\" -m ${m} "
+	((i++))
+	gput tagsF ${i} RASYM_lpt80200_nj1  "--pre \"${pre} && l_pt>80 && l_pt<200 && njets==1\" --cut \"${cut}\" -m ${m} "
 	((i++))
 	gput tagsF ${i} RASYM_wpt0015  "--pre \"${pre} && w_pt>0 && w_pt<15\" --cut \"${cut}\" -m ${m} "
 	((i++))
@@ -324,7 +329,6 @@ fi
 if [ "$mode" == "syst" ]; then
     common="${common} --qcd AUTO"
     pre="${wpre_jordan}"
-    cut="mcw*puw"
     m=924
 
     i=0
@@ -364,7 +368,6 @@ fi
 
 # Z tag and probe
 if [ "$mode" == "tag" ]; then
-    ncut='mcw*puw'
     # Select cuts against which we measure efficiency:
     i=0
     # iso relative
@@ -391,8 +394,8 @@ if [ "$mode" == "tag" ]; then
 	opts=`ggetb tags $itag`
 	for bgsig in 0 3; do  # Pythia or Alpgen MC
 	    for m in 101 103; do  # Use BG subtraction?
-		eval ./stack2.py ${common} ${opts} --bgsig ${bgsig} --cut ${ncut} -m${m} --ntuple z -b --var 'lY_pt'  --bin '32,10,140' -t ${tag}_pt_MC${bgsig}&
-		eval ./stack2.py ${common} ${opts} --bgsig ${bgsig} --cut ${ncut} -m${m} --ntuple z -b --var 'lY_eta' --bin '30,-2.5,2.5' -t ${tag}_eta_MC${bgsig} &
+		eval ./stack2.py ${common} ${opts} --bgsig ${bgsig} --cut ${cut} -m${m} --ntuple z -b --var 'lY_pt'  --bin '32,10,140' -t ${tag}_pt_MC${bgsig}&
+		eval ./stack2.py ${common} ${opts} --bgsig ${bgsig} --cut ${cut} -m${m} --ntuple z -b --var 'lY_eta' --bin '30,-2.5,2.5' -t ${tag}_eta_MC${bgsig} &
 	    done
 	done
 	wait
