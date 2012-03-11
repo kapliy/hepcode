@@ -16,7 +16,7 @@ def ScaleToLumi(h,name,lumi,qcdscale,nevts=None):
         h.Scale(1.0/nevents*lumi*xsec)
         if qcdscale!='AUTO' and sample in ['mc_J%d'%z for z in range(10)]:
             h.Scale(float(qcdscale))
-        if qcdscale!='AUTO' and sample in ['mc_bbmu15x','mc_ccmu15x']:
+        if qcdscale!='AUTO' and sample in ['mc_pythia_bbmu15x','mc_pythia_ccmu15x']:
             h.Scale(float(qcdscale))
     else:
         print 'WARNING: unable to find sample definiction for',name
@@ -103,10 +103,23 @@ mc.append(MCR(106083,'mc_mcnlo_wminmunu','*',3.99,1.000000,6993798))
 mc.append(MCR(106084,'mc_mcnlo_wplusmunu','*',5.87,1.000000,6993798))
 mc.append(MCR(106088,'mc_mcnlo_zmumu','*',4.93,0.9,4998410))
 
-# PowHeg NLO samples - copied from MC@NLO for now
-mc.append(MCR(108301,'mc_powheg_wminmunu','*',3.99,1.000000,6993798))
-mc.append(MCR(108298,'mc_powheg_wplusmunu','*',5.87,1.000000,6993798))
-mc.append(MCR(108304,'mc_powheg_zmumu','*',4.93,0.9,4998410))
+# PowHeg NLO samples
+# updated Feb 24: copied from AMI. These are NLO, so no K-factors needed?
+mc.append(MCR(107391,'mc_powheg_pythia_wmintaunu','*',4.08,1.000000,6993798))
+mc.append(MCR(107390,'mc_powheg_pythia_wplustaunu','*',5.98,1.000000,6993798))
+mc.append(MCR(107392,'mc_powheg_pythia_ztautau','*',9.6744/10.0,1.0,4998410))
+mc.append(MCR(108301,'mc_powheg_pythia_wminmunu','*',4.0891,1.000000,6993798))
+mc.append(MCR(108298,'mc_powheg_pythia_wplusmunu','*',5.9826,1.000000,6993798))
+mc.append(MCR(108304,'mc_powheg_pythia_zmumu','*',9.6864/10.0,1.0,4998410))
+# powheg_herwig xsections missing in AMI; copying from powheg_pythia!
+mc.append(MCR(113185,'mc_powheg_herwig_wminmunu','*',4.0891,1.000000,6993798))
+mc.append(MCR(113187,'mc_powheg_herwig_wplusmunu','*',5.9826,1.000000,6993798))
+mc.append(MCR(126007,'mc_powheg_herwig_zmumu','*',9.6864/10.0,1.0,4998410))
+
+# Sherpa (CTEQ 6L1)
+mc.append(MCR(114612,'mc_sherpa_wmunu','*',9.09,1.000000,6993798))
+mc.append(MCR(114610,'mc_sherpa_zmumu','*',899.72/1000.0,1.000000,4998410))
+
 
 # W/Z + jets samples:
 # https://svnweb.cern.ch/trac/atlasgrp/browser/Physics/StandardModel/Common/Winter2012/mc11c_p833_info.txt
@@ -117,6 +130,13 @@ mc.append(MCR(107692,'mc_jimmy_wmunu_np2','*',0.37783,1.2,500000))
 mc.append(MCR(107693,'mc_jimmy_wmunu_np3','*',0.10188,1.2,500000))
 mc.append(MCR(107694,'mc_jimmy_wmunu_np4','*',0.02575,1.2,500000))
 mc.append(MCR(107695,'mc_jimmy_wmunu_np5','*',0.00692,1.2,500000))
+# alpgen pythia (copied from alpgen-jimmy)
+mc.append(MCR(117690,'mc_alpgen_pythia_wmunu_np0','*',6.91960,1.2,500000))
+mc.append(MCR(117691,'mc_alpgen_pythia_wmunu_np1','*',1.30420,1.2,500000))
+mc.append(MCR(117692,'mc_alpgen_pythia_wmunu_np2','*',0.37783,1.2,500000))
+mc.append(MCR(117693,'mc_alpgen_pythia_wmunu_np3','*',0.10188,1.2,500000))
+mc.append(MCR(117694,'mc_alpgen_pythia_wmunu_np4','*',0.02575,1.2,500000))
+mc.append(MCR(117695,'mc_alpgen_pythia_wmunu_np5','*',0.00692,1.2,500000))
 #wtaunu (mc11c_p833_info.txt, ATL-COM-PHYS-2011-1522.pdf)
 mc.append(MCR(107700,'mc_jimmy_wtaunu_np0','*',6918.60*1.2/1000.0,1.0,500000))
 mc.append(MCR(107701,'mc_jimmy_wtaunu_np1','*',1303.20*1.2/1000.0,1.0,500000))

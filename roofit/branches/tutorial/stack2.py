@@ -182,11 +182,12 @@ w2zsub.append(('l_pt','lX_pt'))
 w2zsub.append(('l_eta','lX_eta'))
 w2zsub.append(('l_phi','lX_phi'))
 w2zsub.append(('idhits','lX_idhits'))
+w2zsub.append(('l_trigEF','lX_trigEF'))
 w2zsub.append(('d0','lX_d0'))
 w2zsub.append(('z0','lX_z0'))
 def pre_w2z(pre):
     """ Converts a pre string for w ntuple into a corresponding one for z """
-    pre = prune(pre,('met','w_mt'))
+    pre = prune(pre,('met','w_mt','nmuons','l_trigEF'))
     xtra = "Z_m>70 && Z_m<110 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0"
     res = []
     for elm in pre.split(' && '):
@@ -206,6 +207,8 @@ def fortruth(pre):
     res = []
     for elm in pre.split(' && '):
         if re.search('iso',elm) or re.match('idhits',elm) or re.search('d0',elm) or re.search('z0',elm) or re.search('exms',elm):
+            continue
+        if re.search('trig',elm) or re.search('nmuons',elm):
             continue
         res.append(elm)
     return ' && '.join(res)
@@ -280,7 +283,7 @@ def revisoreg(pre):
 
 def looseisoreg(pre):
     """ Loose sample needed for matrix method QCD estimation """
-    return prune(pre, ('ptiso','lP_ptiso','l_ptiso','etiso','lP_etiso','lN_etiso') )
+    return prune(pre, ('ptiso','lP_ptiso','l_ptiso','etiso','lP_etiso','lN_etiso','nmuons','l_trigEF') )
 
 def run_fit(pre,var='met',bin='100,5,100',cut='mcw*puw'):
     import SuFit
@@ -329,13 +332,14 @@ def particle(h,inp=opts.input,var=opts.var,bin=opts.bin,q=opts.charge):
 # MC stack order
 pw,pz = [SuStack() for zz in xrange(2)]
 # w samples:
-if opts.bgsig in (0,1,2,4): # w inclusive
+if opts.bgsig in (0,1,2,4,5,6): # w inclusive
     pw.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
     pw.add(label='Z#rightarrow#tau#tau',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta,flags=['bg','mc','ewk'])
     #pw.add(label='Z#rightarrow#tau#tau',samples='mc_pythia_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
     pw.add(label='W#rightarrow#tau#nu',samples=['mc_jimmy_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow,flags=['bg','mc','ewk'])
     #pw.add(label='W#rightarrow#tau#nu',samples='mc_pythia_wtaunu',color=ROOT.kYellow,flags=['bg','mc','ewk'])
-    pw.add(label='Z#rightarrow#mu#mu',samples='mc_pythia_zmumu',color=ROOT.kRed,flags=['bg','mc','ewk'])
+    pw.add(label='Z#rightarrow#mu#mu',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['bg','mc','ewk'])
+    #pw.add(label='Z#rightarrow#mu#mu',samples='mc_pythia_zmumu',color=ROOT.kRed,flags=['bg','mc','ewk'])
     if opts.bgqcd==0:
         pw.add(label='bbmu15X/ccmu15X',samples=['mc_pythia_bbmu15x','mc_pythia_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     elif opts.bgqcd==1:
@@ -347,12 +351,19 @@ if opts.bgsig in (0,1,2,4): # w inclusive
     elif opts.bgsig==2:
         pw.add(label='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk'])
     elif opts.bgsig==4:
-        pw.add(label='W#rightarrow#mu#nu',samples=['mc_powheg_wminmunu','mc_powheg_wplusmunu'],color=10,flags=['sig','mc','ewk'])
+        pw.add(label='W#rightarrow#mu#nu',samples=['mc_powheg_herwig_wminmunu','mc_powheg_herwig_wplusmunu'],color=10,flags=['sig','mc','ewk'])
+    elif opts.bgsig==5:
+        pw.add(label='W#rightarrow#mu#nu',samples=['mc_powheg_pythia_wminmunu','mc_powheg_pythia_wplusmunu'],color=10,flags=['sig','mc','ewk'])
+    elif opts.bgsig==6:
+        pw.add(label='W#rightarrow#mu#nu',samples='mc_sherpa_wmunu',color=10,flags=['sig','mc','ewk'])
     # cache some samples for special studies. Disabled from stacks using a 'no' flag.
     pw.add(label='pythia',samples='mc_pythia_wmunu',color=10,flags=['sig','mc','ewk','no'])
+    pw.add(label='sherpa',samples='mc_sherpa_wmunu',color=10,flags=['sig','mc','ewk','no'])
     pw.add(label='mcnlo',samples=['mc_mcnlo_wminmunu','mc_mcnlo_wplusmunu'],color=10,flags=['sig','mc','ewk','no'])
-    pw.add(label='alpgen',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk','no'])
-    pw.add(label='powheg',samples=['mc_powheg_wminmunu','mc_powheg_wplusmunu'],color=10,flags=['sig','mc','ewk','no'])
+    pw.add(label='powheg_herwig',samples=['mc_powheg_herwig_wminmunu','mc_powheg_herwig_wplusmunu'],color=10,flags=['sig','mc','ewk','no'])
+    pw.add(label='powheg_pythia',samples=['mc_powheg_pythia_wminmunu','mc_powheg_pythia_wplusmunu'],color=10,flags=['sig','mc','ewk','no'])
+    pw.add(label='alpgen_herwig',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk','no'])
+    pw.add(label='alpgen_pythia',samples=['mc_alpgen_pythia_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk','no'])
     pw.add(label='qcd',samples=['mc_pythia_bbmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd','no'])
 elif opts.bgsig in (3,): # w+jets
     pw.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
@@ -367,9 +378,10 @@ else:
     pass
 
 # z samples:
-if opts.bgsig in (0,1,2,4): # z inclusive
+if opts.bgsig in (0,1,2,4,5,6): # z inclusive
     pz.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
-    pz.add(label='W#rightarrow#mu#nu',samples='mc_pythia_wmunu',color=10,flags=['bg','mc','ewk'])
+    pz.add(label='W#rightarrow#mu#nu',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk'])
+    #pz.add(label='W#rightarrow#mu#nu',samples='mc_pythia_wmunu',color=10,flags=['bg','mc','ewk'])
     pz.add(label='Z#rightarrow#tau#tau',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta,flags=['bg','mc','ewk'])
     #pz.add(label='Z#rightarrow#tau#tau',samples='mc_pythia_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
     pz.add(label='W#rightarrow#tau#nu',samples=['mc_jimmy_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow,flags=['bg','mc','ewk'])
@@ -387,7 +399,11 @@ if opts.bgsig in (0,1,2,4): # z inclusive
     elif opts.bgsig==2:
         pz.add(label='Z#rightarrow#mu#mu+jets',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['sig','mc','ewk'])
     elif opts.bgsig==4:
-        pz.add(label='Z#rightarrow#mu#mu',samples='mc_powheg_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
+        pz.add(label='Z#rightarrow#mu#mu',samples='mc_powheg_herwig_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
+    elif opts.bgsig==5:
+        pz.add(label='Z#rightarrow#mu#mu',samples='mc_powheg_pythia_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
+    elif opts.bgsig==6:
+        pz.add(label='Z#rightarrow#mu#mu',samples='mc_sherpa_zmumu',color=10,flags=['sig','mc','ewk'])
 elif opts.bgsig in (3,): # z+jets
     pz.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
     pz.add(label='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['bg','mc','ewk'])
@@ -404,10 +420,52 @@ elif opts.bgsig in (10,11,12,13,14): # Z->mumu signal only (for normalized plots
         pz.add(label='Z#rightarrow#mu#mu',samples='mc_mcnlo_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
     elif opts.bgsig in (12,13): #Alpgen
         pz.add(label='Z#rightarrow#mu#mu+jets',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['sig','mc','ewk'])
-    elif opts.bgsig==14: #PowHeg
-        pz.add(label='Z#rightarrow#mu#mu',samples='mc_powheg_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
+    elif opts.bgsig==14: #PowHeg Herwig
+        pz.add(label='Z#rightarrow#mu#mu',samples='mc_powheg_herwig_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
+    elif opts.bgsig==15: #PowHeg Pythia
+        pz.add(label='Z#rightarrow#mu#mu',samples='mc_powheg_pythia_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
     SuSample.unitize = True
 
+class SigSamples:
+    """ Lists various MC generators"""
+    msize = 1.5
+    def __init__(s):
+        s.n = 0
+        s.names = []
+        s.labels = []
+        s.colors = []
+        s.sizes = []
+        s.styles = []
+        s.cuts = []
+    def ntot(s):
+        assert s.n == len(s.cuts)
+        return s.n
+    def add(s,name,label,color=None,size=0.7,style=20,cut=None):
+        """ Add one sample """
+        s.names.append(name)
+        s.labels.append(label)
+        s.colors.append( color if color else s.autocolor(len(s.cuts)) )
+        s.sizes.append(size*s.msize)
+        s.styles.append(style)
+        s.cuts.append(cut)
+        s.n+=1
+    def prefill_data(s):
+        """ if we also plan to overlay the data """
+        s.add('datasub','Data',color=1,style=21)
+    def prefill_mc(s):
+        """ pre-fill with all available MC samples """
+        s.add('pythia','Pythia(MRSTMCal)')
+        s.add('pythia','Pythia(MRSTMCal->CTEQ6L1)',cut='lha_cteq6ll')
+        s.add('sherpa','Sherpa(CTEQ6L1)')
+        s.add('alpgen_herwig','Alpgen/Herwig(CTEQ6L1)')
+        #s.add('alpgen_pythia','Alpgen/Pythia(CTEQ6L1)')
+        s.add('mcnlo','MC@NLO(CT10)')
+        s.add('powheg_herwig','PowHeg/Herwig(CT10)')
+        s.add('powheg_pythia','PowHeg/Pythia(CT10)')
+    def autocolor(s,i):
+        """ choose a reasonable sequence of colors """
+        colorlist = [2,3,4,5,6,20,28,41,46]
+        return colorlist[i] if i<len(colorlist) else 1
 
 # Pre-load the ntuples
 path_truth = 'truth/st_truth_reco_%s/ntuple'%opts.ntuple
@@ -435,126 +493,106 @@ if False:
 gbg = []
 q = opts.charge
 
-if mode in ('922','gen_det_kin'): # compares, at truth level, different monte-carlos.
-    renormalize()
+if mode in ('sig_reco','sig_truth'): # compares distributions in different signal monte-carlos.
+    is_truth = (mode=='sig_truth')
     c = SuCanvas()
-    c.buildDefault(width=800,height=600)
+    c.buildDefault(width=1024,height=768)
     cc = c.cd_canvas()
     cc.cd(1)
-    pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,fortruth(opts.pre))
-    hpythia = po.histo('pythia','truth_pythia',opts.var,opts.bin,pre,path=path_truth,norm=True)
-    hmcnlo  = po.histo('mcnlo', 'truth_mcnlo', opts.var,opts.bin,pre,path=path_truth,norm=True)
-    halpgen = po.histo('alpgen','truth_alpgen',opts.var,opts.bin,pre,path=path_truth,norm=True)
-    hpowheg = po.histo('powheg','truth_powheg',opts.var,opts.bin,pre,path=path_truth,norm=True)
-    mstyle = 20
-    msize = 1.5
-    hpythia.SetLineColor(ROOT.kRed)
-    hpythia.SetMarkerColor(ROOT.kRed)
-    hpythia.SetMarkerStyle(mstyle)
-    hpythia.SetMarkerSize(msize*1.0)
-    hpythia.Draw('')
-    hpythia.GetYaxis().SetRangeUser(0,max(hpythia.GetMaximum(),hmcnlo.GetMaximum(),halpgen.GetMaximum(),hpowheg.GetMaximum())*1.5)
-    hpythia.GetXaxis().SetTitle(opts.var);
-    hmcnlo.SetLineColor(ROOT.kBlue)
-    hmcnlo.SetMarkerColor(ROOT.kBlue)
-    hmcnlo.SetMarkerStyle(mstyle)
-    hmcnlo.SetMarkerSize(msize*0.7)
-    hmcnlo.Draw('A same')
-    halpgen.SetLineColor(8)
-    halpgen.SetMarkerColor(8)
-    halpgen.SetMarkerStyle(mstyle)
-    halpgen.SetMarkerSize(msize*0.50)
-    halpgen.Draw('A same')
-    hpowheg.SetLineColor(9)
-    hpowheg.SetMarkerColor(9)
-    hpowheg.SetMarkerStyle(mstyle)
-    hpowheg.SetMarkerSize(msize*0.3)
-    hpowheg.Draw('A same')
+    M = SigSamples()
+    M.prefill_mc()
+    h = []
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
-    leg.SetHeader('Different generators:')
-    lab = ('Pythia(MRST)','MC@NLO(CT10)','Alpgen(CTEQ6.1)','PowHeg(CT10)')
-    leg.AddEntry(hpythia,lab[0],'LP')
-    leg.AddEntry(hmcnlo,lab[1],'LP')
-    leg.AddEntry(halpgen,lab[2],'LP')
-    leg.AddEntry(hpowheg,lab[3],'LP')
+    leg.SetHeader(opts.var)
+    SuSample.unitize = True
+    for i in xrange(M.ntot()):
+        print 'Creating:',i
+        cut = opts.cut+'*'+M.cuts[i] if M.cuts[i] else opts.cut
+        pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,fortruth(opts.pre) if is_truth else opts.pre)
+        h.append( po.histo(M.names[i],'plot_%s_%s_%d'%(M.names[i],M.cuts[i] if M.cuts[i] else '',q),opts.var,opts.bin,pre,path=(path_truth if is_truth else path_reco)) )
+        h[-1].SetLineColor(M.colors[i])
+        h[-1].SetMarkerColor(M.colors[i])
+        h[-1].SetMarkerStyle(M.styles[i])
+        h[-1].SetMarkerSize(M.sizes[i])
+        h[-1].Draw() if i==0 else h[-1].Draw('A same')
+        leg.AddEntry(h[-1],M.labels[i],'LP')
+    maxh = max([htmp.GetMaximum() for htmp in h])*1.5
+    h[0].GetYaxis().SetRangeUser(0,maxh)
     leg.Draw('same')
 
-if mode=='921': # asymmetry, at truth level, of different monte-carlos.
-    renormalize()
+if mode=='asym_truth': # asymmetry, at truth level, of different monte-carlos.
     c = SuCanvas()
-    c.buildDefault(width=800,height=600)
+    c.buildDefault(width=1024,height=768)
     cc = c.cd_canvas()
     cc.cd(1)
-    names = ('pythia','mcnlo','alpgen','powheg')
-    labels = ('Pythia(MRST)','MC@NLO(CT10)','Alpgen(CTEQ6.1)','PowHeg(CT10)')
-    mstyle = 20
-    msize = 1.5
-    colors = (ROOT.kRed,ROOT.kBlue,8,9)
-    sizes = (msize*1.0,msize*0.7,msize*0.5,msize*0.3)
+    M = SigSamples()
+    M.prefill_mc()
     h = []
     hasym = []
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
     leg.SetHeader('Asymmetry:')
-    for i in range(4):
+    for i in xrange(M.ntot()):
         h.append([None,None])
         for q in (0,1):
             print 'Creating:',i,q
-            pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,fortruth(opts.pre))
-            h[i][q] = po.histo(names[i],'truth_%s_%d'%(names[i],q),opts.var,opts.bin,pre,path=path_truth)
-            h[i][q].SetLineColor(colors[i])
-            h[i][q].SetMarkerColor(colors[i])
-            h[i][q].SetMarkerStyle(mstyle)
-            h[i][q].SetMarkerSize(sizes[i])
+            cut = opts.cut+'*'+M.cuts[i] if M.cuts[i] else opts.cut
+            pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],cut,fortruth(opts.pre))
+            h[i][q] = po.histo(M.names[i],'truth_%s_%s_%d'%(M.names[i],M.cuts[i] if M.cuts[i] else '',q),opts.var,opts.bin,pre,path=path_truth)
+            h[i][q].SetLineColor(M.colors[i])
+            h[i][q].SetMarkerColor(M.colors[i])
+            h[i][q].SetMarkerStyle(M.styles[i])
+            h[i][q].SetMarkerSize(M.sizes[i])
         hasym.append(c.WAsymmetry(h[i][POS],h[i][NEG]))
         hasym[i].Draw() if i==0 else hasym[i].Draw('A same')
-        leg.AddEntry(hasym[i],labels[i],'LP')
-    hasym[0].GetYaxis().SetRangeUser(0,max(hasym[0].GetMaximum(),hasym[1].GetMaximum(),hasym[2].GetMaximum(),hasym[3].GetMaximum())*1.5)
+        leg.AddEntry(hasym[i],M.labels[i],'LP')
+    maxh = max([htmp.GetMaximum() for htmp in hasym])*1.5
+    hasym[0].GetYaxis().SetRangeUser(0,maxh)
     leg.Draw('same')
 
-if mode=='923': # asymmetry, at reco/particle level, of different monte-carlos. Compared to BG-subtracted data
+if mode=='asym_reco': # asymmetry, at reco/particle level, of different monte-carlos. Compared to BG-subtracted data
     renormalize()
     c = SuCanvas()
-    c.buildDefault(width=800,height=600)
+    c.buildDefault(width=1024,height=768)
     cc = c.cd_canvas()
     cc.cd(1)
-    names = ('pythia','mcnlo','alpgen','powheg','datasub')
-    labels = ('Pythia(MRST)','MC@NLO(CT10)','Alpgen(CTEQ6.1)','PowHeg(CT10)','Data')
-    msize = 1.5
-    colors = (ROOT.kRed,ROOT.kBlue,8,9,ROOT.kBlack)
-    sizes = (msize*0.7,msize*0.7,msize*0.7,msize*0.7,msize*0.5)
-    mstyles = (20,20,20,20,21)
+    M = SigSamples()
+    M.prefill_mc()
+    M.prefill_data()
     h = []
     hasym = []
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
     leg.SetHeader('Asymmetry:')
-    for i in range(len(names)):
+    for i in range(M.ntot()):
         h.append([None,None])
         for q in (0,1):
             print 'Creating:',i,q
-            pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre)
-            if i==len(names)-1: #data
-                h[i][q] = particle(po.data_sub('datasub_%s_%d'%(names[i],q),opts.var,opts.bin,pre,path=path_reco),q=q)
+            preDATA = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre)
+            cut = opts.cut+'*'+M.cuts[i] if M.cuts[i] else opts.cut
+            preMC = '(%s) * (%s) * (%s)'%(QMAP[q][2],cut,opts.pre)
+            if i==M.ntot()-1: #data
+                h[i][q] = particle(po.data_sub('datasub_%s_%d'%(M.names[i],q),opts.var,opts.bin,preDATA,path=path_reco),q=q)
             else: #MC
                 if opts.effroot: # just get the particle truth histo directly (correctly handles the errors)
-                    pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,fortruth(opts.pre))
-                    h[i][q] = po.histo(names[i],'recomc_%s_%d'%(names[i],q),opts.var,opts.bin,pre,path=path_truth)
+                    pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],cut,fortruth(opts.pre))
+                    h[i][q] = po.histo(M.names[i],'recomc_%s_%s_%d'%(M.names[i],M.cuts[i] if M.cuts[i] else '',q),opts.var,opts.bin,preMC,path=path_truth)
                 else:
-                    h[i][q] = particle(po.histo(names[i],'recomc_%s_%d'%(names[i],q),opts.var,opts.bin,pre,path=path_reco),q=q)
-            h[i][q].SetLineColor(colors[i])
-            h[i][q].SetMarkerColor(colors[i])
-            h[i][q].SetMarkerStyle(mstyles[i])
-            h[i][q].SetMarkerSize(sizes[i])
+                    h[i][q] = particle(po.histo(M.names[i],'recomc_%s_%s_%d'%(M.names[i],M.cuts[i] if M.cuts[i] else '',q),opts.var,opts.bin,preMC,path=path_reco),q=q)
+            h[i][q].SetLineColor(M.colors[i])
+            h[i][q].SetMarkerColor(M.colors[i])
+            h[i][q].SetMarkerStyle(M.styles[i])
+            h[i][q].SetMarkerSize(M.sizes[i])
         hasym.append(c.WAsymmetry(h[i][POS],h[i][NEG]))
-        if not i==len(names)-1:
+        if not i==len(M.names)-1:
             hasym[i].Draw() if i==0 else hasym[i].Draw('A same')
         else:
             hasym[i].Draw('A same')
-        leg.AddEntry(hasym[i],labels[i],'LP')
-    hasym[0].GetYaxis().SetRangeUser(0,max(hasym[0].GetMaximum(),hasym[1].GetMaximum(),hasym[2].GetMaximum(),hasym[3].GetMaximum())*1.5)
+        leg.AddEntry(hasym[i],M.labels[i],'LP')
+    maxh = max([htmp.GetMaximum() for htmp in hasym])*1.5
+    hasym[0].GetYaxis().SetRangeUser(0,maxh)
     leg.Draw('same')
 
 # WARNING: this function is very specific to the TrigFTKAna ntuple (ie, manually refers to many folders!)
-if mode=='924': # asymmetry, at reco/particle level: systematic variations in bg-subtracted data
+if mode=='asym_syst': # asymmetry, at reco/particle level: systematic variations in bg-subtracted data
     renormalize()
     qcdscale = SuSample.qcdscale
     c = SuCanvas()
@@ -600,8 +638,9 @@ if mode=='924': # asymmetry, at reco/particle level: systematic variations in bg
         h.append([None,None])
         for q in (0,1):
             SuSample.hcharge = q
-            pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre)
+            pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre) 
             pre += hh[0]+'_'+SuSample.hsourcedata + '_' + SuSample.hsourcemc
+            print pre
             h[i][q] = particle(po.data_sub('datasub_%s_%d'%(hh[0],q),opts.var,opts.bin,pre,path=path_reco),q=q)
             h[i][q].SetLineColor(colors[i])
             h[i][q].SetMarkerColor(colors[i])
@@ -612,7 +651,7 @@ if mode=='924': # asymmetry, at reco/particle level: systematic variations in bg
         leg.AddEntry(hasym[i],hh[0],'LP')    
     hasym[0].GetXaxis().SetRangeUser(0,2.4)
     # overlay signal templates?
-    if True:
+    if False:
         SuSample.hsource = None
         names_mc = ('pythia','mcnlo','alpgen')
         labels_mc = ('Pythia(MRST)','MC@NLO(CT10)','Alpgen(CTEQ6.1)')
@@ -670,6 +709,9 @@ if mode=='matrix_2010inc': # QCD estimation using matrix method
             print 'This variable cannot be automatrically translated between w and z ntuples: %s'%opts.var
             var = opts.var
         pre_z_bef = prune(pre_z_aft,'lX_ptiso20'.replace('lX',QMAPZ[iqp][2]))
+        print 'BKK: isolation efficiency for Z events' #FIXME
+        print pre_z_bef #FIXME
+        print pre_z_aft #FIXME
         hz_bef.append( pz.data('data_bef_%s'%QMAPZ[iq][1],var,opts.bin,'(%s) * (%s)'%(opts.cut,pre_z_bef)) )
         hz_aft.append( pz.data('data_aft_%s'%QMAPZ[iq][1],var,opts.bin,'(%s) * (%s)'%(opts.cut,pre_z_aft)) )
     iq = 1 if opts.charge==1 else 0  # both-charges case: use mu+ template
@@ -683,14 +725,17 @@ if mode=='matrix_2010inc': # QCD estimation using matrix method
     print 'Obtaining heff_fake template using W candidates in a QCD-enriched region'
     cc.cd(2)
     pre_fake_toppair1 = prunesub(opts.pre,('fabs\(d0sig\)'),'fabs(d0sig)>5')
-    pre_fake_winc = prunesub(opts.pre,('l_pt','met','w_mt','fabs\(d0sig\)'),'l_pt>15 && l_pt<20 && met<25 && w_mt<40')
+    pre_fake_winc = prunesub(opts.pre,('l_pt','met','w_mt','fabs\(d0sig\)','l_trigEF','nmuons'),'l_pt>15 && l_pt<20 && met<25 && w_mt<40')
     pre_fake_aft = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,pre_fake_winc)
     pre_fake_bef = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,prune(pre_fake_winc,'ptiso'))
+    print 'AKK: isolation efficiency for QCD events' #FIXME
+    print pre_fake_bef #FIXME
+    print pre_fake_aft #FIXME
     hfake_bef = pw.data('fdata_bef',opts.var,opts.bin,pre_fake_bef)
     hfake_aft = pw.data('fdata_aft',opts.var,opts.bin,pre_fake_aft)
     heff_fake = c.Efficiency(hfake_aft,hfake_bef)
     heff_fake.Draw('')
-    heff_fake.GetYaxis().SetRangeUser(0.3,0.5)
+    heff_fake.GetYaxis().SetRangeUser(0.2,0.5)
     heff_fake.GetYaxis().SetTitle('Efficiency for QCD')
     heff_fake.GetXaxis().SetTitle(opts.var)
     # Get h_isol, h_loose directly from data
@@ -698,6 +743,9 @@ if mode=='matrix_2010inc': # QCD estimation using matrix method
     cc.cd(3)
     pre_isol = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre)
     pre_loose = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,looseisoreg(opts.pre))
+    print 'CKK: overall loose and isolated samples' #FIXME
+    print pre_isol #FIXME
+    print pre_loose #FIXME
     pres = (pre_isol,pre_loose)
     hNdata = []
     for i in range(len(pres)):
