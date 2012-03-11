@@ -3,24 +3,21 @@ source bashmap.sh
 
 #note: saw better agreement with d0sig<3.0 AND fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5
 
-wpre_preiso='l_pt>20.0 && fabs(l_eta)<2.4 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5' #old
-wpre_preiso='nmuons==1 && l_pt>20.0 && fabs(l_eta)<2.4 && met>25.0 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && fabs(d0sig)<10.0' #WW/WZ (d0sig)<3.0
-wpre_jordan="${wpre_preiso} && ptiso20/l_pt<0.1"
-wpre_peter="${wpre_preiso} && ptiso30<1.125 && etiso30<1.125" #old
-wpre_peter="${wpre_preiso} && ptiso30/l_pt<0.15 && etiso30corr/l_pt<0.14" #WW/WZ
-zpre_preiso='lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>20.0 && fabs(lP_eta)<2.4 && fabs(lP_pt_id-lP_pt_exms)/lP_pt_id<0.5    &&     lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0 && fabs(lN_eta)<2.4 && fabs(lN_pt_id-lN_pt_exms)/lN_pt_id<0.5    &&     Z_m>70 && Z_m<110 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0' #old
-zpre_preiso='nmuons==2 && lP_idhits==1 && fabs(lP_z0)<10. && lP_pt>20.0 && fabs(lP_eta)<2.4 && fabs(lP_d0sig)<10.0    &&    lN_idhits==1 && fabs(lN_z0)<10. && lN_pt>20.0 && fabs(lN_eta)<2.4 && fabs(lN_d0sig)<10.0    &&     Z_m>70 && Z_m<110 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0' #WW/WZ (d0sig<3.0)
-zpre_jordan="${zpre_preiso} && lP_ptiso20/lP_pt<0.1 && lN_ptiso20/lN_pt<0.1"
-zpre_peter="${zpre_preiso} && lP_ptiso30<1.125 && lP_etiso30<1.125 && lN_ptiso30<1.125 && lN_etiso30<1.125" #old
-zpre_peter="${zpre_preiso} && lP_ptiso30/lP_pt<0.15 && lP_etiso30corr/lP_pt<0.14 && lN_ptiso30/lN_pt<0.15 && lN_etiso30corr/lN_pt<0.14" #WW/WZ
+wpre_idms='fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5' #unused
+wpre_preiso='met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && fabs(d0sig)<10.0 && nmuons==1 && l_trigEF<0.2' #WW/WZ (d0sig)<3.0
+wpre_jordan="ptiso20/l_pt<0.1 && ${wpre_preiso}"
+wpre_peter="ptiso30/l_pt<0.15 && etiso30corr/l_pt<0.14 && ${wpre_preiso}" #WW/WZ
+zpre_preiso='lP_pt>20.0 && fabs(lP_eta)<2.4 && lN_pt>20.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10. && fabs(lP_d0sig)<10.0    &&    lN_idhits==1 && fabs(lN_z0)<10. && fabs(lN_d0sig)<10.0    &&     Z_m>70 && Z_m<110 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && (lP_trigEF<0.2 || lN_trigEF<0.2)' #WW/WZ (d0sig<3.0)
+zpre_jordan="lP_ptiso20/lP_pt<0.1 && lN_ptiso20/lN_pt<0.1 && ${zpre_preiso}"
+zpre_peter="lP_ptiso30/lP_pt<0.15 && lP_etiso30corr/lP_pt<0.14 && lN_ptiso30/lN_pt<0.15 && lN_etiso30corr/lN_pt<0.14 && ${zpre_preiso}" #WW/WZ
 
 # default cut
 cut="mcw*puw*effw*trigw"
 # MC11B/MC11C
 commonB="--input /share/ftkdata1/antonk/ana_v28HB_01212012_DtoM_jetupd_stacoCB_all/"
 commonC="--input /share/ftkdata1/antonk/ana_v28HC_01212012_DtoM_jetupd_stacoCB_all/"
-
 common="--input /share/ftkdata1/antonk/ana_v28HC_02092012_DtoM_cernupd_stacoCB_all"
+common="--input /share/ftkdata1/antonk/ana_v29D_02222012_DtoM_pdfw_stacoCB_all/"
 
 ###############################################################################
 # Parse command line
@@ -49,25 +46,27 @@ function run_d0_stacks () {
 }
 function run_w_stacks () {
     eval ./stack2.py ${common}  -b --var 'nvtxs_all' --bin '20,0,20' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var 'njets' --bin '10,0,10' -t ${tag} $@ &
     eval ./stack2.py ${common}  -b --var 'l_pt' --bin '50,0,100' -t ${tag} $@ &
     eval ./stack2.py ${common}  -b --var 'met' --bin '50,0,200' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var 'met_phi' --bin '50,-3.15,3.15' -t ${tag} $@ &
     eval ./stack2.py ${common}  -b --var 'w_mt' --bin '50,0,200' -t ${tag} $@ &
-    eval ./stack2.py ${common}  -b --var 'l_eta' --bin '50,-2.5,2.5' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var 'l_eta' --bin '20,-2.5,2.5' -t ${tag} $@ &
     eval ./stack2.py ${common}  -b --var 'w_pt' --bin '50,0,200' -t ${tag} $@ &
-    eval ./stack2.py ${common}  -b --var 'ptiso20/l_pt' --bin '100,0,0.2' -t ${tag} $@ &
-    eval ./stack2.py ${common}  -b --var 'ptiso30/l_pt' --bin '100,0,0.2' -t ${tag} $@ &
-    eval ./stack2.py ${common}  -b --var 'etiso30corr/l_pt' --bin '100,0,0.2' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var 'ptiso20/l_pt' --bin '100,0,0.1' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var 'ptiso30/l_pt' --bin '100,0,0.1' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var 'etiso30corr/l_pt' --bin '100,-0.2,0.2' -t ${tag} $@ &
 }
 function run_w_asym () {
-    eval ./stack2.py ${common}  -b --var "\"fabs(l_eta)\"" --bin '25,0.0,2.5' -t ${tag} $@ &
-    eval ./stack2.py ${common}  -b --var 'l_eta' --bin '50,-2.5,2.5' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var "\"fabs(l_eta)\"" --bin '10,0.0,2.5' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var 'l_eta' --bin '20,-2.5,2.5' -t ${tag} $@ &
 }
 function run_w_asym_min () {
-    eval ./stack2.py ${common}  -b --var "\"fabs(l_eta)\"" --bin '25,0.0,2.5' -t ${tag} $@ &
-    eval ./stack2.py ${common}  -b --var "\"fabs(l_eta+0)\"" --bin '10,0.0,2.5' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var "\"fabs(l_eta)\"" --bin '10,0.0,2.5' -t ${tag} $@ &
 }
 function run_z_stacks () {
     eval ./stack2.py ${common} --ntuple z -b --var 'nvtxs_all' --bin '20,0,20' -t ${tag} $@ &
+    eval ./stack2.py ${common} --ntuple z -b --var 'njets' --bin '10,0,10' -t ${tag} $@ &
     eval ./stack2.py ${common} --ntuple z -b --var 'lP_pt' --bin '50,0,100' -t ${tag} $@ &
     eval ./stack2.py ${common} --ntuple z -b --var 'lN_pt' --bin '50,0,100' -t ${tag} $@ &
     eval ./stack2.py ${common} --ntuple z -b --var 'met' --bin '50,0,200' -t ${tag} $@ &
@@ -115,25 +114,21 @@ fi
 if [ "$mode" == "wstack" ]; then
     common="${common} --qcd AUTO"
     i=0
-    gput tagss ${i} WJ_pythia_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 2"
+    gput tagss ${i} WJ_pythia_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 0 --charge 2"
     ((i++))
-    gput tagss ${i} WJ_pythia_q1 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 1"
+    gput tagss ${i} WJ_alpgen_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 2 --charge 2"
     ((i++))
-    gput tagss ${i} WJ_pythia_q0 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --charge 0"
+    gput tagss ${i} WJ_alpgen_q1 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 2 --charge 1"
     ((i++))
-    gput tagss ${i} WJ_alpgen_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 3 --charge 2"
-    ((i++))
-    gput tagss ${i} WJ_alpgen_q1 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 3 --charge 1"
-    ((i++))
-    gput tagss ${i} WJ_alpgen_q0 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 3 --charge 0"
+    gput tagss ${i} WJ_alpgen_q0 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 2 --charge 0"
     ((i++))
     gput tagss ${i} WJ_mcnlo_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 1 --charge 2"
     ((i++))
-    gput tagss ${i} WJ_powheg_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 4 --charge 2"
+    gput tagss ${i} WJ_sherpa_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 6 --charge 2"
     ((i++))
-    gput tagss ${i} WP_pythia_q2 "--pre \"${wpre_peter}\" --cut \"${cut}\" --charge 2"
+    gput tagss ${i} WJ_powheg_herwig_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 4 --charge 2"
     ((i++))
-    gput tagss ${i} WP_alpgen_q2 "--pre \"${wpre_peter}\" --cut \"${cut}\" --bgsig 3 --charge 2"
+    gput tagss ${i} WP_alpgen_q2 "--pre \"${wpre_peter}\" --cut \"${cut}\" --bgsig 2 --charge 2"
     ((i++))
     # run all jobs
     i=0
@@ -157,20 +152,20 @@ fi
 # Z stack histos
 if [ "$mode" == "zstack" ]; then
     i=0
-    gput tagzz ${i} ZJ_pythia_uncut "--pre \"${zpre_preiso}\" --cut \"${cut}\""
-    ((i++))
-    gput tagzz ${i} ZJ_pythia_all "--pre \"${zpre_jordan}\" --cut \"${cut}\""
-    ((i++))
-    gput tagzz ${i} ZP_pythia_all "--pre \"${zpre_peter}\" --cut \"${cut}\""
-    ((i++))
     # note that alpgen gives a much better agreement for Zs!
+    gput tagzz ${i} ZJ_alpgen_uncut "--pre \"${zpre_preiso}\" --cut \"${cut}\" --bgsig 3"
+    ((i++))
     gput tagzz ${i} ZJ_alpgen_all "--pre \"${zpre_jordan}\" --cut \"${cut}\" --bgsig 3"
     ((i++))
-    gput tagzz ${i} ZP_alpgen_all "--pre \"${zpre_peter}\" --cut \"${cut}\" --bgsig 3"
+    gput tagzz ${i} ZJ_pythia_all "--pre \"${zpre_jordan}\" --cut \"${cut}\" --bgsig 0"
     ((i++))
     gput tagzz ${i} ZJ_mcnlo_all "--pre \"${zpre_jordan}\" --cut \"${cut}\" --bgsig 1"
     ((i++))
-    gput tagzz ${i} ZJ_powheg_all "--pre \"${zpre_jordan}\" --cut \"${cut}\" --bgsig 4"
+    gput tagzz ${i} ZJ_sherpa_all "--pre \"${zpre_jordan}\" --cut \"${cut}\" --bgsig 6"
+    ((i++))
+    gput tagzz ${i} ZJ_powheg_herwig_all "--pre \"${zpre_jordan}\" --cut \"${cut}\" --bgsig 4"
+    ((i++))
+    gput tagzz ${i} ZP_alpgen_all "--pre \"${zpre_peter}\" --cut \"${cut}\" --bgsig 3"
     ((i++))
     # run all jobs
     i=0
@@ -185,24 +180,59 @@ if [ "$mode" == "zstack" ]; then
     echo DONE
 fi
 
-# truth plots for multiple generators
-if [ "$mode" == "truth" ]; then
-    common="${common} --qcd AUTO"
+# reco-level comparisons of signal distributions
+if [ "$mode" == "sig_reco" ]; then
+    common="${common}"
     pre="${wpre_jordan}"
-    m=1
 
-    m=922
+    m=sig_reco
     tag=QALL
     run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 2 "
+    wait
+    tag=QPOS
+    run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 0 "
+    tag=QNEG
+    run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 1 "
+    wait
+fi
+
+# truth plots for multiple generators
+if [ "$mode" == "truth" ]; then
+    common="${common}"
+    pre="${wpre_jordan}"
+    cut='mcw*puw' # no need to use eff/trig weights here
+
+    m=sig_truth
+    tag=QALL
+    run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 2 "
+    wait
     tag=QPOS
     run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 0 "
     tag=QNEG
     run_w_stacks "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 1 "
     wait
 
-    m=921
+    m=asym_truth
     tag=ASYM
-    run_w_asym  "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --charge 1 "
+    run_w_asym_min  "--pre \"${pre}\" --cut \"${cut}\" -m ${m}"
+    tag=ASYM_lpt2040
+    run_w_asym_min  "--pre \"${pre} && l_pt>20 && l_pt<40\" --cut \"${cut}\" -m ${m}"
+    tag=ASYM_lpt4080
+    run_w_asym_min  "--pre \"${pre} && l_pt>40 && l_pt<80\" --cut \"${cut}\" -m ${m} "
+    tag=ASYM_nj0
+    run_w_asym_min  "--pre \"${pre} && njets==0\" --cut \"${cut}\" -m ${m} "
+    tag=ASYM_nj1
+    run_w_asym_min  "--pre \"${pre} && njets==1\" --cut \"${cut}\" -m ${m} "
+    tag=ASYM_nj2
+    run_w_asym_min  "--pre \"${pre} && njets==2\" --cut \"${cut}\" -m ${m} "
+    tag=ASYM_wpt0010
+    run_w_asym_min  "--pre \"${pre} && w_pt>0 && w_pt<10\" --cut \"${cut}\" -m ${m} "
+    tag=ASYM_wpt1020
+    run_w_asym_min  "--pre \"${pre} && w_pt>10 && w_pt<20\" --cut \"${cut}\" -m ${m} "
+    tag=ASYM_wpt20100
+    run_w_asym_min  "--pre \"${pre} && w_pt>20 && w_pt<100\" --cut \"${cut}\" -m ${m} "
+    ((i++))
+    
     wait
     
     echo DONE
@@ -262,7 +292,7 @@ fi;
 if [ "$mode" == "asym" ]; then
     common="${common} --qcd AUTO"
     pre="${wpre_jordan}"
-    m=923
+    m=asym_reco
 
     i=0
     # detector level
@@ -279,27 +309,29 @@ if [ "$mode" == "asym" ]; then
 	((i++))
 	gput tagsF ${i} RASYM_nj2  "--pre \"${pre} && njets==2\" --cut \"${cut}\" -m ${m} "
 	((i++))
-	gput tagsF ${i} RASYM_lpt2050  "--pre \"${pre} && l_pt>20 && l_pt<40\" --cut \"${cut}\" -m ${m} "
+	gput tagsF ${i} RASYM_lpt2040  "--pre \"${pre} && l_pt>20 && l_pt<40\" --cut \"${cut}\" -m ${m} "
 	((i++))
-	gput tagsF ${i} RASYM_lpt5080  "--pre \"${pre} && l_pt>40 && l_pt<80\" --cut \"${cut}\" -m ${m} "
+	gput tagsF ${i} RASYM_lpt4080  "--pre \"${pre} && l_pt>40 && l_pt<80\" --cut \"${cut}\" -m ${m} "
 	((i++))
 	gput tagsF ${i} RASYM_lpt80200  "--pre \"${pre} && l_pt>80 && l_pt<200\" --cut \"${cut}\" -m ${m} "
 	((i++))
-	gput tagsF ${i} RASYM_lpt2050_nj0  "--pre \"${pre} && l_pt>20 && l_pt<40 && njets==0\" --cut \"${cut}\" -m ${m} "
+	gput tagsF ${i} RASYM_lpt2040_nj0  "--pre \"${pre} && l_pt>20 && l_pt<40 && njets==0\" --cut \"${cut}\" -m ${m} "
 	((i++))
-	gput tagsF ${i} RASYM_lpt5080_nj0  "--pre \"${pre} && l_pt>40 && l_pt<80 && njets==0\" --cut \"${cut}\" -m ${m} "
+	gput tagsF ${i} RASYM_lpt4080_nj0  "--pre \"${pre} && l_pt>40 && l_pt<80 && njets==0\" --cut \"${cut}\" -m ${m} "
 	((i++))
 	gput tagsF ${i} RASYM_lpt80200_nj0  "--pre \"${pre} && l_pt>80 && l_pt<200 && njets==0\" --cut \"${cut}\" -m ${m} "
 	((i++))
-	gput tagsF ${i} RASYM_lpt2050_nj1  "--pre \"${pre} && l_pt>20 && l_pt<40 && njets==1\" --cut \"${cut}\" -m ${m} "
+	gput tagsF ${i} RASYM_lpt2040_nj1  "--pre \"${pre} && l_pt>20 && l_pt<40 && njets==1\" --cut \"${cut}\" -m ${m} "
 	((i++))
-	gput tagsF ${i} RASYM_lpt5080_nj1  "--pre \"${pre} && l_pt>40 && l_pt<80 && njets==1\" --cut \"${cut}\" -m ${m} "
+	gput tagsF ${i} RASYM_lpt4080_nj1  "--pre \"${pre} && l_pt>40 && l_pt<80 && njets==1\" --cut \"${cut}\" -m ${m} "
 	((i++))
 	gput tagsF ${i} RASYM_lpt80200_nj1  "--pre \"${pre} && l_pt>80 && l_pt<200 && njets==1\" --cut \"${cut}\" -m ${m} "
 	((i++))
-	gput tagsF ${i} RASYM_wpt0015  "--pre \"${pre} && w_pt>0 && w_pt<15\" --cut \"${cut}\" -m ${m} "
+	gput tagsF ${i} RASYM_wpt0010  "--pre \"${pre} && w_pt>0 && w_pt<10\" --cut \"${cut}\" -m ${m} "
 	((i++))
-	gput tagsF ${i} RASYM_wpt1580  "--pre \"${pre} && w_pt>15 && w_pt<80\" --cut \"${cut}\" -m ${m} "
+	gput tagsF ${i} RASYM_wpt1020  "--pre \"${pre} && w_pt>10 && w_pt<20\" --cut \"${cut}\" -m ${m} "
+	((i++))
+	gput tagsF ${i} RASYM_wpt20100  "--pre \"${pre} && w_pt>20 && w_pt<100\" --cut \"${cut}\" -m ${m} "
 	((i++))
     fi
     if [ "1" -eq "1" ]; then
@@ -329,7 +361,7 @@ fi
 if [ "$mode" == "syst" ]; then
     common="${common} --qcd AUTO"
     pre="${wpre_jordan}"
-    m=924
+    m=asym_syst
 
     i=0
     # detector level

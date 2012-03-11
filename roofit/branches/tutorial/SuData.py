@@ -160,7 +160,8 @@ class SuSample:
             key_str = md5(key_str_all).hexdigest()
         needs_saving = s.GLOBAL_CACHE
         if s.GLOBAL_CACHE and os.path.exists(s.GLOBAL_CACHE):
-            with FileLock(s.GLOBAL_CACHE):
+            #with FileLock(s.GLOBAL_CACHE):
+            if True:
                 s.cache = ROOT.TFile.Open(s.GLOBAL_CACHE,'READ')
                 assert s.cache and s.cache.IsOpen()
                 if s.cache.Get(key_str):
