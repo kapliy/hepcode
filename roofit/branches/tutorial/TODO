@@ -1,5 +1,5 @@
-* pythia wmunu with reweighted pdf - extra category, just for that!
-* similarly for wmunu pt reweighting for samples with the same PDF
+* separate run for wmunu pt reweighting for samples with the same PDF.
+* add isoww_metfit category to get isolation choice systematic
 
 roofit updates:
 [AFTER FIXING HISTO BUG:]
@@ -11,12 +11,8 @@ roofit updates:
 
 
 TrigFTKAna updates:
-* finish cleaning up w/z asymmetry headers; add tag-probe in.
-* Cutflow issues!!!
-* Add MET diff plots; Add back missing MET systematics terms
-* Add tag and probe histos using Antonio's class (see ana_lowmh example)
-  NO! just make categories applying/not applying isolation!
-  NO! NO! hardcode in study class, as Ho Ling does!
+* add tag-probe in.
+  hardcode in study class, as Ho Ling does!
 * LATER: Add truth-level 4-momentum and njets to reco ntuple (maybe implement global passing via a map in DgEventInfo?)
 * LATER: Add FSR tool; add FSR-present flag; add FSR-corrected Z
 * LATER: add dressed truth leptons

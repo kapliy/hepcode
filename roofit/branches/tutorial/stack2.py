@@ -300,18 +300,19 @@ def run_fit(pre,var='met',bin='100,5,100',cut='mcw*puw'):
     hfree.getLegendName = lambda : 'QCD (bb/cc mu15X)'
     f.setDataBackgrounds(hdata,hfixed,hfree)
     f.doFit()
-    tmp = f.drawFits()
+    tmp = f.drawFits(pre)
     gbg.append((f,hdata,hfixed,hfree,tmp))
     return tmp[0],tmp[1],f.scales[0]
 
-def renormalize():
+def renormalize(bin='100,5,100'):
     """ Normalizes MET template """
     if not opts.qcdscale in ('AUTO','auto','Auto'):
         return
     if opts.ntuple=='z': # TODO: choose a good region to normalize Z QCD contribution
         return
     fitpre = metfitreg(opts.pre)
-    dum1,dum2,scale = run_fit(pre=fitpre)
+    ctmp,frame,scale = run_fit(pre=fitpre,bin=bin)
+    OMAP.append(ctmp)
     # TODO FIXME: understand why this is an inverse of fitted scale here!
     SuSample.qcdscale = 1.0/scale
 
@@ -455,13 +456,14 @@ class SigSamples:
     def prefill_mc(s):
         """ pre-fill with all available MC samples """
         s.add('pythia','Pythia(MRSTMCal)')
-        s.add('pythia','Pythia(MRSTMCal->CTEQ6L1)',cut='lha_cteq6ll')
-        s.add('sherpa','Sherpa(CTEQ6L1)')
+        #s.add('pythia','Pythia(MRSTMCal->CTEQ6L1)',cut='lha_cteq6ll')
+        #return # quick return for now! FIXME
+        #s.add('sherpa','Sherpa(CTEQ6L1)')
         s.add('alpgen_herwig','Alpgen/Herwig(CTEQ6L1)')
         #s.add('alpgen_pythia','Alpgen/Pythia(CTEQ6L1)')
         s.add('mcnlo','MC@NLO(CT10)')
         s.add('powheg_herwig','PowHeg/Herwig(CT10)')
-        s.add('powheg_pythia','PowHeg/Pythia(CT10)')
+        #s.add('powheg_pythia','PowHeg/Pythia(CT10)')
     def autocolor(s,i):
         """ choose a reasonable sequence of colors """
         colorlist = [2,3,4,5,6,20,28,41,46]
@@ -469,10 +471,10 @@ class SigSamples:
 
 # Pre-load the ntuples
 path_truth = 'truth/st_truth_reco_%s/ntuple'%opts.ntuple
-path_reco  = 'st_%s_final/ntuple'%opts.ntuple
+path_reco  = 'nominal/st_%s_final/ntuple'%opts.ntuple
 for it,px in enumerate((pw,pz)):
     ptruth = 'truth/st_truth_reco_%s/ntuple'%('w' if it==0 else 'z')
-    preco  = 'st_%s_final/ntuple'%('w' if it==0 else 'z')
+    preco  = 'nominal/st_%s_final/ntuple'%('w' if it==0 else 'z')
     px.add(label='2011 data',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kBlack,flags=['data'])
     px.addchain(ptruth)
     px.addchain(preco)
@@ -576,7 +578,7 @@ if mode=='asym_reco': # asymmetry, at reco/particle level, of different monte-ca
                     pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],cut,fortruth(opts.pre))
                     h[i][q] = po.histo(M.names[i],'recomc_%s_%s_%d'%(M.names[i],M.cuts[i] if M.cuts[i] else '',q),opts.var,opts.bin,preMC,path=path_truth)
                 else:
-                    h[i][q] = particle(po.histo(M.names[i],'recomc_%s_%s_%d'%(M.names[i],M.cuts[i] if M.cuts[i] else '',q),opts.var,opts.bin,preMC,path=path_reco),q=q)
+                    h[i][q] = po.histo(M.names[i],'recomc_%s_%s_%d'%(M.names[i],M.cuts[i] if M.cuts[i] else '',q),opts.var,opts.bin,preMC,path=path_reco)
             h[i][q].SetLineColor(M.colors[i])
             h[i][q].SetMarkerColor(M.colors[i])
             h[i][q].SetMarkerStyle(M.styles[i])
@@ -591,44 +593,176 @@ if mode=='asym_reco': # asymmetry, at reco/particle level, of different monte-ca
     hasym[0].GetYaxis().SetRangeUser(0,maxh)
     leg.Draw('same')
 
+# ADDING SYSTEMATICS!
+# NOTE: BG-SUBTRACTED does not include systematic effects in the subtracted MC for now. So data error bar is statistics only.
+if mode=='asym_reco_syst': # asymmetry, at reco/particle level, of different monte-carlos. Compared to BG-subtracted data
+    #renormalize() #FIXME
+    c = SuCanvas()
+    c.buildDefault(width=1024,height=768)
+    cc = c.cd_canvas()
+    cc.cd(1)
+    M = SigSamples()
+    M.prefill_mc()
+    M.prefill_data()
+    h = []
+    hasym = []     # central values
+    hasymsys = []  # systematic band
+
+    # groups of systematic errors
+    HS = []
+    hs = [('nominal','nominal/st_w_final/isoww/%s','nominal/st_w_final/isoww/%s',0),]  # format: (data,mc) histo
+    HS.append(hs)
+    # MCP momentum scale and smearing
+    hs = [('mcp_unscaled','nominal/st_w_final/isoww/%s','smeared_unscaled/st_w_final/isoww/%s',1),]
+    HS.append(hs)
+    hs = [('mcp_msdown','nominal/st_w_final/isoww/%s','mcp_msdown/st_w_final/isoww/%s',2),]
+    hs += [('mcp_msup','nominal/st_w_final/isoww/%s','mcp_msup/st_w_final/isoww/%s',2),]
+    HS.append(hs)
+    hs = [('mcp_iddown','nominal/st_w_final/isoww/%s','mcp_iddown/st_w_final/isoww/%s',3),]
+    hs += [('mcp_idup','nominal/st_w_final/isoww/%s','mcp_idup/st_w_final/isoww/%s',3),]
+    HS.append(hs)
+    # MCP efficiencies
+    hs = [('effstatup','nominal/st_w_final/isoww/%s','nominal/st_w_effstatup/isoww/%s',4),]
+    hs += [('effstatdown','nominal/st_w_final/isoww/%s','nominal/st_w_effstatdown/isoww/%s',4),]
+    HS.append(hs)
+    hs = [('trigstatup','nominal/st_w_final/isoww/%s','nominal/st_w_trigstatup/isoww/%s',5),]
+    hs += [('trigstatdown','nominal/st_w_final/isoww/%s','nominal/st_w_trigstatdown/isoww/%s',5),]
+    HS.append(hs)
+    # MET systematic
+    hs = [('met_allcludown','nominal/st_w_final/isoww/%s','met_allcludown/st_w_final/isoww/%s',6),]
+    hs += [('met_allcluup','nominal/st_w_final/isoww/%s','met_allcluup/st_w_final/isoww/%s',6),]
+    HS.append(hs)
+    # jet systematics
+    hs = [('jet_jesdown','nominal/st_w_final/isoww/%s','jet_jesdown/st_w_final/isoww/%s',7),]
+    hs = [('jet_jesup','nominal/st_w_final/isoww/%s','jet_jesup/st_w_final/isoww/%s',7),]
+    HS.append(hs)
+    hs = [('jet_jer','nominal/st_w_final/isoww/%s','jet_jer/st_w_final/isoww/%s',8),]
+    HS.append(hs)
+
+    def update_errors(h,errs):
+        i = 0
+        for hs in HS[1:]:
+            bdiffs = [[] for z in xrange(0,h.GetNbinsX()+2)]
+            for cursyst in hs: # loop over systematics in this group
+                for ibin in xrange(0,h.GetNbinsX()+2):
+                    bdiffs[ibin].append ( abs(h.GetBinContent(ibin)-errs[i].GetBinContent(ibin)) )
+                i+=1
+            for ibin in xrange(0,h.GetNbinsX()+2):
+                olderr = h.GetBinError(ibin)
+                newerr = max(bdiffs[ibin])
+                #print 'SETTING ERROR:',ibin,olderr,newerr
+                h.SetBinError(ibin,1.0*math.sqrt(olderr*olderr + newerr*newerr))
+        assert(len(errs)==i)
+        return h
+
+    hsources = []
+    for hs in HS:
+        hsources += [ v[2]%opts.hsource for v in hs ]
+    print 'HSOURCES:'
+    print hsources
+
+    leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
+    leg.SetHeader('Asymmetry:')
+    for i in range(M.ntot()): # loop over different MC samples
+        asyms = None
+        if i==M.ntot()-1: #data
+            SuSample.hsourcemc = SuSample.hsourcedata = None
+            fpath = (os.path.dirname(opts.hsource)+'/' if os.path.dirname(opts.hsource) else '')+'met'
+            # renormalization and plos of POS
+            SuSample.hsource = (HS[0][0][1].replace('isoww','metfit'))%(fpath)
+            SuSample.hcharge = 0
+            #renormalize(bin='200,0,200')
+            SuSample.hsource = hsources[0]
+            hpos = po.data_sub('datasub_%s_%d'%(M.names[i],q),opts.var,opts.bin,'0',path=path_reco)
+            # same for NEG
+            SuSample.hsource = (HS[0][0][1].replace('isoww','metfit'))%(fpath)
+            SuSample.hcharge = 1
+            #renormalize(bin='200,0,200')
+            SuSample.hsource = hsources[0]
+            hneg = po.data_sub('datasub_%s_%d'%(M.names[i],q),opts.var,opts.bin,'1',path=path_reco)
+            # ok plot time
+            hasym.append(c.WAsymmetry(hpos,hneg))
+            hasym[-1].SetLineColor(M.colors[i])
+            hasym[-1].SetMarkerColor(M.colors[i])
+            hasym[-1].SetMarkerStyle(M.styles[i])
+            hasym[-1].SetMarkerSize(M.sizes[i])
+            hasymsys.append(None)
+        else: # reco-level MC
+            asyms = po.histosys(M.names[i],'bla_%s_%s_%d'%(M.names[i],M.cuts[i] if M.cuts[i] else '',q),hsources)
+            hasym.append(asyms[0])
+            hasym[-1].SetLineColor(M.colors[i])
+            hasym[-1].SetMarkerColor(M.colors[i])
+            hasym[-1].SetMarkerStyle(M.styles[i])
+            hasym[-1].SetMarkerSize(M.sizes[i])
+            hasymsys.append( update_errors(hasym[-1].Clone(hasym[-1].GetName()+'sys'),asyms[1:]) )
+            hasymsys[-1].SetFillColor(M.colors[i])
+            hasymsys[-1].SetFillStyle(3001)
+        if hasymsys[i]:
+            hasymsys[i].Draw('E3') if i==0 else hasymsys[i].Draw('A E3 same')
+        hasym[i].Draw('A same')
+        if asyms and False:
+            [bla.SetMarkerColor(ROOT.kBlue) for bla in asyms]
+            [bla.Draw('A same') for bla in asyms[1:]]
+            print ['%.4f'%bla.GetMean() for bla in asyms[1:]]
+        leg.AddEntry(hasym[i],M.labels[i],'LP')
+    maxh = max([htmp.GetMaximum() for htmp in hasym])*1.5
+    hasymsys[0].GetYaxis().SetRangeUser(0,maxh)
+    leg.Draw('same')
+
 # WARNING: this function is very specific to the TrigFTKAna ntuple (ie, manually refers to many folders!)
 if mode=='asym_syst': # asymmetry, at reco/particle level: systematic variations in bg-subtracted data
-    renormalize()
-    qcdscale = SuSample.qcdscale
+    qcdscale = SuSample.qcdscale # back up
     c = SuCanvas()
     c.buildDefault(width=800,height=600)
     cc = c.cd_canvas()
     cc.cd(1)
+    gbg.append(cc)
     # variations
     msize = 1.5
     sizes = [msize*0.7]*20
-    colors = [i for i in xrange(20,40)]
+    colors = [ROOT.kBlack]
+    colors += [i for i in xrange(20,50)]
     mstyles=[20]*20
     h = []
     hasym = []
     leg = ROOT.TLegend(0.55-0.4,0.70-0.11,0.88-0.4,0.92,QMAP[q][3],"brNDC")
     leg.SetHeader('Systematic variations:')
-    hs = [('nominal','WJ','WJ',''),]  # format: (data,mc) histo
-    # MCP momentum scale
-    hs += [('KLOW','WJ','WJ_mc_KC_SCALEKLOW',''),]
-    hs += [('KUP','WJ','WJ_mc_KC_SCALEKUP',''),]
-    hs += [('CLOW','WJ','WJ_mc_KC_SCALECLOW',''),]
-    hs += [('CUP','WJ','WJ_mc_KC_SCALECUP',''),]
-    # MCP smearing
-    hs += [('MSLOW','WJ','WJ_mc_KC_MSLOW',''),]
-    hs += [('MSUP','WJ','WJ_mc_KC_MSUP',''),]
-    hs += [('IDLOW','WJ','WJ_mc_KC_IDLOW',''),]
-    hs += [('IDUP','WJ','WJ_mc_KC_IDUP',''),]
-    # QCD
-    hs += [('QCD +20%','WJ','WJ','qcd+'),('QCD -20%','WJ','WJ','qcd-')]
-    hs += [('Isolation','WP','WP','qcdP'),]
+    hs = [('nominal','nominal/st_w_final/isoww/%s','nominal/st_w_final/isoww/%s',0),]  # format: (data,mc) histo
+    # MCP momentum scale and smearing
+    hs += [('mcp_unscaled','nominal/st_w_final/isoww/%s','smeared_unscaled/st_w_final/isoww/%s',1),]
+    hs += [('mcp_msdown','nominal/st_w_final/isoww/%s','mcp_msdown/st_w_final/isoww/%s',2),]
+    hs += [('mcp_msup','nominal/st_w_final/isoww/%s','mcp_msup/st_w_final/isoww/%s',2),]
+    hs += [('mcp_iddown','nominal/st_w_final/isoww/%s','mcp_iddown/st_w_final/isoww/%s',3),]
+    hs += [('mcp_idup','nominal/st_w_final/isoww/%s','mcp_idup/st_w_final/isoww/%s',3),]
+    # MCP efficiencies
+    hs += [('effstatup','nominal/st_w_final/isoww/%s','nominal/st_w_effstatup/isoww/%s',4),]
+    hs += [('effstatdown','nominal/st_w_final/isoww/%s','nominal/st_w_effstatdown/isoww/%s',4),]
+    hs += [('trigstatup','nominal/st_w_final/isoww/%s','nominal/st_w_trigstatup/isoww/%s',5),]
+    hs += [('trigstatdown','nominal/st_w_final/isoww/%s','nominal/st_w_trigstatdown/isoww/%s',5),]
+    # MET systematic
+    hs += [('met_allcludown','nominal/st_w_final/isoww/%s','met_allcludown/st_w_final/isoww/%s',6),]
+    hs += [('met_allcluup','nominal/st_w_final/isoww/%s','met_allcluup/st_w_final/isoww/%s',6),]
+    # jet systematics
+    hs += [('jet_jesdown','nominal/st_w_final/isoww/%s','jet_jesdown/st_w_final/isoww/%s',7),]
+    hs += [('jet_jesup','nominal/st_w_final/isoww/%s','jet_jesup/st_w_final/isoww/%s',7),]
+    hs += [('jet_jer','nominal/st_w_final/isoww/%s','jet_jer/st_w_final/isoww/%s',8),]
+
+    
     SuSample.GLOBAL_CACHE = None
     SuSample.rebin = 1
-    SuSample.hsource = '%s/st_w_final/00_wmt/asym_abseta'
     for i,hh in enumerate(hs):
-        SuSample.hsourcedata = SuSample.hsource%hh[1]
-        SuSample.hsourcemc = SuSample.hsource%hh[2]
-        SuSample.qcdscale = qcdscale
+        # normalize bbmu15X QCD separately in each systematic region in metfit region:
+        SuSample.hsource = True
+        fpath = (os.path.dirname(opts.hsource)+'/' if os.path.dirname(opts.hsource) else '')+'met'
+        SuSample.hsourcedata = (hh[1].replace('isoww','metfit'))%(fpath)
+        SuSample.hsourcemc = (hh[2].replace('isoww','metfit'))%(fpath)
+        print SuSample.hsourcedata,SuSample.hsourcemc
+        renormalize(bin='200,0,200')
+        c.cd_canvas().cd(1)
+        SuSample.hsourcedata = hh[1]%opts.hsource
+        SuSample.hsourcemc = hh[2]%opts.hsource
+        
+        #SuSample.qcdscale = qcdscale # set automatically
         if hh[3]=='qcd+':
             SuSample.qcdscale = qcdscale*1.2
         elif hh[3]=='qcd-':
@@ -650,32 +784,6 @@ if mode=='asym_syst': # asymmetry, at reco/particle level: systematic variations
         hasym[i].Draw() if i==0 else hasym[i].Draw('A same')
         leg.AddEntry(hasym[i],hh[0],'LP')    
     hasym[0].GetXaxis().SetRangeUser(0,2.4)
-    # overlay signal templates?
-    if False:
-        SuSample.hsource = None
-        names_mc = ('pythia','mcnlo','alpgen')
-        labels_mc = ('Pythia(MRST)','MC@NLO(CT10)','Alpgen(CTEQ6.1)')
-        colors_mc = (ROOT.kRed,ROOT.kBlue,8,ROOT.kBlack)
-        sizes_mc = (msize*0.7,msize*0.7,msize*0.7,msize*0.5)
-        mstyle_mc = 22
-        hasym_mc = []
-        h_mc = []
-        for i in range(3):
-            h_mc.append([None,None])
-            for q in (0,1):
-                pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre)
-                if opts.effroot and False:
-                    pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,fortruth(opts.pre))
-                    h_mc[i][q] = po.histo(names_mc[i],'truth_%s_%d'%(names_mc[i],q),opts.var,opts.bin,pre,path=path_truth)
-                else:
-                    h_mc[i][q] = po.histo(names_mc[i],'truth_%s_%d'%(names_mc[i],q),opts.var,opts.bin,pre,path=path_reco)
-                h_mc[i][q].SetLineColor(colors_mc[i])
-                h_mc[i][q].SetMarkerColor(colors_mc[i])
-                h_mc[i][q].SetMarkerStyle(mstyle_mc)
-                h_mc[i][q].SetMarkerSize(sizes_mc[i])
-            hasym_mc.append(c.WAsymmetry(h_mc[i][POS],h_mc[i][NEG]))
-            hasym_mc[i].Draw('A same')
-            leg.AddEntry(hasym_mc[i],labels_mc[i],'LP')
     # plot everything and scale y axis
     def hmaximum(h):
         res=[]
@@ -1205,7 +1313,7 @@ if not opts.antondb:
         DIR=opts.output+'/'
     c.SaveAs('%s_%s_%s_%s_%s_%s'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode),'png',DIR=DIR)
     for i,obj in enumerate(OMAP):
-        if hasattr(obj,'InheritsFrom') and obj.InheritsFrom('TPad'):
+        if hasattr(obj,'InheritsFrom') and obj.InheritsFrom('TPad') and hasattr(obj,'SaveAs'):
             obj.SaveAs(DIR+SuCanvas.cleanse('%s_%s_%s_%s_%s_%s__%d'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode,i))+'.png')
         elif hasattr(obj,'SaveAs'): # SuCanvas
             obj.SaveAs('%s_%s_%s_%s_%s_%s__%d'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode,i),'png',DIR=DIR)
