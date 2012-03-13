@@ -2,6 +2,10 @@
 import re,math
 import ROOT
 
+def rand_name(ln=10):
+  import random,string
+  return ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(ln))
+
 class SuCanvas:
   """ Jordan's canvas class for plotting """
 
@@ -303,9 +307,10 @@ class SuCanvas:
   def __init__(s):
     s._ratioDrawn = False
 
-  def buildDefault(s,title='default',width=800,height=600):
+  def buildDefault(s,width=800,height=600):
     s._ratioDrawn = False;
-    s._canvas = ROOT.TCanvas( title , title , 0 , 0 , width , height );
+    title = rand_name()
+    s._canvas = ROOT.TCanvas( "canvas"+title , "ratio"+title , 200 , 10 , 800 , 800 );
     s._canvas.SetFillColor( ROOT.kWhite );
     s._canvas.GetFrame().SetBorderMode( 0 );
     s._canvas.GetFrame().SetBorderSize( 0 );
@@ -314,9 +319,9 @@ class SuCanvas:
     s._canvas.SetRightMargin( 0.05 );
     s._canvas.SetLeftMargin( 0.1 );
     s._canvas.cd();
-    s._plotPad = ROOT.TPad()
-    s._ratioPad = ROOT.TPad()
-    s._coverPad = ROOT.TPad()
+    #s._plotPad = ROOT.TPad()
+    #s._ratioPad = ROOT.TPad()
+    #s._coverPad = ROOT.TPad()
     s._labelSize = 0.025;
     s._axisTitleSize = 0.025;
     s._legendTextSize = 0.025;
@@ -331,14 +336,15 @@ class SuCanvas:
       c.Update()
 
   def buildRatio(s):
-    s._canvas = ROOT.TCanvas( "canvas" , "ratio" , 200 , 10 , 800 , 800 );
+    title = rand_name()
+    s._canvas = ROOT.TCanvas( title , title , 200 , 10 , 800 , 800 );
     s._canvas.SetFillColor( ROOT.kWhite );
     s._canvas.GetFrame().SetBorderMode( 0 );
     s._canvas.GetFrame().SetBorderSize( 0 );
     s._canvas.SetTopMargin( 0.05 ); # set this so getY2 works
     s._ratioDrawn = True;
     # pad containing the main plot + legend
-    s._plotPad = ROOT.TPad( "plotPad" , "plotPad" , 0. , 0. , 1. , 1. );
+    s._plotPad = ROOT.TPad( title+"plotPad" , title+"plotPad" , 0. , 0. , 1. , 1. );
     s._plotPad.SetBottomMargin( 0.25 );
     s._plotPad.SetTopMargin( 0.05 );
     s._plotPad.SetRightMargin( 0.05 );
@@ -346,7 +352,7 @@ class SuCanvas:
     s._plotPad.SetFillColor( ROOT.kWhite );
     s._plotPad.Draw();
     # pad covering the bottom number
-    s._coverPad = ROOT.TPad( "coverPad" , "coverPad" , 0. , 0.24 , 0.0975 , 0.28 );
+    s._coverPad = ROOT.TPad( title+"coverPad" , title+"coverPad" , 0. , 0.24 , 0.0975 , 0.28 );
     s._coverPad.SetBottomMargin( 0. );
     s._coverPad.SetTopMargin( 0. );
     s._coverPad.SetLeftMargin( 0. );
@@ -354,7 +360,7 @@ class SuCanvas:
     s._coverPad.SetFillColor( ROOT.kWhite );
     s._coverPad.Draw();
     # pad containing ratio histogram
-    s._ratioPad = ROOT.TPad( "ratioPad" , "ratioPad" , 0. , 0. , 1. , 0.25 );
+    s._ratioPad = ROOT.TPad( title+"ratioPad" , title+"ratioPad" , 0. , 0. , 1. , 0.25 );
     s._ratioPad.SetBottomMargin( 0.275 );
     s._ratioPad.SetTopMargin( 0. );
     s._ratioPad.SetLeftMargin( 0.1 );

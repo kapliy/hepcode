@@ -123,18 +123,20 @@ class SuFit:
     # return final weights
     return s.scales
 
-  def drawFits(s):
+  def drawFits(s,title='random'):
     """ Draw fits in all variables """
     res = []
     for ivar in xrange(len(s.vnames)):
-      res += s.drawFit(ivar)
+      res += s.drawFit(ivar,title)
     return res
 
-  def drawFit(s,ivar):
+  def drawFit(s,ivar,title='random'):
     """ Draw the fit for ivar's variable """
     import SuCanvas
     s.canvas = canvas = SuCanvas.SuCanvas()
-    canvas.buildDefault()
+    canvas.buildDefault(1024,768)
+    cc = s.canvas.cd_canvas()
+    cc.cd(1)
     s.frame = frame = s.w.var(s.vnames[ivar]).frame()
     RooAbsData.plotOn(s.dataHist, frame , RF.Name("dataHist") )
     if True:

@@ -19,6 +19,9 @@ commonC="--input /share/ftkdata1/antonk/ana_v28HC_01212012_DtoM_jetupd_stacoCB_a
 common="--input /share/ftkdata1/antonk/ana_v28HC_02092012_DtoM_cernupd_stacoCB_all"
 common="--input /share/ftkdata1/antonk/ana_v29D_02222012_DtoM_pdfw_stacoCB_all/"
 
+# big remake, MET recalibration etc
+common="--input /share/t3data3/antonk/ana/ana_v29D_03092012_DtoM_64bit_noc022_stacoCB_all/"
+
 ###############################################################################
 # Parse command line
 ###############################################################################

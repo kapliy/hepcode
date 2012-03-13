@@ -144,10 +144,13 @@ class SuSample:
         for i,f in enumerate(s.files):
             assert f.IsOpen()
             if not h:
+                print '%s/%s'%(s.topdir(f),hpath)
+                if not  f.Get('%s/%s'%(s.topdir(f),hpath)):
+                    return None
                 h = f.Get('%s/%s'%(s.topdir(f),hpath)).Clone(hname)
                 h.Sumw2()
             else:
-                h.Add( f.Get('%s/%s'%(s.topdir(),hpath)) )
+                h.Add( f.Get('%s/%s'%(s.topdir(f),hpath)) )
         return h
     def histo(s,hname,var,bin,cut,path=None):
         """ retrieve a particular histogram from ntuple """
@@ -184,11 +187,11 @@ class SuSample:
                     htmp = path.split('/');
                     htmp.insert(-1,QMAP[iq][1])
                     return '/'.join(htmp) if iq in (0,1) else path
-                hsource = s.hsource
-                if s.hsourcemc and s.hsourcedata:
+                hsource = SuSample.hsource
+                if SuSample.hsourcemc and SuSample.hsourcedata:
                     # in the future, this could bootstrap path from flags[]
-                    hsource = s.hsourcemc if 'mc' in s.flags else s.hsourcedata
-                hpath = QAPP(hsource,s.hcharge)
+                    hsource = SuSample.hsourcemc if 'mc' in s.flags else SuSample.hsourcedata
+                hpath = QAPP(hsource,SuSample.hcharge)
                 s.data[key]=s.GetHisto(hname,hpath)
             else:
                 # build from TNtuple
@@ -206,6 +209,8 @@ class SuSample:
                     htmp.Write(key_str,ROOT.TObject.kOverwrite)
                     s.cache.Close()
                     s.cache = None
+        if not s.data[key]:
+            return None
         res = s.data[key].Clone()
         if s.lumi:
             res.Scale(s.scale(evcnt = s.choose_evcount(cut)))
@@ -306,6 +311,26 @@ class SuStack:
         """ generic function to return histogram for a particular subsample """
         loop = [z for z in s.elm if z.label==label]
         return s.histosum(loop,hname,var,bin,cut,path,norm)
+    def histosys(s,label,hname,hsources):
+        """ generic function to return a collection of histograms for each systematic (listed under hsourced = [])
+        return asymmetry directly!
+        """
+        import SuCanvas
+        bla = SuCanvas.SuCanvas()
+        SuSample.GLOBAL_CACHE = None
+        SuSample.hsourcemc = SuSample.hsourcedata = None
+        loop = [z for z in s.elm if z.label==label]
+        var,bin,cut,path='none','100,-1,1','none','none'
+        result = []
+        for hsource in hsources:
+            print 'Asymmetry:',label,hsource
+            SuSample.hsource = hsource
+            SuSample.hcharge = 0
+            pos = s.histosum(loop,hname+hsource,var,bin,cut,'0'+hsource)
+            SuSample.hcharge = 1
+            neg = s.histosum(loop,hname+hsource,var,bin,cut,'1'+hsource)
+            result.append(bla.WAsymmetry(pos,neg))
+        return result # array of asymmetry histograms for each systematic
     def histosum(s,loop,hname,var,bin,cut,path,norm=None):
         """ generic function to add up a subset of samples """
         if len(loop)==0:
