@@ -76,8 +76,8 @@ mc = MC_samples()
 #http://www.dspace.cam.ac.uk/bitstream/1810/236979/1/tomthesis.pdf
 
 # THESE ARE NOT UPDATED!
-mc.append(MCR(106044,'mc_pythia_wmunu','*',10460/1000,1.000000,6993798))
-mc.append(MCR(107054,'mc_pythia_wtaunu','*',10460/1000,1.0,999874)) # inclusive wtaunu
+mc.append(MCR(106044,'mc_pythia_wmunu','*',10460/1000.0,1.000000,6993798))
+mc.append(MCR(107054,'mc_pythia_wtaunu','*',10460/1000.0,1.0,999874)) # inclusive wtaunu
 mc.append(MCR(106022,'mc_pythia_wtaunu_1Lepton','*',8916.33*1.17*3.068E-01/1000,1.0,999874)) #actual xs for this is 8.916E3*0.35 (tau is forced to decay into e/mu)
 mc.append(MCR(106047,'mc_pythia_zmumu','*',989/1000.0,1.000000,4998410))
 mc.append(MCR(106052,'mc_pythia_ztautau','*',989/1000.0,1.000000,1998598))

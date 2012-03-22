@@ -456,14 +456,14 @@ class SigSamples:
     def prefill_mc(s):
         """ pre-fill with all available MC samples """
         s.add('pythia','Pythia(MRSTMCal)')
-        #s.add('pythia','Pythia(MRSTMCal->CTEQ6L1)',cut='lha_cteq6ll')
+        s.add('pythia','Pythia(MRSTMCal->CTEQ6L1)',cut='lha_cteq6ll')
         #return # quick return for now! FIXME
         #s.add('sherpa','Sherpa(CTEQ6L1)')
         s.add('alpgen_herwig','Alpgen/Herwig(CTEQ6L1)')
         #s.add('alpgen_pythia','Alpgen/Pythia(CTEQ6L1)')
         s.add('mcnlo','MC@NLO(CT10)')
         s.add('powheg_herwig','PowHeg/Herwig(CT10)')
-        #s.add('powheg_pythia','PowHeg/Pythia(CT10)')
+        s.add('powheg_pythia','PowHeg/Pythia(CT10)')
     def autocolor(s,i):
         """ choose a reasonable sequence of colors """
         colorlist = [2,3,4,5,6,20,28,41,46]

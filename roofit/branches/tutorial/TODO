@@ -1,3 +1,33 @@
+* Take an eta slice. # events in pt 20..40, 40..80
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Work in progress:
+* understand njets distribution issues. Isolation? Ntuple/histo difference?
+  Re-made the distribution in roofit/stack2.py - looks a lot better. WHY???
+* Data driven QCD
+* Why data driven backgrounds go in one-sided direction.
+* W/Z common meeting.
+
+*Add veto on z mass from non-isolated muons.
+
 * separate run for wmunu pt reweighting for samples with the same PDF.
 * add isoww_metfit category to get isolation choice systematic
 
