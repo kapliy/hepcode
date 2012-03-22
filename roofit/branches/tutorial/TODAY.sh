@@ -50,6 +50,7 @@ function run_d0_stacks () {
 function run_w_stacks () {
     eval ./stack2.py ${common}  -b --var 'nvtxs_all' --bin '20,0,20' -t ${tag} $@ &
     eval ./stack2.py ${common}  -b --var 'njets' --bin '10,0,10' -t ${tag} $@ &
+    eval ./stack2.py ${common}  -b --var 'njets30' --bin '10,0,10' -t ${tag} $@ &
     eval ./stack2.py ${common}  -b --var 'l_pt' --bin '50,0,100' -t ${tag} $@ &
     eval ./stack2.py ${common}  -b --var 'met' --bin '50,0,200' -t ${tag} $@ &
     eval ./stack2.py ${common}  -b --var 'met_phi' --bin '50,-3.15,3.15' -t ${tag} $@ &
@@ -240,6 +241,72 @@ if [ "$mode" == "truth" ]; then
     
     echo DONE
 fi
+
+# truth plots for multiple generators - asymmetry only - at many different points
+if [ "$mode" == "truth_asym" ]; then
+    common="${common}"
+    pre="${wpre_jordan}"
+    cut='mcw*puw' # no need to use eff/trig weights here
+
+    m=asym_truth
+    tag=ASYM
+    run_w_asym_min  "--pre \"${pre}\" --cut \"${cut}\" -m ${m}"
+    tag=ASYM_lpt2040
+    run_w_asym_min  "--pre \"${pre} && l_pt>20 && l_pt<40\" --cut \"${cut}\" -m ${m}"
+    tag=ASYM_lpt4080
+    run_w_asym_min  "--pre \"${pre} && l_pt>40 && l_pt<80\" --cut \"${cut}\" -m ${m} "
+    tag=ASYM_lpt80200
+    run_w_asym_min  "--pre \"${pre} && l_pt>80 && l_pt<200\" --cut \"${cut}\" -m ${m} "
+    tag=ASYM_wpt0010
+    run_w_asym_min  "--pre \"${pre} && w_pt>0 && w_pt<10\" --cut \"${cut}\" -m ${m} "
+    tag=ASYM_wpt1020
+    run_w_asym_min  "--pre \"${pre} && w_pt>10 && w_pt<20\" --cut \"${cut}\" -m ${m} "
+    tag=ASYM_wpt20100
+    run_w_asym_min  "--pre \"${pre} && w_pt>20 && w_pt<100\" --cut \"${cut}\" -m ${m} "
+    tag=ASYM_wmt4060
+    run_w_asym_min  "--pre \"${pre} && w_mt>40 && w_mt<60\" --cut \"${cut}\" -m ${m} "
+    tag=ASYM_wmt6080
+    run_w_asym_min  "--pre \"${pre} && w_mt>60 && w_mt<90\" --cut \"${cut}\" -m ${m} "
+    tag=ASYM_wmt80200
+    run_w_asym_min  "--pre \"${pre} && w_mt>80 && w_mt<200\" --cut \"${cut}\" -m ${m} "
+    tag=ASYM_met2540
+    run_w_asym_min  "--pre \"${pre} && met>25 && met<40\" --cut \"${cut}\" -m ${m} "
+    tag=ASYM_met40200
+    run_w_asym_min  "--pre \"${pre} && met>40 && met<200\" --cut \"${cut}\" -m ${m} "
+    wait
+    for nj in 0 1 2; do
+	tag=ASYM_nj${nj}
+	run_w_asym_min  "--pre \"${pre} && njets==${nj}\" --cut \"${cut}\" -m ${m} "
+	tag=ASYM_lpt2040_nj${nj}
+	run_w_asym_min  "--pre \"${pre} && l_pt>20 && l_pt<40 && njets==${nj}\" --cut \"${cut}\" -m ${m}"
+	tag=ASYM_lpt4080_nj${nj}
+	run_w_asym_min  "--pre \"${pre} && l_pt>40 && l_pt<80 && njets==${nj}\" --cut \"${cut}\" -m ${m} "
+	tag=ASYM_lpt80200_nj${nj}
+	run_w_asym_min  "--pre \"${pre} && l_pt>80 && l_pt<200 && njets==${nj}\" --cut \"${cut}\" -m ${m} "
+	tag=ASYM_wpt0010_nj${nj}
+	run_w_asym_min  "--pre \"${pre} && w_pt>0 && w_pt<10 && njets==${nj}\" --cut \"${cut}\" -m ${m} "
+	tag=ASYM_wpt1020_nj${nj}
+	run_w_asym_min  "--pre \"${pre} && w_pt>10 && w_pt<20 && njets==${nj}\" --cut \"${cut}\" -m ${m} "
+	tag=ASYM_wpt20100_nj${nj}
+	run_w_asym_min  "--pre \"${pre} && w_pt>20 && w_pt<100 && njets==${nj}\" --cut \"${cut}\" -m ${m} "
+	tag=ASYM_wmt4060_nj${nj}
+	run_w_asym_min  "--pre \"${pre} && w_mt>40 && w_mt<60 && njets==${nj}\" --cut \"${cut}\" -m ${m} "
+	tag=ASYM_wmt6080_nj${nj}
+	run_w_asym_min  "--pre \"${pre} && w_mt>60 && w_mt<90 && njets==${nj}\" --cut \"${cut}\" -m ${m} "
+	tag=ASYM_wmt80200_nj${nj}
+	run_w_asym_min  "--pre \"${pre} && w_mt>80 && w_mt<200 && njets==${nj}\" --cut \"${cut}\" -m ${m} "
+	tag=ASYM_met2540_nj${nj}
+	run_w_asym_min  "--pre \"${pre} && met>25 && met<40 && njets==${nj}\" --cut \"${cut}\" -m ${m} "
+	tag=ASYM_met40200_nj${nj}
+	run_w_asym_min  "--pre \"${pre} && met>40 && met<200 && njets==${nj}\" --cut \"${cut}\" -m ${m} "
+	wait
+    done
+    
+    wait
+    
+    echo DONE
+fi
+
 
 # creation and verification of unfolding efficiency histograms
 if [ "$mode" == "unfold" ]; then
