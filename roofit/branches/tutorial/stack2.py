@@ -38,6 +38,9 @@ parser.add_option("--lvar",dest="lvar",
 parser.add_option("--lbin",dest="lbin",
                   type="string", default='25,-2.5,2.5',
                   help="Binning for lvar")
+parser.add_option("--extra",dest="extra",
+                  type="string", default=None,
+                  help="General-purpose extra parameter")
 parser.add_option("--pre",dest="pre",
                   type="string", default=_PRE_PETER,
                   help="Preliminary cuts to select final W candidates")
@@ -405,6 +408,12 @@ if opts.bgsig in (0,1,2,4,5,6): # z inclusive
         pz.add(label='Z#rightarrow#mu#mu',samples='mc_powheg_pythia_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
     elif opts.bgsig==6:
         pz.add(label='Z#rightarrow#mu#mu',samples='mc_sherpa_zmumu',color=10,flags=['sig','mc','ewk'])
+    pz.add(label='pythia',samples='mc_pythia_zmumu',color=10,flags=['sig','mc','ewk','no'])
+    pz.add(label='sherpa',samples='mc_sherpa_zmumu',color=10,flags=['sig','mc','ewk','no'])
+    pz.add(label='mcnlo',samples='mc_mcnlo_zmumu',color=10,flags=['sig','mc','ewk','no'])
+    pz.add(label='powheg_herwig',samples='mc_powheg_herwig_zmumu',color=10,flags=['sig','mc','ewk','no'])
+    pz.add(label='powheg_pythia',samples='mc_powheg_pythia_zmumu',color=10,flags=['sig','mc','ewk','no'])
+    pz.add(label='alpgen_herwig',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk','no'])
 elif opts.bgsig in (3,): # z+jets
     pz.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
     pz.add(label='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['bg','mc','ewk'])
@@ -1166,7 +1175,9 @@ def loop_zbins(w, pre_in,
         Supports requiring both legs to be in a particular region.
     """
     import Fit
-    pre_in = prune(pre_in,lvar)
+    print 'ORIGINAL pre string:',pre_in
+    pre_in = prune(pre_in,[lvar+'>',lvar+'<'])
+    print 'PRUNED pre string:',pre_in
     lbins,lmin,lmax = [ int(zz) if i==0 else float(zz) for i,zz in enumerate(lvarbins.split(','))]
     lbinw = (lmax-lmin)*1.0/lbins
     pbins,pmin,pmax = [ int(zz) if i==0 else float(zz) for i,zz in enumerate(pvarbins.split(','))]
@@ -1185,10 +1196,10 @@ def loop_zbins(w, pre_in,
     for i in xrange(lbins):
         lL = lmin + i*lbinw
         lR = lL + lbinw
-        ccscan.cd(i+1)
         h = []
         f = []
         for iqp in (POS,NEG):
+            ccscan.cd(i+1)
             iqt = 0 if iqp==1 else 1
             var = lvar.replace('lX',QMAPZ[iqt][2]).replace('lY',QMAPZ[iqp][2])
             prelist = [pre_in,'(%s)>%.2f'%(lvar,lL),'(%s)<=%.2f'%(lvar,lR)]
@@ -1196,7 +1207,10 @@ def loop_zbins(w, pre_in,
                 varX = lvar.replace('Y','X')
                 prelist += ['(%s)>%.2f'%(lvar,lL),'(%s)<=%.2f'%(lvar,lR)]
             pre = ' && '.join(prelist).replace('lX',QMAPZ[iqt][2]).replace('lY',QMAPZ[iqp][2])
-            h.append( po.data('data%d_q%d'%(i,iqp),pvar,pvarbins,pre) )
+            if opts.extra=='data':
+                h.append( po.data('data%d_q%d'%(i,iqp),pvar,pvarbins,pre) )
+            else:
+                h.append( po.histo('pythia','zmumu%d_q%d'%(i,iqp),pvar,pvarbins,pre,path=path_reco) )
             ipvarbins = ifitbins = (pbins,pmin,pmax)
             if w.func=='gaus':
                 dGeV = 6.0  # 4.0
@@ -1204,14 +1218,19 @@ def loop_zbins(w, pre_in,
                 ifitbins = (int(2*dGeV/pbinw),peak - dGeV, peak + dGeV)
                 ifitbins = (-1,80.00,100.00)
                 print 'Reducing gaus0 fit window: [%.2f,%.2f] --> [%.2f,%.2f]'%(ipvarbins[1],ipvarbins[2],ifitbins[1],ifitbins[2])
-            r,frame,chi2ndf,ndf,xtra,res1st = Fit.Fit(w,h[-1],ipvarbins,ifitbins)
+            r,frame,chi2ndf,ndf,xtra,res1st = Fit.Fit(w,h[-1],ipvarbins,ifitbins,ncpus=16)
             frame.Draw()
+            ci = SuCanvas()
+            ci.buildDefault(title='scan%dq%d'%(i,iqp),width=800,height=600)
+            cci = ci.cd_canvas()
+            frame.Draw()
+            OMAP.append(ci)
             if iqp==POS:
-                hPOS.SetBinContent(i,w.var('m').getVal())
-                hPOS.SetBinError(i,w.var('m').getError())
+                hPOS.SetBinContent(i+1,w.var('m').getVal())
+                hPOS.SetBinError(i+1,w.var('m').getError())
             else:
-                hNEG.SetBinContent(i,w.var('m').getVal())
-                hNEG.SetBinError(i,w.var('m').getError())
+                hNEG.SetBinContent(i+1,w.var('m').getVal())
+                hNEG.SetBinError(i+1,w.var('m').getError())
     return cscan,hPOS,hNEG
 
 if mode == '1111':
@@ -1226,12 +1245,22 @@ if mode == '1111':
     c.buildDefault(title='canvas',width=800,height=600)
     cc = c.cd_canvas()
     tagcentral = False
-    pre = 'lX_idhits==1 && fabs(lX_z0)<10. && fabs(lX_eta)<%f && lX_pt>20.0 && (lX_q*lY_q)<0 && fabs(lX_z0-lY_z0)<3 && fabs(lX_d0-lY_d0)<2 && lX_ptiso20/lX_pt<0.1 && Z_m>70 && Z_m<110'%(1.0 if tagcentral else 2.4)
-    pre += '&& lY_idhits==1 && fabs(lY_z0)<10. && lY_pt>20.0 && lX_ptiso20/lX_pt<0.1'
+    etalim = 1.0 if tagcentral else 2.4
+    pre = 'lX_idhits==1 && fabs(lX_z0)<10. && fabs(lX_eta)<%f && lX_pt>20.0 && (lX_q*lY_q)<0 && fabs(lX_z0-lY_z0)<3 && fabs(lX_d0-lY_d0)<2 && Z_m>70 && Z_m<110'%etalim
+    pre += '&& lY_idhits==1 && fabs(lY_z0)<10. && fabs(lY_eta)<%f && lY_pt>20.0'%etalim
+    # isolation
+    isoreq = 'lX_ptiso20/lX_pt<0.1 && lY_ptiso20/lY_pt<0.1'
+    #isoreq = 'lX_ptiso40<2.0 && lX_etiso40<2.0 && lY_ptiso40<2.0 && lY_etiso40<2.0'
+    pre += ' && ' + isoreq
     cscan,hPOS,hNEG = loop_zbins(w,pre,pvar=pvar,pvarbins=pvarbins,lvar=lvar,lvarbins=lvarbins)
     cc.cd()
     hPOS.Draw()
-    hNEG.Draw('SAME')
+    hNEG.Draw('A SAME')
+    hPOS.GetYaxis().SetRangeUser(90.5,91.5)
+    if opts.refline!='0.5,1.5':
+        ymin=float(opts.refline.split(',')[0])
+        ymax=float(opts.refline.split(',')[1])
+        hPOS.GetYaxis().SetRangeUser(ymin,ymax)
     OMAP.append( cscan )
     pass
 

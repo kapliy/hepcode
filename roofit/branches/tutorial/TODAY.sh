@@ -20,7 +20,7 @@ common="--input /share/ftkdata1/antonk/ana_v28HC_02092012_DtoM_cernupd_stacoCB_a
 common="--input /share/ftkdata1/antonk/ana_v29D_02222012_DtoM_pdfw_stacoCB_all/"
 
 # big remake, MET recalibration etc
-common="--input /share/t3data3/antonk/ana/ana_v29D_03092012_DtoM_64bit_noc022_stacoCB_all/"
+common="--input /share/t3data3/antonk/ana/ana_v29D_03132012_DtoM_64bit_allsyst_withsoftjup_stacoCB_all"
 
 ###############################################################################
 # Parse command line
@@ -94,7 +94,7 @@ fi
 # Z MCP studies
 # TODO - work in progress!
 # TODO: merge in a single framework to do these kinds of plots; fix gaussian fit 
-if [ "$mode" == "MCP" ]; then
+if [ "$mode" == "MCP" -o "$mode" == "1111" ]; then
     m=1013
     m=1012
     m=1111
@@ -105,7 +105,8 @@ if [ "$mode" == "MCP" ]; then
     for itag in `gkeys tagzmcp`; do
 	tag=`ggeta tagzmcp $itag`
 	opts=`ggetb tagzmcp $itag`
-	eval ./stack2.py ${common} -m${m} --ntuple z -b --var 'Z_m' --bin '50,70,110' --lvar lY_eta --lbin '1,-2.5,2.5' -t ${tag} ${opts} --func gaus &
+	eval ./stack2.py ${common} -m${m} --ntuple z -b --var 'Z_m' --bin '50,70,110' --lvar lY_pt --lbin '15,20,160' -t ${tag} ${opts} --func egge3 --refline 90,92 & #--extra data &
+	#eval ./stack2.py ${common} -m${m} --ntuple z -b --var 'Z_m' --bin '50,70,110' --lvar lY_eta --lbin '1,-2.5,2.5' -t ${tag} ${opts} --func gaus &
 	wait
 	((i++))
     done

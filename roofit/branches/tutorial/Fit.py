@@ -220,9 +220,9 @@ def Fit(w,data,fullbins,fitbins,ncpus=4,extras=False,gaus=False):
     RF.Hesse(kTRUE)
     r = w.model.fitTo(data,RF.PrintLevel(1),RF.Extended(w.model.isExt),RF.NumCPU(ncpus),RF.Save(),RF.Range('it1'))
     w.model.plotOn(frame,RF.Name('mit1'),RF.Range('it1'),RF.NormRange('it1'))
-    return (r,frame,None,None,None,None) # FIXME - problem fitting in a reduced range!
+    #return (r,frame,None,None,None,None) # FIXME - problem fitting in a reduced range!
     res1st = []
-    if gaus and False:
+    if gaus:
         nsc = 1.0  #1.25
         mean=w.var('m').getVal()
         sigma=w.var('s').getVal()
