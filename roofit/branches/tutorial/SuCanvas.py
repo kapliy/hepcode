@@ -307,9 +307,10 @@ class SuCanvas:
   def __init__(s):
     s._ratioDrawn = False
 
-  def buildDefault(s,width=800,height=600):
+  def buildDefault(s,width=800,height=600,title=None):
     s._ratioDrawn = False;
-    title = rand_name()
+    if not title:
+      title = rand_name()
     s._canvas = ROOT.TCanvas( "canvas"+title , "ratio"+title , 200 , 10 , 800 , 800 );
     s._canvas.SetFillColor( ROOT.kWhite );
     s._canvas.GetFrame().SetBorderMode( 0 );
@@ -335,8 +336,9 @@ class SuCanvas:
       c.Modified()
       c.Update()
 
-  def buildRatio(s):
-    title = rand_name()
+  def buildRatio(s,title=None):
+    if not title:
+      title = rand_name()
     s._canvas = ROOT.TCanvas( title , title , 200 , 10 , 800 , 800 );
     s._canvas.SetFillColor( ROOT.kWhite );
     s._canvas.GetFrame().SetBorderMode( 0 );

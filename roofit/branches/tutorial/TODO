@@ -1,22 +1,20 @@
+Ntuple based studies:
+* Compare QCD template shapes as a function of isolation cone.
+* Compare data/MC agreement in roofit for tigher cone (0.1)
+
+Run overnight:
+* 2D migration matrices for all systematics
+* DONE Add tighter isolation (pt+etcone changed to 0.1)
+* DONE Add qcd with three inversions of isolation [ normal, tight, tighter ]
+
+
+
+* Try etcone changed to 0.1
+* email constantinos: ABCD method qcd template
+  CM: ABCD = isolation and MULTIJET_LIKE{met<X && mT<X && nlepton=small}
 * Take an eta slice. # events in pt 20..40, 40..80
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+* Peter: check if there are off-diagonal entries
+* Peter: unfolding test on pythia/alpgen
 
 
 Work in progress:
