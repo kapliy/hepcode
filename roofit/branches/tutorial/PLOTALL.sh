@@ -13,6 +13,12 @@ tag=MAR14_ALLSYST_UPDATE
 input=/share/t3data3/antonk/ana/ana_v29D_03152012_DtoM_64bit_allsyst_stacoCB_all
 tag=MAR18_ALLSYST_UPDATE
 
+input=/share/t3data3/antonk/ana/ana_v29D_04092012_DtoM_64bit_unfold1d_etaslices_stacoCB_all
+tag=APR10_REPLOT
+
+input=/share/t3data3/antonk/ana/ana_v29D_04112012_DtoM_64bit_unfold1d_etaslices_numet_stacoCB_all
+tag=APR10_NUMET
+
 for m in sig_reco wstack zstack truth unfold asym; do
     echo "Starting ${m}"
     ./TODAY.sh -i ${input} -o ${tag}_${m} -m ${m} -c "${cut}" &> LOG.${tag}.${m}

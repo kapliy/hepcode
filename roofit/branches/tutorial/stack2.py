@@ -100,7 +100,7 @@ parser.add_option("--bgqcd",dest="bgqcd",
                   type="int", default=0,
                   help="QCD: 0=Pythia mu15x, 1=Pythia J0..J5")
 parser.add_option("--bgsig",dest="bgsig",
-                  type="int", default=0,
+                  type="int", default=2,
                   help="Background: 0=Pythia, 1=MC@NLO, 2=Alpgen(signal only), 3=Alpgen(all)")
 parser.add_option('-f',"--func",dest="func",
                   type="string", default='gaus',
@@ -479,10 +479,10 @@ class SigSamples:
         return colorlist[i] if i<len(colorlist) else 1
 
 # Pre-load the ntuples
-path_truth = 'truth/st_truth_reco_%s/ntuple'%opts.ntuple
+path_truth = 'truth/st_%s_final/ntuple'%opts.ntuple
 path_reco  = 'nominal/st_%s_final/ntuple'%opts.ntuple
 for it,px in enumerate((pw,pz)):
-    ptruth = 'truth/st_truth_reco_%s/ntuple'%('w' if it==0 else 'z')
+    ptruth = 'truth/st_%s_final/ntuple'%('w' if it==0 else 'z')
     preco  = 'nominal/st_%s_final/ntuple'%('w' if it==0 else 'z')
     px.add(label='2011 data',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kBlack,flags=['data'])
     px.addchain(ptruth)
