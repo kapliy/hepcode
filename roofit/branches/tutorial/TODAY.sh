@@ -6,10 +6,10 @@ source bashmap.sh
 wpre_idms='fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5' #unused
 wpre_preiso='met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && fabs(d0sig)<10.0 && nmuons==1 && l_trigEF<0.2' #WW/WZ (d0sig)<3.0
 wpre_jordan="ptiso20/l_pt<0.1 && ${wpre_preiso}"
-wpre_peter="ptiso30/l_pt<0.15 && etiso30corr/l_pt<0.14 && ${wpre_preiso}" #WW/WZ
+wpre_peter="ptiso30/l_pt<0.15 && etiso30corr/l_pt<0.15 && ${wpre_preiso}" #WW/WZ
 zpre_preiso='lP_pt>20.0 && fabs(lP_eta)<2.4 && lN_pt>20.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10. && fabs(lP_d0sig)<10.0    &&    lN_idhits==1 && fabs(lN_z0)<10. && fabs(lN_d0sig)<10.0    &&     Z_m>70 && Z_m<110 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && (lP_trigEF<0.2 || lN_trigEF<0.2)' #WW/WZ (d0sig<3.0)
 zpre_jordan="lP_ptiso20/lP_pt<0.1 && lN_ptiso20/lN_pt<0.1 && ${zpre_preiso}"
-zpre_peter="lP_ptiso30/lP_pt<0.15 && lP_etiso30corr/lP_pt<0.14 && lN_ptiso30/lN_pt<0.15 && lN_etiso30corr/lN_pt<0.14 && ${zpre_preiso}" #WW/WZ
+zpre_peter="lP_ptiso30/lP_pt<0.15 && lP_etiso30corr/lP_pt<0.15 && lN_ptiso30/lN_pt<0.15 && lN_etiso30corr/lN_pt<0.15 && ${zpre_preiso}" #WW/WZ
 
 # default cut
 cut="mcw*puw*effw*trigw"

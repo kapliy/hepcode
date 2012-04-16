@@ -1,3 +1,5 @@
+* Add systematics: trigger/reco efficiency where POS goes up, NEG goes down
+
 Ntuple based studies:
 * Compare QCD template shapes as a function of isolation cone.
 * Compare data/MC agreement in roofit for tigher cone (0.1)
