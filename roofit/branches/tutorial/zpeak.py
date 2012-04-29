@@ -3,7 +3,7 @@
 
 _QUALITY = ' && lP_idhits==1 && fabs(lP_z0)<10. && fabs(lP_d0sig)<10. && fabs(lP_pt_id-lP_pt_exms)/lP_pt_id<0.5'
 _QUALITY += ' && lN_idhits==1 && fabs(lN_z0)<10. && fabs(lN_d0sig)<10. && fabs(lN_pt_id-lN_pt_exms)/lN_pt_id<0.5'
-_PRE_PETER='fabs(lP_eta)<2.5 && lP_pt>20.0 && fabs(lN_eta)<2.5 && lN_pt>20.0 && lP_ptiso40<2.0 && lP_etiso40<2.0 && lN_ptiso40<2.0 && lN_etiso40<2.0 && Z_m>60 && (lP_q*lN_q)<0'+_QUALITY
+_PRE_PETER='fabs(lP_eta)<2.5 && lP_pt>20.0 && fabs(lN_eta)<2.5 && lN_pt>20.0 &&  lP_ptiso30/lP_pt<0.15 && lP_etiso30corr/lP_pt<0.15 && lN_ptiso30/lN_pt<0.15 && lN_etiso30corr/lN_pt<0.15  && Z_m>60 && (lP_q*lN_q)<0'+_QUALITY
 
 #loosen isolation, tighten d0/z0:
 if False:
@@ -43,10 +43,10 @@ parser.add_option("--pre",dest="pre",
                   type="string", default=_PRE_PETER,
                   help="Preliminary cuts to select final W candidates")
 parser.add_option("--data",dest="data",
-                  type="string", default='dg/st_z_final/ntuple',
+                  type="string", default='dg/nominal/st_z_final/ntuple',
                   help="ntuple name for data")
 parser.add_option("--mc",dest="mc",
-                  type="string", default='dg/st_z_final/ntuple',
+                  type="string", default='dg/smeared_unscaled/st_z_final/ntuple',
                   help="ntuple name for MC")
 parser.add_option("--region",dest="region",
                   type="string", default='BB',

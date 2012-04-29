@@ -101,6 +101,7 @@ class Table:
     """
     boundsP = [0.30,0.60,0.9,1.30,1.60,2.00,2.50] #[TxT]
     boundsP = [0.50,1.05,1.70,2.51] #[SxS]
+    boundsP = [1.05,2.51] #2012
     def ordered_pairs(s,lst):
         """ input: [a1,a2,a3]
         output: [a1,a2], [a2,a3]
@@ -255,6 +256,7 @@ def ordered_pairs(lst):
     return zip(lst,lst[1:])
 boundsP = [0.30,0.60,0.9,1.30,1.60,2.00,2.50] #[TxT]
 boundsP = [0.50,1.05,1.70,2.51] #[SxS]
+boundsP = [1.05,2.51] #2012
 boundsA = [-z for z in reversed(boundsP)] + [0.00,] + boundsP
 bounds = ordered_pairs(boundsA)
 regsR = range(0,len(bounds))
@@ -766,6 +768,7 @@ default,klu,R70,egge = [None]*4
 default_shifts,klu_shifts,R70_shifts,egge_shifts = [None]*4
 default_scales,klu_scales,R70_scales,egge_scales = [None]*4
 regs = ['S%dS'%i for i in regsR]
+regs = ['CC','Bcc','Baa','AA'] #2012
 try:
     if shift:
         default_scales = load_scale(regs=regs,pattern='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
@@ -824,7 +827,7 @@ if mode==5:
     print latex_tail
     fout.close()
     sys.stdout = stdout
-# latex kp/km table
+# latex kp/km or K/C table (stat only)
 if mode==8:
     ttype = 'kC' if shift else 'kpkm' 
     fname = 'latex/table_%s_r%d_%s_STAT.tex'%(ttype,opts.rel,algos[algo])

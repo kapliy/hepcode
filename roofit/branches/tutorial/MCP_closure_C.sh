@@ -20,8 +20,41 @@ staco_mcnoscale0="--root0 '/share/ftkdata1/antonk/ana_v28_1128_BtoM_stacoCB_nosc
 staco_mcdefault1="--root1 '/share/ftkdata1/antonk/ana_v28_1128_BtoM_stacoCB_default/mc_zmumu/root_mc_zmumu.root'"
 staco_mcKC1="--root1 '/share/ftkdata1/antonk/ana_v28_1128_BtoM_stacoCB_scaleMC_KC/mc_zmumu/root_mc_zmumu.root'"
 
+#2012/2011 data comparison:
+flabel=v29D_MCP2012_04162012
+staco_2011="--root0 '/share/t3data3/antonk/ana/ana_${flabel}_stacoCB_MCPscale/data*/root*.root'"
+muid_2011="--root0 '/share/t3data3/antonk/ana/ana_${flabel}_muidCB_MCPscale/data*/root*.root'"
+flabel=v2012_MCP2012_04162012
+staco_2012="--root1 '/share/t3data3/antonk/ana/ana_${flabel}_stacoCB_MCPscale/data*/root*.root'"
+muid_2012="--root1 '/share/t3data3/antonk/ana/ana_${flabel}_muidCB_MCPscale/data*/root*.root'"
 
 if [ "1" -eq "1" ]; then
+    flabel=v29D_MCP2012_04162012
+    staco_2011="--root0 '/share/t3data3/antonk/ana/ana_${flabel}_stacoCB_MCPscale/data*/root*.root'"
+    muid_2011="--root0 '/share/t3data3/antonk/ana/ana_${flabel}_muidCB_MCPscale/data*/root*.root'"
+    flabel=v2012_MCP2012_04162012
+    staco_2012="--root1 '/share/t3data3/antonk/ana/ana_${flabel}_stacoCB_MCPscale/data*/root*.root'"
+    muid_2012="--root1 '/share/t3data3/antonk/ana/ana_${flabel}_muidCB_MCPscale/data*/root*.root'"
+
+    i=0
+    gput tags $i staco_2011_2012      "${staco_2011} ${staco_2012} --zmin 80 --zmax 100 --label0 \"STACO, 2011 data\" --label1 \"STACO, 2012 data\" "
+    ((i++))
+    gput tags $i muid_2011_2012       "${muid_2011} ${muid_2012} --zmin 80 --zmax 100 --label0 \"MuID, 2011 data\" --label1 \"MuID, 2012 data\" "
+    ((i++))
+    flabel=v29D_MCP2012_04162012
+    staco_2011="--root1 '/share/t3data3/antonk/ana/ana_${flabel}_stacoCB_MCPscale/data*/root*.root'"
+    muid_2011="--root0 '/share/t3data3/antonk/ana/ana_${flabel}_muidCB_MCPscale/data*/root*.root'"
+    flabel=v2012_MCP2012_04162012
+    staco_2012="--root1 '/share/t3data3/antonk/ana/ana_${flabel}_stacoCB_MCPscale/data*/root*.root'"
+    muid_2012="--root0 '/share/t3data3/antonk/ana/ana_${flabel}_muidCB_MCPscale/data*/root*.root'"
+    gput tags $i muid_staco_2012      "${muid_2012} ${staco_2012} --zmin 80 --zmax 100 --label0 \"MuID, 2012 data\" --label1 \"STACO, 2012 data\" "
+    ((i++))
+    gput tags $i muid_staco_2011      "${muid_2011} ${staco_2011} --zmin 80 --zmax 100 --label0 \"MuID, 2011 data\" --label1 \"STACO, 2011 data\" "
+    ((i++))
+fi;
+
+# validation of independent sample (second 2/fb from 2011 data)
+if [ "0" -eq "1" ]; then
     i=0
     gput tags $i staco_data_KC       "${staco_data0} ${staco_data1KC} --zmin 80 --zmax 100"
     ((i++))
@@ -36,6 +69,7 @@ fi;
 tts="cmb id exms"
 regs="AA BB CC Bcc Baa FWC FWA MWC MWA"
 regs="`echo S{0..7}S`"
+regs="AA BB CC Bcc Baa"
 xtra=""
 i=0
 
