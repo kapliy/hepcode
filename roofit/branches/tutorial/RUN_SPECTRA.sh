@@ -5,21 +5,25 @@
 
 source bashmap.sh
 ROOTDIR=$PWD
-antondb=out1006alt
+antondb=out2012_both
 # Specify the list of tags
 
-data0="--root0 '/share/ftkdata1/antonk/ana_v26_0930_all_stacoCB_10GeV/data_period*/root*.root'"
-data1="--root1 '/share/ftkdata1/antonk/ana_v27_0930_all_stacoCB_10GeV/data_period*/root*.root'"
+flabel=v29D_MCP2012_04162012
+data0="--root0 '/share/t3data3/antonk/ana/ana_${flabel}_stacoCB_MCPscale/data*/root*.root'"
+flabel=v2012_MCP2012_04162012
+data1="--root1 '/share/t3data3/antonk/ana/ana_${flabel}_stacoCB_MCPscale/data*/root*.root'"
 
 if [ "1" -eq "1" ]; then
     i=0
     gput tags $i default     "${data0} ${data1} --zmin 80 --zmax 100"
-    gput tags $i kluit     "${data0} ${data1} --zmin 80 --zmax 100 --kluit"
+    ((i++))
+    gput tags $i kluit       "${data0} ${data1} --zmin 80 --zmax 100 --kluit"
     ((i++))
 fi;
 
 tts="cmb id exms"
 regs="AA BB CC Bcc Baa FWC FWA MWC MWA" # "FWC0 FWC1 FWC2 FWC3 FWA0 FWA1 FWA2 FWA3"
+regs="AA BB CC Bcc Baa"
 xtra=""
 i=0
 

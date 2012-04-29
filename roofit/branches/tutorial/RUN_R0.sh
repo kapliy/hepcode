@@ -2,43 +2,46 @@
 source bashmap.sh
 ROOTDIR=$PWD
 
-antondb=out01012012mc11b
-flabel=v28B_01012012_BtoM_mc11b
-
-# Specify the list of tags
+antondb=out2012
+flabel=NONE
 i=0
 
+# Specify the list of tags
+for flabel in v29D_MCP2012_04162012 v2012_MCP2012_04162012; do
+antondb=out2012_${flabel}
 if [ "1" -eq "1" ]; then
-    data="--root '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_all/data_period*/root_data_period*.root'"
-    gput tags $i r17_default_staco    "${data} --zmin 80 --zmax 100"
+    data="--root '/share/t3data3/antonk/ana/ana_${flabel}_stacoCB_MCPscale/data*/root_data*.root'"
+    gput tags $i r17_default_staco    " --antondb ${antondb} ${data} --zmin 80 --zmax 100"
     ((i++))
-    gput tags $i r17_m70110_staco     "${data} --zmin 70 --zmax 110"
+    gput tags $i r17_m70110_staco     " --antondb ${antondb} ${data} --zmin 70 --zmax 110"
     ((i++))
-    gput tags $i r17_klu_staco        "${data} --zmin 80 --zmax 100 --kluit"
+    gput tags $i r17_klu_staco        " --antondb ${antondb} ${data} --zmin 80 --zmax 100 --kluit"
     ((i++))
-    data="--root '/share/ftkdata1/antonk/ana_${flabel}_muidCB_all/data_period*/root_data_period*.root'"
-    #gput tags $i r17_default_muid    "${data} --zmin 80 --zmax 100"
+    data="--root '/share/t3data3/antonk/ana/ana_${flabel}_muidCB_MCPscale/data*/root_data*.root'"
+    gput tags $i r17_default_muid    " --antondb ${antondb} ${data} --zmin 80 --zmax 100"
     ((i++))
-    #gput tags $i r17_m70110_muid     "${data} --zmin 70 --zmax 110"
+    gput tags $i r17_m70110_muid     " --antondb ${antondb} ${data} --zmin 70 --zmax 110"
     ((i++))
-    #gput tags $i r17_klu_muid        "${data} --zmin 80 --zmax 100 --kluit"
+    gput tags $i r17_klu_muid        " --antondb ${antondb} ${data} --zmin 80 --zmax 100 --kluit"
     ((i++))
 fi;
+done
 
+# test (broken): apply to MC
 if [ "0" -eq "1" ]; then
     data="--root '/share/ftkdata1/antonk/ana_${flabel}_noscale_stacoCB/mc_pythia_zmumu/root_mc_pythia_zmumu*.root'"
-    gput tags $i r17_MCdefault_staco    "${data} --zmin 80 --zmax 100"
+    gput tags $i r17_MCdefault_staco    "--antondb ${antondb} ${data} --zmin 80 --zmax 100"
     ((i++))
-    gput tags $i r17_MCm70110_staco     "${data} --zmin 70 --zmax 110"
+    gput tags $i r17_MCm70110_staco     "--antondb ${antondb} ${data} --zmin 70 --zmax 110"
     ((i++))
-    gput tags $i r17_MCklu_staco        "${data} --zmin 80 --zmax 100 --kluit"
+    gput tags $i r17_MCklu_staco        "--antondb ${antondb} ${data} --zmin 80 --zmax 100 --kluit"
     ((i++))
     data="--root '/share/ftkdata1/antonk/ana_${flabel}_noscale_muidCB/mc_pythia_zmumu/root_mc_pythia_zmumu*.root'"
-    gput tags $i r17_MCdefault_muid    "${data} --zmin 80 --zmax 100"
+    gput tags $i r17_MCdefault_muid    "--antondb ${antondb} ${data} --zmin 80 --zmax 100"
     ((i++))
-    gput tags $i r17_MCm70110_muid     "${data} --zmin 70 --zmax 110"
+    gput tags $i r17_MCm70110_muid     "--antondb ${antondb} ${data} --zmin 70 --zmax 110"
     ((i++))
-    gput tags $i r17_MCklu_muid        "${data} --zmin 80 --zmax 100 --kluit"
+    gput tags $i r17_MCklu_muid        "--antondb ${antondb} ${data} --zmin 80 --zmax 100 --kluit"
     ((i++))
 fi;
 
@@ -47,6 +50,7 @@ tts="cmb id exms"
 regs="`echo E{0..25}E`"
 regs="`echo T{0..13}T`"
 regs="`echo S{0..7}S`"
+regs="AA BB CC Bcc Baa" #2012
 xtra="--template --ext eps"
 i=0
 
@@ -72,7 +76,7 @@ for itag in `gkeys tags`; do
 	    m=1.0
 	    d=0.08
 	    frange="--fitmin `echo \"${m}-${d}\" | bc -l` --fitmax `echo \"${m}+${d}\" | bc -l`"
-	    cmd="./keysfit.py -b --antondb ${antondb} ${opts} --tt ${tt} --region ${reg} --tag ${tag} --ndata $nevt --nscan ${nscan} --scan ${frange} ${xtra}"
+	    cmd="./keysfit.py -b ${opts} --tt ${tt} --region ${reg} --tag ${tag} --ndata $nevt --nscan ${nscan} --scan ${frange} ${xtra}"
 	    echo $cmd
 	    echo $cmd >> $J
 	    qsub -N R0${i} -o ${LOG} -e ${ERR} ${J}
