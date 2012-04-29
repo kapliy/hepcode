@@ -1,8 +1,0 @@
-./stack.py -b -m1 --var 'l_pt' --bin '50,0,100'
-./stack.py -b -m1 --var 'met' --bin '50,0,200'
-./stack.py -b -m1 --var 'w_mt' --bin '50,0,200'
-./stack.py -b -m1 --var 'l_eta' --bin '50,-2.5,2.5'
-
-./stack.py -b -m1 --var 'l_eta' --bin '50,-2.5,2.5' --hmc WJ/st_w_final/00_wmt/asym_eta --hdata WJ/st_w_final/00_wmt/asym_eta
-./stack.py -b -m1 --var 'met' --bin '500,0,500' --hmc WJ/st_w_final/00_wmt/met --hdata WJ/st_w_final/00_wmt/met
-./stack.py -b -m11 --var l_eta --bin 50,-2.5,2.5 --hmc WJ/st_w_final/00_wmt/asym_abseta --hdata WJ/st_w_final/00_wmt/asym_abseta --rebin 4 --antondb crap
