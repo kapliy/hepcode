@@ -90,18 +90,21 @@ class SuCanvas:
     #note: errors are incorrect here
     return hsum
 
-  def asym_error(s,Np,sNp,Nm,sNm):
+  @staticmethod
+  def asym_error(Np,sNp,Nm,sNm):
     """ Error propagation formula for (N+ - N-)/(N+ + N-) """
     t = (Np+Nm)**2
     if t==0:
       return 0
     res2 = (2*Nm/t)**2 * sNp**2 + (-2*Np/t)**2 * sNm**2
     return math.sqrt(res2) if res2>0 else 0.0
-  def asym_value(s,Np,sNp,Nm,sNm):
+  @staticmethod
+  def asym_value(Np,sNp,Nm,sNm):
     """ returns (N+ - N-)/(N+ + N-) """
     res = (Np-Nm)/(Np+Nm) if Np+Nm>0 else 0
     return res
-  def WAsymmetry(s,hplus,hminus,title='asymmetry'):
+  @staticmethod
+  def WAsymmetry(hplus,hminus,title='asymmetry'):
     """ (W+ - W-)/(W+ + W-) workhorse function with correct errors """
     hsum = hplus.Clone(hplus.GetName()+" asymmetry")
     hsum.Reset()
@@ -110,13 +113,14 @@ class SuCanvas:
       sNp = hplus.GetBinError(i)
       Nm  = hminus.GetBinContent(i)
       sNm = hminus.GetBinError(i)
-      hsum.SetBinContent(i,s.asym_value(Np,sNp,Nm,sNm))
-      hsum.SetBinError(i,s.asym_error(Np,sNp,Nm,sNm))
+      hsum.SetBinContent(i,SuCanvas.asym_value(Np,sNp,Nm,sNm))
+      hsum.SetBinError(i,SuCanvas.asym_error(Np,sNp,Nm,sNm))
     hsum.SetTitle(title)
     return hsum
 
-  def plotAsymmetry(s,hdPOS,hdNEG,hmcPOS,hmcNEG,leg=None):
-    """ Wrapper to make a complete plot of charge asymmetry for data vs mc """
+  def plotAsymmetryFromComponents(s,hdPOS,hdNEG,hmcPOS,hmcNEG,leg=None):
+    """ DEPRECATED: wrapper to make a complete plot of charge asymmetry for data vs mc
+    from individual charge-dependent histograms """
     s.buildRatio();
     s.cd_plotPad();
     # mc
@@ -142,6 +146,36 @@ class SuCanvas:
     s.hratio.Draw("AP same");
     s.update()
 
+  def plotAsymmetry(s,hd,hmc,M,leg=None):
+    """ Wrapper to plot asymmetry curves for data vs mc
+    M = SigSamples object that takes care of colors and such """
+    # TODO: multiple MC's - both in main and ratio plots
+    # TODO: systematics
+    s.buildRatio();
+    s.cd_plotPad();
+    s.hd,s.hmc = hd,hmc
+    # mc
+    if not (isinstance(v,list) or isinstance(v,tuple)):
+      hmc = [hmc,]
+    hmc.SetLineColor(ROOT.kBlue)
+    hmc.Draw()
+    s.FixupHisto(hmc)
+    hmc.GetYaxis().SetRangeUser(0.0,0.5);
+    hmc.GetYaxis().SetTitle('Asymmetry');
+    # data
+    hd.SetMarkerSize(1.0)
+    hd.Draw("AP same")
+    s.FixupHisto(hd)
+    if leg:
+      leg.Draw("same")
+    # ratio
+    s.cd_ratioPad();
+    s.hratio,s.href = hd.Clone("hratio"),hd.Clone("href")
+    s.hratio.Divide(hmc)
+    s.drawRefLine(s.href)
+    s.drawRatio(s.hratio)
+    s.hratio.Draw("AP same");
+    s.update()
 
   def Matrix_loose(s,Nt,Nl,er,ef):
     """ Matrix method estimate of QCD - formula from W inclusive measurement
@@ -311,7 +345,7 @@ class SuCanvas:
     s._ratioDrawn = False;
     if not title:
       title = rand_name()
-    s._canvas = ROOT.TCanvas( "canvas"+title , "ratio"+title , 200 , 10 , 800 , 800 );
+    s._canvas = ROOT.TCanvas( "canvas"+title , "canvas"+title , 200 , 10 , 800 , 800 );
     s._canvas.SetFillColor( ROOT.kWhite );
     s._canvas.GetFrame().SetBorderMode( 0 );
     s._canvas.GetFrame().SetBorderSize( 0 );
@@ -336,10 +370,10 @@ class SuCanvas:
       c.Modified()
       c.Update()
 
-  def buildRatio(s,title=None):
+  def buildRatio(s,width=800,height=800,title=None):
     if not title:
       title = rand_name()
-    s._canvas = ROOT.TCanvas( title , title , 200 , 10 , 800 , 800 );
+    s._canvas = ROOT.TCanvas( 'canvasm'+title , 'canvasm'+title , width , height );
     s._canvas.SetFillColor( ROOT.kWhite );
     s._canvas.GetFrame().SetBorderMode( 0 );
     s._canvas.GetFrame().SetBorderSize( 0 );

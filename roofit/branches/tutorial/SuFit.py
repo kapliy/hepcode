@@ -30,6 +30,8 @@ class SuFit:
     
     s.fractions = []
     s.scales = []
+    s.fractionsE = []
+    s.scalesE = []
 
     s.model = None
     s.dataHist = None
@@ -72,6 +74,8 @@ class SuFit:
     if s.model: s.model.Clear()
     s.fractions = []
     s.scales = []
+    s.fractionsE = []
+    s.scalesE = []
 
     # create RooDataHist for data
     s.dataHist = RooDataHist( "dataHist" , "dataHist" , s.ArgList() , s.data )
@@ -113,13 +117,19 @@ class SuFit:
     for fname in s.fnames:
       s.fractions.append( s.w.var(fname).getVal() )
       s.scales.append( s.w.var(fname).getVal() )
+      if True:
+        s.fractionsE.append( s.w.var(fname).getError() )
+        s.scalesE.append( s.w.var(fname).getError() )
     for ival in xrange(0,len(s.scales)):
       s.scales[ival] *= s.data.Integral()
       s.scales[ival] /= s.free[ival].Integral()
       if True:
+        s.scalesE[ival] *= s.data.Integral()
+        s.scalesE[ival] /= s.free[ival].Integral()
+      if True:
         print "Free Background (fraction & scale):",fname
-        print s.fractions[ival]
-        print s.scales[ival]
+        print s.fractions[ival],'+/-',s.fractionsE[ival]
+        print s.scales[ival],'+/-',s.scalesE[ival]
     # return final weights
     return s.scales
 
@@ -184,3 +194,23 @@ class SuFit:
     key.Draw("9");
     fractext.Draw("9");
     return canvas,frame
+
+gbg_tmp = []
+if __name__=='__main__':
+  f = SuFit()
+  f.addFitVar( 'met', 0 , 100 , 'met' );
+  # get histograms
+  f1 = ROOT.TFile.Open('/share/t3data3/antonk/ana/ana_v29D_04292012_DtoM_unfold_stacoCB_all/mc_pythia_wmunu/root_mc_pythia_wmunu.root')
+  f2 = ROOT.TFile.Open('/share/t3data3/antonk/ana/ana_v29D_04292012_DtoM_unfold_stacoCB_all/mc_pythia_bbmu15x/root_mc_pythia_bbmu15x.root')
+  hfixed = f1.Get('dg/nominal/st_w_final/metfit/met')
+  hfixed.Scale(1/40.0)
+  hfree = f2.Get('dg/nominal/st_w_final/metfit/met')
+  hdata = hfixed.Clone()
+  hdata.Add(hfree,1.47)
+  # run SuFit
+  hdata.getLegendName = lambda : 'Data'
+  hfixed.getLegendName = lambda : 'Fixed'
+  hfree.getLegendName = lambda : 'QCD float'
+  f.setDataBackgrounds(hdata,hfixed,hfree)
+  gbg_tmp.append( f.doFit() )
+  gbg_tmp.append( f.drawFits('random') )

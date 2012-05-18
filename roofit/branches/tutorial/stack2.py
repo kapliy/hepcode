@@ -27,7 +27,7 @@ parser.add_option("--input",dest="input",
                   type="string", default='ROOT/current/all',
                   help="Path to input root file with all histos")
 parser.add_option("--var",dest="var",
-                  type="string", default='l_eta',
+                  type="string", default='met',
                   help="Variable to plot")
 parser.add_option("--bin",dest="bin",
                   type="string", default='50,-2.5,2.5',
@@ -54,8 +54,8 @@ parser.add_option("--cut",dest="cut",
                   type="string", default='mcw*puw', # *effw*trigw
                   help="Additional cut to select events")
 parser.add_option("--hsource",dest="hsource",
-                  type="string", default=None,
-                  help="Path to data histogram (if set, use it instead of ntuple")
+                  type="string", default='%s/st_%s_final/%s',
+                  help="Template for the path to data histograms")
 parser.add_option("--rebin",dest="rebin",
                   type="int", default=1,
                   help="Rebin histograms")
@@ -129,17 +129,12 @@ SuCanvas._refLineMax = float(opts.refline.split(',')[1])
 SetStyle("AtlasStyle.C")
 from SuData import *
 SuSample.rootpath = opts.input
-SuSample.hsource = opts.hsource
-SuSample.hcharge = opts.charge
 SuSample.lumi = opts.lumi
 SuSample.rebin = opts.rebin
 SuSample.qcdscale = float(opts.qcdscale) if not opts.qcdscale in ('AUTO','auto','Auto') else 1.0
+SuSample.load_unfolding()
 
 #SetStyle()
-def QAPP(path,iq):
-    htmp = path.split('/');
-    htmp.insert(-1,QMAP[iq][1])
-    return '/'.join(htmp) if iq in (0,1) else path
 
 POS,NEG,ALL=range(3)
 QMAP = {}
@@ -344,10 +339,13 @@ if opts.bgsig in (0,1,2,4,5,6): # w inclusive
     #pw.add(label='W#rightarrow#tau#nu',samples='mc_pythia_wtaunu',color=ROOT.kYellow,flags=['bg','mc','ewk'])
     pw.add(label='Z#rightarrow#mu#mu',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['bg','mc','ewk'])
     #pw.add(label='Z#rightarrow#mu#mu',samples='mc_pythia_zmumu',color=ROOT.kRed,flags=['bg','mc','ewk'])
+    pw.add(label='WW/WZ/ZZ',samples=['mc_herwig_ww','mc_herwig_wz','mc_herwig_zz'],color=11,flags=['bg','mc','ewk'])
     if opts.bgqcd==0:
         pw.add(label='bbmu15X/ccmu15X',samples=['mc_pythia_bbmu15x','mc_pythia_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     elif opts.bgqcd==1:
         pw.add(label='QCD J0..J5',samples=['mc_pythia_J%d'%v for v in xrange(5)],color=ROOT.kCyan,flags=['bg','mc','qcd'])
+    elif opts.bgqcd==2:
+        pw.add(label='QCD data-driven',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kCyan,flags=['bg','mc','qcd','driven'])
     if opts.bgsig==0:
         pw.add(label='W#rightarrow#mu#nu',samples='mc_pythia_wmunu',color=10,flags=['sig','mc','ewk'])
     elif opts.bgsig==1:
@@ -369,15 +367,6 @@ if opts.bgsig in (0,1,2,4,5,6): # w inclusive
     pw.add(label='alpgen_herwig',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk','no'])
     pw.add(label='alpgen_pythia',samples=['mc_alpgen_pythia_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk','no'])
     pw.add(label='qcd',samples=['mc_pythia_bbmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd','no'])
-elif opts.bgsig in (3,): # w+jets
-    pw.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
-    pw.add(label='Z#rightarrow#tau#tau+jets',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta,flags=['bg','mc','ewk'])
-    pw.add(label='W#rightarrow#tau#nu+jets',samples=['mc_jimmy_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow,flags=['bg','mc','ewk'])
-    pw.add(label='Z#rightarrow#mu#mu+jets',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['bg','mc','ewk'])
-    pw.add(label='WZ/ZZ',samples=['mc_herwig_wz','mc_herwig_zz'],color=11,flags=['bg','mc','ewk'])
-    pw.add(label='WW',samples='mc_herwig_ww',color=12,flags=['bg','mc','ewk'])
-    pw.add(label='bbmu15X/ccmu15X',samples=['mc_pythia_bbmu15x','mc_pythia_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
-    pw.add(label='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk'])
 else:
     pass
 
@@ -390,6 +379,7 @@ if opts.bgsig in (0,1,2,4,5,6): # z inclusive
     #pz.add(label='Z#rightarrow#tau#tau',samples='mc_pythia_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk'])
     pz.add(label='W#rightarrow#tau#nu',samples=['mc_jimmy_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow,flags=['bg','mc','ewk'])
     #pz.add(label='W#rightarrow#tau#nu',samples='mc_pythia_wtaunu',color=ROOT.kYellow,flags=['bg','mc','ewk'])
+    pz.add(label='WW/WZ/ZZ',samples=['mc_herwig_ww','mc_herwig_wz','mc_herwig_zz'],color=11,flags=['bg','mc','ewk'])
     if opts.bgqcd==0:
         pz.add(label='bbmu15X/ccmu15X',samples=['mc_pythia_bbmu15x','mc_pythia_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     elif opts.bgqcd==1:
@@ -414,15 +404,6 @@ if opts.bgsig in (0,1,2,4,5,6): # z inclusive
     pz.add(label='powheg_herwig',samples='mc_powheg_herwig_zmumu',color=10,flags=['sig','mc','ewk','no'])
     pz.add(label='powheg_pythia',samples='mc_powheg_pythia_zmumu',color=10,flags=['sig','mc','ewk','no'])
     pz.add(label='alpgen_herwig',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk','no'])
-elif opts.bgsig in (3,): # z+jets
-    pz.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
-    pz.add(label='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['bg','mc','ewk'])
-    pz.add(label='Z#rightarrow#tau#tau+jets',samples=['mc_jimmy_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta,flags=['bg','mc','ewk'])
-    pz.add(label='W#rightarrow#tau#nu+jets',samples=['mc_jimmy_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow,flags=['bg','mc','ewk'])
-    pz.add(label='WZ/ZZ',samples=['mc_herwig_wz','mc_herwig_zz'],color=11,flags=['bg','mc','ewk'])
-    pz.add(label='WW',samples='mc_herwig_ww',color=12,flags=['bg','mc','ewk'])
-    pz.add(label='bbmu15X/ccmu15X',samples=['mc_pythia_bbmu15x','mc_pythia_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
-    pz.add(label='Z#rightarrow#mu#mu+jets',samples=['mc_jimmy_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['sig','mc','ewk'])
 elif opts.bgsig in (10,11,12,13,14): # Z->mumu signal only (for normalized plots)
     if opts.bgsig==10: #Pythia
         pz.add(label='Z#rightarrow#mu#mu',samples='mc_pythia_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
@@ -435,48 +416,6 @@ elif opts.bgsig in (10,11,12,13,14): # Z->mumu signal only (for normalized plots
     elif opts.bgsig==15: #PowHeg Pythia
         pz.add(label='Z#rightarrow#mu#mu',samples='mc_powheg_pythia_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
     SuSample.unitize = True
-
-class SigSamples:
-    """ Lists various MC generators"""
-    msize = 1.5
-    def __init__(s):
-        s.n = 0
-        s.names = []
-        s.labels = []
-        s.colors = []
-        s.sizes = []
-        s.styles = []
-        s.cuts = []
-    def ntot(s):
-        assert s.n == len(s.cuts)
-        return s.n
-    def add(s,name,label,color=None,size=0.7,style=20,cut=None):
-        """ Add one sample """
-        s.names.append(name)
-        s.labels.append(label)
-        s.colors.append( color if color else s.autocolor(len(s.cuts)) )
-        s.sizes.append(size*s.msize)
-        s.styles.append(style)
-        s.cuts.append(cut)
-        s.n+=1
-    def prefill_data(s):
-        """ if we also plan to overlay the data """
-        s.add('datasub','Data',color=1,style=21)
-    def prefill_mc(s):
-        """ pre-fill with all available MC samples """
-        s.add('pythia','Pythia(MRSTMCal)')
-        s.add('pythia','Pythia(MRSTMCal->CTEQ6L1)',cut='lha_cteq6ll')
-        #return # quick return for now! FIXME
-        #s.add('sherpa','Sherpa(CTEQ6L1)')
-        s.add('alpgen_herwig','Alpgen/Herwig(CTEQ6L1)')
-        #s.add('alpgen_pythia','Alpgen/Pythia(CTEQ6L1)')
-        s.add('mcnlo','MC@NLO(CT10)')
-        s.add('powheg_herwig','PowHeg/Herwig(CT10)')
-        s.add('powheg_pythia','PowHeg/Pythia(CT10)')
-    def autocolor(s,i):
-        """ choose a reasonable sequence of colors """
-        colorlist = [2,3,4,5,6,20,28,41,46]
-        return colorlist[i] if i<len(colorlist) else 1
 
 # Pre-load the ntuples
 path_truth = 'truth/st_%s_final/ntuple'%opts.ntuple
@@ -503,6 +442,22 @@ if False:
 
 gbg = []
 q = opts.charge
+
+# Create a global DataSource object that contains the path to all histograms or ntuples
+dH = DataSource(ntuple=opts.ntuple,unfold=None,
+                charge=q,var=opts.var,histo=opts.hsource,
+                sysdir=['nominal','nominal','isowind'],subdir='st_w_final',basedir='baseline',
+                qcd={'metfit':'metfit'})
+dH.clone_systematics()
+
+# Work in progress: port of SuPlot goodies to python
+if mode in ('final'):
+    print 'Mode  =',mode
+    leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
+    leg.SetHeader(opts.var)
+    h = po.stack('dstack',dH)
+    #hasym = po.stack2('nominal','st_w_final','baseline',0,opts.var,qcd=,unfold=None,leg=leg)
+    sys.exit(0)
 
 if mode in ('sig_reco','sig_truth'): # compares distributions in different signal monte-carlos.
     is_truth = (mode=='sig_truth')
@@ -905,16 +860,12 @@ if mode=='matrix_2010inc': # QCD estimation using matrix method
     gbg.append(leg)
 
 if mode=='1': # total stack histo
-    renormalize()
+    dH2 = dH.load('nonexistent')
     c = SuCanvas()
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
     hmc,hdata = None,None
-    if opts.ntuple=='w':
-        hmc = po.stack('mc',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre),leg=leg)
-        hdata = po.data('data',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre),leg=leg)
-    else:
-        hmc = po.stack('mc',opts.var,opts.bin,'(%s) * (%s)'%(opts.cut,opts.pre),leg=leg)
-        hdata = po.data('data',opts.var,opts.bin,'(%s) * (%s)'%(opts.cut,opts.pre),leg=leg)
+    hmc = po.stack('mc',dH2,leg=leg)
+    hdata = po.data('data',dH2,leg=leg)
     c.plotStackHisto(hmc,hdata,leg)
 
 if mode=='2': # signal - directly from MC, or bg-subtracted data - allow application of efficiency histogram
@@ -976,31 +927,17 @@ if mode=='100': # creates efficiency histogram (corrects back to particle level)
             heff.Write(key_str,ROOT.TObject.kOverwrite)
             f.Close()
 
-if mode=='11': # asymmetry (not bg-subtracted)
+def asymmetry():
     assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
-    hsig,hd    = [None]*2,[None]*2
-    SuSample.hcharge = POS
-    hsig[POS]  = particle(po.sig('signalPOS',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[POS][2],opts.cut,opts.pre)),q=POS)
-    hd[POS]    = particle(po.data('dataPOS',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[POS][2],opts.cut,opts.pre)),q=POS)
-    SuSample.hcharge = NEG
-    hsig[NEG]  = particle(po.sig('signalNEG',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[NEG][2],opts.cut,opts.pre)),q=NEG)
-    hd[NEG]    = particle(po.data('dataNEG',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[NEG][2],opts.cut,opts.pre)),q=NEG)
+    hsig = po.sig('signalPOS',dH.clone(q=0))
+    hd   = po.data_sub('dataPOS',dH.clone(q=0))
     c = SuCanvas()
-    c.plotAsymmetry(hd[POS],hd[NEG],hsig[POS],hsig[NEG])
+    c.plotAsymmetryFromComponents(hd[POS],hd[NEG],hsig[POS],hsig[NEG])
+    return c
 
-if mode=='12': # asymmetry (bg-subtracted)
-    assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
-    renormalize()
-    hsig,hd_sig  = [None]*2,[None]*2
-    SuSample.hcharge = POS
-    hsig[POS]    = particle(po.sig('signalPOS',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[POS][2],opts.cut,opts.pre)),q=POS)
-    hd_sig[POS]  = particle(po.data_sub('dataPOS',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[POS][2],opts.cut,opts.pre)),q=POS)
-    SuSample.hcharge = NEG
-    hsig[NEG]    = particle(po.sig('signalNEG',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[NEG][2],opts.cut,opts.pre)),q=NEG)
-    hd_sig[NEG]  = particle(po.data_sub('dataNEG',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[NEG][2],opts.cut,opts.pre)),q=NEG)
-    c = SuCanvas()
-    c.plotAsymmetry(hd_sig[POS],hd_sig[NEG],hsig[POS],hsig[NEG])
-
+if mode=='11': # asymmetry (bg-subtracted)
+    c = asymmetry()
+    
 if mode in ('101','102','103'): # tag and probe
     assert opts.ntuple=='z','ERROR: tag-and-probe can only be computed for the z ntuple'
     #renormalize()
@@ -1334,20 +1271,31 @@ if mode=='99': # Floating QCD normalization
     renormalize()  # for testing - only activated when --qcd=auto
     c,frame,scalef = run_fit(metfitreg(opts.pre),opts.var,opts.bin,opts.cut)
 
+####################################
+######## SAVING OUTPUT
+####################################
+
+for key,val in po.fits.iteritems():
+    print 'Adding a normalization fit:',key
+    val.savename = '_'+key
+    OMAP.append(val)
+
 if not opts.antondb:
     DIR='./'
     if opts.output:
         if not os.path.isdir(opts.output):
             os.makedirs(opts.output)
         DIR=opts.output+'/'
+    # save main plot
     c.SaveAs('%s_%s_%s_%s_%s_%s'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode),'png',DIR=DIR)
+    # save additional plots
     for i,obj in enumerate(OMAP):
+        savename = obj.savename if hasattr(obj,'savename') else ''
         if hasattr(obj,'InheritsFrom') and obj.InheritsFrom('TPad') and hasattr(obj,'SaveAs'):
-            obj.SaveAs(DIR+SuCanvas.cleanse('%s_%s_%s_%s_%s_%s__%d'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode,i))+'.png')
+            obj.SaveAs(DIR+SuCanvas.cleanse('%s_%s_%s_%s_%s_%s__%d%s'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode,i,savename))+'.png')
         elif hasattr(obj,'SaveAs'): # SuCanvas
-            obj.SaveAs('%s_%s_%s_%s_%s_%s__%d'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode,i),'png',DIR=DIR)
+            obj.SaveAs('%s_%s_%s_%s_%s_%s__%d%s'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode,i,savename),'png',DIR=DIR)
 
-# save everything
 if len(COUT)>0:
     VMAP['COUT']=[]
     for l in COUT:

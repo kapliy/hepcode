@@ -1,4 +1,45 @@
-* Add systematics: trigger/reco efficiency where POS goes up, NEG goes down
+WORK PLAN:
+* Need to come up with a structure to keep systematics
+* Add ratio plot under the QCD plots, perhaps by simply copying it over from Jordan!
+
+* Make histograms and asymmetry with total error bars
+* Add unfolding for inclusive (vs eta)
+
+* Make it all work when path leads to bin_%d folders. Tricky, should work with/without unfolding.
+
+
+
+
+
+
+Top-level usage:
+stack.histo()
+stack.asym('nominal/syst','baseline',unfold=None/glob/bin)
+
+So SuStack needs to know about folder structure and normalization histograms.
+
+SuPlot-style systematics specification. + integrate unfolding
+
+First: get a histogram for a particular systematic variation. Use opts.var to select variable.
+Use hsource stuff to select directory? Or better, perhaps hardcode them in SuSys specification?
+
+SuNorm:
+ List of normalizations by systematic x region
+ (also allow to skip non-nominal systematics)
+ Compute on-demand?
+  
+SuSys, plus direction - to automatically group systematics
+ SuNorm
+ folder = <>/baseline/asym_abseta -> baseline/POS/asym_abseta
+
+
+
+
+
+
+
+
+* Add systematics: trigger/reco efficiency where POS goes up, NEG goes down [not needed]
 
 Ntuple based studies:
 * Compare QCD template shapes as a function of isolation cone.
@@ -8,9 +49,6 @@ Run overnight:
 * 2D migration matrices for all systematics
 * DONE Add tighter isolation (pt+etcone changed to 0.1)
 * DONE Add qcd with three inversions of isolation [ normal, tight, tighter ]
-
-
-
 * Try etcone changed to 0.1
 * email constantinos: ABCD method qcd template
   CM: ABCD = isolation and MULTIJET_LIKE{met<X && mT<X && nlepton=small}
