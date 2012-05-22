@@ -5,7 +5,7 @@
 
 source bashmap.sh
 ROOTDIR=$PWD
-antondb=out2012_both
+antondb=out2011_both
 # Specify the list of tags
 
 flabel=v29D_MCP2012_04162012

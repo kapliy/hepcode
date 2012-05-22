@@ -2,13 +2,13 @@
 source bashmap.sh
 ROOTDIR=$PWD
 
-antondb=out2012
+antondb=out2011
 flabel=NONE
 i=0
 
 # Specify the list of tags
-for flabel in v29D_MCP2012_04162012 v2012_MCP2012_04162012; do
-antondb=out2012_${flabel}
+for flabel in v29D_05222012_MCP2011; do
+antondb=out2011_${flabel}
 if [ "1" -eq "1" ]; then
     data="--root '/share/t3data3/antonk/ana/ana_${flabel}_stacoCB_MCPscale/data*/root_data*.root'"
     gput tags $i r17_default_staco    " --antondb ${antondb} ${data} --zmin 80 --zmax 100"
@@ -51,6 +51,7 @@ regs="`echo E{0..25}E`"
 regs="`echo T{0..13}T`"
 regs="`echo S{0..7}S`"
 regs="AA BB CC Bcc Baa" #2012
+regs="`echo W{0..9}W`"
 xtra="--template --ext eps"
 i=0
 

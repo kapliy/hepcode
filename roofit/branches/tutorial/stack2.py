@@ -444,11 +444,15 @@ gbg = []
 q = opts.charge
 
 # Create a global DataSource object that contains the path to all histograms or ntuples
-dH = DataSource(ntuple=opts.ntuple,unfold=None,
-                charge=q,var=opts.var,histo=opts.hsource,
-                sysdir=['nominal','nominal','isowind'],subdir='st_w_final',basedir='baseline',
-                qcd={'metfit':'metfit'})
-dH.clone_systematics()
+
+dH = SuPlot()
+dH.bootstrap(ntuple=opts.ntuple,unfold=None,
+             charge=q,var=opts.var,histo=opts.hsource,
+             sysdir=['nominal','nominal','isowind'],subdir='st_w_final',basedir='baseline',
+             qcd={'metfit':'metfit'})
+
+dH.enable_all()
+SuStack.QCD_SYS_SCALES = True
 
 # Work in progress: port of SuPlot goodies to python
 if mode in ('final'):
@@ -860,13 +864,13 @@ if mode=='matrix_2010inc': # QCD estimation using matrix method
     gbg.append(leg)
 
 if mode=='1': # total stack histo
-    dH2 = dH.load('nonexistent')
+    dH2 = dH
     c = SuCanvas()
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
     hmc,hdata = None,None
     hmc = po.stack('mc',dH2,leg=leg)
     hdata = po.data('data',dH2,leg=leg)
-    c.plotStackHisto(hmc,hdata,leg)
+    c.plotStackHisto(hmc.flat[0].stack,hdata.flat[0].h,leg)
 
 if mode=='2': # signal - directly from MC, or bg-subtracted data - allow application of efficiency histogram
     assert opts.ntuple=='w','Only w ntuple supported for now'

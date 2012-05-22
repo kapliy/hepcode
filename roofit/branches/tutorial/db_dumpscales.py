@@ -764,7 +764,7 @@ def print_syst_scale(regs):
     print r'     Total uncertainty & ' + ' & '.join(['%.2f'%s for s in sumsq([stat1[0],sys4[0]])]) + r'\\'
 
 # load everything into dictionaries
-default,klu,R70,egge = [None]*4
+default,klu,R70,egge = [None]*4  # for k+/k- version
 default_shifts,klu_shifts,R70_shifts,egge_shifts = [None]*4
 default_scales,klu_scales,R70_scales,egge_scales = [None]*4
 regs = ['S%dS'%i for i in regsR]
