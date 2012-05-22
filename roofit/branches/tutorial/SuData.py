@@ -9,8 +9,8 @@ from hashlib import md5
 import ROOT
 from FileLock import FileLock
 
-class DataSource:
-    """ Generic class that describes where to get the data.
+class SuSys:
+    """ Generic class that describes where to get the data for one histogram (systematic).
     Basically, it generalizes ntuple-based and histo-based data access.
     def stack(s,hname,var,bin,cut,path=None,flags=['mc'],leg=None):
     def stack2(s,sysdir,subdir,basedir,charge,hname,qcd={},flags=['mc'],leg=None,unfold=None):
@@ -26,13 +26,14 @@ class DataSource:
     def __init__(s,charge=2,qcd = {}, unfold=None,qcderr=0,
                  ntuple='w',path=None,var=None,bin=None,pre='',weight="mcw*puw*effw*trigw",
                  histo=None,sysdir=None,subdir=None,basedir=None ):
+        # actual histograms
+        s.h = None
+        s.stack = None
         # Common resources:
-        s.status = 0
-        s.name = '' # to keep systematic names
-        s.h = None  # actual histogram
+        s.name = ''
         s.charge = charge
         s.unfold = unfold
-        s.qcd = qcd  # special map to place ourselves into a QCD-region (e.g, anti-isolation)
+        s.qcd = qcd       # special map to place ourselves into a QCD-region (e.g, anti-isolation)
         s.qcderr = qcderr # Controls QCD scale uncertainty: 1 = sigma_up, -1 = sigma_down, 0 = nominal 
         # Ntuple-based resources:
         s.ntuple = ntuple # w or z
@@ -47,80 +48,6 @@ class DataSource:
         s.sysdir = s.qlist(sysdir)
         s.subdir = s.qlist(subdir)
         s.basedir = s.qlist(basedir)
-        # Histogram-based systematics
-        s.syst = None,[] # list of DataSource's with systematics
-    def load(s,sysname):
-        for sgroups in s.syst:
-            for sinst in sgroups:
-                if sinst.name==sysname:
-                    return sinst
-        print 'WARNING: cannot find systematic:',sysname,' - will return self (%s)'%s.name
-        return s
-    def clone_systematics(s,pre=''):
-        """ The idea is to clone itself , adding a DataSource for all systematic variations.
-        This is arranged in nested lists, with UP/DOWN variations within each nesting group
-        """
-        print 'Creating systematic variations...'
-        s.syst = []
-        # nominal first:
-        s.syst.append( [s.clone()] )
-        res = []
-        def add(n,ss):
-            """ Clones sysdir """
-            res.append(s.clone(name=n,sysdir_mc=ss))
-        def add2(n,ss):
-            """ Clones subdir (e.g., for efficiencies) """
-            res.append(s.clone(name=n,subdir_mc=ss))
-        def add3(n,ss):
-            """ Clones qcd normalization """
-            res.append(s.clone(name=n,qcderr=ss))
-        def next():
-            s.syst.append(res[:])
-            del res[:]
-        # MCP smearing UP
-        add('mcp_msup',pre+'mcp_msup')
-        add('mcp_msdown',pre+'mcp_msdown')
-        next()
-        # MCP smearing DOWN
-        add('mcp_idup',pre+'mcp_idup')
-        add('mcp_iddown',pre+'mcp_iddown')
-        next()
-        # MCP scale
-        if False: # old MCP scale recommendation: on/off
-            add('mcp_unscaled',pre+'mcp_unscaled')
-            next()
-        else:  # using my C/K variations
-            add('mcp_kup',pre+'mcp_kup')
-            add('mcp_kdown',pre+'mcp_kdown')
-            next()
-            add('mcp_cup',pre+'mcp_cup')
-            add('mcp_cdown',pre+'mcp_cdown')
-            next()
-        # MCP efficiency
-        add2('nominal_effstatup',pre+'st_w_effstatup')
-        add2('nominal_effstatdown',pre+'st_w_effstatdown')
-        next()
-        add2('nominal_effsysup',pre+'st_w_effsysup')
-        add2('nominal_effsysdown',pre+'st_w_effsysdown')
-        next()
-        add2('nominal_trigstatup',pre+'st_w_trigstatup')
-        add2('nominal_trigstatdown',pre+'st_w_trigstatdown')
-        next()
-        # JET
-        add('jet_jer',pre+'jet_jer')
-        next()
-        add('jet_jesup',pre+'jet_jesup')
-        add('jet_jesdown',pre+'jet_jesdown')
-        next()
-        # MET
-        add('met_allcluup',pre+'met_allcluup')
-        add('met_allcludown',pre+'met_allcludown')
-        next()
-        # QCD normalizatoin
-        add3('qcdup',1)
-        add3('qcddown',-1)
-        next()
-        print 'Created systematic variations: N =',len(s.syst)
     def use_ntuple(s):
         """ True or False """
         return s.path and s.bin and s.pre
@@ -129,7 +56,7 @@ class DataSource:
         assert s.var
         assert s.bin
         assert s.pre
-        return '(%s)*(%s)*(%s)' % (DataSource.QMAP[s.charge][2] , s.pre, s.weight)
+        return '(%s)*(%s)*(%s)' % (SuSys.QMAP[s.charge][2] , s.pre, s.weight)
     def nt_prez(s):
         assert False,'Not implemented'
         return '(%s)*(%s)' % ( s.pre, s.weight )
@@ -151,17 +78,24 @@ class DataSource:
                 i=2
             else:
                 i=1
-        hpath = os.path.join(s.sysdir[i],s.subdir[i],s.basedir[i]) + DataSource.QMAP[s.charge][0] + '/' + s.histo
+        hpath = os.path.join(s.sysdir[i],s.subdir[i],s.basedir[i]) + SuSys.QMAP[s.charge][0] + '/' + s.histo
         return hpath
-    def h_path_fname(s,i=2):
-        return s.sysdir[i] + '_' + s.subdir[i] + '_' + s.basedir[i] + '_' + DataSource.QMAP[s.charge][1]
+    def h_path_fname(s,i=1):
+        return s.sysdir[2]+'__'+s.sysdir[i] + '_' + s.subdir[i] + '_' + s.basedir[i] + '_' + SuSys.QMAP[s.charge][1]
+    def qcd_region(s):
+        """ Puts this SuSys in qcd region based on qcd map """
+        s.basedir = [s.qcd['metfit']]*3 # disable MET>25 cut
+        s.histo = 'met'
     def clone(s,sysdir=None,sysdir_mc=None,subdir=None,subdir_mc=None,basedir=None,qcderr=None,name=None,q=None):
-        """ deep copy , also allowing to update some members on-the-fly (useful to spawn systematics) """
+        """ deep copy, also allowing to update some members on-the-fly (useful to spawn systematics) """
         import copy
         res =  copy.copy(s)
+        # do not clone the actual histograms
+        res.h,res.stack = None,None
         # only replace in MC
         if sysdir_mc: res.sysdir = s.qlist([res.sysdir[0],sysdir_mc,res.sysdir[2]])
         if subdir_mc: res.subdir = s.qlist([res.subdir[0],subdir_mc,res.subdir[2]])
+        # other replacements
         if sysdir: res.sysdir = s.qlist(sysdir)
         if subdir: res.subdir = s.qlist(subdir)
         if basedir: res.basedir = s.qlist(basedir)
@@ -169,7 +103,207 @@ class DataSource:
         if name: res.name = name
         if q: res.charge = q
         return res
-
+    def Add(s,o):
+        return s.h.Add(o.h) if s.h and o.h else None
+    def AddStack(s,o):
+        return s.stack.Add(o.h) if s.stack and o.h else None
+    def SetName(s,n):
+        return s.h.SetName(n) if s.h else None
+    def SetLineColor(s,c):
+        return s.h.SetLineColor(c) if s.h else None
+    def SetFillColor(s,c):
+        return s.h.SetFillColor(c) if s.h else None
+    def SetMarkerSize(s,c):
+        return s.h.SetMarkerSize(c) if s.h else None
+    def Scale(s,c):
+        return s.h.Scale(c) if s.h else None
+    def Unitize(s):
+        return s.h.Scale(1.0/s.h.Integral()) if s.h else None
+    def MakeStack(s,n):
+        s.stack = ROOT.THStack(n,n)
+        return s.stack
+            
+class SuPlot:
+    """ A collection of SuSys objects - a histogram along with all of its systematics.
+    Handles final error computations and printing of systematic percent error tables.
+    Implements the TH1* interface for easier handling
+    """
+    def __init__(s):
+        s.h = None
+        s.status = 0
+        s.groups = []   # flat list of groups - names of systematics
+        s.sys = []      # nested list (groups->up/downs)
+        s.flat = []     # flat list of all systematics
+        s.enable = [0,] # flat list of enabled indices
+    def Add(s,h):
+        return [ p1.Add(p2) for i,(p1,p2) in enumerate(zip(s.flat,h.flat)) if i in s.enable]
+    def AddStack(s,h):
+        return [ p1.AddStack(p2) for i,(p1,p2) in enumerate(zip(s.flat,h.flat)) if i in s.enable ]
+    def SetName(s,name):
+        return [ p1.SetName(name+'_'+p1.name) for i,p1 in enumerate(s.flat) if i in s.enable ]
+    def SetLineColor(s,c):
+        return [ p1.SetLineColor(c) for i,p1 in enumerate(s.flat) if i in s.enable ]
+    def SetFillColor(s,c):
+        return [ p1.SetFillColor(c) for i,p1 in enumerate(s.flat) if i in s.enable ]
+    def SetMarkerSize(s,c):
+        return [ p1.SetMarkerSize(c) for i,p1 in enumerate(s.flat) if i in s.enable ]
+    def Scale(s,v):
+        """ either one constant, or a per-systematic tuple """
+        if isinstance(v,list) or isinstance(v,tuple):
+            return [ p1.Scale(v[i]) for i,p1 in enumerate(s.flat) if i in s.enable ]
+        else:
+            return [ p1.Scale(v) for i,p1 in enumerate(s.flat) if i in s.enable ]
+    def Unitize(s):
+        return [ p1.Unitize() for i,p1 in enumerate(s.flat) if i in s.enable ]
+    def MakeStacks(s,hname):
+        return [ p1.MakeStack(hname+'_'+p1.name) for i,p1 in enumerate(s.flat) if i in s.enable ]
+    def get(s,sysname):
+        """ Gets a particular systematic """
+        for sgroups in s.sys:
+            for sinst in sgroups:
+                if sinst.name==sysname:
+                    return sinst
+        print 'WARNING: cannot find systematic:',sysname,' - will return nominal'
+        assert len(s.sys)>0,'Empty s.sys collection - even nominal is absent!'
+        return s.sys[0][0]
+    def nominal(s):
+        return s.sys[0][0].h
+    def enable_name(s,name):
+        idx = 0 
+        for sgroups in s.sys:
+            for sinst in sgroups:
+                if sinst.name==sysname:
+                    s.enable = [idx]
+                    return
+                idx+=1
+        print 'WARNING: could not enable systematic:',name
+    def enable_nominal(s):
+        s.enable = [0,]
+    def enable_all(s):
+        s.enable = []
+        idx = 0
+        for ig,sgroups in enumerate(s.sys):
+            for iss,sinst in enumerate(sgroups):
+                s.enable.append(idx)
+                idx += 1
+    def qcd_region(s):
+        """ Puts all SuSys in qcd region based on qcd map """
+        res = s.clone()
+        [o.qcd_region() for o in res.flat]
+        res.status = 1 # to prevent infinite recursion
+        return res
+    def bootstrap(s,charge=2,qcd = {},unfold=None,qcderr=0,
+                  ntuple='w',path=None,var=None,bin=None,pre='',weight="mcw*puw*effw*trigw",
+                  histo=None,sysdir=None,subdir=None,basedir=None ):
+        """ bootstraps a full collection of systematics from the nominal instance of SuSys """
+        pre=''
+        if sysdir and sysdir[0]=='tight_nominal':
+            pre='tight_'
+        # nominal first:
+        nom = SuSys(charge=charge,qcd=qcd,unfold=unfold,qcderr=qcderr,
+                    ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight,
+                    histo=histo,sysdir=sysdir,subdir=subdir,basedir=basedir)
+        s.sys = [ [nom,] ]
+        s.flat = [ nom ]
+        s.groups = [ 'nominal' ]
+        # systematic variations
+        print 'Creating systematic variations...'
+        res = []
+        def add(n,ss):
+            """ Clones sysdir """
+            res.append(nom.clone(name=n,sysdir_mc=ss))
+            s.flat.append(res[-1])
+        def add2(n,ss):
+            """ Clones subdir (e.g., for efficiencies) """
+            res.append(nom.clone(name=n,subdir_mc=ss))
+            s.flat.append(res[-1])
+        def add3(n,ss):
+            """ Clones qcd normalization """
+            res.append(nom.clone(name=n,qcderr=ss))
+            s.flat.append(res[-1])
+        def next(nn):
+            s.sys.append(res[:])
+            s.groups.append(nn)
+            del res[:]
+        # MCP smearing UP
+        add('mcp_msup',pre+'mcp_msup')
+        add('mcp_msdown',pre+'mcp_msdown')
+        next('MCP_MS_RES')
+        # MCP smearing DOWN
+        add('mcp_idup',pre+'mcp_idup')
+        add('mcp_iddown',pre+'mcp_iddown')
+        next('MCP_ID_RES')
+        # MCP scale
+        if False: # old MCP scale recommendation: on/off
+            add('mcp_unscaled',pre+'mcp_unscaled')
+            next('MCP_SCALE')
+        else:  # using my C/K variations
+            add('mcp_kup',pre+'mcp_kup')
+            add('mcp_kdown',pre+'mcp_kdown')
+            next('MCP_KSCALE')
+            add('mcp_cup',pre+'mcp_cup')
+            add('mcp_cdown',pre+'mcp_cdown')
+            next('MCP_CSCALE')
+        # MCP efficiency
+        add2('nominal_effstatup',pre+'st_w_effstatup')
+        add2('nominal_effstatdown',pre+'st_w_effstatdown')
+        next('MCP_EFFSTAT')
+        add2('nominal_effsysup',pre+'st_w_effsysup')
+        add2('nominal_effsysdown',pre+'st_w_effsysdown')
+        next('MCP_EFFSYS')
+        add2('nominal_trigstatup',pre+'st_w_trigstatup')
+        add2('nominal_trigstatdown',pre+'st_w_trigstatdown')
+        next('MCP_TRIG')
+        # JET
+        add('jet_jer',pre+'jet_jer')
+        next('JER')
+        add('jet_jesup',pre+'jet_jesup')
+        add('jet_jesdown',pre+'jet_jesdown')
+        next('JES')
+        # MET
+        add('met_allcluup',pre+'met_allcluup')
+        add('met_allcludown',pre+'met_allcludown')
+        next('MET')
+        # QCD normalization
+        add3('qcdup',1)
+        add3('qcddown',-1)
+        next('QCD_FRAC')
+        assert len(s.sys)==len(s.groups)
+        print 'Created systematic variations: N =',len(s.sys)
+    def update_errors(s):
+        """ folds systematic variations into total TH1 error  """
+        s.h = h = s.sys[0][0].Clone(s.sys[0][0].GetName()+'_final')
+        i = 0
+        for hss in s.sys[1:]:
+            bdiffs = [[] for z in xrange(0,h.GetNbinsX()+2)]
+            for hs in hss: # loop over systematics in this group
+                for ibin in xrange(0,h.GetNbinsX()+2):
+                    bdiffs[ibin].append ( abs(h.GetBinContent(ibin)-hs.h.GetBinContent(ibin)) )
+                i+=1
+            for ibin in xrange(0,h.GetNbinsX()+2):
+                olderr = h.GetBinError(ibin)
+                newerr = max(bdiffs[ibin])
+                #print 'SETTING ERROR:',ibin,olderr,newerr
+                h.SetBinError(ibin,1.0*math.sqrt(olderr*olderr + newerr*newerr))
+        return s.h
+    def clone(s,q=None,enable=None):
+        """ Clones an entire SuPlot.
+        Currently only supports cloning the charge
+        """
+        res = SuPlot()
+        res.status = 0
+        res.groups = s.groups
+        res.sys = []
+        res.flat = []
+        res.enable = enable if enable else s.enable
+        for sgroups in s.sys:
+            bla = []
+            for sinst in sgroups:
+                bla.append(sinst.clone(q=q))
+                res.flat.append(bla[-1])
+            res.sys.append( bla )
+        return res
+        
 class SigSamples:
     """ Handles colors and marker styles for various MC generators """
     msize = 1.5
@@ -230,7 +364,7 @@ class SuSample:
         s.nt = {}
         s.nevt = {}
         s.files = []
-        s.flags = [] #general flags
+        s.flags = []   #general flags
         s.table = {}   #general settings map
         s._evcounts = ("nevts","nevts_eff","nevts_trig","nevts_efftrig","nevts_unw","nevts_mcw")
         s.seen_samples = []
@@ -373,7 +507,7 @@ class SuSample:
         for i,f in enumerate(s.files):
             assert f.IsOpen()
             if not h:
-                print 'GetHisto:: %s/%s'%(s.topdir(f),hpath),f.GetPath()
+                print 'GetHisto:: %s \t\t %s/%s'%(os.path.basename(f.GetName()),s.topdir(f),hpath)
                 if not  f.Get('%s/%s'%(s.topdir(f),hpath)):
                     return None
                 h = f.Get('%s/%s'%(s.topdir(f),hpath)).Clone(hname)
@@ -381,12 +515,20 @@ class SuSample:
             else:
                 h.Add( f.Get('%s/%s'%(s.topdir(f),hpath)) )
         return h
-    def histo(s,hname,d,rebin=1.0,unitize=False):
+    def histo(s,hname,dall,rebin=1.0,unitize=False):
         """ A wrapper around histogram-based and ntuple-based histo accessors """
-        if d.use_ntuple():
-            return s.histo_nt( hname,d.var,d.bin,d.weight,d.path,rebin )
-        else:
-            return s.histo_h(hname,d,rebin)
+        if isinstance(dall,SuSys):
+            dall.h = s.histo_h(hname,dall,rebin)
+            return dall
+        # This is where d splits into per-systematic loop
+        # and calls histo_nt or histo_h on a particular SuSys
+        for i,d in enumerate(dall.flat):
+            if not i in dall.enable: continue
+            if d.use_ntuple():
+                d.h = s.histo_nt( hname,d.var,d.bin,d.weight,d.path,rebin )
+            else:
+                d.h = s.histo_h(hname,d,rebin)
+        return dall
     def histo_nt(s,hname,var,bin,cut,path=None,rebin=1.0):
         """ retrieve a particular histogram from ntuple (with cache) """
         path = path if path else s.path
@@ -440,7 +582,7 @@ class SuSample:
         """ retrieve a particular histogram; path is re-built manually"""
         res = s.GetHisto(hname,d.h_path(flags=s.flags))
         if not res:
-            print hname, d.h_path(flags=s.flags)
+            print '->Missing histo:',hname, d.h_path(flags=s.flags)
         if s.lumi:
             res.Scale(s.scale(evcnt = s.choose_evcount('')))
         if rebin!=1:
@@ -477,7 +619,7 @@ class SuStackElm:
             return None
         res = s.samples[0].histo(hname,d,rebin=rebin)
         for h in s.samples[1:]:
-            htmp = h.histo(hname,d,rebin=rebin)
+            htmp = h.histo(hname,d.clone(),rebin=rebin)
             if res and not htmp:
                 continue
             elif res and htmp:
@@ -489,10 +631,10 @@ class SuStackElm:
             res.SetFillColor(s.color)
             res.SetMarkerSize(0)
             if unitize:
-                res.Scale(1/res.Integral())
-            elif 'qcd' in s.flags and d.status==0:
-                scale = s.po.get_scale(d)
-                if scale!=1.0: res.Scale(scale)
+                res.Unitize()
+            elif 'qcd' in s.flags and (isinstance(d,SuPlot) and d.status==0):
+                scales = s.po.get_scales(d)
+                res.Scale(scales)
         assert res,'Failed to create: ' + hname
         return res
 
@@ -502,6 +644,7 @@ class SuStack:
     Underlying caching is implemented in SuSample
     This class does not own the histograms it creates!
     """
+    QCD_SYS_SCALES = False
     def __init__(s):
         """ constructor """
         # stack elements
@@ -546,23 +689,28 @@ class SuStack:
         if not isinstance(samples,list):
             samples = [samples,]
         s.elm.append( SuStackElm(label,samples,color,flags,table,po=s) )
+    def get_scales(s,d):
+        if not SuStack.QCD_SYS_SCALES:
+            return s.get_scale(d.sys[0][0])
+        res = []
+        for ig,o in enumerate(d.flat):
+            res.append(s.get_scale(o))
+        return res
     def get_scale(s,d):
         """ A lookup cache of QCD scale values """
-        # massage DataSource to put us in the QCD region
+        # massage the path to put us in the QCD region
         d2 = d.clone()
-        d2.basedir = [d2.qcd['metfit']]*3 # disable MET>25 cut
-        d2.status = 1 # to prevent infinite recursion
-        d2.histo = 'met'
-        key = d2.h_path_fname(i=2)
+        d2.qcd_region()
+        key = d2.h_path_fname()
         if key in s.scales:
             return s.scales[key][0]*(1.0+d.qcderr*s.scales[key][1])
         import SuFit
         f = SuFit.SuFit()
         f.addFitVar( 'met', 0 , 100 , 'MET (GeV)' );
         # get histograms
-        hdata   = s.data('data',d2)
-        hfixed = s.ewk('bgfixed',d2)
-        hfree = s.qcd('bgfree',d2)
+        hdata   = s.data('data',d2).h
+        hfixed = s.ewk('bgfixed',d2).h
+        hfree = s.qcd('bgfree',d2).h
         assert hdata,'Failed to find data'
         assert hfixed,'Failed to find fixed backgrounds'
         assert hfree,'Failed to find free backgrounds'
@@ -587,7 +735,7 @@ class SuStack:
             return None
         res = loop[0].histo(hname,d)
         for h in loop[1:] :
-            htmp = h.histo(hname,d)
+            htmp = h.histo(hname,d.clone())
             if res and not htmp:
                 continue
             elif res and htmp:
@@ -598,21 +746,25 @@ class SuStack:
             res.SetName(hname)
             res.SetMarkerSize(0)
             if norm:
-                res.Scale(1/res.Integral())
+                res.Unitize()
                 #res.Scale(1/res.GetSumOfWeights())
         return res
     def asym_generic(s,method,hname,d,*args,**kwargs):
         """ Generic function that builds asymmetry for a given method """
-        hPOS = method(hname+'_POS',d.clone(q=0),*args,**kwargs)
-        hNEG = method(hname+'_NEG',d.clone(q=1),*args,**kwargs)
         import SuCanvas
-        return SuCanvas.SuCanvas.WAsymmetry(hPOS,hNEG)
+        hPOSs = method(hname+'_POS',d.clone(q=0),*args,**kwargs)
+        hNEGs = method(hname+'_NEG',d.clone(q=1),*args,**kwargs)
+        assert len(hPOSs.flat) == len(hNEGs.flat)
+        for i,(hPOS,hNEG) in enumerate( zip(hPOSs.flat,hNEGs.flag) ):
+            if hPOS.h and hNEG.h:
+                d.flat[i].h = SuCanvas.SuCanvas.WAsymmetry(hPOS.h,hNEG.h)
+        return d
     def data(s,hname,d,leg=None):
         """ data summed histogram """
         loop = [e for e in s.elm if 'data' in e.flags and 'no' not in e.flags]
         res = s.histosum(loop,hname,d)
         if leg:
-            leg.AddEntry(res,'Data(#int L dt = %.1f pb^{-1})'%(SuSample.lumi/1000.0),'LP')
+            leg.AddEntry(res.nominal(),'Data(#int L dt = %.1f pb^{-1})'%(SuSample.lumi/1000.0),'LP')
         return res
     def asym_data(s,*args,**kwargs):
         return s.asym_generic(s.data,*args,**kwargs)
@@ -658,7 +810,8 @@ class SuStack:
     def stack(s,hname,d,flags=['mc'],leg=None):
         """ MC histogram stack (legacy, ntuple-based)"""
         # prepare containers for results
-        res = ROOT.THStack(hname,hname)
+        res = d
+        res.MakeStacks(hname)
         if leg:
             leg.SetFillStyle(1001)
             leg.SetFillColor(10)
@@ -666,9 +819,9 @@ class SuStack:
         loop = [e for e in s.elm if set(flags) == (set(flags) & set(e.flags)) and 'no' not in e.flags]
         #loop = [e for e in s.elm if 'mc' in e.flags]
         for bg in loop:
-            h = bg.histo(hname,d)
+            h = bg.histo(hname,d.clone())
             if h:
-                res.Add(h)
+                res.AddStack(h)
                 if leg:
-                    leg.AddEntry(h,bg.label,'F')
+                    leg.AddEntry(h.nominal(),bg.label,'F')
         return res

@@ -8,6 +8,15 @@ if not 'libPyRoot' in sys.modules: #hack to get rid of TenvRec warnings
     gErrorIgnoreLevel=ROOT.kInfo
     sys.modules['libPyROOT'].gROOT.GetListOfGlobals().FindObject('gErrorAbortLevel').GetAddress().__setitem__(0,5001)
 
+def xflatten(seq):
+    """a generator to flatten a nested list"""
+    for x in seq:
+        if type(x) is list:
+            for y in xflatten(x):
+                yield y
+        else:
+            yield x
+
 def SetStyle(styleMacro=''):
     """ Global style settings for ROOT """
     if styleMacro=='':

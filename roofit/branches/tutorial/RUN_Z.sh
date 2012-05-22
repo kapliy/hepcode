@@ -2,27 +2,37 @@
 source bashmap.sh
 ROOTDIR=$PWD
 
-antondb=out2012
+antondb=out2011
 flabel=NONE
 i=0
 
 # Specify the list of tags
-for flabel in v29D_MCP2012_04162012 v2012_MCP2012_04162012; do
-antondb=out2012_${flabel}
+for flabel in v29D_05222012_MCP2011; do
+antondb=out2011_${flabel}
 if [ "1" -eq "1" ]; then
     data="--rootdata '/share/t3data3/antonk/ana/ana_${flabel}_stacoCB_MCPscale/data*/root_data*.root'"
-    mc="--rootmc '/share/t3data3/antonk/ana/ana_${flabel}_stacoCB_MCPscale/mc_pythia_zmumu*/root_mc*.root'"
+    mc="--rootmc '/share/t3data3/antonk/ana/ana_${flabel}_stacoCB_MCPscale/mc_pythia_zmumu/root_mc*.root'"
+    mc2="--rootmc '/share/t3data3/antonk/ana/ana_${flabel}_stacoCB_MCPscale/mc_powheg_pythia_zmumu_max/root_mc*.root'"
     gput tags $i r17_default_staco     " --antondb ${antondb} ${data} ${mc} --func gaus0 --min 70 --max 110"
     ((i++))
     gput tags $i r17_default_staco     " --antondb ${antondb} ${data} ${mc} --func egge3 --min 70 --max 110"
     ((i++))
+    gput tags $i r17_powheg_staco     " --antondb ${antondb} ${data} ${mc2} --func gaus0 --min 70 --max 110"
+    ((i++))
+    gput tags $i r17_powheg_staco     " --antondb ${antondb} ${data} ${mc2} --func egge3 --min 70 --max 110"
+    ((i++))
     gput tags $i r17_m80100_staco      " --antondb ${antondb} ${data} ${mc} --func egge3 --min 80 --max 100"
     ((i++))
     data="--rootdata '/share/t3data3/antonk/ana/ana_${flabel}_muidCB_MCPscale/data*/root_data*.root'"
-    mc="--rootmc '/share/t3data3/antonk/ana/ana_${flabel}_muidCB_MCPscale/mc_pythia_zmumu*/root_mc*.root'"
+    mc="--rootmc '/share/t3data3/antonk/ana/ana_${flabel}_muidCB_MCPscale/mc_pythia_zmumu/root_mc*.root'"
+    mc2="--rootmc '/share/t3data3/antonk/ana/ana_${flabel}_muidCB_MCPscale/mc_powheg_pythia_zmumu_max/root_mc*.root'"
     gput tags $i r17_default_muid     " --antondb ${antondb} ${data} ${mc} --func gaus0 --min 70 --max 110"
     ((i++))
     gput tags $i r17_default_muid     " --antondb ${antondb} ${data} ${mc} --func egge3 --min 70 --max 110"
+    ((i++))
+    gput tags $i r17_powheg_muid     " --antondb ${antondb} ${data} ${mc} --func gaus0 --min 70 --max 110"
+    ((i++))
+    gput tags $i r17_powheg_muid     " --antondb ${antondb} ${data} ${mc} --func egge3 --min 70 --max 110"
     ((i++))
     gput tags $i r17_m80100_muid      " --antondb ${antondb} ${data} ${mc} --func egge3 --min 80 --max 100"
     ((i++))
@@ -62,6 +72,7 @@ regs="`echo E{0..25}E`"
 regs="`echo T{0..13}T`"
 regs="`echo S{0..7}S`"
 regs="AA BB CC Bcc Baa" #2012
+regs="`echo W{0..9}W`"
 xtra="--ext eps"
 i=0
 
