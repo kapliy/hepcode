@@ -1,3 +1,8 @@
+* Generic plotting, with flags
+* Put functions in stack.py to make multiple plots at once. Subfolders to save plots?
+* Unfolding
+
+
 DISCUSS:
 * MCP - Maarten taking over?
 * D3PD - worth migrating or not?

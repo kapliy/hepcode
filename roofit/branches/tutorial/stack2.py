@@ -56,6 +56,9 @@ parser.add_option("--cut",dest="cut",
 parser.add_option("--hsource",dest="hsource",
                   type="string", default='%s/st_%s_final/%s',
                   help="Template for the path to data histograms")
+parser.add_option("--metallsys", default=False,
+                  action="store_true",dest="metallsys",
+                  help="If set to true, re-fits QCD for each systematic")
 parser.add_option("--rebin",dest="rebin",
                   type="int", default=1,
                   help="Rebin histograms")
@@ -93,6 +96,9 @@ parser.add_option('-t',"--tag",dest="tag",
 parser.add_option('-b', "--batch", default=False,
                   action="store_true",dest="batch",
                   help="Enable batch mode (all output directly to filesystem)")
+parser.add_option('-v', "--verbose", default=False,
+                  action="store_true",dest="verbose",
+                  help="Enable verbose printouts")
 parser.add_option("-q", "--charge",dest="charge",
                   type="int", default=2,
                   help="Which charge to plot: 0=POS, 1=NEG, 2=ALL")
@@ -126,9 +132,15 @@ from FileLock import FileLock
 from SuCanvas import *
 SuCanvas._refLineMin = float(opts.refline.split(',')[0])
 SuCanvas._refLineMax = float(opts.refline.split(',')[1])
+SuCanvas.savetag     = opts.tag
+SuCanvas.savedir = './'
+if opts.output:
+    SuCanvas.savedir = opts.output+'/'
+
 SetStyle("AtlasStyle.C")
 from SuData import *
 SuSample.rootpath = opts.input
+SuSample.debug = opts.verbose
 SuSample.lumi = opts.lumi
 SuSample.rebin = opts.rebin
 SuSample.qcdscale = float(opts.qcdscale) if not opts.qcdscale in ('AUTO','auto','Auto') else 1.0
@@ -136,172 +148,7 @@ SuSample.load_unfolding()
 
 #SetStyle()
 
-POS,NEG,ALL=range(3)
-QMAP = {}
-QMAP[POS] = (0,'POS','(l_q>0)','mu+ only')
-QMAP[NEG] = (1,'NEG','(l_q<0)','mu- only')
-QMAP[ALL] = (2,'ALL','(l_q!=0)','mu+ and mu-')
-QMAPZ = {}
-QMAPZ[POS] = (0,'POS','lP','mu+')
-QMAPZ[NEG] = (1,'NEG','lN','mu-')
-
-def prunesub(pre,lvar,sub):
-    """ substitutes all instances of 'lvar' in pre with 'sub' """
-    res = []
-    lvars=[]
-    if type(lvar)==type([]) or type(lvar)==type(()):
-        lvars = lvar
-    else:
-        lvars = (lvar,)
-    already_subbed = False
-    for elm in pre.split(' && '):
-        keep = True
-        for lvar in lvars:
-            if re.match(lvar,elm):
-                print '-> pruning away: ',elm
-                keep = False
-                break
-        if keep:
-            res.append(elm)
-        elif sub and not already_subbed:
-            res.append(sub)
-            already_subbed = True
-    return ' && '.join(res)
-
-def prune(pre,lvar):
-    """ removes all instances of 'lvar' from pre """
-    return prunesub(pre,lvar,None)
-
-w2zsub = []
-w2zsub.append(('ptiso','lX_ptiso'))
-w2zsub.append(('etiso','lX_etiso'))
-w2zsub.append(('l_q','lX_q'))
-w2zsub.append(('l_pt','lX_pt'))
-w2zsub.append(('l_eta','lX_eta'))
-w2zsub.append(('l_phi','lX_phi'))
-w2zsub.append(('idhits','lX_idhits'))
-w2zsub.append(('l_trigEF','lX_trigEF'))
-w2zsub.append(('d0','lX_d0'))
-w2zsub.append(('z0','lX_z0'))
-def pre_w2z(pre):
-    """ Converts a pre string for w ntuple into a corresponding one for z """
-    pre = prune(pre,('met','w_mt','nmuons','l_trigEF'))
-    xtra = "Z_m>70 && Z_m<110 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0"
-    res = []
-    for elm in pre.split(' && '):
-        changed = False
-        for isub in w2zsub:
-            if re.search(isub[0],elm):
-                elm = elm.replace(isub[0],isub[1]).replace('l_pt','lX_pt')
-                res.append ( elm.replace('lX',QMAPZ[0][2]) + ' && ' + elm.replace('lX',QMAPZ[1][2]) )
-                changed = True
-                break
-        if not changed:
-            res.append(elm)
-    return ' && '.join(res) + ' && ' + xtra
-
-def fortruth(pre):
-    """ removes pre variables that are not applicable to truth tracks """
-    res = []
-    for elm in pre.split(' && '):
-        if re.search('iso',elm) or re.match('idhits',elm) or re.search('d0',elm) or re.search('z0',elm) or re.search('exms',elm):
-            continue
-        if re.search('trig',elm) or re.search('nmuons',elm):
-            continue
-        res.append(elm)
-    return ' && '.join(res)
-
-def metfitreg_auto(pre):
-    """ met fit region from w+jets 2010 analysis
-    This is a version that automatically modifies the 'pre' string
-    """
-    res = []
-    for elm in pre.split(' && '):
-        if re.match('w_mt',elm):
-            res.append('w_mt>35.0')
-        elif re.match('met',elm):
-            res.append('met>15.0')
-        else:
-            res.append(elm)
-    result = ' && '.join(res)
-    print 'INFO: QCD fit in MET variable with the following cuts:'
-    print result
-    return result
-
-def metfitreg(pre):
-    """ met fit region from w+jets 2010 analysis
-    This is the version that hardcodes everything except for isolation.
-    Useful to produce double-differential asymmetry plots """
-    _default = 'l_pt>20.0 && fabs(l_eta)<2.4 && met>15.0 && w_mt>35.0 && idhits==1 && fabs(z0)<10.0 && fabs(d0sig)<10.0 && ptiso20/l_pt<0.1'
-    res = []
-    # first fill with _default values (minus isolation)
-    for elm in _default.split(' && '):
-        if re.match('ptiso',elm) or re.match('etiso',elm):
-            continue
-        res.append(elm)
-    # next, take isolation cuts from the actual pre string
-    for elm in pre.split(' && '):
-        if re.match('ptiso',elm) or re.match('etiso',elm):
-            res.append(elm)
-    result = ' && '.join(res)
-    print 'INFO: QCD fit in MET variable with the following cuts:'
-    print result
-    return result
-
-def qcdreg(pre):
-    """ qcd-enriched sample to get data-driven template """
-    res = []
-    for elm in pre.split(' && '):
-        if re.match('fabs\(d0',elm) or re.match('d0',elm):
-            res.append('fabs(d0sig)>3.0 && fabs(d0)>0.1 && fabs(d0)<0.4')
-        else:
-            res.append(elm)
-    return ' && '.join(res)
-
-def samesignreg(pre):
-    """ removes the Z charge constraint and explicitly reverses it"""
-    newpre = prunesub(pre,('lP_q\*lN_q','\(lP_q\*lN_q'),'(lP_q*lN_q)>0')
-    return newpre
-
-def revisoreg(pre):
-    """ qcd-enriched sample to get data-driven template
-    This version reverses isolation, which allegedly affects pt spectrum
-    ptiso20/l_pt<0.1
-    ptiso40<2.0 && etiso40<2.0
-    """
-    res = []
-    for elm in pre.split(' && '):
-        if re.match('ptiso',elm) or re.match('etiso',elm):
-            ws = elm.split('<')
-            assert len(ws)==2
-            res.append( ws[0] + '>' + ws[1] )
-        else:
-            res.append(elm)
-    return ' && '.join(res)
-
-def looseisoreg(pre):
-    """ Loose sample needed for matrix method QCD estimation """
-    return prune(pre, ('ptiso','lP_ptiso','l_ptiso','etiso','lP_etiso','lN_etiso','nmuons','l_trigEF') )
-
-def run_fit(pre,var='met',bin='100,5,100',cut='mcw*puw'):
-    import SuFit
-    f = SuFit.SuFit()
-    f.addFitVar( var, float(bin.split(',')[1]) , float(bin.split(',')[2]) , var );
-    # get histograms
-    hdata   = po.data('data',var,bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],cut,pre))
-    hfixed = po.ewk('bgfixed',var,bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],cut,pre))
-    hfree = po.qcd('bgfree',var,bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],cut,pre))
-    assert hfixed,'Failed to find fixed backgrounds'
-    # run SuFit
-    hdata.getLegendName = lambda : 'DATA'
-    hfixed.getLegendName = lambda : 'EWK backgrounds'
-    hfree.getLegendName = lambda : 'QCD (bb/cc mu15X)'
-    f.setDataBackgrounds(hdata,hfixed,hfree)
-    f.doFit()
-    tmp = f.drawFits(pre)
-    gbg.append((f,hdata,hfixed,hfree,tmp))
-    return tmp[0],tmp[1],f.scales[0]
-
+from ntuple_tools import *
 def renormalize(bin='100,5,100'):
     """ Normalizes MET template """
     if not opts.qcdscale in ('AUTO','auto','Auto'):
@@ -417,7 +264,7 @@ elif opts.bgsig in (10,11,12,13,14): # Z->mumu signal only (for normalized plots
         pz.add(label='Z#rightarrow#mu#mu',samples='mc_powheg_pythia_zmumu',color=ROOT.kRed,flags=['sig','mc','ewk'])
     SuSample.unitize = True
 
-# Pre-load the ntuples
+# Pre-load ntuples
 path_truth = 'truth/st_%s_final/ntuple'%opts.ntuple
 path_reco  = 'nominal/st_%s_final/ntuple'%opts.ntuple
 for it,px in enumerate((pw,pz)):
@@ -443,25 +290,121 @@ if False:
 gbg = []
 q = opts.charge
 
-# Create a global DataSource object that contains the path to all histograms or ntuples
-
+# Create systematic collections:
 dH = SuPlot()
 dH.bootstrap(ntuple=opts.ntuple,unfold=None,
              charge=q,var=opts.var,histo=opts.hsource,
              sysdir=['nominal','nominal','isowind'],subdir='st_w_final',basedir='baseline',
              qcd={'metfit':'metfit'})
-
 dH.enable_all()
-SuStack.QCD_SYS_SCALES = True
+SuStack.QCD_SYS_SCALES = opts.metallsys
 
-# Work in progress: port of SuPlot goodies to python
-if mode in ('final'):
-    print 'Mode  =',mode
+# Create multiple signal Monte-Carlos
+M = SigSamples()
+M.prefill_mc()
+
+def plot_stack(dH2,var):
+    dH2.update_histo( var )
+    c = SuCanvas('stack_'+var)
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
-    leg.SetHeader(opts.var)
-    h = po.stack('dstack',dH)
-    #hasym = po.stack2('nominal','st_w_final','baseline',0,opts.var,qcd=,unfold=None,leg=leg)
-    sys.exit(0)
+    hmc,hdata = None,None
+    hmc = po.sig('datasub',dH2.clone())
+    hstack = po.stack('mc',dH2.clone(),leg=leg)
+    hdata = po.data('data',dH2.clone(),leg=leg)
+    c.plotStackHisto(hstack.flat[0].stack,hdata.flat[0].h,leg)
+    return c
+
+# combined plots
+if mode=='ALL' or mode=='all':
+    OMAP.append( plot_stack(dH.clone(),'lepton_absetav') )
+    OMAP.append( plot_stack(dH.clone(),'lepton_pt') )
+    
+if mode=='1': # total stack histo
+    dH2 = dH
+    c = SuCanvas()
+    leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
+    hmc,hdata = None,None
+    hmc = po.stack('mc',dH2,leg=leg)
+    hdata = po.data('data',dH2,leg=leg)
+    c.plotStackHisto(hmc.flat[0].stack,hdata.flat[0].h,leg)
+
+if mode=='2': # signal - directly from MC, or bg-subtracted data - allow application of efficiency histogram
+    assert opts.ntuple=='w','Only w ntuple supported for now'
+    renormalize()
+    c = SuCanvas()
+    c.buildDefault(width=1024,height=400)
+    cc = c.cd_canvas()
+    cc.Divide(2,1)
+    cc.cd(1)
+    pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,fortruth(opts.pre))
+    htruth = po.sig('part_truth',opts.var,opts.bin,pre,path=path_truth)
+    htruth.SetLineColor(ROOT.kBlack)
+    hsig  = po.sig('signal',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre))
+    hsig.SetLineColor(ROOT.kRed)
+    hsig_eff = particle(hsig.Clone('signal_eff'))
+    htruth.Draw('')
+    hsig.Draw('A same')
+    if False:
+        hd_sig = po.data_sub('bgsub_data',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre))
+        hd_sig.SetLineColor(ROOT.kBlue)
+        hd_sig_eff = particle(hd_sig.Clone('bgsub_data_eff'))
+        hd_sig.Draw('A same')
+    if opts.effroot:
+        cc.cd(2)
+        htruth.Draw('')
+        hsig_eff.Draw('A same')
+        #hd_sig_eff.Draw('A same')
+
+if mode=='100': # creates efficiency histogram (corrects back to particle level)
+    renormalize()
+    c = SuCanvas()
+    c.buildDefault(width=1024,height=400)
+    cc = c.cd_canvas()
+    cc.Divide(2,1)
+    cc.cd(1)
+    pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,fortruth(opts.pre))
+    htruth = po.sig('truth',opts.var,opts.bin,pre,path=path_truth)
+    pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre)
+    hreco = po.sig('reco',opts.var,opts.bin,pre,path=path_reco)
+    htruth.SetLineColor(ROOT.kBlack)
+    htruth.Draw('')
+    hreco.SetLineColor(ROOT.kRed)
+    hreco.SetLineWidth(hreco.GetLineWidth()*2)
+    hreco.Draw('A same')
+    cc.cd(2)
+    # efficiency histogram for bin-by-bin unfolding: hreco == htruth * heff
+    heff = hreco.Clone('heff')
+    heff.Divide(htruth)
+    heff.SetLineColor(ROOT.kBlack)
+    heff.Draw('')
+    # save efficiency histogram in a dedicated efficiency file
+    if opts.effroot:
+        with FileLock(opts.effroot):
+            f = ROOT.TFile.Open(opts.effroot,'UPDATE')
+            assert f and f.IsOpen()
+            f.cd()
+            key_str = re.sub(r'[^\w]', '_', 'eff_%s_%s_%s_%d'%(opts.input,opts.var,opts.bin,opts.charge))
+            heff.Write(key_str,ROOT.TObject.kOverwrite)
+            f.Close()
+
+def asymmetry_old():
+    assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
+    hsig = po.sig('signalPOS',dH.clone(q=0))
+    hd   = po.data_sub('dataPOS',dH.clone(q=0))
+    c = SuCanvas()
+    c.plotAsymmetryFromComponents(hd[POS],hd[NEG],hsig[POS],hsig[NEG])
+    return c
+
+def asymmetry():
+    assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
+    hsig = po.sig('signalPOS',dH.clone(q=0))
+    hd = po.asym_data_sub('asym_data',dH.clone())
+    c = SuCanvas()
+    c.plotAsymmetry(hd[POS],hd[NEG],hsig[POS],hsig[NEG])
+    return c
+
+if mode=='11': # asymmetry (bg-subtracted)
+    c = asymmetry()
 
 if mode in ('sig_reco','sig_truth'): # compares distributions in different signal monte-carlos.
     is_truth = (mode=='sig_truth')
@@ -469,8 +412,6 @@ if mode in ('sig_reco','sig_truth'): # compares distributions in different signa
     c.buildDefault(width=1024,height=768)
     cc = c.cd_canvas()
     cc.cd(1)
-    M = SigSamples()
-    M.prefill_mc()
     h = []
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
     leg.SetHeader(opts.var)
@@ -495,8 +436,6 @@ if mode=='asym_truth': # asymmetry, at truth level, of different monte-carlos.
     c.buildDefault(width=1024,height=768)
     cc = c.cd_canvas()
     cc.cd(1)
-    M = SigSamples()
-    M.prefill_mc()
     h = []
     hasym = []
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
@@ -525,8 +464,6 @@ if mode=='asym_reco': # asymmetry, at reco/particle level, of different monte-ca
     c.buildDefault(width=1024,height=768)
     cc = c.cd_canvas()
     cc.cd(1)
-    M = SigSamples()
-    M.prefill_mc()
     M.prefill_data()
     h = []
     hasym = []
@@ -569,8 +506,6 @@ if mode=='asym_reco_syst': # asymmetry, at reco/particle level, of different mon
     c.buildDefault(width=1024,height=768)
     cc = c.cd_canvas()
     cc.cd(1)
-    M = SigSamples()
-    M.prefill_mc()
     M.prefill_data()
     h = []
     hasym = []     # central values
@@ -862,85 +797,6 @@ if mode=='matrix_2010inc': # QCD estimation using matrix method
     leg.AddEntry(hqcd_mc,'MC QCD (bb/cc mu15x)','LP')
     leg.Draw('same')
     gbg.append(leg)
-
-if mode=='1': # total stack histo
-    dH2 = dH
-    c = SuCanvas()
-    leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
-    hmc,hdata = None,None
-    hmc = po.stack('mc',dH2,leg=leg)
-    hdata = po.data('data',dH2,leg=leg)
-    c.plotStackHisto(hmc.flat[0].stack,hdata.flat[0].h,leg)
-
-if mode=='2': # signal - directly from MC, or bg-subtracted data - allow application of efficiency histogram
-    assert opts.ntuple=='w','Only w ntuple supported for now'
-    renormalize()
-    c = SuCanvas()
-    c.buildDefault(width=1024,height=400)
-    cc = c.cd_canvas()
-    cc.Divide(2,1)
-    cc.cd(1)
-    pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,fortruth(opts.pre))
-    htruth = po.sig('part_truth',opts.var,opts.bin,pre,path=path_truth)
-    htruth.SetLineColor(ROOT.kBlack)
-    hsig  = po.sig('signal',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre))
-    hsig.SetLineColor(ROOT.kRed)
-    hsig_eff = particle(hsig.Clone('signal_eff'))
-    htruth.Draw('')
-    hsig.Draw('A same')
-    if False:
-        hd_sig = po.data_sub('bgsub_data',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre))
-        hd_sig.SetLineColor(ROOT.kBlue)
-        hd_sig_eff = particle(hd_sig.Clone('bgsub_data_eff'))
-        hd_sig.Draw('A same')
-    if opts.effroot:
-        cc.cd(2)
-        htruth.Draw('')
-        hsig_eff.Draw('A same')
-        #hd_sig_eff.Draw('A same')
-
-if mode=='100': # creates efficiency histogram (corrects back to particle level)
-    renormalize()
-    c = SuCanvas()
-    c.buildDefault(width=1024,height=400)
-    cc = c.cd_canvas()
-    cc.Divide(2,1)
-    cc.cd(1)
-    pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,fortruth(opts.pre))
-    htruth = po.sig('truth',opts.var,opts.bin,pre,path=path_truth)
-    pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre)
-    hreco = po.sig('reco',opts.var,opts.bin,pre,path=path_reco)
-    htruth.SetLineColor(ROOT.kBlack)
-    htruth.Draw('')
-    hreco.SetLineColor(ROOT.kRed)
-    hreco.SetLineWidth(hreco.GetLineWidth()*2)
-    hreco.Draw('A same')
-    cc.cd(2)
-    # efficiency histogram for bin-by-bin unfolding: hreco == htruth * heff
-    heff = hreco.Clone('heff')
-    heff.Divide(htruth)
-    heff.SetLineColor(ROOT.kBlack)
-    heff.Draw('')
-    # save efficiency histogram in a dedicated efficiency file
-    if opts.effroot:
-        with FileLock(opts.effroot):
-            f = ROOT.TFile.Open(opts.effroot,'UPDATE')
-            assert f and f.IsOpen()
-            f.cd()
-            key_str = re.sub(r'[^\w]', '_', 'eff_%s_%s_%s_%d'%(opts.input,opts.var,opts.bin,opts.charge))
-            heff.Write(key_str,ROOT.TObject.kOverwrite)
-            f.Close()
-
-def asymmetry():
-    assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
-    hsig = po.sig('signalPOS',dH.clone(q=0))
-    hd   = po.data_sub('dataPOS',dH.clone(q=0))
-    c = SuCanvas()
-    c.plotAsymmetryFromComponents(hd[POS],hd[NEG],hsig[POS],hsig[NEG])
-    return c
-
-if mode=='11': # asymmetry (bg-subtracted)
-    c = asymmetry()
     
 if mode in ('101','102','103'): # tag and probe
     assert opts.ntuple=='z','ERROR: tag-and-probe can only be computed for the z ntuple'
@@ -1281,36 +1137,32 @@ if mode=='99': # Floating QCD normalization
 
 for key,val in po.fits.iteritems():
     print 'Adding a normalization fit:',key
-    val.savename = '_'+key
+    val.savename = 'qcdfit_'+key
     OMAP.append(val)
 
+# save images
 if not opts.antondb:
-    DIR='./'
-    if opts.output:
-        if not os.path.isdir(opts.output):
-            os.makedirs(opts.output)
-        DIR=opts.output+'/'
+    if not os.path.isdir(opts.output):
+        os.makedirs(SuCanvas.savedir)
     # save main plot
-    c.SaveAs('%s_%s_%s_%s_%s_%s'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode),'png',DIR=DIR)
-    # save additional plots
+    #c.SaveAs('%s_%s_%s_%s_%s_%s'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode),'png',DIR=DIR)
+    # save all plots
     for i,obj in enumerate(OMAP):
-        savename = obj.savename if hasattr(obj,'savename') else ''
-        if hasattr(obj,'InheritsFrom') and obj.InheritsFrom('TPad') and hasattr(obj,'SaveAs'):
-            obj.SaveAs(DIR+SuCanvas.cleanse('%s_%s_%s_%s_%s_%s__%d%s'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode,i,savename))+'.png')
-        elif hasattr(obj,'SaveAs'): # SuCanvas
-            obj.SaveAs('%s_%s_%s_%s_%s_%s__%d%s'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode,i,savename),'png',DIR=DIR)
+        savename = obj.savename
+        assert hasattr(obj,'SaveAs') # SuCanvas
+        obj.SaveSelf()
 
-if len(COUT)>0:
-    VMAP['COUT']=[]
-    for l in COUT:
-        print l
-        VMAP['COUT'].append(l)
-c._canvas.SetName('%s_m%s_%s'%(opts.tag,mode,opts.var))
-OMAP += [c._canvas,]
-if (len(VMAP)>0 or len(OMAP)>0) and opts.antondb:
-    a = antondb.antondb(opts.antondb)
-    path = os.path.join('/stack/',opts.tag,QMAP[opts.charge][1])
-    if len(VMAP)>0:
-        a.add(path,VMAP)
-    if len(OMAP)>0:
-        a.add_root(path,[oo for oo in OMAP if hasattr(oo,'InheritsFrom')])
+# save ROOT files
+if opts.antondb:
+    if len(COUT)>0:
+        VMAP['COUT']=[]
+        for l in COUT:
+            print l
+            VMAP['COUT'].append(l)
+    if (len(VMAP)>0 or len(OMAP)>0):
+        a = antondb.antondb(opts.antondb)
+        path = os.path.join('/stack/',opts.tag)
+        if len(VMAP)>0:
+            a.add(path,VMAP)
+        if len(OMAP)>0:
+            a.add_root(path,[oo._canvas for oo in OMAP if hasattr(oo,'_canvas')])

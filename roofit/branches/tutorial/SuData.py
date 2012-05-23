@@ -86,7 +86,7 @@ class SuSys:
         """ Puts this SuSys in qcd region based on qcd map """
         s.basedir = [s.qcd['metfit']]*3 # disable MET>25 cut
         s.histo = 'met'
-    def clone(s,sysdir=None,sysdir_mc=None,subdir=None,subdir_mc=None,basedir=None,qcderr=None,name=None,q=None):
+    def clone(s,sysdir=None,sysdir_mc=None,subdir=None,subdir_mc=None,basedir=None,qcderr=None,name=None,q=None,histo=None):
         """ deep copy, also allowing to update some members on-the-fly (useful to spawn systematics) """
         import copy
         res =  copy.copy(s)
@@ -101,10 +101,11 @@ class SuSys:
         if basedir: res.basedir = s.qlist(basedir)
         if qcderr: res.qcderr = qcderr
         if name: res.name = name
+        if histo: res.histo = histo
         if q: res.charge = q
         return res
-    def Add(s,o):
-        return s.h.Add(o.h) if s.h and o.h else None
+    def Add(s,o,dd=1.0):
+        return s.h.Add(o.h,dd) if s.h and o.h else None
     def AddStack(s,o):
         return s.stack.Add(o.h) if s.stack and o.h else None
     def SetName(s,n):
@@ -135,8 +136,8 @@ class SuPlot:
         s.sys = []      # nested list (groups->up/downs)
         s.flat = []     # flat list of all systematics
         s.enable = [0,] # flat list of enabled indices
-    def Add(s,h):
-        return [ p1.Add(p2) for i,(p1,p2) in enumerate(zip(s.flat,h.flat)) if i in s.enable]
+    def Add(s,h,dd=1.0):
+        return [ p1.Add(p2,dd) for i,(p1,p2) in enumerate(zip(s.flat,h.flat)) if i in s.enable]
     def AddStack(s,h):
         return [ p1.AddStack(p2) for i,(p1,p2) in enumerate(zip(s.flat,h.flat)) if i in s.enable ]
     def SetName(s,name):
@@ -167,7 +168,9 @@ class SuPlot:
         assert len(s.sys)>0,'Empty s.sys collection - even nominal is absent!'
         return s.sys[0][0]
     def nominal(s):
-        return s.sys[0][0].h
+        return s.flat[0]
+    def nominal_h(s):
+        return s.nominal().h
     def enable_name(s,name):
         idx = 0 
         for sgroups in s.sys:
@@ -272,6 +275,7 @@ class SuPlot:
         print 'Created systematic variations: N =',len(s.sys)
     def update_errors(s):
         """ folds systematic variations into total TH1 error  """
+        # FIXME TODO: make a clone of main TH1
         s.h = h = s.sys[0][0].Clone(s.sys[0][0].GetName()+'_final')
         i = 0
         for hss in s.sys[1:]:
@@ -286,7 +290,18 @@ class SuPlot:
                 #print 'SETTING ERROR:',ibin,olderr,newerr
                 h.SetBinError(ibin,1.0*math.sqrt(olderr*olderr + newerr*newerr))
         return s.h
-    def clone(s,q=None,enable=None):
+    def summary_bin(s,b):
+        """ Prints relative deviation of various systematics in a given bin """
+        nom = s.nominal_h()
+        for ig,hss in enumerate(s.sys[1:]):
+            print s.groups[ig],':'
+            for hs in hss: # loop over systematics in this group
+                print '%s \t:\t %.2f' % (hs.name, 100.0*(hs.h.GetBinContent(b) - nom.GetBinContent(b))/nom.GetBinContent(b) if nom.GetBinContent(b) else 0 )
+        pass
+    def update_histo(s,histo):
+        for o in s.flat:
+            o.histo = histo
+    def clone(s,q=None,enable=None,histo=None):
         """ Clones an entire SuPlot.
         Currently only supports cloning the charge
         """
@@ -299,52 +314,11 @@ class SuPlot:
         for sgroups in s.sys:
             bla = []
             for sinst in sgroups:
-                bla.append(sinst.clone(q=q))
+                bla.append(sinst.clone(q=q,histo=histo))
                 res.flat.append(bla[-1])
             res.sys.append( bla )
         return res
         
-class SigSamples:
-    """ Handles colors and marker styles for various MC generators """
-    msize = 1.5
-    def __init__(s):
-        s.n = 0
-        s.names = []
-        s.labels = []
-        s.colors = []
-        s.sizes = []
-        s.styles = []
-        s.cuts = []
-    def ntot(s):
-        assert s.n == len(s.cuts)
-        return s.n
-    def add(s,name,label,color=None,size=0.7,style=20,cut=None):
-        """ Add one sample """
-        s.names.append(name)
-        s.labels.append(label)
-        s.colors.append( color if color else s.autocolor(len(s.cuts)) )
-        s.sizes.append(size*s.msize)
-        s.styles.append(style)
-        s.cuts.append(cut)
-        s.n+=1
-    def prefill_data(s):
-        """ if we also plan to overlay the data """
-        s.add('datasub','Data',color=1,style=21)
-    def prefill_mc(s):
-        """ pre-fill with all available MC samples """
-        s.add('pythia','Pythia(MRSTMCal)')
-        s.add('pythia','Pythia(MRSTMCal->CTEQ6L1)',cut='lha_cteq6ll')
-        #s.add('sherpa','Sherpa(CTEQ6L1)')
-        s.add('alpgen_herwig','Alpgen/Herwig(CTEQ6L1)')
-        #s.add('alpgen_pythia','Alpgen/Pythia(CTEQ6L1)')
-        s.add('mcnlo','MC@NLO(CT10)')
-        s.add('powheg_herwig','PowHeg/Herwig(CT10)')
-        s.add('powheg_pythia','PowHeg/Pythia(CT10)')
-    def autocolor(s,i):
-        """ choose a reasonable sequence of colors """
-        colorlist = [2,3,4,5,6,20,28,41,46]
-        return colorlist[i] if i<len(colorlist) else 1
-
 class SuSample:
     """
     Encapsulates a single TChain
@@ -507,7 +481,8 @@ class SuSample:
         for i,f in enumerate(s.files):
             assert f.IsOpen()
             if not h:
-                print 'GetHisto:: %s \t\t %s/%s'%(os.path.basename(f.GetName()),s.topdir(f),hpath)
+                if SuSample.debug:
+                    print 'GetHisto:: %s \t\t %s/%s'%(os.path.basename(f.GetName()),s.topdir(f),hpath)
                 if not  f.Get('%s/%s'%(s.topdir(f),hpath)):
                     return None
                 h = f.Get('%s/%s'%(s.topdir(f),hpath)).Clone(hname)
@@ -725,6 +700,10 @@ class SuStack:
         s.gbg.append((f,hdata,hfixed,hfree,tmp))
         s.scales[key] = (f.scales[0],f.scalesE[0])
         return s.scales[key][0]*(1.0+d.qcderr*s.scales[key][1])
+    def run_unfolding(s,d):
+        """ Unfolds SuSys histograms to particle level """
+        # TODO FIXME
+        pass
     def histo(s,label,hname,d,norm=None):
         """ generic function to return histogram for a particular subsample """
         loop = [z for z in s.elm if z.label==label]
@@ -764,7 +743,7 @@ class SuStack:
         loop = [e for e in s.elm if 'data' in e.flags and 'no' not in e.flags]
         res = s.histosum(loop,hname,d)
         if leg:
-            leg.AddEntry(res.nominal(),'Data(#int L dt = %.1f pb^{-1})'%(SuSample.lumi/1000.0),'LP')
+            leg.AddEntry(res.nominal_h(),'Data(#int L dt = %.1f pb^{-1})'%(SuSample.lumi/1000.0),'LP')
         return res
     def asym_data(s,*args,**kwargs):
         return s.asym_generic(s.data,*args,**kwargs)
@@ -823,5 +802,5 @@ class SuStack:
             if h:
                 res.AddStack(h)
                 if leg:
-                    leg.AddEntry(h.nominal(),bg.label,'F')
+                    leg.AddEntry(h.nominal_h(),bg.label,'F')
         return res
