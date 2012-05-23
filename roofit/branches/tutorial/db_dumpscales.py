@@ -17,6 +17,8 @@ from optparse import OptionParser
 dbname = 'out1023L7' # original presentation in MCP mtg on Nov 01 are from here
 dbname = 'out1122v27closure' # closure tests on periods D..K with v27 ntuples
 dbname = 'out1113mcpupdate' # published constants in MuonMomentumCorrections come from here
+dbname = 'out2011_v29D_05222012_MCP2011' # updated 2011 for full 2011 dataset + extra bin at 2.0 + powheg
+
 _DISABLE_KLU = False
 _DISABLE_CHI = False
 
@@ -102,6 +104,7 @@ class Table:
     boundsP = [0.30,0.60,0.9,1.30,1.60,2.00,2.50] #[TxT]
     boundsP = [0.50,1.05,1.70,2.51] #[SxS]
     boundsP = [1.05,2.51] #2012
+    boundsP = [0.50,1.05,1.70,2.0,2.5] #[WxW]
     def ordered_pairs(s,lst):
         """ input: [a1,a2,a3]
         output: [a1,a2], [a2,a3]
@@ -257,6 +260,7 @@ def ordered_pairs(lst):
 boundsP = [0.30,0.60,0.9,1.30,1.60,2.00,2.50] #[TxT]
 boundsP = [0.50,1.05,1.70,2.51] #[SxS]
 boundsP = [1.05,2.51] #2012
+boundsP = [0.50,1.05,1.70,2.0,2.5] #[WxW]
 boundsA = [-z for z in reversed(boundsP)] + [0.00,] + boundsP
 bounds = ordered_pairs(boundsA)
 regsR = range(0,len(bounds))
@@ -769,6 +773,7 @@ default_shifts,klu_shifts,R70_shifts,egge_shifts = [None]*4
 default_scales,klu_scales,R70_scales,egge_scales = [None]*4
 regs = ['S%dS'%i for i in regsR]
 regs = ['CC','Bcc','Baa','AA'] #2012
+regs = ['W%dW'%i for i in regsR]
 try:
     if shift:
         default_scales = load_scale(regs=regs,pattern='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')

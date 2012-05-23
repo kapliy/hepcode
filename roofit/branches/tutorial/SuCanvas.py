@@ -6,11 +6,63 @@ def rand_name(ln=10):
   import random,string
   return ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(ln))
 
+class SigSamples:
+    """ Handles colors and marker styles for various MC generators """
+    msize = 1.5
+    def __init__(s):
+        s.n = 0
+        s.names = []
+        s.labels = []
+        s.colors = []
+        s.sizes = []
+        s.styles = []
+        s.cuts = []
+        s.ratios = []
+    def ntot(s):
+        assert s.n == len(s.cuts)
+        return s.n
+    def add(s,name,label,color=None,size=0.7,style=20,cut=None,ratio=None):
+        """ Add one sample """
+        s.names.append(name)
+        s.labels.append(label)
+        s.colors.append( color if color else s.autocolor(len(s.cuts)) )
+        s.sizes.append(size*s.msize)
+        s.styles.append(style)
+        s.cuts.append(cut)
+        s.ratios.append(ratio)
+        s.n+=1
+    def prefill_data(s):
+        """ if we also plan to overlay the data """
+        s.add('datasub','Data',color=1,style=21)
+    def prefill_mc(s):
+        """ pre-fill with all available MC samples """
+        s.add('pythia','Pythia(MRSTMCal)')
+        #s.add('pythia','Pythia(MRSTMCal->CTEQ6L1)',cut='lha_cteq6ll')
+        #s.add('sherpa','Sherpa(CTEQ6L1)')
+        s.add('alpgen_herwig','Alpgen/Herwig(CTEQ6L1)',ratio=True)
+        #s.add('alpgen_pythia','Alpgen/Pythia(CTEQ6L1)')
+        s.add('mcnlo','MC@NLO(CT10)',ratio=True)
+        #s.add('powheg_herwig','PowHeg/Herwig(CT10)')
+        s.add('powheg_pythia','PowHeg/Pythia(CT10)',ratio=True)
+    def autocolor(s,i):
+        """ choose a reasonable sequence of colors """
+        colorlist = [2,3,4,5,6,20,28,41,46]
+        return colorlist[i] if i<len(colorlist) else 1
+
 class SuCanvas:
   """ Jordan's canvas class for plotting """
 
   _refLineMin = 0.5
   _refLineMax = 1.5
+
+  savedir = './'
+  savetype = 'png'
+  savetag = ''
+
+  def __init__(s,name='plot'):
+    s.data = []
+    s._ratioDrawn = False
+    s.savename = name
 
   def FixupHisto(s,h):
     h.GetXaxis().SetTitleOffset( s.getXtitleOffset() );
@@ -56,6 +108,7 @@ class SuCanvas:
 
   def plotStackHisto(s,stack,data,leg=None):
     """ Wrapper to make a complete plot of stack and data overlayed """
+    s.data.append((stack,data,leg))
     s.buildRatio();
     s.cd_plotPad();
     # mc
@@ -121,6 +174,7 @@ class SuCanvas:
   def plotAsymmetryFromComponents(s,hdPOS,hdNEG,hmcPOS,hmcNEG,leg=None):
     """ DEPRECATED: wrapper to make a complete plot of charge asymmetry for data vs mc
     from individual charge-dependent histograms """
+    s.data.append((hdPOS,hdNEG,hmcPOS,hmcNEG,leg))
     s.buildRatio();
     s.cd_plotPad();
     # mc
@@ -146,14 +200,12 @@ class SuCanvas:
     s.hratio.Draw("AP same");
     s.update()
 
-  def plotAsymmetry(s,hd,hmc,M,leg=None):
-    """ Wrapper to plot asymmetry curves for data vs mc
+  def plotSuPlot(s,hd,hmc,M=None,leg=None):
+    """ A generic function to plot a SuPlot
     M = SigSamples object that takes care of colors and such """
-    # TODO: multiple MC's - both in main and ratio plots
-    # TODO: systematics
     s.buildRatio();
     s.cd_plotPad();
-    s.hd,s.hmc = hd,hmc
+    s.data.append((hc,hmc,leg))
     # mc
     if not (isinstance(v,list) or isinstance(v,tuple)):
       hmc = [hmc,]
@@ -338,9 +390,6 @@ class SuCanvas:
     s.lq.SetLineStyle(2)
     s.lq.Draw('l')
                    
-  def __init__(s):
-    s._ratioDrawn = False
-
   def buildDefault(s,width=800,height=600,title=None):
     s._ratioDrawn = False;
     if not title:
@@ -420,6 +469,12 @@ class SuCanvas:
   @staticmethod
   def cleanse(name2):
     return re.sub(r'[^\w]', '_', name2)
+  def SaveSelf(s):
+    """ auto-save version """
+    assert s.savedir
+    assert s.savename
+    assert s.savetype
+    return s.SaveAs(s.savetag+'_'+s.savename,s.savetype,s.savedir)
   def SaveAs(s,name2,ext='png',DIR='./'):
     name = s.cleanse(name2)
     c = s._canvas
