@@ -314,14 +314,16 @@ def plot_stack(dH2,var):
 
 # combined plots
 if mode=='ALL' or mode=='all':
-    OMAP.append( plot_stack(dH.clone(),'lepton_absetav') )
-    OMAP.append( plot_stack(dH.clone(),'lepton_pt') )
-    c = SuCanvas('stack')
-    hmc = po.sig('datasub',dH.clone(q=0))
-    M = PlotOptions()
-    M.add('mc','mc')
-    M.add('mc','mc')
-    c.plotMany([hmc,hmc],M=M,mode=0)
+    if False:
+        OMAP.append( plot_stack(dH.clone(),'lepton_absetav') )
+        OMAP.append( plot_stack(dH.clone(),'lepton_pt') )
+    c = SuCanvas('test')
+    hpos = po.data_sub('pos',dH.clone(q=0))
+    hneg = po.data_sub('neg',dH.clone(q=1))
+    hall = po.data_sub('all',dH.clone(q=2))
+    M = PlotOptions();
+    M.add('POS','mu+'); M.add('NEG','mu-'); M.add('ALL','mu')
+    c.plotMany([hpos,hneg,hall],M=M,mode=0,height=1)
     OMAP.append(c)
     
 if mode=='1': # total stack histo

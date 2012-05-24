@@ -202,14 +202,17 @@ class SuCanvas:
     s.hratio.Draw("AP same");
     s.update()
 
-  def plotOne(s,hplot,mode=0,range=0):
+  def plotOne(s,hplot,mode=0,height=0,leg=None,title=None):
     """ A generic function to plot an instance of SuPlot.
     Mode is: 0=nominal; 1=total errors; 2=all systematic plots
-    Range is: 0=Max*1.3, 1=Max*1.5, 2=0..0.5
+    Height is: 0=Max*1.3, 1=Max*1.5, 2=0..0.5
     """
-    s.data.append( hplot )
     s.buildDefault(width=1024,height=400)
     s.cd_canvas();
+    if not leg:
+      leg = ROOT.TLegend(0.55,0.60,0.88,0.92,'Legend',"brNDC")
+    if title!=None: leg.SetHeader(title)
+    s.data.append( (hplot,leg) )
     hs = []
     if mode==1:
       ht = hplot.clone()
@@ -226,6 +229,8 @@ class SuCanvas:
         s.data.append(h)
         color = PlotOptions.autocolor(i)
         h.SetLineColor(color)
+        h.SetMarkerColor(color)
+        leg.AddEntry(h,hsys.name,'LP')
         if i==0:
           h.Draw()
         else:
@@ -233,26 +238,29 @@ class SuCanvas:
         s.FixupHisto(h)
         if mode==0: break
     maxh = max([h.GetMaximum() for h in hs])
-    if range==0:
+    if height==0:
       hs[0].GetYaxis().SetRangeUser(0,maxh*1.3);
-    elif range==1:
+    elif height==1:
       hs[0].GetYaxis().SetRangeUser(0,maxh*1.5);
-    elif range==2:
+    elif height==2:
       hs[0].GetYaxis().SetRangeUser(0,0.5);
     else:
-      assert False,'Unsupported range'
+      assert False,'Unsupported height'
+    if mode==2: # draw legend for multi-systematic studies
+      leg.Draw("same")
     s.update()
 
-  def plotMany(s,hplots,M=None,mode=0,range=0,leg=None):
+  def plotMany(s,hplots,M=None,mode=0,height=0,leg=None,title=None):
     """ A generic function to plot several SuPlot's.
     M is: a PlotOptions object describing formatting and colors
     Mode is: 0=nominal; 1=total errors
-    Range is: 0=Max*1.3, 1=Max*1.5, 2=0..0.5
+    Height is: 0=Max*1.3, 1=Max*1.5, 2=0..0.5
     """
     if M:
       assert M.ntot()==len(hplots),'Size mismatch between SuPlots and PlotOptions'
     if not leg:
       leg = ROOT.TLegend(0.55,0.70,0.88,0.88,'Legend',"brNDC")
+    if title!=None: leg.SetHeader(title)
     s.data.append( (hplots,leg) )
     s.buildDefault(width=1024,height=400)
     s.cd_canvas();
@@ -281,14 +289,14 @@ class SuCanvas:
         h.Draw('A SAME')
       s.FixupHisto(h)
     maxh = max([h.GetMaximum() for h in hs])
-    if range==0:
+    if height==0:
       hs[0].GetYaxis().SetRangeUser(0,maxh*1.3);
-    elif range==1:
+    elif height==1:
       hs[0].GetYaxis().SetRangeUser(0,maxh*1.5);
-    elif range==2:
+    elif height==2:
       hs[0].GetYaxis().SetRangeUser(0,0.5);
     else:
-      assert False,'Unsupported range'
+      assert False,'Unsupported height'
     if True:
       leg.Draw("same")
     s.update()
