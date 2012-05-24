@@ -93,16 +93,16 @@ class SuSys:
         # do not clone the actual histograms
         res.h,res.stack = None,None
         # only replace in MC
-        if sysdir_mc: res.sysdir = s.qlist([res.sysdir[0],sysdir_mc,res.sysdir[2]])
-        if subdir_mc: res.subdir = s.qlist([res.subdir[0],subdir_mc,res.subdir[2]])
+        if sysdir_mc!=None: res.sysdir = s.qlist([res.sysdir[0],sysdir_mc,res.sysdir[2]])
+        if subdir_mc!=None: res.subdir = s.qlist([res.subdir[0],subdir_mc,res.subdir[2]])
         # other replacements
-        if sysdir: res.sysdir = s.qlist(sysdir)
-        if subdir: res.subdir = s.qlist(subdir)
-        if basedir: res.basedir = s.qlist(basedir)
-        if qcderr: res.qcderr = qcderr
-        if name: res.name = name
-        if histo: res.histo = histo
-        if q: res.charge = q
+        if sysdir!=None: res.sysdir = s.qlist(sysdir)
+        if subdir!=None: res.subdir = s.qlist(subdir)
+        if basedir!=None: res.basedir = s.qlist(basedir)
+        if qcderr!=None: res.qcderr = qcderr
+        if name!=None: res.name = name
+        if histo!=None: res.histo = histo
+        if q!=None: res.charge = q
         return res
     def Add(s,o,dd=1.0):
         return s.h.Add(o.h,dd) if s.h and o.h else None
@@ -303,7 +303,7 @@ class SuPlot:
             o.histo = histo
     def clone(s,q=None,enable=None,histo=None):
         """ Clones an entire SuPlot.
-        Currently only supports cloning the charge
+        Each SuSys is cloned individually to avoid soft pointer links
         """
         res = SuPlot()
         res.status = 0
@@ -749,8 +749,8 @@ class SuStack:
         return s.asym_generic(s.data,*args,**kwargs)
     def data_sub(s,hname,d):
         """ bg-subtracted data """
-        hdata = s.data(hname,d)
-        hbg = s.bg(hname,d)
+        hdata = s.data(hname,d.clone())
+        hbg = s.bg(hname,d.clone())
         if hdata and hbg:
             hdata.Add(hbg,-1.0)
         return hdata
