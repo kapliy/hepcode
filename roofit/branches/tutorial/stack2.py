@@ -303,13 +303,21 @@ SuStack.QCD_SYS_SCALES = opts.metallsys
 M = PlotOptions()
 M.prefill_mc()
 
-def plot_stack(dH2,var):
+def plot_asymmetry(dH2,var,m=0):
+    assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
     dH2.update_histo( var )
-    c = SuCanvas('stack_'+var)
-    leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
+    c = SuCanvas('asym_'+dH2.nominal().h_path_fname())
+    hasym = po.asym_data_sub('asym',dH2.clone())
+    c.plotOne(hasym,mode=m,height='asym')
+    return c
+
+def plot_stack(dH2,var,m=0):
+    dH2.update_histo( var )
+    c = SuCanvas('stack_'+dH2.nominal().h_path_fname())
+    leg = ROOT.TLegend(0.55,0.70,0.88,0.88,var,"brNDC")
     hstack = po.stack('mc',dH2.clone(),leg=leg)
     hdata = po.data('data',dH2.clone(),leg=leg)
-    c.plotStackHisto(hstack.flat[0].stack,hdata.flat[0].h,leg)
+    c.plotStack(hstack,hdata,mode=m,leg=leg)
     return c
 
 # combined plots
@@ -317,14 +325,18 @@ if mode=='ALL' or mode=='all':
     if False:
         OMAP.append( plot_stack(dH.clone(),'lepton_absetav') )
         OMAP.append( plot_stack(dH.clone(),'lepton_pt') )
-    c = SuCanvas('test')
-    hpos = po.data_sub('pos',dH.clone(q=0))
-    hneg = po.data_sub('neg',dH.clone(q=1))
-    hall = po.data_sub('all',dH.clone(q=2))
-    M = PlotOptions();
-    M.add('POS','mu+'); M.add('NEG','mu-'); M.add('ALL','mu')
-    c.plotMany([hpos,hneg,hall],M=M,mode=0,height=1)
-    OMAP.append(c)
+    if True:
+        OMAP.append( plot_asymmetry(dH.clone(),'lepton_absetav',m=2) )
+    if False:
+        c = SuCanvas('test')
+        hpos = po.data_sub('pos',dH.clone(q=0))
+        hneg = po.data_sub('neg',dH.clone(q=1))
+        hall = po.data_sub('all',dH.clone(q=2))
+        M = PlotOptions();
+        M.add('POS','mu+'); M.add('NEG','mu-'); M.add('ALL','mu')
+        c.plotOne(hpos,mode=2,height=2.0)
+        #c.plotMany([hpos,hneg,hall],M=M,mode=0,height=1.5)
+        OMAP.append(c)
     
 if mode=='1': # total stack histo
     dH2 = dH
@@ -400,14 +412,6 @@ def asymmetry_old():
     hd   = po.data_sub('dataPOS',dH.clone(q=0))
     c = SuCanvas()
     c.plotAsymmetryFromComponents(hd[POS],hd[NEG],hsig[POS],hsig[NEG])
-    return c
-
-def asymmetry():
-    assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
-    hsig = po.sig('signalPOS',dH.clone(q=0))
-    hd = po.asym_data_sub('asym_data',dH.clone())
-    c = SuCanvas()
-    c.plotAsymmetry(hd[POS],hd[NEG],hsig[POS],hsig[NEG])
     return c
 
 if mode=='11': # asymmetry (bg-subtracted)

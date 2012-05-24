@@ -108,8 +108,8 @@ class SuCanvas:
     refLine.SetLineStyle( ROOT.kDashed );
     refLine.Draw( "hist" );
 
-  def plotStackHisto(s,stack,data,leg=None):
-    """ Wrapper to make a complete plot of stack and data overlayed """
+  def plotStackHisto_H(s,stack,data,leg=None):
+    """ Wrapper to make a complete plot of stack and data overlayed - TH1 version (deprecated) """
     s.data.append((stack,data,leg))
     s.buildRatio();
     s.cd_plotPad();
@@ -144,7 +144,6 @@ class SuCanvas:
     hsum.SetTitle(title)
     #note: errors are incorrect here
     return hsum
-
   @staticmethod
   def asym_error(Np,sNp,Nm,sNm):
     """ Error propagation formula for (N+ - N-)/(N+ + N-) """
@@ -202,10 +201,21 @@ class SuCanvas:
     s.hratio.Draw("AP same");
     s.update()
 
-  def plotOne(s,hplot,mode=0,height=0,leg=None,title=None):
+  @staticmethod
+  def set_uncert_style(obj):
+    """ set style for uncertainties """
+    if not obj: return
+    obj.SetFillColor( ROOT.kYellow );
+    obj.SetFillStyle( 3001 );
+    obj.SetLineColor( ROOT.kRed );
+    obj.SetMarkerColor( ROOT.kRed );
+    obj.SetLineStyle( 2 );
+    obj.SetLineWidth( 2 );
+  
+  def plotOne(s,hplot,mode=0,height=1.5,leg=None,title=None):
     """ A generic function to plot an instance of SuPlot.
     Mode is: 0=nominal; 1=total errors; 2=all systematic plots
-    Height is: 0=Max*1.3, 1=Max*1.5, 2=0..0.5
+    Height is: Max*height. Or asym = 0..0.5
     """
     s.buildDefault(width=1024,height=400)
     s.cd_canvas();
@@ -223,7 +233,7 @@ class SuCanvas:
       s.FixupHisto(h)
     else:
       for i,hsys in enumerate(hplot.flat):
-        h = hsys.h
+        h = hsys.h.Clone()
         if not h: continue
         hs.append(h)
         s.data.append(h)
@@ -238,23 +248,19 @@ class SuCanvas:
         s.FixupHisto(h)
         if mode==0: break
     maxh = max([h.GetMaximum() for h in hs])
-    if height==0:
-      hs[0].GetYaxis().SetRangeUser(0,maxh*1.3);
-    elif height==1:
-      hs[0].GetYaxis().SetRangeUser(0,maxh*1.5);
-    elif height==2:
+    if height=='asym':
       hs[0].GetYaxis().SetRangeUser(0,0.5);
     else:
-      assert False,'Unsupported height'
+      hs[0].GetYaxis().SetRangeUser(0,maxh*float(height));
     if mode==2: # draw legend for multi-systematic studies
       leg.Draw("same")
     s.update()
 
-  def plotMany(s,hplots,M=None,mode=0,height=0,leg=None,title=None):
+  def plotMany(s,hplots,M=None,mode=0,height=1.5,leg=None,title=None):
     """ A generic function to plot several SuPlot's.
     M is: a PlotOptions object describing formatting and colors
     Mode is: 0=nominal; 1=total errors
-    Height is: 0=Max*1.3, 1=Max*1.5, 2=0..0.5
+    Height is: Max*height. Or asym = 0..0.5
     """
     if M:
       assert M.ntot()==len(hplots),'Size mismatch between SuPlots and PlotOptions'
@@ -289,16 +295,48 @@ class SuCanvas:
         h.Draw('A SAME')
       s.FixupHisto(h)
     maxh = max([h.GetMaximum() for h in hs])
-    if height==0:
-      hs[0].GetYaxis().SetRangeUser(0,maxh*1.3);
-    elif height==1:
-      hs[0].GetYaxis().SetRangeUser(0,maxh*1.5);
-    elif height==2:
+    if height=='asym':
       hs[0].GetYaxis().SetRangeUser(0,0.5);
     else:
-      assert False,'Unsupported height'
+      hs[0].GetYaxis().SetRangeUser(0,maxh*float(height));
     if True:
       leg.Draw("same")
+    s.update()
+
+  def plotStack(s,hstack,hdata,leg=None,height=1.5,mode=0):
+    """ Wrapper to make a complete plot of stack and data overlayed - SuData version
+    mode=0 - nominal only
+    mode=1 - apply systematics
+    """
+    s.buildRatio();
+    s.cd_plotPad();
+    stack = hstack.nominal().stack.Clone()
+    data = hdata.nominal_h()
+    s.data.append((stack,data,leg))
+    hsys = None
+    # mc
+    stack.Draw("HIST")
+    s.FixupHisto(stack)
+    stack.SetMinimum(0.0) # was: 0.1
+    maximum = max((data.GetMaximum(),stack.GetMaximum()))
+    stack.SetMaximum(maximum*height)
+    # systematics
+    if mode==1:
+      hsys = hstack.update_errors()
+      hsys.Draw('A SAME E3')
+    #data
+    data.SetMarkerSize(1.0)
+    data.Draw("AP same")
+    s.FixupHisto(data)
+    if leg:
+      leg.Draw("same")
+    # ratio
+    s.cd_ratioPad();
+    s.hratio,s.href = data.Clone("hratio"),data.Clone("href")
+    s.hratio.Divide(stack.GetStack().Last())
+    s.drawRefLine(s.href)
+    s.drawRatio(s.hratio)
+    s.hratio.Draw("AP same");
     s.update()
 
   def Matrix_loose(s,Nt,Nl,er,ef):
