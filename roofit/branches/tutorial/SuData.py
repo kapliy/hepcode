@@ -81,7 +81,7 @@ class SuSys:
         hpath = os.path.join(s.sysdir[i],s.subdir[i],s.basedir[i]) + SuSys.QMAP[s.charge][0] + '/' + s.histo
         return hpath
     def h_path_fname(s,i=1):
-        return s.sysdir[2]+'__'+s.sysdir[i] + '_' + s.subdir[i] + '_' + s.basedir[i] + '_' + SuSys.QMAP[s.charge][1]
+        return s.sysdir[2]+'__'+s.sysdir[i] + '_' + s.subdir[i] + '_' + s.basedir[i] + '_' + SuSys.QMAP[s.charge][1] + '_' + s.histo
     def qcd_region(s):
         """ Puts this SuSys in qcd region based on qcd map """
         s.basedir = [s.qcd['metfit']]*3 # disable MET>25 cut
@@ -91,7 +91,7 @@ class SuSys:
         import copy
         res =  copy.copy(s)
         # do not clone the actual histograms
-        res.h,res.stack = None,None
+        #res.h,res.stack = None,None
         # only replace in MC
         if sysdir_mc!=None: res.sysdir = s.qlist([res.sysdir[0],sysdir_mc,res.sysdir[2]])
         if subdir_mc!=None: res.subdir = s.qlist([res.subdir[0],subdir_mc,res.subdir[2]])
@@ -130,7 +130,7 @@ class SuPlot:
     Implements the TH1* interface for easier handling
     """
     def __init__(s):
-        s.h = None
+        s.hsys = None
         s.status = 0
         s.groups = []   # flat list of groups - names of systematics
         s.sys = []      # nested list (groups->up/downs)
@@ -275,21 +275,25 @@ class SuPlot:
         print 'Created systematic variations: N =',len(s.sys)
     def update_errors(s):
         """ folds systematic variations into total TH1 error  """
-        assert s.sys[0][0].h
-        s.h = h = s.sys[0][0].h.Clone(s.sys[0][0].GetName()+'_final')
+        stack_mode = False
+        if not s.sys[0][0].h:
+            assert s.sys[0][0].stack
+            stack_mode = True
+        s.hsys = s.sys[0][0].stack.GetStack().Last().Clone() if stack_mode else s.sys[0][0].h.Clone()
         i = 0
         for hss in s.sys[1:]:
-            bdiffs = [[] for z in xrange(0,h.GetNbinsX()+2)]
+            bdiffs = [[] for z in xrange(0,s.hsys.GetNbinsX()+2)]
             for hs in hss: # loop over systematics in this group
-                for ibin in xrange(0,h.GetNbinsX()+2):
-                    bdiffs[ibin].append ( abs(h.GetBinContent(ibin)-hs.h.GetBinContent(ibin)) )
+                for ibin in xrange(0,s.hsys.GetNbinsX()+2):
+                    h = hs.stack.GetStack().Last() if stack_mode else hs.h
+                    bdiffs[ibin].append ( abs(s.hsys.GetBinContent(ibin)-h.GetBinContent(ibin)) )
                 i+=1
-            for ibin in xrange(0,h.GetNbinsX()+2):
-                olderr = h.GetBinError(ibin)
+            for ibin in xrange(0,s.hsys.GetNbinsX()+2):
+                olderr = s.hsys.GetBinError(ibin)
                 newerr = max(bdiffs[ibin])
                 #print 'SETTING ERROR:',ibin,olderr,newerr
-                h.SetBinError(ibin,1.0*math.sqrt(olderr*olderr + newerr*newerr))
-        return s.h
+                s.hsys.SetBinError(ibin,1.0*math.sqrt(olderr*olderr + newerr*newerr))
+        return s.hsys
     def summary_bin(s,b):
         """ Prints relative deviation of various systematics in a given bin """
         nom = s.nominal_h()
@@ -734,7 +738,7 @@ class SuStack:
         hPOSs = method(hname+'_POS',d.clone(q=0),*args,**kwargs)
         hNEGs = method(hname+'_NEG',d.clone(q=1),*args,**kwargs)
         assert len(hPOSs.flat) == len(hNEGs.flat)
-        for i,(hPOS,hNEG) in enumerate( zip(hPOSs.flat,hNEGs.flag) ):
+        for i,(hPOS,hNEG) in enumerate( zip(hPOSs.flat,hNEGs.flat) ):
             if hPOS.h and hNEG.h:
                 d.flat[i].h = SuCanvas.SuCanvas.WAsymmetry(hPOS.h,hNEG.h)
         return d
