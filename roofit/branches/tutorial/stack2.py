@@ -300,15 +300,13 @@ dH.enable_all()
 SuStack.QCD_SYS_SCALES = opts.metallsys
 
 # Create multiple signal Monte-Carlos
-M = SigSamples()
+M = PlotOptions()
 M.prefill_mc()
 
 def plot_stack(dH2,var):
     dH2.update_histo( var )
     c = SuCanvas('stack_'+var)
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
-    hmc,hdata = None,None
-    hmc = po.sig('datasub',dH2.clone())
     hstack = po.stack('mc',dH2.clone(),leg=leg)
     hdata = po.data('data',dH2.clone(),leg=leg)
     c.plotStackHisto(hstack.flat[0].stack,hdata.flat[0].h,leg)
@@ -318,6 +316,13 @@ def plot_stack(dH2,var):
 if mode=='ALL' or mode=='all':
     OMAP.append( plot_stack(dH.clone(),'lepton_absetav') )
     OMAP.append( plot_stack(dH.clone(),'lepton_pt') )
+    c = SuCanvas('stack')
+    hmc = po.sig('datasub',dH.clone(q=0))
+    M = PlotOptions()
+    M.add('mc','mc')
+    M.add('mc','mc')
+    c.plotMany([hmc,hmc],M=M,mode=0)
+    OMAP.append(c)
     
 if mode=='1': # total stack histo
     dH2 = dH
