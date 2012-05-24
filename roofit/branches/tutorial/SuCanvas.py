@@ -6,7 +6,7 @@ def rand_name(ln=10):
   import random,string
   return ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(ln))
 
-class SigSamples:
+class PlotOptions:
     """ Handles colors and marker styles for various MC generators """
     msize = 1.5
     def __init__(s):
@@ -44,10 +44,11 @@ class SigSamples:
         s.add('mcnlo','MC@NLO(CT10)',ratio=True)
         #s.add('powheg_herwig','PowHeg/Herwig(CT10)')
         s.add('powheg_pythia','PowHeg/Pythia(CT10)',ratio=True)
-    def autocolor(s,i):
+    @staticmethod
+    def autocolor(i):
         """ choose a reasonable sequence of colors """
         colorlist = [2,3,4,5,6,20,28,41,46]
-        return colorlist[i] if i<len(colorlist) else 1
+        return colorlist[i] if i<len(colorlist) else (1 if i==11 else i)
 
 class SuCanvas:
   """ Jordan's canvas class for plotting """
@@ -63,6 +64,7 @@ class SuCanvas:
     s.data = []
     s._ratioDrawn = False
     s.savename = name
+    s._plotPad,s._coverPad,s._ratioPad,s._canvas = None,None,None,None
 
   def FixupHisto(s,h):
     h.GetXaxis().SetTitleOffset( s.getXtitleOffset() );
@@ -200,33 +202,95 @@ class SuCanvas:
     s.hratio.Draw("AP same");
     s.update()
 
-  def plotSuPlot(s,hd,hmc,M=None,leg=None):
-    """ A generic function to plot a SuPlot
-    M = SigSamples object that takes care of colors and such """
-    s.buildRatio();
-    s.cd_plotPad();
-    s.data.append((hc,hmc,leg))
-    # mc
-    if not (isinstance(v,list) or isinstance(v,tuple)):
-      hmc = [hmc,]
-    hmc.SetLineColor(ROOT.kBlue)
-    hmc.Draw()
-    s.FixupHisto(hmc)
-    hmc.GetYaxis().SetRangeUser(0.0,0.5);
-    hmc.GetYaxis().SetTitle('Asymmetry');
-    # data
-    hd.SetMarkerSize(1.0)
-    hd.Draw("AP same")
-    s.FixupHisto(hd)
-    if leg:
+  def plotOne(s,hplot,mode=0,range=0):
+    """ A generic function to plot an instance of SuPlot.
+    Mode is: 0=nominal; 1=total errors; 2=all systematic plots
+    Range is: 0=Max*1.3, 1=Max*1.5, 2=0..0.5
+    """
+    s.data.append( hplot )
+    s.buildDefault(width=1024,height=400)
+    s.cd_canvas();
+    hs = []
+    if mode==1:
+      ht = hplot.clone()
+      h = ht.update_errors()
+      hs.append(h)
+      h.Draw()
+      s.data.append(h)
+      s.FixupHisto(h)
+    else:
+      for i,hsys in enumerate(hplot.flat):
+        h = hsys.h
+        if not h: continue
+        hs.append(h)
+        s.data.append(h)
+        color = PlotOptions.autocolor(i)
+        h.SetLineColor(color)
+        if i==0:
+          h.Draw()
+        else:
+          h.Draw('A SAME')
+        s.FixupHisto(h)
+        if mode==0: break
+    maxh = max([h.GetMaximum() for h in hs])
+    if range==0:
+      hs[0].GetYaxis().SetRangeUser(0,maxh*1.3);
+    elif range==1:
+      hs[0].GetYaxis().SetRangeUser(0,maxh*1.5);
+    elif range==2:
+      hs[0].GetYaxis().SetRangeUser(0,0.5);
+    else:
+      assert False,'Unsupported range'
+    s.update()
+
+  def plotMany(s,hplots,M=None,mode=0,range=0,leg=None):
+    """ A generic function to plot several SuPlot's.
+    M is: a PlotOptions object describing formatting and colors
+    Mode is: 0=nominal; 1=total errors
+    Range is: 0=Max*1.3, 1=Max*1.5, 2=0..0.5
+    """
+    if M:
+      assert M.ntot()==len(hplots),'Size mismatch between SuPlots and PlotOptions'
+    if not leg:
+      leg = ROOT.TLegend(0.55,0.70,0.88,0.88,'Legend',"brNDC")
+    s.data.append( (hplots,leg) )
+    s.buildDefault(width=1024,height=400)
+    s.cd_canvas();
+    hs = []
+    for i,hplot in enumerate(hplots):
+      h0 = hplot.nominal().stack.GetStack().Last() if hplot.nominal().stack else hplot.nominal_h()
+      assert h0
+      if mode==1:
+        ht = hplot.clone()
+        h0 = ht.update_errors()
+      if not h0: continue
+      h = h0.Clone()
+      hs.append(h)
+      s.data.append(h)
+      if M:
+        h.SetLineColor(M.colors[i])
+        h.SetMarkerColor(M.colors[i])
+        h.SetMarkerStyle(M.styles[i])
+        h.SetMarkerSize(M.sizes[i])
+        leg.AddEntry(h,M.labels[i],'LP')
+      else:
+        h.SetLineColor( PlotOptions.autocolor(i) )
+      if i==0:
+        h.Draw()
+      else:
+        h.Draw('A SAME')
+      s.FixupHisto(h)
+    maxh = max([h.GetMaximum() for h in hs])
+    if range==0:
+      hs[0].GetYaxis().SetRangeUser(0,maxh*1.3);
+    elif range==1:
+      hs[0].GetYaxis().SetRangeUser(0,maxh*1.5);
+    elif range==2:
+      hs[0].GetYaxis().SetRangeUser(0,0.5);
+    else:
+      assert False,'Unsupported range'
+    if True:
       leg.Draw("same")
-    # ratio
-    s.cd_ratioPad();
-    s.hratio,s.href = hd.Clone("hratio"),hd.Clone("href")
-    s.hratio.Divide(hmc)
-    s.drawRefLine(s.href)
-    s.drawRatio(s.hratio)
-    s.hratio.Draw("AP same");
     s.update()
 
   def Matrix_loose(s,Nt,Nl,er,ef):
@@ -416,6 +480,7 @@ class SuCanvas:
 
   def update(s):
     for c in (s._plotPad,s._coverPad,s._ratioPad,s._canvas):
+      if not c: continue
       c.Modified()
       c.Update()
 

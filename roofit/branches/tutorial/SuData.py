@@ -275,8 +275,8 @@ class SuPlot:
         print 'Created systematic variations: N =',len(s.sys)
     def update_errors(s):
         """ folds systematic variations into total TH1 error  """
-        # FIXME TODO: make a clone of main TH1
-        s.h = h = s.sys[0][0].Clone(s.sys[0][0].GetName()+'_final')
+        assert s.sys[0][0].h
+        s.h = h = s.sys[0][0].h.Clone(s.sys[0][0].GetName()+'_final')
         i = 0
         for hss in s.sys[1:]:
             bdiffs = [[] for z in xrange(0,h.GetNbinsX()+2)]
