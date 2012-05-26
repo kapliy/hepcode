@@ -144,7 +144,6 @@ SuSample.debug = opts.verbose
 SuSample.lumi = opts.lumi
 SuSample.rebin = opts.rebin
 SuSample.qcdscale = float(opts.qcdscale) if not opts.qcdscale in ('AUTO','auto','Auto') else 1.0
-SuSample.load_unfolding()
 
 #SetStyle()
 
@@ -290,48 +289,91 @@ if False:
 gbg = []
 q = opts.charge
 
-# Create systematic collections:
-dH = SuPlot()
-dH.bootstrap(ntuple=opts.ntuple,unfold=None,
-             charge=q,var=opts.var,histo=opts.hsource,
-             sysdir=['nominal','nominal','isowind'],subdir='st_w_final',basedir='baseline',
-             qcd={'metfit':'metfit'})
-dH.enable_all()
+# Reco-level plots + all systematics
+spR = SuPlot()
+spR.bootstrap(ntuple=opts.ntuple,do_unfold=False,
+              unfold={'sysdir':'nominal','mc':'pythia','method':'RooUnfoldBinByBin','par':4},
+              charge=q,var=opts.var,histo=opts.hsource,
+              sysdir=['nominal','nominal','isowind'],subdir='st_w_final',basedir='baseline',
+              qcd={'metfit':'metfit'})
 SuStack.QCD_SYS_SCALES = opts.metallsys
+spR.enable_all()
+# Truth-level plots
+spT= SuPlot()
+spT.bootstrap(ntuple=opts.ntuple,
+              charge=q,var=opts.var,histo=opts.hsource,
+              sysdir='truth',subdir='st_w_final',basedir='baseline')
+spT.enable_nominal()
 
 # Create multiple signal Monte-Carlos
 M = PlotOptions()
 M.prefill_mc()
 
-def plot_asymmetry(dH2,var,m=0):
+def plot_asymmetry(spR2,var,m=0):
     assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
-    dH2.update_histo( var )
-    c = SuCanvas('asym_'+dH2.nominal().h_path_fname())
-    hasym = po.asym_data_sub('asym',dH2.clone())
+    spR2.update_histo( var )
+    c = SuCanvas('asym_'+spR2.nominal().h_path_fname())
+    hasym = po.asym_data_sub('asym',spR2.clone())
     c.plotOne(hasym,mode=m,height='asym')
     return c
 
-def plot_stack(dH2,var,m=0):
-    dH2.update_histo( var )
-    c = SuCanvas('stack_'+dH2.nominal().h_path_fname())
+def plot_stack(spR2,var,m=0):
+    spR2.update_histo( var )
+    c = SuCanvas('stack_'+spR2.nominal().h_path_fname())
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,var,"brNDC")
-    hstack = po.stack('mc',dH2.clone(),leg=leg)
-    hdata = po.data('data',dH2.clone(),leg=leg)
+    hstack = po.stack('mc',spR2.clone(),leg=leg)
+    hdata = po.data('data',spR2.clone(),leg=leg)
     c.plotStack(hstack,hdata,mode=m,leg=leg)
+    OMAP.append(c)
     return c
+
+def test_unfolding(spR2,spT2):
+    """ tests unfolding on one signal monte-carlo """
+    SuSample.debug = True
+    spR2.enable_nominal()
+    var = 'lepton_absetav'
+    c = SuCanvas('test_unfolding')
+    h = []
+    # TODO FIXME: while asym_mc sanity test "almost" works (we nearly get back to htruth)
+    # individual charges hPOS and hNEG don't quite work. Why?? - study in TrigFTKAna on small test!!! Could it really be the charge when filling response?
+    h.append( po.asym_mc('h',spT2.clone(q=0),label='pythia') )
+    h.append( po.asym_mc('h',spR2.clone(q=0),label='pythia') )
+    h.append( po.asym_mc('h',spR2.clone(q=0,do_unfold=True),label='pythia') )
+    M = PlotOptions();
+    M.add('truth','Pythia truth',color=1);
+    M.add('reco','Pythia reco',color=2);
+    M.add('unfold','Pythia unfold',color=3);
+    c.plotMany(h,M=M,mode=0,height=1.6)
+    OMAP.append(c)
+    if False:
+        hpos_u = po.sig('pos',spR.clone(q=0,do_unfold=True))
+        hpos_tru = po.sig('pos',spT.clone(q=0,do_unfold=False))
+    
 
 # combined plots
 if mode=='ALL' or mode=='all':
     if False:
-        OMAP.append( plot_stack(dH.clone(),'lepton_absetav') )
-        OMAP.append( plot_stack(dH.clone(),'lepton_pt') )
+        plot_stack(spR.clone(),'lepton_absetav')
+        plot_stack(spR.clone(),'lepton_pt')
+    if False:
+        plot_asymmetry(spR.clone(),'lepton_absetav',m=2)
     if True:
-        OMAP.append( plot_asymmetry(dH.clone(),'lepton_absetav',m=2) )
+        test_unfolding(spR.clone(),spT.clone())
+    if False: #unfolding tests
+        c = SuCanvas('test')
+        hpos = po.sig('pos',spR.clone(q=0,do_unfold=False))
+        hpos_u = po.sig('pos',spR.clone(q=0,do_unfold=True))
+        hpos_tru = po.sig('pos',spT.clone(q=0,do_unfold=False))
+        M = PlotOptions();
+        M.add('POS_reco','mu+ reco'); M.add('POS_unf','mu+ unfolded');
+        M.add('POS_tru','mu+ truth')
+        c.plotMany([hpos,hpos_u,hpos_tru],M=M,mode=0,height=1.5)
+        OMAP.append(c)
     if False:
         c = SuCanvas('test')
-        hpos = po.data_sub('pos',dH.clone(q=0))
-        hneg = po.data_sub('neg',dH.clone(q=1))
-        hall = po.data_sub('all',dH.clone(q=2))
+        hpos = po.data_sub('pos',spR.clone(q=0))
+        hneg = po.data_sub('neg',spR.clone(q=1))
+        hall = po.data_sub('all',spR.clone(q=2))
         M = PlotOptions();
         M.add('POS','mu+'); M.add('NEG','mu-'); M.add('ALL','mu')
         c.plotOne(hpos,mode=2,height=2.0)
@@ -339,12 +381,12 @@ if mode=='ALL' or mode=='all':
         OMAP.append(c)
     
 if mode=='1': # total stack histo
-    dH2 = dH
+    spR2 = spR
     c = SuCanvas()
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
     hmc,hdata = None,None
-    hmc = po.stack('mc',dH2,leg=leg)
-    hdata = po.data('data',dH2,leg=leg)
+    hmc = po.stack('mc',spR2,leg=leg)
+    hdata = po.data('data',spR2,leg=leg)
     c.plotStackHisto(hmc.flat[0].stack,hdata.flat[0].h,leg)
 
 if mode=='2': # signal - directly from MC, or bg-subtracted data - allow application of efficiency histogram
@@ -408,14 +450,15 @@ if mode=='100': # creates efficiency histogram (corrects back to particle level)
 
 def asymmetry_old():
     assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
-    hsig = po.sig('signalPOS',dH.clone(q=0))
-    hd   = po.data_sub('dataPOS',dH.clone(q=0))
+    hsig = po.sig('signalPOS',spR.clone(q=0))
+    hd   = po.data_sub('dataPOS',spR.clone(q=0))
     c = SuCanvas()
     c.plotAsymmetryFromComponents(hd[POS],hd[NEG],hsig[POS],hsig[NEG])
+    OMAP.append(c)
     return c
 
 if mode=='11': # asymmetry (bg-subtracted)
-    c = asymmetry()
+    asymmetry_old()
 
 if mode in ('sig_reco','sig_truth'): # compares distributions in different signal monte-carlos.
     is_truth = (mode=='sig_truth')

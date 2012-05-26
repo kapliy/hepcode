@@ -23,7 +23,7 @@ class SuSys:
             return v
         else:
             return [v]*3
-    def __init__(s,charge=2,qcd = {}, unfold=None,qcderr=0,
+    def __init__(s,charge=2,qcd = {}, unfold={},qcderr=0,
                  ntuple='w',path=None,var=None,bin=None,pre='',weight="mcw*puw*effw*trigw",
                  histo=None,sysdir=None,subdir=None,basedir=None ):
         # actual histograms
@@ -82,11 +82,20 @@ class SuSys:
         return hpath
     def h_path_fname(s,i=1):
         return s.sysdir[2]+'__'+s.sysdir[i] + '_' + s.subdir[i] + '_' + s.basedir[i] + '_' + SuSys.QMAP[s.charge][1] + '_' + s.histo
+    def unfold_get_path(s,ibin=None,ivar=None):
+        path = s.unfold['sysdir'] + SuSys.QMAP[s.charge][0] + '/'
+        if ibin==None:
+            path += 'abseta'
+        else:
+            assert ivar!=None
+            path += 'bin%d/%s'%(ibin,ivar)
+        return path
     def qcd_region(s):
         """ Puts this SuSys in qcd region based on qcd map """
         s.basedir = [s.qcd['metfit']]*3 # disable MET>25 cut
         s.histo = 'met'
-    def clone(s,sysdir=None,sysdir_mc=None,subdir=None,subdir_mc=None,basedir=None,qcderr=None,name=None,q=None,histo=None):
+    def clone(s,sysdir=None,sysdir_mc=None,subdir=None,subdir_mc=None,basedir=None,
+              qcderr=None,name=None,q=None,histo=None,unfold=None,unfdir=None):
         """ deep copy, also allowing to update some members on-the-fly (useful to spawn systematics) """
         import copy
         res =  copy.copy(s)
@@ -103,6 +112,11 @@ class SuSys:
         if name!=None: res.name = name
         if histo!=None: res.histo = histo
         if q!=None: res.charge = q
+        if unfold!=None:
+            res.unfold = copy.copy(unfold)
+        else:
+            res.unfold = copy.copy(s.unfold)
+        if unfdir!=None: res.unfold['sysdir'] = unfdir
         return res
     def Add(s,o,dd=1.0):
         return s.h.Add(o.h,dd) if s.h and o.h else None
@@ -131,11 +145,13 @@ class SuPlot:
     """
     def __init__(s):
         s.hsys = None
+        s.htot = None
         s.status = 0
         s.groups = []   # flat list of groups - names of systematics
         s.sys = []      # nested list (groups->up/downs)
         s.flat = []     # flat list of all systematics
         s.enable = [0,] # flat list of enabled indices
+        s.do_unfold = False
     def Add(s,h,dd=1.0):
         return [ p1.Add(p2,dd) for i,(p1,p2) in enumerate(zip(s.flat,h.flat)) if i in s.enable]
     def AddStack(s,h):
@@ -151,7 +167,12 @@ class SuPlot:
     def Scale(s,v):
         """ either one constant, or a per-systematic tuple """
         if isinstance(v,list) or isinstance(v,tuple):
-            return [ p1.Scale(v[i]) for i,p1 in enumerate(s.flat) if i in s.enable ]
+            j=0
+            for i,p1 in enumerate(s.flat):
+                if not i in s.enable: continue
+                p1.Scale(v[j]) # j is an index for *enabled* systematics only!
+                j+=1
+            return True
         else:
             return [ p1.Scale(v) for i,p1 in enumerate(s.flat) if i in s.enable ]
     def Unitize(s):
@@ -192,10 +213,10 @@ class SuPlot:
     def qcd_region(s):
         """ Puts all SuSys in qcd region based on qcd map """
         res = s.clone()
-        [o.qcd_region() for o in res.flat]
+        [o.qcd_region() for i,o in enumerate(res.flat) if i in res.enable]
         res.status = 1 # to prevent infinite recursion
         return res
-    def bootstrap(s,charge=2,qcd = {},unfold=None,qcderr=0,
+    def bootstrap(s,charge=2,qcd = {},unfold={},do_unfold=False,qcderr=0,
                   ntuple='w',path=None,var=None,bin=None,pre='',weight="mcw*puw*effw*trigw",
                   histo=None,sysdir=None,subdir=None,basedir=None ):
         """ bootstraps a full collection of systematics from the nominal instance of SuSys """
@@ -209,20 +230,21 @@ class SuPlot:
         s.sys = [ [nom,] ]
         s.flat = [ nom ]
         s.groups = [ 'nominal' ]
+        s.do_unfold = do_unfold
         # systematic variations
         print 'Creating systematic variations...'
         res = []
-        def add(n,ss):
+        def add(n,ss,unfss=None):
             """ Clones sysdir """
-            res.append(nom.clone(name=n,sysdir_mc=ss))
+            res.append(nom.clone(name=n,sysdir_mc=ss,unfdir=unfss if unfss!=None else ss))
             s.flat.append(res[-1])
-        def add2(n,ss):
+        def add2(n,ss,unfss=None):
             """ Clones subdir (e.g., for efficiencies) """
-            res.append(nom.clone(name=n,subdir_mc=ss))
+            res.append(nom.clone(name=n,subdir_mc=ss,unfdir=unfss if unfss!=None else ss))
             s.flat.append(res[-1])
-        def add3(n,ss):
+        def add3(n,ss,unfss=None):
             """ Clones qcd normalization """
-            res.append(nom.clone(name=n,qcderr=ss))
+            res.append(nom.clone(name=n,qcderr=ss,unfdir=unfss if unfss!=None else ss))
             s.flat.append(res[-1])
         def next(nn):
             s.sys.append(res[:])
@@ -248,14 +270,14 @@ class SuPlot:
             add('mcp_cdown',pre+'mcp_cdown')
             next('MCP_CSCALE')
         # MCP efficiency
-        add2('nominal_effstatup',pre+'st_w_effstatup')
-        add2('nominal_effstatdown',pre+'st_w_effstatdown')
+        add2('effstatup',pre+'st_w_effstatup',pre+'nominal_effstatup')
+        add2('effstatdown',pre+'st_w_effstatdown',pre+'nominal_effstatdown')
         next('MCP_EFFSTAT')
-        add2('nominal_effsysup',pre+'st_w_effsysup')
-        add2('nominal_effsysdown',pre+'st_w_effsysdown')
+        add2('effsysup',pre+'st_w_effsysup',pre+'nominal_effsysup')
+        add2('effsysdown',pre+'st_w_effsysdown',pre+'nominal_effsysdown')
         next('MCP_EFFSYS')
-        add2('nominal_trigstatup',pre+'st_w_trigstatup')
-        add2('nominal_trigstatdown',pre+'st_w_trigstatdown')
+        add2('trigstatup',pre+'st_w_trigstatup',pre+'nominal_trigstatup')
+        add2('trigstatdown',pre+'st_w_trigstatdown',pre+'nominal_trigstatdown')
         next('MCP_TRIG')
         # JET
         add('jet_jer',pre+'jet_jer')
@@ -268,18 +290,20 @@ class SuPlot:
         add('met_allcludown',pre+'met_allcludown')
         next('MET')
         # QCD normalization
-        add3('qcdup',1)
-        add3('qcddown',-1)
-        next('QCD_FRAC')
+        add3('qcdup',1,pre+'nominal')
+        add3('qcddown',-1,pre+'nominal')
+        next('QCD_FRAC'              )
         assert len(s.sys)==len(s.groups)
         print 'Created systematic variations: N =',len(s.sys)
-    def update_errors(s):
+    def update_errors(s,sysonly=False):
         """ folds systematic variations into total TH1 error  """
         stack_mode = False
         if not s.sys[0][0].h:
             assert s.sys[0][0].stack
             stack_mode = True
-        s.hsys = s.sys[0][0].stack.GetStack().Last().Clone() if stack_mode else s.sys[0][0].h.Clone()
+        s.htot = s.sys[0][0].stack.GetStack().Last().Clone() if stack_mode else s.sys[0][0].h.Clone()
+        s.hsys = s.htot.Clone()
+        [s.hsys.SetBinError(ii,0) for ii in xrange(0,s.hsys.GetNbinsX()+2)]
         i = 0
         for hss in s.sys[1:]:
             bdiffs = [[] for z in xrange(0,s.hsys.GetNbinsX()+2)]
@@ -289,11 +313,14 @@ class SuPlot:
                     bdiffs[ibin].append ( abs(s.hsys.GetBinContent(ibin)-h.GetBinContent(ibin)) )
                 i+=1
             for ibin in xrange(0,s.hsys.GetNbinsX()+2):
-                olderr = s.hsys.GetBinError(ibin)
                 newerr = max(bdiffs[ibin])
-                #print 'SETTING ERROR:',ibin,olderr,newerr
-                s.hsys.SetBinError(ibin,1.0*math.sqrt(olderr*olderr + newerr*newerr))
-        return s.hsys
+                # hsys
+                olderr = s.hsys.GetBinError(ibin)
+                s.hsys.SetBinError(ibin,1.0*math.sqrt(olderr*olderr + 1.0*newerr*newerr))
+                # htot
+                olderr = s.htot.GetBinError(ibin)
+                s.htot.SetBinError(ibin,1.0*math.sqrt(olderr*olderr + 1.0*newerr*newerr))
+        return s.hsys if sysonly else s.htot
     def summary_bin(s,b):
         """ Prints relative deviation of various systematics in a given bin """
         nom = s.nominal_h()
@@ -303,9 +330,10 @@ class SuPlot:
                 print '%s \t:\t %.2f' % (hs.name, 100.0*(hs.h.GetBinContent(b) - nom.GetBinContent(b))/nom.GetBinContent(b) if nom.GetBinContent(b) else 0 )
         pass
     def update_histo(s,histo):
-        for o in s.flat:
-            o.histo = histo
-    def clone(s,q=None,enable=None,histo=None):
+        for i,o in enumerate(s.flat):
+            if i in s.enable:
+                o.histo = histo
+    def clone(s,q=None,enable=None,histo=None,do_unfold=None):
         """ Clones an entire SuPlot.
         Each SuSys is cloned individually to avoid soft pointer links
         """
@@ -314,7 +342,8 @@ class SuPlot:
         res.groups = s.groups
         res.sys = []
         res.flat = []
-        res.enable = enable if enable else s.enable
+        res.enable = enable if enable!=None else s.enable
+        res.do_unfold = do_unfold if do_unfold!=None else s.do_unfold
         for sgroups in s.sys:
             bla = []
             for sinst in sgroups:
@@ -333,8 +362,6 @@ class SuSample:
     rootpath = None
     lumi = None
     debug = False
-    # for unfolding:
-    funfold = {}
     def __init__(s,name):
         """ constructor """
         s.name = name
@@ -350,35 +377,6 @@ class SuSample:
         s.path = None  # current ntuple path
         # fast histogram cache
         s.data = {}
-    @staticmethod
-    def load_unfolding():
-        """ Static function to load unfolding migration matrices """
-        # make sure RooUnfold.so is loadable:
-        from ROOT import RooUnfold
-        hpythia = os.path.join(SuSample.rootpath,'unfold_pythia.root')
-        halpgen = os.path.join(SuSample.rootpath,'unfold_alpgen.root')
-        hpowheg = os.path.join(SuSample.rootpath,'unfold_powheg.root')
-        hmcnlo  = os.path.join(SuSample.rootpath,'unfold_mcnlo.root')
-        if os.path.exists(hpythia):
-            SuSample.funfold['pythia'] = ROOT.TFile.Open(hpythia)
-            print 'Found unfolding matrices for:','pythia'
-        else:
-            print 'Cannot find unfolding matrices for:','pythia',hpythia
-        if os.path.exists(halpgen):
-            SuSample.funfold['alpgen'] = ROOT.TFile.Open(halpgen)
-            print 'Found unfolding matrices for:','alpgen'
-        else:
-            print 'Cannot find unfolding matrices for:','alpgen',halpgen
-        if os.path.exists(hpowheg):
-            SuSample.funfold['powheg'] = ROOT.TFile.Open(hpowheg)
-            print 'Found unfolding matrices for:','powheg'
-        else:
-            print 'Cannot find unfolding matrices for:','powheg',hpowheg
-        if os.path.exists(hmcnlo):
-            SuSample.funfold['mcnlo'] = ROOT.TFile.Open(hmcnlo)
-            print 'Found unfolding matrices for:','mcnlo'
-        else:
-            print 'Cannot find unfolding matrices for:','mcnlo',hmcnlo
     def addchain(s,path='st_w_final/ntuple'):
         """ add one of the TNtuples
         path excludes dg/
@@ -632,6 +630,8 @@ class SuStack:
         s.scales = {} # cache of QCD normalization scales
         s.gbg = []
         s.fits = {}
+        # for unfolding:
+        s.funfold = {}
     def addchain(s,path):
         """ add one of the TNtuples """
         return [e.addchain(path) for e in s.elm]
@@ -668,11 +668,64 @@ class SuStack:
         if not isinstance(samples,list):
             samples = [samples,]
         s.elm.append( SuStackElm(label,samples,color,flags,table,po=s) )
+    def load_unfolding(s):
+        """ Loads unfolding migration matrices """
+        # make sure RooUnfold.so is loadable:
+        from ROOT import RooUnfold
+        hpythia = os.path.join(SuSample.rootpath,'unfold_pythia.root')
+        halpgen = os.path.join(SuSample.rootpath,'unfold_alpgen.root')
+        hpowheg = os.path.join(SuSample.rootpath,'unfold_powheg.root')
+        hmcnlo  = os.path.join(SuSample.rootpath,'unfold_mcnlo.root')
+        if os.path.exists(hpythia):
+            s.funfold['pythia'] = ROOT.TFile.Open(hpythia)
+            print 'Found unfolding matrices for:','pythia'
+        else:
+            print 'Cannot find unfolding matrices for:','pythia',hpythia
+        if os.path.exists(halpgen):
+            s.funfold['alpgen'] = ROOT.TFile.Open(halpgen)
+            print 'Found unfolding matrices for:','alpgen'
+        else:
+            print 'Cannot find unfolding matrices for:','alpgen',halpgen
+        if os.path.exists(hpowheg):
+            s.funfold['powheg'] = ROOT.TFile.Open(hpowheg)
+            print 'Found unfolding matrices for:','powheg'
+        else:
+            print 'Cannot find unfolding matrices for:','powheg',hpowheg
+        if os.path.exists(hmcnlo):
+            s.funfold['mcnlo'] = ROOT.TFile.Open(hmcnlo)
+            print 'Found unfolding matrices for:','mcnlo'
+        else:
+            print 'Cannot find unfolding matrices for:','mcnlo',hmcnlo
+    def run_unfolding(s,dall):
+        """ Unfolds SuSys histograms to particle level """
+        if not dall.do_unfold: return dall
+        if not s.funfold: s.load_unfolding()
+        out = dall.clone()
+        for i,d in enumerate(out.flat):
+            if i not in out.enable: continue
+            response = s.funfold[d.unfold['mc']].Get(d.unfold_get_path())
+            h = d.h if d.h else d.stack.GetStack().Last()
+            assert response
+            method = d.unfold['method']
+            par = d.unfold['par']
+            unfold = None
+            if method=='RooUnfoldBayes':
+                unfold = ROOT.RooUnfoldBayes(response, h, par);
+            elif method=='RooUnfoldBinByBin':
+                print 'Bin by bin unfolding'
+                unfold = ROOT.RooUnfoldBinByBin(response, h);
+            elif method=='RooUnfoldSvd':
+                unfold = ROOT.RooUnfoldSvd(response, h, par);
+            assert unfold
+            # replace original histo
+            d.h = unfold.Hreco()
+        return out
     def get_scales(s,d):
         if not SuStack.QCD_SYS_SCALES:
             return s.get_scale(d.sys[0][0])
         res = []
-        for ig,o in enumerate(d.flat):
+        for i,o in enumerate(d.flat):
+            if i not in d.enable: continue
             res.append(s.get_scale(o))
         return res
     def get_scale(s,d):
@@ -704,25 +757,25 @@ class SuStack:
         s.gbg.append((f,hdata,hfixed,hfree,tmp))
         s.scales[key] = (f.scales[0],f.scalesE[0])
         return s.scales[key][0]*(1.0+d.qcderr*s.scales[key][1])
-    def run_unfolding(s,d):
-        """ Unfolds SuSys histograms to particle level """
-        # TODO FIXME
-        pass
     def histo(s,label,hname,d,norm=None):
         """ generic function to return histogram for a particular subsample """
         loop = [z for z in s.elm if z.label==label]
         return s.histosum(loop,hname,d,norm)
-    def histosum(s,loop,hname,d,norm=None):
+    def histosum(s,loop,hname,d,norm=None,weights=None):
         """ generic function to add up a subset of samples """
         if len(loop)==0:
             return None
+        # weights for each sample being summed
+        if not weights:
+            weights = [1.0]*len(loop)
+        assert len(weights)==len(loop)
         res = loop[0].histo(hname,d)
-        for h in loop[1:] :
+        for i,h in enumerate(loop[1:]) :
             htmp = h.histo(hname,d.clone())
             if res and not htmp:
                 continue
             elif res and htmp:
-                res.Add(htmp)
+                res.Add(htmp,weights[i+1])
             elif not res:
                 res = htmp
         if res:
@@ -731,7 +784,7 @@ class SuStack:
             if norm:
                 res.Unitize()
                 #res.Scale(1/res.GetSumOfWeights())
-        return res
+        return s.run_unfolding(res)
     def asym_generic(s,method,hname,d,*args,**kwargs):
         """ Generic function that builds asymmetry for a given method """
         import SuCanvas
@@ -739,6 +792,7 @@ class SuStack:
         hNEGs = method(hname+'_NEG',d.clone(q=1),*args,**kwargs)
         assert len(hPOSs.flat) == len(hNEGs.flat)
         for i,(hPOS,hNEG) in enumerate( zip(hPOSs.flat,hNEGs.flat) ):
+            if not i in hPOSs.enable: continue
             if hPOS.h and hNEG.h:
                 d.flat[i].h = SuCanvas.SuCanvas.WAsymmetry(hPOS.h,hNEG.h)
         return d
@@ -753,11 +807,13 @@ class SuStack:
         return s.asym_generic(s.data,*args,**kwargs)
     def data_sub(s,hname,d):
         """ bg-subtracted data """
-        hdata = s.data(hname,d.clone())
-        hbg = s.bg(hname,d.clone())
-        if hdata and hbg:
-            hdata.Add(hbg,-1.0)
-        return hdata
+        loop1 = [e for e in s.elm if 'mc' in e.flags and 'sig' not in e.flags and 'no' not in e.flags]
+        weights = [1.0]*len(loop1)
+        loop2 += [e for e in s.elm if 'data' in e.flags and 'no' not in e.flags]
+        weights+= [-1.0]*len(loop2)
+        loop = loop1 + loop2
+        res = s.histosum(loop,hname,d,weights=weights)
+        return res
     def asym_data_sub(s,*args,**kwargs):
         return s.asym_generic(s.data_sub,*args,**kwargs)
     def mc(s,hname,d,label=None):
