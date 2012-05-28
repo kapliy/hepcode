@@ -712,11 +712,11 @@ class SuStack:
             if method=='RooUnfoldBayes':
                 unfold = ROOT.RooUnfoldBayes(response, h, par);
             elif method=='RooUnfoldBinByBin':
-                print 'Bin by bin unfolding'
                 unfold = ROOT.RooUnfoldBinByBin(response, h);
             elif method=='RooUnfoldSvd':
                 unfold = ROOT.RooUnfoldSvd(response, h, par);
             assert unfold
+            unfold.SetVerbose(0)
             # replace original histo
             d.h = unfold.Hreco()
         return out

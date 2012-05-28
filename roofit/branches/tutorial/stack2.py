@@ -329,8 +329,8 @@ def plot_stack(spR2,var,m=0):
 
 def test_unfolding(spR2,spT2):
     """ tests unfolding on one signal monte-carlo """
-    SuSample.debug = True
-    spR2.enable_nominal()
+    #SuSample.debug = True
+    #spR2.enable_nominal()
     var = 'lepton_absetav'
     c = SuCanvas('test_unfolding')
     h = []
