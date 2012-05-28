@@ -23,14 +23,14 @@ class SuSys:
             return v
         else:
             return [v]*3
-    def __init__(s,charge=2,qcd = {}, unfold={},qcderr=0,
+    def __init__(s,name='nominal',charge=2,qcd = {}, unfold={},qcderr=0,
                  ntuple='w',path=None,var=None,bin=None,pre='',weight="mcw*puw*effw*trigw",
                  histo=None,sysdir=None,subdir=None,basedir=None ):
         # actual histograms
         s.h = None
         s.stack = None
         # Common resources:
-        s.name = ''
+        s.name = name
         s.charge = charge
         s.unfold = unfold
         s.qcd = qcd       # special map to place ourselves into a QCD-region (e.g, anti-isolation)
@@ -60,8 +60,8 @@ class SuSys:
     def nt_prez(s):
         assert False,'Not implemented'
         return '(%s)*(%s)' % ( s.pre, s.weight )
-    def h_path(s,i=0,flags=None):
-        """ Returns the path to the histogram. Index i has the following meaning:
+    def h_path_folder(s,i=0,flags=None):
+        """ Returns the folder-path to the histogram. Index i has the following meaning:
         i=0 - data
         i=1 - MC
         i=2 - data-driven QCD template
@@ -78,7 +78,15 @@ class SuSys:
                 i=2
             else:
                 i=1
-        hpath = os.path.join(s.sysdir[i],s.subdir[i],s.basedir[i]) + SuSys.QMAP[s.charge][0] + '/' + s.histo
+        hpath = os.path.join(s.sysdir[i],s.subdir[i],s.basedir[i]) + SuSys.QMAP[s.charge][0]
+        return hpath
+    def h_path(s,i=0,flags=None):
+        """ Returns the path to the histogram. Index i has the following meaning:
+        i=0 - data
+        i=1 - MC
+        i=2 - data-driven QCD template
+        """
+        hpath = s.h_path_folder(i,flags)+ '/' + s.histo
         return hpath
     def h_path_fname(s,i=1):
         return s.sysdir[2]+'__'+s.sysdir[i] + '_' + s.subdir[i] + '_' + s.basedir[i] + '_' + SuSys.QMAP[s.charge][1] + '_' + s.histo
@@ -88,12 +96,15 @@ class SuSys:
             path += 'abseta'
         else:
             assert ivar!=None
-            path += 'bin%d/%s'%(ibin,ivar)
+            path += 'bin_%d/%s'%(ibin,ivar)
         return path
     def qcd_region(s):
         """ Puts this SuSys in qcd region based on qcd map """
         s.basedir = [s.qcd['metfit']]*3 # disable MET>25 cut
         s.histo = 'met'
+    def is_sliced(s):
+        """ Returns True if s.histo represents a folder of histograms in eta-slices """
+        return re.search('bin_',s.histo)
     def clone(s,sysdir=None,sysdir_mc=None,subdir=None,subdir_mc=None,basedir=None,
               qcderr=None,name=None,q=None,histo=None,unfold=None,unfdir=None):
         """ deep copy, also allowing to update some members on-the-fly (useful to spawn systematics) """
@@ -131,6 +142,13 @@ class SuSys:
     def SetMarkerSize(s,c):
         return s.h.SetMarkerSize(c) if s.h else None
     def Scale(s,c):
+        # special treatment: if c is a list, then the scales are to be applied per-bin
+        if isinstance(c,list) or isinstance(c,tuple):
+            assert len(c)==s.h.GetNbinsX()+2
+            for i,v in enumerate(c):
+                s.h.SetBinContent(i, s.h.GetBinContent(i)*v)
+                s.h.SetBinError(i, s.h.GetBinError(i)*v)
+            return True
         return s.h.Scale(c) if s.h else None
     def Unitize(s):
         return s.h.Scale(1.0/s.h.Integral()) if s.h else None
@@ -179,6 +197,19 @@ class SuPlot:
         return [ p1.Unitize() for i,p1 in enumerate(s.flat) if i in s.enable ]
     def MakeStacks(s,hname):
         return [ p1.MakeStack(hname+'_'+p1.name) for i,p1 in enumerate(s.flat) if i in s.enable ]
+    def update_from_slices(s,ds,heta,imin,imax):
+        """ Builds a histogram from a collection of 1D histograms (e.g., vs pT) in eta slices
+        imin and imax give a range of bins in pT histogram that gets projected on final eta plot
+        heta is a dummy abseta histogram that's used to bootstrap binning for the final histogram
+        """
+        import SuCanvas
+        # create final eta histogram for each systematic
+        for i,dsys in enumerate(s.flat):
+            if not i in s.enable: continue
+            hpts = [d.flat[i].h for d in ds] # loop over slices
+            assert all(hpts)
+            dsys.h = SuCanvas.SuCanvas.from_slices(hpts,heta,imin,imax)
+        return s
     def get(s,sysname):
         """ Gets a particular systematic """
         for sgroups in s.sys:
@@ -304,16 +335,20 @@ class SuPlot:
         s.htot = s.sys[0][0].stack.GetStack().Last().Clone() if stack_mode else s.sys[0][0].h.Clone()
         s.hsys = s.htot.Clone()
         [s.hsys.SetBinError(ii,0) for ii in xrange(0,s.hsys.GetNbinsX()+2)]
-        i = 0
+        i = len(s.sys[0])
         for hss in s.sys[1:]:
             bdiffs = [[] for z in xrange(0,s.hsys.GetNbinsX()+2)]
             for hs in hss: # loop over systematics in this group
+                if not i in s.enable:
+                    i+=1
+                    continue
+                print s.enable, i, s.flat[i], hs.h
                 for ibin in xrange(0,s.hsys.GetNbinsX()+2):
                     h = hs.stack.GetStack().Last() if stack_mode else hs.h
                     bdiffs[ibin].append ( abs(s.hsys.GetBinContent(ibin)-h.GetBinContent(ibin)) )
                 i+=1
             for ibin in xrange(0,s.hsys.GetNbinsX()+2):
-                newerr = max(bdiffs[ibin])
+                newerr = max(bdiffs[ibin]) if len(bdiffs[ibin])>0 else 0
                 # hsys
                 olderr = s.hsys.GetBinError(ibin)
                 s.hsys.SetBinError(ibin,1.0*math.sqrt(olderr*olderr + 1.0*newerr*newerr))
@@ -416,6 +451,10 @@ class SuSample:
     def addglob(s,pattern):
         """ add all files satisfying a glob pattern """
         return s.add(glob.glob(pattern))
+    def get_from_file(s,hpath,i=0):
+        """ Returns TFile::Get(hpath) from i'th file """
+        assert i<len(s.files)
+        return s.files[i].Get( s.topdir(s.files[i])+'/'+hpath )
     def add(s,file):
         """ add a file or list of files to all declared TChain's """
         if type(file)==type([]) or type(file)==type(()):
@@ -698,7 +737,7 @@ class SuStack:
             print 'Cannot find unfolding matrices for:','mcnlo',hmcnlo
     def run_unfolding(s,dall):
         """ Unfolds SuSys histograms to particle level """
-        if not dall.do_unfold: return dall
+        if isinstance(dall,SuSys) or not dall.do_unfold: return dall
         if not s.funfold: s.load_unfolding()
         out = dall.clone()
         for i,d in enumerate(out.flat):
@@ -731,6 +770,7 @@ class SuStack:
     def get_scale(s,d):
         """ A lookup cache of QCD scale values """
         # massage the path to put us in the QCD region
+        # TODO FIXME: return array of scales instead of one particular scale
         d2 = d.clone()
         d2.qcd_region()
         key = d2.h_path_fname()
@@ -761,30 +801,6 @@ class SuStack:
         """ generic function to return histogram for a particular subsample """
         loop = [z for z in s.elm if z.label==label]
         return s.histosum(loop,hname,d,norm)
-    def histosum(s,loop,hname,d,norm=None,weights=None):
-        """ generic function to add up a subset of samples """
-        if len(loop)==0:
-            return None
-        # weights for each sample being summed
-        if not weights:
-            weights = [1.0]*len(loop)
-        assert len(weights)==len(loop)
-        res = loop[0].histo(hname,d)
-        for i,h in enumerate(loop[1:]) :
-            htmp = h.histo(hname,d.clone())
-            if res and not htmp:
-                continue
-            elif res and htmp:
-                res.Add(htmp,weights[i+1])
-            elif not res:
-                res = htmp
-        if res:
-            res.SetName(hname)
-            res.SetMarkerSize(0)
-            if norm:
-                res.Unitize()
-                #res.Scale(1/res.GetSumOfWeights())
-        return s.run_unfolding(res)
     def asym_generic(s,method,hname,d,*args,**kwargs):
         """ Generic function that builds asymmetry for a given method """
         import SuCanvas
@@ -843,9 +859,6 @@ class SuStack:
         """ QCD background summed histogram """
         loop = [e for e in s.elm if 'qcd' in e.flags and 'no' not in e.flags]
         return s.histosum(loop,hname,d)
-    def stack_ewk(s,hname,d,leg=None):
-        """ MC histogram stack for EWK backgrounds """
-        return s.stack(hname,d,flags=['mc','ewk'],leg=leg)
     def stack(s,hname,d,flags=['mc'],leg=None):
         """ MC histogram stack (legacy, ntuple-based)"""
         # prepare containers for results
@@ -864,3 +877,56 @@ class SuStack:
                 if leg:
                     leg.AddEntry(h.nominal_h(),bg.label,'F')
         return res
+    def histosum(s,loop,hname,d,norm=None,weights=None):
+        """ a wrapper around histosum_apply: allows reconstruction of histograms in eta slices """
+        # regular histogram is easy, just return histosum_apply:
+        if isinstance(d,SuSys) or not d.nominal().is_sliced():
+            return s.histosum_apply(loop,hname,d,norm,weights)
+        # histogram specified in several eta slices: we need to reconstruct & unfold in each eta slice, then re-build:
+        hspec = d.nominal().histo    # bin_%d/lpt:imin:imax
+        assert len(hspec.split(':'))==3
+        horig = hspec.split(':')[0]  # bin_%d/lpt
+        hname = horig.split('/')[1]  # lpt
+        imin,imax = [int(cc) for cc in hspec.split(':')[1:1+2]]
+        assert hname in ('lpt','met','nj25','nj30','wmt','wpt')
+        hdir = loop[0].samples[0].get_from_file( d.nominal().h_path_folder() )
+        assert hdir
+        allkeys = [z.GetName() for z in hdir.GetListOfKeys() if re.match('bin_',z.GetName())]
+        idxs = sorted([ int(z.replace('bin_','')) for z in allkeys ])
+        assert idxs[-1]==len(idxs)-1
+        heta = loop[0].samples[0].get_from_file( d.nominal().h_path_folder() + '/' + 'lepton_absetav' )
+        assert heta
+        heta = heta.Clone()
+        heta.SetLineColor(ROOT.kBlack)
+        heta.SetFillColor(ROOT.kBlack)
+        heta.SetMarkerSize(0)
+        # loop over each eta bin
+        ds = []
+        for idx in idxs:
+            ds.append( s.histosum_apply(loop,hname,d.clone(histo=(horig%idx)),norm,weights) )
+        d.update_from_slices(ds,heta,imin,imax)
+        return d
+    def histosum_apply(s,loop,hname,d,norm=None,weights=None):
+        """ generic function to add up a subset of samples """
+        if len(loop)==0:
+            return None
+        # weights for each sample being summed
+        if not weights:
+            weights = [1.0]*len(loop)
+        assert len(weights)==len(loop)
+        res = loop[0].histo(hname,d)
+        for i,h in enumerate(loop[1:]) :
+            htmp = h.histo(hname,d.clone())
+            if res and not htmp:
+                continue
+            elif res and htmp:
+                res.Add(htmp,weights[i+1])
+            elif not res:
+                res = htmp
+        if res:
+            res.SetName(hname)
+            res.SetMarkerSize(0)
+            if norm:
+                res.Unitize()
+                #res.Scale(1/res.GetSumOfWeights())
+        return s.run_unfolding(res)
