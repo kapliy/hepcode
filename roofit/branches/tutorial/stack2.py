@@ -126,7 +126,7 @@ from common import *
 ROOT.SetSignalPolicy(ROOT.kSignalFast)
 ROOT.gROOT.SetBatch(opts.batch)
 ROOT.TH1.SetDefaultSumw2()
-#ROOT.gStyle.SetOptFit(1111);
+#ROOT.gStyle.SetOptFit(1111)
 
 from FileLock import FileLock
 from SuCanvas import *
@@ -332,6 +332,8 @@ def test_unfolding(spR2,spT2):
     #SuSample.debug = True
     #spR2.enable_nominal()
     var = 'lepton_absetav'
+    spR2.update_histo( var )
+    spT2.update_histo( var )
     c = SuCanvas('test_unfolding')
     h = []
     # TODO FIXME: while asym_mc sanity test "almost" works (we nearly get back to htruth)
@@ -339,16 +341,46 @@ def test_unfolding(spR2,spT2):
     h.append( po.asym_mc('h',spT2.clone(q=0),label='pythia') )
     h.append( po.asym_mc('h',spR2.clone(q=0),label='pythia') )
     h.append( po.asym_mc('h',spR2.clone(q=0,do_unfold=True),label='pythia') )
-    M = PlotOptions();
-    M.add('truth','Pythia truth',color=1);
-    M.add('reco','Pythia reco',color=2);
-    M.add('unfold','Pythia unfold',color=3);
+    M = PlotOptions()
+    M.add('truth','Pythia truth',color=1)
+    M.add('reco','Pythia reco',color=2)
+    M.add('unfold','Pythia unfold',color=3)
     c.plotMany(h,M=M,mode=0,height=1.6)
     OMAP.append(c)
     if False:
         hpos_u = po.sig('pos',spR.clone(q=0,do_unfold=True))
         hpos_tru = po.sig('pos',spT.clone(q=0,do_unfold=False))
-    
+
+def test_from_slices(spR2,spT2,mode=0):  # test: reconstruction in eta slices
+    c = SuCanvas('test_slices')
+    h1,h2=None,None
+    if mode==0:
+        h1 = po.sig('pos',spT.clone(q=0,do_unfold=False))
+        h2 = po.sig('pos',spT.clone(q=0,do_unfold=False,histo='bin_%d/lpt:0:5')) #5 is overflow bin; -1 maps to 4 and show slight disagreement
+    elif mode==1:
+        h1 = po.data('pos',spR.clone(q=0,do_unfold=False))
+        h2 = po.data('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:0:5')) #5 is overflow bin; -1 maps to 4 and show slight disagreement
+    else:
+        assert False,'Unsupported test_from_slices mode'
+    M = PlotOptions()
+    M.add('default','Default')
+    M.add('fromslices','From slices')
+    c.plotMany([h1,h2],M=M,mode=0,height=1.7)
+    #c.plotOne(h1,mode=2,height=1.7)
+    OMAP.append(c)
+
+def test_from_slices_sys(spR):
+    c = SuCanvas('test_slices_sys_inbins')
+    h1R = po.sig('pos',spR.clone(q=0,do_unfold=False))
+    h2R = po.sig('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:0:5'))
+    M = PlotOptions()
+    M.add('default','default')
+    M.add('inbins','inbins')
+    c.plotOne(h2R,mode=2,height=1.7)
+    OMAP.append(c)
+    c = SuCanvas('test_slices_sys_default')
+    c.plotOne(h1R,mode=2,height=1.7)
+    OMAP.append(c)
 
 # combined plots
 if mode=='ALL' or mode=='all':
@@ -357,17 +389,19 @@ if mode=='ALL' or mode=='all':
         plot_stack(spR.clone(),'lepton_pt')
     if False:
         plot_asymmetry(spR.clone(),'lepton_absetav',m=2)
-    if True:
+    if False:
         test_unfolding(spR.clone(),spT.clone())
-    if False: #unfolding tests
-        c = SuCanvas('test')
-        hpos = po.sig('pos',spR.clone(q=0,do_unfold=False))
-        hpos_u = po.sig('pos',spR.clone(q=0,do_unfold=True))
-        hpos_tru = po.sig('pos',spT.clone(q=0,do_unfold=False))
-        M = PlotOptions();
-        M.add('POS_reco','mu+ reco'); M.add('POS_unf','mu+ unfolded');
-        M.add('POS_tru','mu+ truth')
-        c.plotMany([hpos,hpos_u,hpos_tru],M=M,mode=0,height=1.5)
+    if False:
+        test_from_slices(spR.clone(),spT.clone(),1)
+    if True: # test: reconstruction in eta slices
+        c = SuCanvas('test_slices_norm')
+        h1R = po.qcd('pos',spR.clone(q=0,do_unfold=False))
+        h2R = po.qcd('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:0:5'))
+        M = PlotOptions()
+        M.add('default','default')
+        M.add('inbins','inbins')
+        c.plotMany([h1R,h2R],M=M,mode=0,height=1.7)
+        #c.plotOne(h1R,mode=2,height=1.7)
         OMAP.append(c)
     if False:
         c = SuCanvas('test')

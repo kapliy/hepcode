@@ -111,8 +111,8 @@ class SuCanvas:
   def plotStackHisto_H(s,stack,data,leg=None):
     """ Wrapper to make a complete plot of stack and data overlayed - TH1 version (deprecated) """
     s.data.append((stack,data,leg))
-    s.buildRatio();
-    s.cd_plotPad();
+    s.buildRatio()
+    s.cd_plotPad()
     # mc
     stack.Draw("HIST")
     s.FixupHisto(stack)
@@ -126,12 +126,12 @@ class SuCanvas:
     if leg:
       leg.Draw("same")
     # ratio
-    s.cd_ratioPad();
+    s.cd_ratioPad()
     s.hratio,s.href = data.Clone("hratio"),data.Clone("href")
     s.hratio.Divide(stack.GetStack().Last())
     s.drawRefLine(s.href)
     s.drawRatio(s.hratio)
-    s.hratio.Draw("AP same");
+    s.hratio.Draw("AP same")
     s.update()
 
   def WAsymmetry_old(s,hplus,hminus,title='asymmetry'):
@@ -172,19 +172,41 @@ class SuCanvas:
     hsum.SetTitle(title)
     return hsum
 
+  @staticmethod
+  def from_slices(hpts,heta,imin=1,imax=-1):
+    """ Builds a histogram from a collection of 1D histograms (e.g., vs pT) in eta slices
+    imin and imax give a range of bins in pT histogram that gets projected on final eta plot
+    heta is a dummy abseta histogram that's used to bootstrap binning for the final histogram
+    """
+    if imax<0: imax = hpts[0].GetNbinsX()
+    hout = heta.Clone()
+    hout.Reset()
+    for ieta in xrange(1,hout.GetNbinsX()+1): # loop over TH1 eta bins that we're going to set. no overflow/underflow!
+      i = ieta-1 # array index for hpts
+      assert hpts[i]
+      val = 0
+      err2 = 0
+      for ipt in xrange(imin,imax+1):
+        assert ipt <= hpts[i].GetNbinsX()+1
+        val += hpts[i].GetBinContent(ipt)
+        err2 += pow(hpts[i].GetBinError(ipt),2)
+      hout.SetBinContent(ieta,val)
+      hout.SetBinError(ieta,math.sqrt(err2))
+    return hout
+    
   def plotAsymmetryFromComponents(s,hdPOS,hdNEG,hmcPOS,hmcNEG,leg=None):
     """ DEPRECATED: wrapper to make a complete plot of charge asymmetry for data vs mc
     from individual charge-dependent histograms """
     s.data.append((hdPOS,hdNEG,hmcPOS,hmcNEG,leg))
-    s.buildRatio();
-    s.cd_plotPad();
+    s.buildRatio()
+    s.cd_plotPad()
     # mc
     s.hmcasym = s.WAsymmetry(hmcPOS,hmcNEG)
     s.hmcasym.SetLineColor(ROOT.kBlue)
     s.hmcasym.Draw()
     s.FixupHisto(s.hmcasym)
-    s.hmcasym.GetYaxis().SetRangeUser(0.0,0.5);
-    s.hmcasym.GetYaxis().SetTitle('Asymmetry');
+    s.hmcasym.GetYaxis().SetRangeUser(0.0,0.5)
+    s.hmcasym.GetYaxis().SetTitle('Asymmetry')
     # data
     s.hdasym = s.WAsymmetry(hdPOS,hdNEG)
     s.hdasym.SetMarkerSize(1.0)
@@ -233,8 +255,8 @@ class SuCanvas:
       s.FixupHisto(h)
     else:
       for i,hsys in enumerate(hplot.flat):
+        if not hsys.h: continue
         h = hsys.h.Clone()
-        if not h: continue
         hs.append(h)
         s.data.append(h)
         color = PlotOptions.autocolor(i)
