@@ -89,7 +89,8 @@ class SuSys:
         hpath = s.h_path_folder(i,flags)+ '/' + s.histo
         return hpath
     def h_path_fname(s,i=1):
-        return s.sysdir[2]+'__'+s.sysdir[i] + '_' + s.subdir[i] + '_' + s.basedir[i] + '_' + SuSys.QMAP[s.charge][1] + '_' + s.histo
+        out = s.sysdir[2]+'__'+s.sysdir[i] + '_' + s.subdir[i] + '_' + s.basedir[i] + '_' + SuSys.QMAP[s.charge][1] + '_' + s.histo
+        return re.sub(r'[^\w]', '_', out)
     def unfold_get_path(s,ibin=None,ivar=None):
         path = s.unfold['sysdir'] + SuSys.QMAP[s.charge][0] + '/'
         if ibin==None:
@@ -99,8 +100,14 @@ class SuSys:
             path += 'bin_%d/%s'%(ibin,ivar)
         return path
     def qcd_region(s):
-        """ Puts this SuSys in qcd region based on qcd map """
-        s.basedir = [s.qcd['metfit']]*3 # disable MET>25 cut
+        """ Puts this SuSys in qcd region based on qcd map
+        If the original basedir includes a subfolder, we preserve it
+        """
+        basedir=''
+        if len(s.basedir[2].split('/'))>1:  # nominal/lpt2025/tight
+            basedir = '/' + '/'.join( s.basedir[2].split('/')[1:]) # lpt2025/tight
+        basedir = s.qcd['metfit']+basedir   # metfit/lpt2025/tight [/POS/absetav_histo]
+        s.basedir = [basedir]*3 # disable MET>25 cut
         s.histo = 'met'
     def is_sliced(s):
         """ Returns True if s.histo represents a folder of histograms in eta-slices """
@@ -141,8 +148,11 @@ class SuSys:
         return s.h.SetFillColor(c) if s.h else None
     def SetMarkerSize(s,c):
         return s.h.SetMarkerSize(c) if s.h else None
+    def ScaleOne(s,*args,**kwargs):
+        """ In SuSys, this is just an alias for Scale() """
+        return s.Scale(*args,**kwargs)
     def Scale(s,c):
-        # special treatment: if c is a list, then the scales are to be applied per-bin
+        """ special treatment: if c is a list, then the scales are to be applied per-bin """
         if isinstance(c,list) or isinstance(c,tuple):
             assert len(c)==s.h.GetNbinsX()+2
             for i,v in enumerate(c):
@@ -182,17 +192,18 @@ class SuPlot:
         return [ p1.SetFillColor(c) for i,p1 in enumerate(s.flat) if i in s.enable ]
     def SetMarkerSize(s,c):
         return [ p1.SetMarkerSize(c) for i,p1 in enumerate(s.flat) if i in s.enable ]
+    def ScaleOne(s,v):
+        """ This version scales all systematics with the same scale (or scale array) """
+        return [ p1.Scale(v) for i,p1 in enumerate(s.flat) if i in s.enable ]
     def Scale(s,v):
-        """ either one constant, or a per-systematic tuple """
-        if isinstance(v,list) or isinstance(v,tuple):
-            j=0
-            for i,p1 in enumerate(s.flat):
-                if not i in s.enable: continue
-                p1.Scale(v[j]) # j is an index for *enabled* systematics only!
-                j+=1
-            return True
-        else:
-            return [ p1.Scale(v) for i,p1 in enumerate(s.flat) if i in s.enable ]
+        """ This version has a separate scale (or scale array) for each systematics """
+        assert isinstance(v,list) or isinstance(v,tuple)
+        j=0
+        for i,p1 in enumerate(s.flat):
+            if not i in s.enable: continue
+            p1.Scale(v[j]) # j is an index for *enabled* systematics only!
+            j+=1
+        return True
     def Unitize(s):
         return [ p1.Unitize() for i,p1 in enumerate(s.flat) if i in s.enable ]
     def MakeStacks(s,hname):
@@ -243,6 +254,7 @@ class SuPlot:
                 idx += 1
     def qcd_region(s):
         """ Puts all SuSys in qcd region based on qcd map """
+        # This function is unused. Rather, we normally call qcd_region directly on individual SuSys's
         res = s.clone()
         [o.qcd_region() for i,o in enumerate(res.flat) if i in res.enable]
         res.status = 1 # to prevent infinite recursion
@@ -598,7 +610,10 @@ class SuSample:
         """ retrieve a particular histogram; path is re-built manually"""
         res = s.GetHisto(hname,d.h_path(flags=s.flags))
         if not res:
-            print '->Missing histo:',hname, d.h_path(flags=s.flags)
+            fname = os.path.basename(s.files[0].GetName())
+            print '->Missing histo:',hname, fname, d.h_path(flags=s.flags)
+            #return None   # be careful, returning None is a recipe for not noticing problems
+            assert False
         if s.lumi:
             res.Scale(s.scale(evcnt = s.choose_evcount('')))
         if rebin!=1:
@@ -650,7 +665,10 @@ class SuStackElm:
                 res.Unitize()
             elif 'qcd' in s.flags and (isinstance(d,SuPlot) and d.status==0):
                 scales = s.po.get_scales(d)
-                res.Scale(scales)
+                if SuStack.QCD_SYS_SCALES:
+                    res.Scale(scales)
+                else:
+                    res.ScaleOne(scales)
         assert res,'Failed to create: ' + hname
         return res
 
@@ -761,21 +779,47 @@ class SuStack:
         return out
     def get_scales(s,d):
         if not SuStack.QCD_SYS_SCALES:
-            return s.get_scale(d.sys[0][0])
+            return s.get_scale_wrap(d.sys[0][0])
         res = []
         for i,o in enumerate(d.flat):
             if i not in d.enable: continue
-            res.append(s.get_scale(o))
+            res.append(s.get_scale_wrap(o))
         return res
+    def get_scale_wrap(s,d):
+        """ A wrapper around get_scale() that knows how to deal with bin_%d/lpt sliced histograms
+        Note: d is an instance of SuSys, not SuPlot
+        """
+        if d.is_sliced():
+            # retrieve an instance of the sliced histogram (vs lpt) to bootstrap the binning
+            hpt = s.sig('tmp',d.clone(q=0)).h
+            if not hpt:
+                hpt = s.sig('tmp',d.clone(q=1)).h
+            assert hpt,'Unable to retrieve original histogram: %s'%d.h_path()
+            nb = hpt.GetNbinsX()
+            tname=None
+            res = []
+            for ib in xrange(nb):
+                tmin = int(hpt.GetBinLowEdge(ib+1))
+                tmax = tmin + int(hpt.GetBinWidth(ib+1))
+                tname = '%s%s%s'%(os.path.basename(d.h_path()),tmin,tmax) #lpt2025
+                # modify basedir to become metfit/lpt2025
+                dtmp = d.clone()
+                dtmp.basedir = dtmp.qlist( d.basedir[2] + '/' + tname )   # nominal/lpt2025
+                res.append(s.get_scale(dtmp))
+            # duplicate first/last bin scales for underflow/overflow scale
+            return [res[0],] + res + [res[-1],]
+        return s.get_scale(d)
     def get_scale(s,d):
-        """ A lookup cache of QCD scale values """
+        """ A lookup cache of QCD scale values
+        Note: d is an instance of SuSys, not SuPlot
+        """
         # massage the path to put us in the QCD region
-        # TODO FIXME: return array of scales instead of one particular scale
         d2 = d.clone()
         d2.qcd_region()
         key = d2.h_path_fname()
         if key in s.scales:
             return s.scales[key][0]*(1.0+d.qcderr*s.scales[key][1])
+        print 'COMPUTING NEW QCD WEIGHT:',key
         import SuFit
         f = SuFit.SuFit()
         f.addFitVar( 'met', 0 , 100 , 'MET (GeV)' );
