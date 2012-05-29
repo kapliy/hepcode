@@ -395,7 +395,10 @@ if mode=='ALL' or mode=='all':
         test_from_slices(spR.clone(),spT.clone(),1)
     if True: # test: reconstruction in eta slices
         c = SuCanvas('test_slices_norm')
+        SuStack.QCD_SYS_SCALES = True
         h1R = po.qcd('pos',spR.clone(q=0,do_unfold=False))
+        #SuSample.debug = True
+        #spR.enable_nominal()
         h2R = po.qcd('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:0:5'))
         M = PlotOptions()
         M.add('default','default')
