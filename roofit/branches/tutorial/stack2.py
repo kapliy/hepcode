@@ -309,13 +309,27 @@ spT.enable_nominal()
 M = PlotOptions()
 M.prefill_mc()
 
-def plot_asymmetry(spR2,var,m=0):
+def plot_asymmetry(spR2,spT2,var='lepton_absetav',lvl=0):
+    """ lvl=0 is RECO, lvl=1 is unfolded """
     assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
     spR2.update_histo( var )
-    c = SuCanvas('asym_'+spR2.nominal().h_path_fname())
-    hasym = po.asym_data_sub('asym',spR2.clone())
-    c.plotOne(hasym,mode=m,height='asym')
-    return c
+    spT2.update_histo( var )
+    c = SuCanvas('asym_inclusive_%s'%('detector' if lvl==0 else 'unfolded'))
+    M = PlotOptions()
+    M.prefill_data(err=1)
+    M.prefill_mc(err=1 if lvl==0 else 0)
+    h = []
+    h.append( po.asym_data_sub('asym',spR2.clone(do_unfold=(lvl==1))) )
+    for mcname in M.names[1:]:
+        h.append( po.asym_mc(mcname, spT2.clone() if lvl==1 else spR2.clone() ,label=mcname) )
+    c.plotAny(h,M=M,height='asym',title='Detector-level asymmetry' if lvl==0 else 'Truth-level asymmetry')
+    OMAP.append(c)
+    # for unfolded asymmetry, let's also draw individual systematics
+    if lvl==1:
+        c = SuCanvas('asym_inclusive_unfolded_allsys')
+        c.plotOne(h[0],mode=2,height='asym',title='Unfolded asymmetry: systematics')
+        OMAP.append(c)
+        h[0].summary_bin(1)
 
 def plot_stack(spR2,var,m=0):
     spR2.update_histo( var )
@@ -325,7 +339,6 @@ def plot_stack(spR2,var,m=0):
     hdata = po.data('data',spR2.clone(),leg=leg)
     c.plotStack(hstack,hdata,mode=m,leg=leg)
     OMAP.append(c)
-    return c
 
 def test_unfolding(spR2,spT2):
     """ tests unfolding on one signal monte-carlo """
@@ -388,12 +401,38 @@ if mode=='ALL' or mode=='all':
         plot_stack(spR.clone(),'lepton_absetav')
         plot_stack(spR.clone(),'lepton_pt')
     if False:
-        plot_asymmetry(spR.clone(),'lepton_absetav',m=2)
-    if False:
+        plot_asymmetry(spR.clone(),spT.clone(),lvl=0)
+        plot_asymmetry(spR.clone(),spT.clone(),lvl=1)
+    if True:
         test_unfolding(spR.clone(),spT.clone())
     if False:
         test_from_slices(spR.clone(),spT.clone(),1)
-    if True: # test: reconstruction in eta slices
+    if False:
+        c = SuCanvas('test_slices_norm')
+        SuStack.QCD_SYS_SCALES = True
+        print '--------->', 'Making default'
+        h1R = po.asym_data_sub('pos',spR.clone(q=0,do_unfold=False))
+        print '--------->', 'Making inbins combined'
+        h2R = po.asym_data_sub('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:0:5'))
+        hpt = []
+        print '--------->', 'Making inbins pt20..25'
+        hpt.append( po.asym_data_sub('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:1:1')) )
+        print '--------->', 'Making inbins pt25..40'
+        hpt.append( po.asym_data_sub('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:2:2')) )
+        #hpt.append( po.asym_data_sub('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:3:3')) )
+        #hpt.append( po.asym_data_sub('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:4:4')) )
+        M = PlotOptions()
+        M.add('default','default')
+        M.add('inbins','inbins')
+        M.add('pt2025','pt2025')
+        M.add('pt2540','pt2540')
+        #M.add('pt4080','pt4080')
+        #M.add('pt80200','pt80200')
+        print '--------->', 'Starting plotting...'
+        c.plotMany([h1R,h2R]+hpt,M=M,mode=0,height='asym')
+        #c.plotOne(h1R,mode=2,height=1.7)
+        OMAP.append(c)
+    if False: # test: reconstruction in eta slices, also visualizes a gazillion SCALE refits
         c = SuCanvas('test_slices_norm')
         SuStack.QCD_SYS_SCALES = True
         h1R = po.qcd('pos',spR.clone(q=0,do_unfold=False))

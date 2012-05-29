@@ -1,3 +1,7 @@
+* MCP_CDOWN is identical to nominal. MCP_CUP is working fine though.
+* CUP diff from nominal becomes HUGE if QCD is re-normalized in that bin
+
+
 * Generic plotting, with flags
 * Put functions in stack.py to make multiple plots at once. Subfolders to save plots?
 * Unfolding
