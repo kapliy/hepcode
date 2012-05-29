@@ -18,10 +18,11 @@ class PlotOptions:
         s.styles = []
         s.cuts = []
         s.ratios = []
+        s.errors = []
     def ntot(s):
         assert s.n == len(s.cuts)
         return s.n
-    def add(s,name,label,color=None,size=0.7,style=20,cut=None,ratio=None):
+    def add(s,name,label,color=None,size=0.7,style=20,cut=None,ratio=None,err=0):
         """ Add one sample """
         s.names.append(name)
         s.labels.append(label)
@@ -30,20 +31,21 @@ class PlotOptions:
         s.styles.append(style)
         s.cuts.append(cut)
         s.ratios.append(ratio)
+        s.errors.append(err)
         s.n+=1
-    def prefill_data(s):
+    def prefill_data(s,err=0):
         """ if we also plan to overlay the data """
-        s.add('datasub','Data',color=1,style=21)
-    def prefill_mc(s):
+        s.add('datasub','Data',color=1,style=21,err=err)
+    def prefill_mc(s,err=0):
         """ pre-fill with all available MC samples """
-        s.add('pythia','Pythia(MRSTMCal)')
+        s.add('pythia','Pythia(MRSTMCal)',err=err)
         #s.add('pythia','Pythia(MRSTMCal->CTEQ6L1)',cut='lha_cteq6ll')
         #s.add('sherpa','Sherpa(CTEQ6L1)')
-        s.add('alpgen_herwig','Alpgen/Herwig(CTEQ6L1)',ratio=True)
+        s.add('alpgen_herwig','Alpgen/Herwig(CTEQ6L1)',ratio=True,err=err)
         #s.add('alpgen_pythia','Alpgen/Pythia(CTEQ6L1)')
-        s.add('mcnlo','MC@NLO(CT10)',ratio=True)
+        s.add('mcnlo','MC@NLO(CT10)',ratio=True,err=err)
         #s.add('powheg_herwig','PowHeg/Herwig(CT10)')
-        s.add('powheg_pythia','PowHeg/Pythia(CT10)',ratio=True)
+        s.add('powheg_pythia','PowHeg/Pythia(CT10)',ratio=True,err=err)
     @staticmethod
     def autocolor(i):
         """ choose a reasonable sequence of colors """
@@ -315,6 +317,56 @@ class SuCanvas:
         h.Draw()
       else:
         h.Draw('A SAME')
+      s.FixupHisto(h)
+    maxh = max([h.GetMaximum() for h in hs])
+    if height=='asym':
+      hs[0].GetYaxis().SetRangeUser(0,0.5);
+    else:
+      hs[0].GetYaxis().SetRangeUser(0,maxh*float(height));
+    if True:
+      leg.Draw("same")
+    s.update()
+
+  def plotAny(s,hplots,M=None,height=1.7,leg=None,title=None):
+    """ A generic function to plot several SuPlot's.
+    M is: a PlotOptions object describing formatting and colors
+    In this version, systematic error mode is encoded inside M
+    Height is: Max*height. Or asym = 0..0.5
+    """
+    if M:
+      assert M.ntot()==len(hplots),'Size mismatch between SuPlots and PlotOptions'
+    if not leg:
+      leg = ROOT.TLegend(0.55,0.70,0.88,0.88,'Legend',"brNDC")
+    if title!=None: leg.SetHeader(title)
+    s.data.append( (hplots,leg) )
+    s.buildDefault(width=1024,height=400)
+    s.cd_canvas();
+    hs = []
+    for i,hplot in enumerate(hplots):
+      h0 = hplot.nominal().stack.GetStack().Last() if hplot.nominal().stack else hplot.nominal_h()
+      htot = None
+      assert h0
+      if M and M.errors[i]==1: # total error (including systematics)
+        ht = hplot.clone()
+        htot = ht.update_errors()
+        s.data.append(htot)
+      h = h0.Clone()
+      hs.append(h)
+      s.data.append(h)
+      if M:
+        h.SetLineColor(M.colors[i])
+        h.SetMarkerColor(M.colors[i])
+        h.SetMarkerStyle(M.styles[i])
+        h.SetMarkerSize(M.sizes[i])
+        leg.AddEntry(h,M.labels[i],'LP')
+        if htot:
+          htot.SetFillColor(M.colors[i])
+          htot.SetFillStyle(3001)
+      else:
+        h.SetLineColor( PlotOptions.autocolor(i) )
+      h.Draw() if i==0 else h.Draw('A SAME')
+      if htot:
+        htot.Draw('A E3 same')
       s.FixupHisto(h)
     maxh = max([h.GetMaximum() for h in hs])
     if height=='asym':

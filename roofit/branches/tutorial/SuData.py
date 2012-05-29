@@ -70,7 +70,7 @@ class SuSys:
         assert s.sysdir
         assert s.subdir
         assert s.basedir
-        # bootstrap "i" from MC sample flags
+        # determine "i" from MC sample flags
         if flags:
             if 'data' in flags:
                 i=0
@@ -211,14 +211,16 @@ class SuPlot:
     def update_from_slices(s,ds,heta,imin,imax):
         """ Builds a histogram from a collection of 1D histograms (e.g., vs pT) in eta slices
         imin and imax give a range of bins in pT histogram that gets projected on final eta plot
-        heta is a dummy abseta histogram that's used to bootstrap binning for the final histogram
+        heta is a dummy abseta histogram that's used to determine binning for the final histogram
         """
+        print '--------->', 'update_from_slices: starting working on',s.flat[0].histo #FIXME
         import SuCanvas
         # create final eta histogram for each systematic
         for i,dsys in enumerate(s.flat):
             if not i in s.enable: continue
             hpts = [d.flat[i].h for d in ds] # loop over slices
             assert all(hpts)
+            print '--------->', 'update_from_slices: looping',dsys.histo,i #FIXME
             dsys.h = SuCanvas.SuCanvas.from_slices(hpts,heta,imin,imax)
         return s
     def get(s,sysname):
@@ -285,9 +287,15 @@ class SuPlot:
             """ Clones subdir (e.g., for efficiencies) """
             res.append(nom.clone(name=n,subdir_mc=ss,unfdir=unfss if unfss!=None else ss))
             s.flat.append(res[-1])
-        def add3(n,ss,unfss=None):
+        def add3(n,ss,unfss):
             """ Clones qcd normalization """
-            res.append(nom.clone(name=n,qcderr=ss,unfdir=unfss if unfss!=None else ss))
+            res.append(nom.clone(name=n,qcderr=ss,unfdir=unfss))
+            s.flat.append(res[-1])
+        def add4(n,ss,unfss):
+            """ Clones with different MC unfolding matrix """
+            if ss in nom.unfold['mc']: return
+            res.append(nom.clone(name=n,unfdir=unfss))
+            res[-1].unfold['mc'] = ss
             s.flat.append(res[-1])
         def next(nn):
             s.sys.append(res[:])
@@ -313,14 +321,14 @@ class SuPlot:
             add('mcp_cdown',pre+'mcp_cdown')
             next('MCP_CSCALE')
         # MCP efficiency
-        add2('effstatup',pre+'st_w_effstatup',pre+'nominal_effstatup')
-        add2('effstatdown',pre+'st_w_effstatdown',pre+'nominal_effstatdown')
+        add2('effstatup','st_w_effstatup',pre+'nominal_effstatup')
+        add2('effstatdown','st_w_effstatdown',pre+'nominal_effstatdown')
         next('MCP_EFFSTAT')
-        add2('effsysup',pre+'st_w_effsysup',pre+'nominal_effsysup')
-        add2('effsysdown',pre+'st_w_effsysdown',pre+'nominal_effsysdown')
+        add2('effsysup','st_w_effsysup',pre+'nominal_effsysup')
+        add2('effsysdown','st_w_effsysdown',pre+'nominal_effsysdown')
         next('MCP_EFFSYS')
-        add2('trigstatup',pre+'st_w_trigstatup',pre+'nominal_trigstatup')
-        add2('trigstatdown',pre+'st_w_trigstatdown',pre+'nominal_trigstatdown')
+        add2('trigstatup','st_w_trigstatup',pre+'nominal_trigstatup')
+        add2('trigstatdown','st_w_trigstatdown',pre+'nominal_trigstatdown')
         next('MCP_TRIG')
         # JET
         add('jet_jer',pre+'jet_jer')
@@ -335,7 +343,14 @@ class SuPlot:
         # QCD normalization
         add3('qcdup',1,pre+'nominal')
         add3('qcddown',-1,pre+'nominal')
-        next('QCD_FRAC'              )
+        next('QCD_FRAC')
+        # unfolding systematic
+        if 'mc' in nom.unfold:
+            add4('unfold_pythia','pythia',pre+'nominal')
+            add4('unfold_alpgen','alpgen',pre+'nominal')
+            add4('unfold_powheg','powheg',pre+'nominal')
+            add4('unfold_mcnlo','mcnlo',pre+'nominal')
+            next('UNFOLDING')
         assert len(s.sys)==len(s.groups)
         print 'Created systematic variations: N =',len(s.sys)
     def update_errors(s,sysonly=False):
@@ -354,7 +369,6 @@ class SuPlot:
                 if not i in s.enable:
                     i+=1
                     continue
-                print s.enable, i, s.flat[i], hs.h
                 for ibin in xrange(0,s.hsys.GetNbinsX()+2):
                     h = hs.stack.GetStack().Last() if stack_mode else hs.h
                     bdiffs[ibin].append ( abs(s.hsys.GetBinContent(ibin)-h.GetBinContent(ibin)) )
@@ -372,9 +386,9 @@ class SuPlot:
         """ Prints relative deviation of various systematics in a given bin """
         nom = s.nominal_h()
         for ig,hss in enumerate(s.sys[1:]):
-            print s.groups[ig],':'
+            print s.groups[ig+1],':'
             for hs in hss: # loop over systematics in this group
-                print '%s \t:\t %.2f' % (hs.name, 100.0*(hs.h.GetBinContent(b) - nom.GetBinContent(b))/nom.GetBinContent(b) if nom.GetBinContent(b) else 0 )
+                print '%s \t\t:\t\t %.2f%%' % (hs.name, 100.0*(hs.h.GetBinContent(b) - nom.GetBinContent(b))/nom.GetBinContent(b) if nom.GetBinContent(b) else 0 )
         pass
     def update_histo(s,histo):
         for i,o in enumerate(s.flat):
@@ -664,11 +678,14 @@ class SuStackElm:
             if unitize:
                 res.Unitize()
             elif 'qcd' in s.flags and (isinstance(d,SuPlot) and d.status==0):
+                print '--------->', 'qcd scaling start:',hname #FIXME
                 scales = s.po.get_scales(d)
+                print '--------->', 'qcd scaling applying:',hname #FIXME
                 if SuStack.QCD_SYS_SCALES:
                     res.Scale(scales)
                 else:
                     res.ScaleOne(scales)
+                print '--------->', 'qcd scaling end:',hname #FIXME
         assert res,'Failed to create: ' + hname
         return res
 
@@ -764,6 +781,7 @@ class SuStack:
             h = d.h if d.h else d.stack.GetStack().Last()
             assert response
             method = d.unfold['method']
+            print 'Unfolding method:',d.name,d.unfold['mc'] # FIXME AK
             par = d.unfold['par']
             unfold = None
             if method=='RooUnfoldBayes':
@@ -848,7 +866,9 @@ class SuStack:
     def asym_generic(s,method,hname,d,*args,**kwargs):
         """ Generic function that builds asymmetry for a given method """
         import SuCanvas
+        print '--------->', 'asym_generic: preparing hPOS' #FIXME
         hPOSs = method(hname+'_POS',d.clone(q=0),*args,**kwargs)
+        print '--------->', 'asym_generic: preparing hNEG' #FIXME
         hNEGs = method(hname+'_NEG',d.clone(q=1),*args,**kwargs)
         assert len(hPOSs.flat) == len(hNEGs.flat)
         for i,(hPOS,hNEG) in enumerate( zip(hPOSs.flat,hNEGs.flat) ):
@@ -867,9 +887,9 @@ class SuStack:
         return s.asym_generic(s.data,*args,**kwargs)
     def data_sub(s,hname,d):
         """ bg-subtracted data """
-        loop1 = [e for e in s.elm if 'mc' in e.flags and 'sig' not in e.flags and 'no' not in e.flags]
+        loop1 = [e for e in s.elm if 'data' in e.flags and 'no' not in e.flags]
         weights = [1.0]*len(loop1)
-        loop2 += [e for e in s.elm if 'data' in e.flags and 'no' not in e.flags]
+        loop2 = [e for e in s.elm if 'mc' in e.flags and 'sig' not in e.flags and 'no' not in e.flags]
         weights+= [-1.0]*len(loop2)
         loop = loop1 + loop2
         res = s.histosum(loop,hname,d,weights=weights)
