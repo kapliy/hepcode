@@ -22,6 +22,9 @@ common="--input /share/ftkdata1/antonk/ana_v29D_02222012_DtoM_pdfw_stacoCB_all/"
 # big remake, MET recalibration etc
 common="--input /share/t3data3/antonk/ana/ana_v29D_03132012_DtoM_64bit_allsyst_withsoftjup_stacoCB_all"
 
+# attempting to make the plots again after switching to histograms - to debug problems with asymmetry
+common="--input /share/t3data3/antonk/ana/ana_v29D_04292012_DtoM_unfold_stacoCB_all"
+
 ###############################################################################
 # Parse command line
 ###############################################################################
@@ -66,6 +69,7 @@ function run_w_asym () {
     eval ./stack2.py ${common}  -b --var 'l_eta' --bin '20,-2.5,2.5' -t ${tag} $@ &
 }
 function run_w_asym_min () {
+    echo ./stack2.py ${common}  -b --var "\"fabs(l_eta)\"" --bin '10,0.0,2.5' -t ${tag} $@
     eval ./stack2.py ${common}  -b --var "\"fabs(l_eta)\"" --bin '10,0.0,2.5' -t ${tag} $@ &
 }
 function run_z_stacks () {
@@ -360,7 +364,7 @@ fi;
 # FINAL OUTPUT:
 # reco-level asymmetry plots for multiple generators
 # also allows to perform a correction to particle level
-if [ "$mode" == "asym" ]; then
+if [ "$mode" == "asym" -o "$mode" == "asym_reco" ]; then
     common="${common} --qcd AUTO"
     pre="${wpre_jordan}"
     m=asym_reco
@@ -370,10 +374,10 @@ if [ "$mode" == "asym" ]; then
     gput tagsF ${i} RASYM  "--pre \"${pre}\" --cut \"${cut}\" -m ${m} "
     ((i++))
     # unfolded to particle level
-    gput tagsF ${i} UASYM  "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --effroot asymmetry_eff.root"
-    ((i++))
+    #gput tagsF ${i} UASYM  "--pre \"${pre}\" --cut \"${cut}\" -m ${m} --effroot asymmetry_eff.root"
+    #((i++))
     # additional variations - for run
-    if [ "2" -eq "2" ]; then
+    if [ "0" -eq "2" ]; then
 	gput tagsF ${i} RASYM_nj0  "--pre \"${pre} && njets==0\" --cut \"${cut}\" -m ${m} "
 	((i++))
 	gput tagsF ${i} RASYM_nj1  "--pre \"${pre} && njets==1\" --cut \"${cut}\" -m ${m} "
@@ -405,7 +409,7 @@ if [ "$mode" == "asym" ]; then
 	gput tagsF ${i} RASYM_wpt20100  "--pre \"${pre} && w_pt>20 && w_pt<100\" --cut \"${cut}\" -m ${m} "
 	((i++))
     fi
-    if [ "1" -eq "1" ]; then
+    if [ "0" -eq "1" ]; then
 	gput tagsF ${i} RASYM_met4060  "--pre \"${pre} && met>40 && met<60\" --cut \"${cut}\" -m ${m} "
 	((i++))
 	gput tagsF ${i} RASYM_met60200  "--pre \"${pre} && met>60 && met<200\" --cut \"${cut}\" -m ${m} "

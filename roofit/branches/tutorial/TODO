@@ -1,3 +1,13 @@
+* Open by-hand the histograms for MS systematics and confirm if this is indeed all shit.
+* Restore the ntuple cuts with renormalize() and see what's up with that.
+
+Rerunning:
+* allcluup
+
+
+
+
+* Modify dgplot to be able to plot TH1 objects. Then, draw msup/msdown/nominal variations.
 * MCP_CDOWN is identical to nominal. MCP_CUP is working fine though.
 * CUP diff from nominal becomes HUGE if QCD is re-normalized in that bin
 
@@ -25,49 +35,21 @@ WORK PLAN:
 
 
 
-Top-level usage:
-stack.histo()
-stack.asym('nominal/syst','baseline',unfold=None/glob/bin)
-
-So SuStack needs to know about folder structure and normalization histograms.
-
-SuPlot-style systematics specification. + integrate unfolding
-
-First: get a histogram for a particular systematic variation. Use opts.var to select variable.
-Use hsource stuff to select directory? Or better, perhaps hardcode them in SuSys specification?
-
-SuNorm:
- List of normalizations by systematic x region
- (also allow to skip non-nominal systematics)
- Compute on-demand?
-  
-SuSys, plus direction - to automatically group systematics
- SuNorm
- folder = <>/baseline/asym_abseta -> baseline/POS/asym_abseta
-
-
-
-
-
-
-
-
-* Add systematics: trigger/reco efficiency where POS goes up, NEG goes down [not needed]
 
 Ntuple based studies:
 * Compare QCD template shapes as a function of isolation cone.
 * Compare data/MC agreement in roofit for tigher cone (0.1)
 
 Run overnight:
-* 2D migration matrices for all systematics
+* DONE 2D migration matrices for all systematics
 * DONE Add tighter isolation (pt+etcone changed to 0.1)
 * DONE Add qcd with three inversions of isolation [ normal, tight, tighter ]
 * Try etcone changed to 0.1
 * email constantinos: ABCD method qcd template
   CM: ABCD = isolation and MULTIJET_LIKE{met<X && mT<X && nlepton=small}
-* Take an eta slice. # events in pt 20..40, 40..80
+* DONE Take an eta slice. # events in pt 20..40, 40..80
 * Peter: check if there are off-diagonal entries
-* Peter: unfolding test on pythia/alpgen
+* DONE Peter: unfolding test on pythia/alpgen
 
 
 Work in progress:

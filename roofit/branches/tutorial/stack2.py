@@ -291,7 +291,7 @@ q = opts.charge
 
 # Reco-level plots + all systematics
 spR = SuPlot()
-spR.bootstrap(ntuple=opts.ntuple,do_unfold=False,
+spR.bootstrap(do_unfold=False,
               unfold={'sysdir':'nominal','mc':'pythia','method':'RooUnfoldBinByBin','par':4},
               charge=q,var=opts.var,histo=opts.hsource,
               sysdir=['nominal','nominal','isowind'],subdir='st_w_final',basedir='baseline',
@@ -300,14 +300,15 @@ SuStack.QCD_SYS_SCALES = opts.metallsys
 spR.enable_all()
 # Truth-level plots
 spT= SuPlot()
-spT.bootstrap(ntuple=opts.ntuple,
-              charge=q,var=opts.var,histo=opts.hsource,
+spT.bootstrap(charge=q,var=opts.var,histo=opts.hsource,
               sysdir='truth',subdir='st_w_final',basedir='baseline')
 spT.enable_nominal()
-
-# Create multiple signal Monte-Carlos
-M = PlotOptions()
-M.prefill_mc()
+# Reco-level ntuple
+spRN = SuPlot()
+spRN.bootstrap(ntuple=opts.ntuple,histo=None,
+               charge=q,var=opts.var,path=path_reco,bin=opts.bin,
+               weight=opts.cut,pre=opts.pre)
+spRN.enable_nominal()
 
 def plot_asymmetry(spR2,spT2,var='lepton_absetav',lvl=0):
     """ lvl=0 is RECO, lvl=1 is unfolded """
@@ -329,7 +330,7 @@ def plot_asymmetry(spR2,spT2,var='lepton_absetav',lvl=0):
         c = SuCanvas('asym_inclusive_unfolded_allsys')
         c.plotOne(h[0],mode=2,height='asym',title='Unfolded asymmetry: systematics')
         OMAP.append(c)
-        h[0].summary_bin(1)
+        h[0].summary_bin([1])
 
 def plot_stack(spR2,var,m=0):
     spR2.update_histo( var )
@@ -340,7 +341,7 @@ def plot_stack(spR2,var,m=0):
     c.plotStack(hstack,hdata,mode=m,leg=leg)
     OMAP.append(c)
 
-def test_unfolding(spR2,spT2):
+def test_unfolding(spR2,spT2,asym=True):
     """ tests unfolding on one signal monte-carlo """
     #SuSample.debug = True
     #spR2.enable_nominal()
@@ -351,9 +352,14 @@ def test_unfolding(spR2,spT2):
     h = []
     # TODO FIXME: while asym_mc sanity test "almost" works (we nearly get back to htruth)
     # individual charges hPOS and hNEG don't quite work. Why?? - study in TrigFTKAna on small test!!! Could it really be the charge when filling response?
-    h.append( po.asym_mc('h',spT2.clone(q=0),label='pythia') )
-    h.append( po.asym_mc('h',spR2.clone(q=0),label='pythia') )
-    h.append( po.asym_mc('h',spR2.clone(q=0,do_unfold=True),label='pythia') )
+    if asym:
+        h.append( po.asym_mc('h',spT2.clone(q=0),label='pythia') )
+        h.append( po.asym_mc('h',spR2.clone(q=0),label='pythia') )
+        h.append( po.asym_mc('h',spR2.clone(q=0,do_unfold=True),label='pythia') )
+    else:
+        h.append( po.mc('h',spT2.clone(q=1),label='pythia') )
+        h.append( po.mc('h',spR2.clone(q=1),label='pythia') )
+        h.append( po.mc('h',spR2.clone(q=1,do_unfold=True),label='pythia') )
     M = PlotOptions()
     M.add('truth','Pythia truth',color=1)
     M.add('reco','Pythia reco',color=2)
@@ -403,8 +409,20 @@ if mode=='ALL' or mode=='all':
     if False:
         plot_asymmetry(spR.clone(),spT.clone(),lvl=0)
         plot_asymmetry(spR.clone(),spT.clone(),lvl=1)
-    if True:
-        test_unfolding(spR.clone(),spT.clone())
+    if True: # mel test: look at systematic variations in signal only, see if it is one-sided
+        spR.update_histo( 'lepton_absetav' )
+        c = SuCanvas('systematics')
+        if False: # in asymmetry
+            h = po.asym_sig('asym',spR.clone(do_unfold=0))
+            c.plotOne(h,mode=2,height='asym',title='Signal MC asymmetry: systematics')
+        else:     # in signal
+            #h = po.sig('asym',spR.clone(q=0))
+            h = po.mc('asym',spR.clone(q=0),label='pythia')
+            c.plotOne(h,mode=2,height=1.5,title='Signal MC asymmetry: systematics')
+        OMAP.append(c)
+        h.summary_bin(fname='index.html')
+    if False:
+        test_unfolding(spR.clone(),spT.clone(),asym=False)
     if False:
         test_from_slices(spR.clone(),spT.clone(),1)
     if False:
@@ -589,11 +607,14 @@ if mode=='asym_truth': # asymmetry, at truth level, of different monte-carlos.
     leg.Draw('same')
 
 if mode=='asym_reco': # asymmetry, at reco/particle level, of different monte-carlos. Compared to BG-subtracted data
-    renormalize()
+    SuStackElm.new_scales = False
+    #renormalize()
     c = SuCanvas()
     c.buildDefault(width=1024,height=768)
     cc = c.cd_canvas()
     cc.cd(1)
+    M = PlotOptions();
+    M.prefill_mc()
     M.prefill_data()
     h = []
     hasym = []
@@ -603,17 +624,11 @@ if mode=='asym_reco': # asymmetry, at reco/particle level, of different monte-ca
         h.append([None,None])
         for q in (0,1):
             print 'Creating:',i,q
-            preDATA = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre)
-            cut = opts.cut+'*'+M.cuts[i] if M.cuts[i] else opts.cut
-            preMC = '(%s) * (%s) * (%s)'%(QMAP[q][2],cut,opts.pre)
             if i==M.ntot()-1: #data
-                h[i][q] = particle(po.data_sub('datasub_%s_%d'%(M.names[i],q),opts.var,opts.bin,preDATA,path=path_reco),q=q)
+                h[i][q] = po.data_sub('datasub',spRN.clone(q=q,path=path_reco,histo=opts.hsource)).nominal_h()
             else: #MC
-                if opts.effroot: # just get the particle truth histo directly (correctly handles the errors)
-                    pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],cut,fortruth(opts.pre))
-                    h[i][q] = po.histo(M.names[i],'recomc_%s_%s_%d'%(M.names[i],M.cuts[i] if M.cuts[i] else '',q),opts.var,opts.bin,preMC,path=path_truth)
-                else:
-                    h[i][q] = po.histo(M.names[i],'recomc_%s_%s_%d'%(M.names[i],M.cuts[i] if M.cuts[i] else '',q),opts.var,opts.bin,preMC,path=path_reco)
+                h[i][q] = po.mc('recomc',spRN.clone(q=q,path=path_reco,histo=opts.hsource),label=M.names[i]).nominal_h()
+            assert h[i][q]
             h[i][q].SetLineColor(M.colors[i])
             h[i][q].SetMarkerColor(M.colors[i])
             h[i][q].SetMarkerStyle(M.styles[i])
@@ -627,6 +642,7 @@ if mode=='asym_reco': # asymmetry, at reco/particle level, of different monte-ca
     maxh = max([htmp.GetMaximum() for htmp in hasym])*1.5
     hasym[0].GetYaxis().SetRangeUser(0,maxh)
     leg.Draw('same')
+    OMAP.append(c)
 
 # ADDING SYSTEMATICS!
 # NOTE: BG-SUBTRACTED does not include systematic effects in the subtracted MC for now. So data error bar is statistics only.
