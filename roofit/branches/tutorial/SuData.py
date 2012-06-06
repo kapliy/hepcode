@@ -24,7 +24,7 @@ class SuSys:
         else:
             return [v]*3
     def __init__(s,name='nominal',charge=2,qcd = {}, unfold={},qcderr=0,
-                 ntuple='w',path=None,var=None,bin=None,pre='',weight="mcw*puw*effw*trigw",
+                 ntuple=None,path=None,var=None,bin=None,pre='',weight="mcw*puw*effw*trigw",
                  histo=None,sysdir=None,subdir=None,basedir=None ):
         # actual histograms
         s.h = None
@@ -50,7 +50,7 @@ class SuSys:
         s.basedir = s.qlist(basedir)
     def use_ntuple(s):
         """ True or False """
-        return s.path and s.bin and s.pre
+        return s.ntuple!=None
     def nt_prew(s):
         """ Returns a TTree::Draw cut string for w ntuple """
         assert s.var
@@ -111,9 +111,10 @@ class SuSys:
         s.histo = 'met'
     def is_sliced(s):
         """ Returns True if s.histo represents a folder of histograms in eta-slices """
-        return re.search('bin_',s.histo)
+        return re.search('bin_',s.histo) if s.histo else False
     def clone(s,sysdir=None,sysdir_mc=None,subdir=None,subdir_mc=None,basedir=None,
-              qcderr=None,name=None,q=None,histo=None,unfold=None,unfdir=None):
+              qcderr=None,name=None,q=None,histo=None,unfold=None,unfdir=None,
+              ntuple=None,path=None,var=None,bin=None,pre=None,weight=None):
         """ deep copy, also allowing to update some members on-the-fly (useful to spawn systematics) """
         import copy
         res =  copy.copy(s)
@@ -135,6 +136,13 @@ class SuSys:
         else:
             res.unfold = copy.copy(s.unfold)
         if unfdir!=None: res.unfold['sysdir'] = unfdir
+        # ntuple replacements
+        if ntuple!=None: res.ntuple = ntuple
+        if path!=None: res.path = path
+        if var!=None: res.var = var
+        if bin!=None: res.bin = bin
+        if pre!=None: res.pre = pre
+        if weight!=None: res.weight = weight
         return res
     def Add(s,o,dd=1.0):
         return s.h.Add(o.h,dd) if s.h and o.h else None
@@ -262,12 +270,12 @@ class SuPlot:
         res.status = 1 # to prevent infinite recursion
         return res
     def bootstrap(s,charge=2,qcd = {},unfold={},do_unfold=False,qcderr=0,
-                  ntuple='w',path=None,var=None,bin=None,pre='',weight="mcw*puw*effw*trigw",
+                  ntuple=None,path=None,var=None,bin=None,pre='',weight="mcw*puw*effw*trigw",
                   histo=None,sysdir=None,subdir=None,basedir=None ):
         """ bootstraps a full collection of systematics from the nominal instance of SuSys """
-        pre=''
+        prep=''
         if sysdir and sysdir[0]=='tight_nominal':
-            pre='tight_'
+            prep='tight_'
         # nominal first:
         nom = SuSys(charge=charge,qcd=qcd,unfold=unfold,qcderr=qcderr,
                     ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight,
@@ -276,8 +284,11 @@ class SuPlot:
         s.flat = [ nom ]
         s.groups = [ 'nominal' ]
         s.do_unfold = do_unfold
+        # if this is using the ntuple, we don't have all systematics
+        if nom.use_ntuple():
+            print 'Created ntuple-based SuPlot'
+            return
         # systematic variations
-        print 'Creating systematic variations...'
         res = []
         def add(n,ss,unfss=None):
             """ Clones sysdir """
@@ -302,54 +313,54 @@ class SuPlot:
             s.groups.append(nn)
             del res[:]
         # MCP smearing UP
-        add('mcp_msup',pre+'mcp_msup')
-        add('mcp_msdown',pre+'mcp_msdown')
+        add('mcp_msup',prep+'mcp_msup')
+        add('mcp_msdown',prep+'mcp_msdown')
         next('MCP_MS_RES')
         # MCP smearing DOWN
-        add('mcp_idup',pre+'mcp_idup')
-        add('mcp_iddown',pre+'mcp_iddown')
+        add('mcp_idup',prep+'mcp_idup')
+        add('mcp_iddown',prep+'mcp_iddown')
         next('MCP_ID_RES')
         # MCP scale
         if False: # old MCP scale recommendation: on/off
-            add('mcp_unscaled',pre+'mcp_unscaled')
+            add('mcp_unscaled',prep+'mcp_unscaled')
             next('MCP_SCALE')
         else:  # using my C/K variations
-            add('mcp_kup',pre+'mcp_kup')
-            add('mcp_kdown',pre+'mcp_kdown')
+            add('mcp_kup',prep+'mcp_kup')
+            add('mcp_kdown',prep+'mcp_kdown')
             next('MCP_KSCALE')
-            add('mcp_cup',pre+'mcp_cup')
-            add('mcp_cdown',pre+'mcp_cdown')
+            add('mcp_cup',prep+'mcp_cup')
+            add('mcp_cdown',prep+'mcp_cdown')
             next('MCP_CSCALE')
         # MCP efficiency
-        add2('effstatup','st_w_effstatup',pre+'nominal_effstatup')
-        add2('effstatdown','st_w_effstatdown',pre+'nominal_effstatdown')
+        add2('effstatup','st_w_effstatup',prep+'nominal_effstatup')
+        add2('effstatdown','st_w_effstatdown',prep+'nominal_effstatdown')
         next('MCP_EFFSTAT')
-        add2('effsysup','st_w_effsysup',pre+'nominal_effsysup')
-        add2('effsysdown','st_w_effsysdown',pre+'nominal_effsysdown')
+        add2('effsysup','st_w_effsysup',prep+'nominal_effsysup')
+        add2('effsysdown','st_w_effsysdown',prep+'nominal_effsysdown')
         next('MCP_EFFSYS')
-        add2('trigstatup','st_w_trigstatup',pre+'nominal_trigstatup')
-        add2('trigstatdown','st_w_trigstatdown',pre+'nominal_trigstatdown')
+        add2('trigstatup','st_w_trigstatup',prep+'nominal_trigstatup')
+        add2('trigstatdown','st_w_trigstatdown',prep+'nominal_trigstatdown')
         next('MCP_TRIG')
         # JET
-        add('jet_jer',pre+'jet_jer')
+        add('jet_jer',prep+'jet_jer')
         next('JER')
-        add('jet_jesup',pre+'jet_jesup')
-        add('jet_jesdown',pre+'jet_jesdown')
+        add('jet_jesup',prep+'jet_jesup')
+        add('jet_jesdown',prep+'jet_jesdown')
         next('JES')
         # MET
-        add('met_allcluup',pre+'met_allcluup')
-        add('met_allcludown',pre+'met_allcludown')
+        add('met_allcluup',prep+'met_allcluup')
+        add('met_allcludown',prep+'met_allcludown')
         next('MET')
         # QCD normalization
-        add3('qcdup',1,pre+'nominal')
-        add3('qcddown',-1,pre+'nominal')
+        add3('qcdup',1,prep+'nominal')
+        add3('qcddown',-1,prep+'nominal')
         next('QCD_FRAC')
         # unfolding systematic
         if 'mc' in nom.unfold:
-            add4('unfold_pythia','pythia',pre+'nominal')
-            add4('unfold_alpgen','alpgen',pre+'nominal')
-            add4('unfold_powheg','powheg',pre+'nominal')
-            add4('unfold_mcnlo','mcnlo',pre+'nominal')
+            add4('unfold_pythia','pythia',prep+'nominal')
+            add4('unfold_alpgen','alpgen',prep+'nominal')
+            add4('unfold_powheg','powheg',prep+'nominal')
+            add4('unfold_mcnlo','mcnlo',prep+'nominal')
             next('UNFOLDING')
         assert len(s.sys)==len(s.groups)
         print 'Created systematic variations: N =',len(s.sys)
@@ -382,7 +393,7 @@ class SuPlot:
                 olderr = s.htot.GetBinError(ibin)
                 s.htot.SetBinError(ibin,1.0*math.sqrt(olderr*olderr + 1.0*newerr*newerr))
         return s.hsys if sysonly else s.htot
-    def summary_bin(s,b):
+    def summary_bin_txt(s,b):
         """ Prints relative deviation of various systematics in a given bin """
         nom = s.nominal_h()
         for ig,hss in enumerate(s.sys[1:]):
@@ -390,11 +401,52 @@ class SuPlot:
             for hs in hss: # loop over systematics in this group
                 print '%s \t\t:\t\t %.2f%%' % (hs.name, 100.0*(hs.h.GetBinContent(b) - nom.GetBinContent(b))/nom.GetBinContent(b) if nom.GetBinContent(b) else 0 )
         pass
+    def summary_bin(s,b=None,fname=None):
+        """ Prints relative deviation of various systematics in a given bin, compared with the statistical uncertainty """
+        nom = s.nominal_h()
+        bins = b if b else range(1,nom.GetNbinsX()+1)
+        oldsys,f = sys.stdout,None
+        if fname:
+            f = open(fname,'w')
+            sys.stdout = f
+        print '<HTML><BODY>'
+        print '<TABLE border="1">'
+        print '<thead><tr>'
+        print '<td width="100">|eta| bin</td>'
+        for b in bins:
+            tmin = nom.GetBinLowEdge(b)
+            tmax = tmin + nom.GetBinWidth(b)
+            print '<td width="50">%.1f..%.1f</td>'%(tmin,tmax)
+        print '</tr></thead>'
+        # statistical errors (for reference)
+        print '<TR>'
+        print '<TD>stat. err</TD>'
+        for b in bins:
+            err  = 100.0*(nom.GetBinError(b))/nom.GetBinContent(b) if nom.GetBinContent(b) else -999
+            print '<TD>%.2f</TD>'%(err)
+        print '</TR>'
+        for ig,hss in enumerate(s.sys[1:]):
+            print '<TR><TD colspan="%d">'%(len(bins)+1)
+            print s.groups[ig+1]
+            print '</TD></TR>'
+            for hs in hss:
+                name = hs.name
+                print '<TR>'
+                print '<TD>%s</TD>'%name
+                for b in bins:
+                    diff = 100.0*(hs.h.GetBinContent(b) - nom.GetBinContent(b))/nom.GetBinContent(b) if nom.GetBinContent(b) else -999
+                    print '<TD>%.2f</TD>'%diff
+                print '</TR>'
+        print '</TABLE>'
+        print '</BODY></HTML>'
+        sys.stdout = oldsys
+        if f: f.close()
+        #print 'http://rendera.heroku.com/'
     def update_histo(s,histo):
         for i,o in enumerate(s.flat):
             if i in s.enable:
                 o.histo = histo
-    def clone(s,q=None,enable=None,histo=None,do_unfold=None):
+    def clone(s,q=None,enable=None,histo=None,do_unfold=None,ntuple=None,path=None,var=None,bin=None,pre=None,weight=None):
         """ Clones an entire SuPlot.
         Each SuSys is cloned individually to avoid soft pointer links
         """
@@ -408,11 +460,11 @@ class SuPlot:
         for sgroups in s.sys:
             bla = []
             for sinst in sgroups:
-                bla.append(sinst.clone(q=q,histo=histo))
+                bla.append(sinst.clone(q=q,histo=histo,ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight))
                 res.flat.append(bla[-1])
             res.sys.append( bla )
         return res
-        
+
 class SuSample:
     """
     Encapsulates a single TChain
@@ -567,11 +619,18 @@ class SuSample:
         for i,d in enumerate(dall.flat):
             if not i in dall.enable: continue
             if d.use_ntuple():
-                d.h = s.histo_nt( hname,d.var,d.bin,d.weight,d.path,rebin )
+                d.h = s.histo_nt(hname,d.var,d.bin,d.nt_prew(),path=d.path,rebin=rebin,hsource=d.histo)
             else:
                 d.h = s.histo_h(hname,d,rebin)
         return dall
-    def histo_nt(s,hname,var,bin,cut,path=None,rebin=1.0):
+    @staticmethod
+    def make_habseta(name='habseta_template'):
+        """ makes an instance of abseta histogram with detector-motivated binning """
+        import array
+        bins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
+        a = array.array('f',bins)
+        return ROOT.TH1F(name,name,len(a)-1,a)
+    def histo_nt(s,hname,var,bin,cut,path=None,hsource=None,rebin=1.0):
         """ retrieve a particular histogram from ntuple (with cache) """
         path = path if path else s.path
         key = (s.rootpath,s.name,path,var,bin,cut)
@@ -594,9 +653,18 @@ class SuSample:
                 s.cache = None
         if not key in s.data:
             hname = hname + '_' + s.name
-            print '--> creating %s'%hname
+            usebin,xtra = True,''
+            # special handling to create variable-bin eta histograms:
+            if hsource=='lepton_absetav':
+                s.habseta = s.make_habseta(hname)
+                usebin = False
+                xtra = ' with special abseta binning'
+            print '--> creating %s%s'%(hname,xtra)
             # build from TNtuple
-            s.nt[path].Draw('%s>>%s(%s)'%(var,hname,bin),cut,'goff')
+            if usebin:
+                s.nt[path].Draw('%s>>%s(%s)'%(var,hname,bin),cut,'goff')
+            else:
+                s.nt[path].Draw('%s>>%s'%(var,hname),cut,'goff')
             if not ROOT.gDirectory.Get(hname):
                 return None
             s.data[key] = ROOT.gDirectory.Get(hname).Clone()
@@ -640,6 +708,7 @@ class SuStackElm:
     Encapsulates a set of SuSamples (to be drawn with one color)
     For example: jimmy_wmunu_np{0..5}
     """
+    new_scales = True
     def __init__(s,label,samples,color=ROOT.kBlack,flags=[],table={},po=None):
         """ constructor """
         s.samples = [SuSample(a) for a in samples]
@@ -677,7 +746,7 @@ class SuStackElm:
             res.SetMarkerSize(0)
             if unitize:
                 res.Unitize()
-            elif 'qcd' in s.flags and (isinstance(d,SuPlot) and d.status==0):
+            elif SuStackElm.new_scales==True and 'qcd' in s.flags and (isinstance(d,SuPlot) and d.status==0):
                 print '--------->', 'qcd scaling start:',hname #FIXME
                 scales = s.po.get_scales(d)
                 print '--------->', 'qcd scaling applying:',hname #FIXME
