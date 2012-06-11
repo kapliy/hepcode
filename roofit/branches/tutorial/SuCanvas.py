@@ -346,7 +346,7 @@ class SuCanvas:
       h0 = hplot.nominal().stack.GetStack().Last() if hplot.nominal().stack else hplot.nominal_h()
       htot = None
       assert h0
-      if M and M.errors[i]==1: # total error (including systematics)
+      if M and M.errors[i]: # total error (including systematics)
         ht = hplot.clone()
         htot = ht.update_errors()
         s.data.append(htot)
@@ -371,8 +371,10 @@ class SuCanvas:
     maxh = max([h.GetMaximum() for h in hs])
     if height=='asym':
       hs[0].GetYaxis().SetRangeUser(0,0.5);
-    else:
+    elif height<3.0:
       hs[0].GetYaxis().SetRangeUser(0,maxh*float(height));
+    else:
+      hs[0].GetYaxis().SetRangeUser(0,height);
     if True:
       leg.Draw("same")
     s.update()
