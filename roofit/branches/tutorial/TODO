@@ -1,39 +1,17 @@
-* Open by-hand the histograms for MS systematics and confirm if this is indeed all shit.
+Check out this line: - it gets triggered on met_phi in Zmumu events.
+    if( safe_divide(tmp,den) > 1E6 ) { printf( "num = %f , den = %f\n" , num , den ); return 0; assert(false); } //FIXME AK                                            
 * Restore the ntuple cuts with renormalize() and see what's up with that.
 
-Rerunning:
-* allcluup
-
-
-
-
 * Modify dgplot to be able to plot TH1 objects. Then, draw msup/msdown/nominal variations.
-* MCP_CDOWN is identical to nominal. MCP_CUP is working fine though.
 * CUP diff from nominal becomes HUGE if QCD is re-normalized in that bin
 
-
-* Generic plotting, with flags
-* Put functions in stack.py to make multiple plots at once. Subfolders to save plots?
-* Unfolding
-
-*SuLegend
-
 Peter: Photos  -> Dressed truth should be the same
-FEWS has no ewk FSR term.
+FEWS has no ewk FSR term. -> FEWZ 3.0
 
 WORK PLAN:
-* Need to come up with a structure to keep systematics
 * Add ratio plot under the QCD plots, perhaps by simply copying it over from Jordan!
-
 * Make histograms and asymmetry with total error bars
-* Add unfolding for inclusive (vs eta)
-
-* Make it all work when path leads to bin_%d folders. Tricky, should work with/without unfolding.
-
-
-
-
-
+* add ability to turn log-scale in saved plots!
 
 
 Ntuple based studies:
@@ -41,16 +19,9 @@ Ntuple based studies:
 * Compare data/MC agreement in roofit for tigher cone (0.1)
 
 Run overnight:
-* DONE 2D migration matrices for all systematics
-* DONE Add tighter isolation (pt+etcone changed to 0.1)
-* DONE Add qcd with three inversions of isolation [ normal, tight, tighter ]
 * Try etcone changed to 0.1
 * email constantinos: ABCD method qcd template
   CM: ABCD = isolation and MULTIJET_LIKE{met<X && mT<X && nlepton=small}
-* DONE Take an eta slice. # events in pt 20..40, 40..80
-* Peter: check if there are off-diagonal entries
-* DONE Peter: unfolding test on pythia/alpgen
-
 
 Work in progress:
 * understand njets distribution issues. Isolation? Ntuple/histo difference?
@@ -84,25 +55,10 @@ The scale factors do not depent on pT, but the errors do. So to get
 the right errors with the scale factors,  you must use the
 fourmomentum before the smearing.
 
-* See why SCALEK_UP/etc stuff is not working in SmearingClass
-* etconecorr plot: make in qcd control region; expand below zero.
-  powheg - change color to orange
-  powheg+pythia, but mc@NLO+herwig
-* add ability to turn log-scale in saved plots!
-
 * Mel: compare Pythia and Alpgen pre-FSR distributions.
   Peter: identify and veto events that have an FSR photon around the mu
   Mel: Make reco plots of w pt, see if generator differences wash away
   Peter: make truth plots of asymmetry in w pt bins (0..5 GeV)
-* Note: got worse agreement; differences are:
-  - CULPRIT: bug in hfor - was applied to regular alpgen samples
-  - trigger: removed barrel40 trigger (substantial difference noted!)
-  - missing Z veto - NOPE, NOT IT; also wrong veto (used presel muons - i.e., veto too strong)
-  - Removed fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5 cut
-  - relaxed (d0sig)<3.0 to be (d0sig)<10.0
-* Add systematic histos for trigger/efficiency variations. This just changes weights, so fill at last step!
-* met cleaning addition: jet within cone 0.3 of lepton
-* Add overlap removal (remove jets near electrons?)
 * Choose MC truth correctly: Alpgen status != 1, but 123/124 (see google docs!)
 
 Mel meeting:
@@ -110,27 +66,11 @@ Mel meeting:
 * TODO: Look at distributions in high lepton pt bin - see if everything is alright.
 * Tight isolation issue: add ptcone/etcone plots, as well as relative plots
 * MET resolution near 25 GeV
-* pdf reweighting : add to ntuple; compare pythia with alpgen with same pdf
-
-
-* Upgrade to the latest ROOT version (for anaquick) - when 17.0.6.X is available on tier3
-
-
-pileup nmu correction: 0.88 - ID people
-                       0.83 - penn people, makes slopes the same
-		       0.80 - best improvement in MET, et isolation variables (all calo distributions)
-
-TODO: make overall agreement work for W plots (play with different values of pileup reweighting)
-      study w_mt w_pt resolution
-      njet - peter not as excited about
-      bins of lepton pt (easiest)
 
 roofit:
 Check that Z TP errors don't change if I scale the lumi by a factor of 10
    (or alternatively, if I actually normalize the histograms)
 
-Peter: nuclear option = mc11c - switch minbias back to pythia6 (for higgs analysis)
-whichever one looks better and is used for the trigger efficiency
 charge mis-id - won't work from Z's. Flip probability. Can't look at same-sign Z's
 + add bins of lepton pt
 * TODO: use calo muons in tag-and-probe.
@@ -144,20 +84,17 @@ KS toy-MC study (performing a fit) - see if errors are correct. If yes, drop chi
 For the "bad" cmb bin, look at a variation of akluit where the other muon is forced into a particular region.
 Peter: does z resolution improve in data following the correction?
 
-TODO: Z mass fit in bins of eta/phi - including on MC (confirm Kluit's problem)
-      Z mass peak fit with alpgen; fit with/without pileup factors.
-      Z mass peak at particle level (which is, however, after FSR/ISR)
-
-IN PROGRESS:
+MCP:
 Re-write db_* executable using classes that will automatically write out all latex output.
 Basically, create python abstraction classes for every table. They can reference the database in the constructor.
 Printing will occur in a correct manner automatically.
 Use sequence of inheritance, starting from top-level document (that includes facilities to save and compile)
+TODO: Z mass fit in bins of eta/phi - including on MC (confirm Kluit's problem)
+      Z mass peak fit with alpgen; fit with/without pileup factors.
+      Z mass peak at particle level (which is, however, after FSR/ISR)
+
 
 TrigFTKAna:
-* add muon-jet overlap checking (remove jet is dR<0.5)
-* add a word to AnaWCrossSectionCandidate saying if it's the best candidate at preselection level (compare results with/without)
-* Rename ntuple variables for consistency (e.g., l_ prefix for isolation)
 * ID efficiency via tag and probe (lX, lY, lZ)
   Create a completely separate ntuple (manually turned on though). The idea is to create mu-ID candidates. The AOD::id muons would 
   have a link to the closest-matched full muon (if any). Make sure smearing class can smear ID muons, too!
@@ -166,16 +103,12 @@ TrigFTKAna:
   Add (if MC) additional words to primary ntuple: keeping relevant information from truth ntuple
   This would need some matching: for a given W/Z candidate, it will seek the closest truth candidate.
 
-Make bin-by-bin efficiency corrections for isolation (wrt combined) and trigger (wrt isolated).
-
 conversion to truth level. Resolution is not negligible in MET. unfolding.
 Peter: METRefFinal - METTruth; split into parallel and perpendicular to lepton axis components (later)
 Handle bad charge-dependent modeling - even though QCD is fit in a charge-dependent fasion.
 
 Issues:
 * choose generator that models missing et best (!!!)
-* alternate higher order generators for w production - ? powheg? Read about generators!
-* look into efficiency calculation and why histograms turn negative if i use eff error!
 
 Suggestions for analysis:
 * z0/d0 vs nvtx plots
@@ -183,32 +116,19 @@ Suggestions for analysis:
 * z tag-probe vs muon p (not pt)
 * add yields
 * Efficiency unfolding - careful with different generators.
-* Repeat with 2010 binning (use TTree::Draw('var >> +h'))
-
 
 Suggestions for MCP:
 * Add fitted-z-mass in phi/eta bins plot!
   https://indico.cern.ch/getFile.py/access?subContId=3&contribId=7&resId=1&materialId=slides&confId=157170
 * Add p_cmb-p_ID feature
   https://indico.cern.ch/getFile.py/access?subContId=0&contribId=7&resId=0&materialId=slides&confId=157170
-* Do Peter-style W analysis (should be easy, given what i have!)
 
 print keysfit id/exms string modification to make sure it is correct.
 * Add data-driven QCD template capability to SuData
 
-Analysis updates:
-* trigger matching (HiggsWW example)
-* trigger scaling (following matching)
-* jet-muon overlap
-* only consider vtx[0] for vertex finding
-* alpgen HFOR tool
-
-
-* Check POWHEG+pythia asymmetry in last bin - compared with MC@NLO+HERWIG
 * Et-miss resolution study: use Z events; project on Z pt axis (Sam Whitehead's thesis)
 
 Consider W+jets QCD templates
-MCP hits that fail - vs eta/phi in 2d (suspect specific modules)!
 
 Muon scales:
 * Investigate RooEggePdf - see if it is indeed compatible with my implementation!

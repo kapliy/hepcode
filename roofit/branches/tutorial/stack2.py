@@ -104,7 +104,7 @@ parser.add_option("-q", "--charge",dest="charge",
                   help="Which charge to plot: 0=POS, 1=NEG, 2=ALL")
 parser.add_option("--bgqcd",dest="bgqcd",
                   type="int", default=0,
-                  help="QCD: 0=Pythia mu15x, 1=Pythia J0..J5")
+                  help="QCD: 0=Pythia mu15x, 1=Pythia J0..J5, 2=data-driven")
 parser.add_option("--bgsig",dest="bgsig",
                   type="int", default=2,
                   help="Background: 0=Pythia, 1=MC@NLO, 2=Alpgen(signal only), 3=Alpgen(all)")
@@ -157,7 +157,7 @@ def renormalize(bin='100,5,100'):
     fitpre = metfitreg(opts.pre)
     ctmp,frame,scale = run_fit(pre=fitpre,bin=bin)
     OMAP.append(ctmp)
-    # TODO FIXME: understand why this is an inverse of fitted scale here!
+    # understand why this is an inverse of fitted scale here!
     SuSample.qcdscale = 1.0/scale
 
 def particle(h,inp=opts.input,var=opts.var,bin=opts.bin,q=opts.charge):
@@ -305,32 +305,46 @@ spT.bootstrap(charge=q,var=opts.var,histo=opts.hsource,
 spT.enable_nominal()
 # Reco-level ntuple
 spRN = SuPlot()
-spRN.bootstrap(ntuple=opts.ntuple,histo=None,
+spRN.bootstrap(ntuple=opts.ntuple,histo=opts.hsource,
                charge=q,var=opts.var,path=path_reco,bin=opts.bin,
                weight=opts.cut,pre=opts.pre)
 spRN.enable_nominal()
 
-def plot_asymmetry(spR2,spT2,var='lepton_absetav',lvl=0):
-    """ lvl=0 is RECO, lvl=1 is unfolded """
-    assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
-    spR2.update_histo( var )
-    spT2.update_histo( var )
-    c = SuCanvas('asym_inclusive_%s'%('detector' if lvl==0 else 'unfolded'))
-    M = PlotOptions()
-    M.prefill_data(err=1)
-    M.prefill_mc(err=1 if lvl==0 else 0)
+if mode=='asym_reco_manual': # asymmetry, at reco/particle level, of different monte-carlos. Compared to BG-subtracted data
+    SuStackElm.new_scales = False
+    #renormalize()
+    c = SuCanvas()
+    c.buildDefault(width=1024,height=768)
+    M = PlotOptions();
+    M.prefill_mc()
+    M.prefill_data()
     h = []
-    h.append( po.asym_data_sub('asym',spR2.clone(do_unfold=(lvl==1))) )
-    for mcname in M.names[1:]:
-        h.append( po.asym_mc(mcname, spT2.clone() if lvl==1 else spR2.clone() ,label=mcname) )
-    c.plotAny(h,M=M,height='asym',title='Detector-level asymmetry' if lvl==0 else 'Truth-level asymmetry')
+    for i in range(M.ntot()):
+        if i==M.ntot()-1: #data
+            h.append( po.asym_data_sub('asym',spRN.clone(path=path_reco,histo=opts.hsource)) )
+        else:
+            h.append( po.asym_mc('mcasym', spRN.clone(path=path_reco,histo=opts.hsource), label=M.names[i]) )
+    c.plotAny(h,M=M,height='asym',title='Detector-level asymmetry')
     OMAP.append(c)
-    # for unfolded asymmetry, let's also draw individual systematics
-    if lvl==1:
-        c = SuCanvas('asym_inclusive_unfolded_allsys')
-        c.plotOne(h[0],mode=2,height='asym',title='Unfolded asymmetry: systematics')
-        OMAP.append(c)
-        h[0].summary_bin([1])
+
+def plot_asymmetry(spR2,spT2=None,var='lepton_absetav',do_errors=True,do_unfold=False,new_scales=True,name='asym'):
+    assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
+    SuStackElm.new_scales = new_scales
+    if spR2: spR2.update_histo( var )
+    if spT2: spT2.update_histo( var )
+    c = SuCanvas('%s_%s'%(name,'detector' if do_unfold==False else 'unfolded'))
+    M = PlotOptions()
+    M.prefill_mc(err=do_errors if do_unfold==False else False)
+    M.prefill_data(err=do_errors)
+    h = []
+    for i in range(M.ntot()):
+        if i==M.ntot()-1: #data
+            #h.append( po.asym_data('data',spR2.clone(do_unfold=do_unfold)) )
+            h.append( po.asym_data_sub('datasub',spR2.clone(do_unfold=do_unfold)) )
+        else: #MC
+            h.append( po.asym_mc('mc', spT2.clone() if spT2 else spR2.clone() ,label=M.names[i]) )
+    c.plotAny(h,M=M,height='asym',title='Detector-level asymmetry' if do_unfold==False else 'Truth-level asymmetry')
+    OMAP.append(c)
 
 def plot_stack(spR2,var,m=0):
     spR2.update_histo( var )
@@ -350,8 +364,6 @@ def test_unfolding(spR2,spT2,asym=True):
     spT2.update_histo( var )
     c = SuCanvas('test_unfolding')
     h = []
-    # TODO FIXME: while asym_mc sanity test "almost" works (we nearly get back to htruth)
-    # individual charges hPOS and hNEG don't quite work. Why?? - study in TrigFTKAna on small test!!! Could it really be the charge when filling response?
     if asym:
         h.append( po.asym_mc('h',spT2.clone(q=0),label='pythia') )
         h.append( po.asym_mc('h',spR2.clone(q=0),label='pythia') )
@@ -401,15 +413,43 @@ def test_from_slices_sys(spR):
     c.plotOne(h1R,mode=2,height=1.7)
     OMAP.append(c)
 
+def test_ntuple_histo(spR2,var='lepton_absetav',new_scales=True,name='ntuple_histo'):
+    assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
+    SuStackElm.new_scales = new_scales
+    if spR2: spR2.update_histo( var )
+    c = SuCanvas('%s_%s'%(name,'detector'))
+    M = PlotOptions()
+    M.prefill_mc()
+    M.prefill_data()
+    h = []
+    for i in range(M.ntot()):
+        if i==M.ntot()-1: #data
+            h.append( po.asym_data_sub('data',spR2.clone()) )
+        else: #MC
+            h.append( po.asym_mc('mc', spR2.clone() ,label=M.names[i]) )
+    c.plotAny(h,M=M,height='asym',title='Ntuple-Histo comparison')
+    #c.plotAny(h,M=M,height=4000*1000,title='Ntuple-Histo comparison')
+    OMAP.append(c)
+
 # combined plots
 if mode=='ALL' or mode=='all':
     if False:
         plot_stack(spR.clone(),'lepton_absetav')
         plot_stack(spR.clone(),'lepton_pt')
     if False:
-        plot_asymmetry(spR.clone(),spT.clone(),lvl=0)
-        plot_asymmetry(spR.clone(),spT.clone(),lvl=1)
-    if True: # mel test: look at systematic variations in signal only, see if it is one-sided
+        plot_asymmetry(spR.clone(),spT.clone(),do_unfold=True)
+        plot_asymmetry(spR.clone(),spT.clone(),do_unfold=True)
+    if True: # compares TH1 vs ntuple based basic histogram results
+        test_ntuple_histo(spR.clone(),name='asym_histo',new_scales=False)
+        test_ntuple_histo(spRN.clone(path=path_reco),name='asym_ntuple_all',new_scales=False)
+        newpre=opts.pre + ' && ' + 'fabs(d0sig)<5.0'
+        test_ntuple_histo(spRN.clone(path=path_reco,pre=newpre),name='asym_ntuple_d05',new_scales=False)
+        newpre=opts.pre + ' && ' + 'fabs(d0sig)<10.0'
+        test_ntuple_histo(spRN.clone(path=path_reco,pre=newpre),name='asym_ntuple_d10',new_scales=False)
+    if False: # compares TH1 vs ntuple based asymmetry results
+        plot_asymmetry(spR.clone(),None,name='asym_histo',do_unfold=False,do_errors=False,new_scales=False)
+        plot_asymmetry(spRN.clone(path=path_reco),None,name='asym_ntuple',do_unfold=False,do_errors=False,new_scales=False)
+    if False: # mel test: look at systematic variations in signal only, see if it is one-sided
         spR.update_histo( 'lepton_absetav' )
         c = SuCanvas('systematics')
         if False: # in asymmetry
@@ -462,16 +502,6 @@ if mode=='ALL' or mode=='all':
         M.add('inbins','inbins')
         c.plotMany([h1R,h2R],M=M,mode=0,height=1.7)
         #c.plotOne(h1R,mode=2,height=1.7)
-        OMAP.append(c)
-    if False:
-        c = SuCanvas('test')
-        hpos = po.data_sub('pos',spR.clone(q=0))
-        hneg = po.data_sub('neg',spR.clone(q=1))
-        hall = po.data_sub('all',spR.clone(q=2))
-        M = PlotOptions();
-        M.add('POS','mu+'); M.add('NEG','mu-'); M.add('ALL','mu')
-        c.plotOne(hpos,mode=2,height=2.0)
-        #c.plotMany([hpos,hneg,hall],M=M,mode=0,height=1.5)
         OMAP.append(c)
     
 if mode=='1': # total stack histo
@@ -605,44 +635,6 @@ if mode=='asym_truth': # asymmetry, at truth level, of different monte-carlos.
     maxh = max([htmp.GetMaximum() for htmp in hasym])*1.5
     hasym[0].GetYaxis().SetRangeUser(0,maxh)
     leg.Draw('same')
-
-if mode=='asym_reco': # asymmetry, at reco/particle level, of different monte-carlos. Compared to BG-subtracted data
-    SuStackElm.new_scales = False
-    #renormalize()
-    c = SuCanvas()
-    c.buildDefault(width=1024,height=768)
-    cc = c.cd_canvas()
-    cc.cd(1)
-    M = PlotOptions();
-    M.prefill_mc()
-    M.prefill_data()
-    h = []
-    hasym = []
-    leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
-    leg.SetHeader('Asymmetry:')
-    for i in range(M.ntot()):
-        h.append([None,None])
-        for q in (0,1):
-            print 'Creating:',i,q
-            if i==M.ntot()-1: #data
-                h[i][q] = po.data_sub('datasub',spRN.clone(q=q,path=path_reco,histo=opts.hsource)).nominal_h()
-            else: #MC
-                h[i][q] = po.mc('recomc',spRN.clone(q=q,path=path_reco,histo=opts.hsource),label=M.names[i]).nominal_h()
-            assert h[i][q]
-            h[i][q].SetLineColor(M.colors[i])
-            h[i][q].SetMarkerColor(M.colors[i])
-            h[i][q].SetMarkerStyle(M.styles[i])
-            h[i][q].SetMarkerSize(M.sizes[i])
-        hasym.append(c.WAsymmetry(h[i][POS],h[i][NEG]))
-        if not i==len(M.names)-1:
-            hasym[i].Draw() if i==0 else hasym[i].Draw('A same')
-        else:
-            hasym[i].Draw('A same')
-        leg.AddEntry(hasym[i],M.labels[i],'LP')
-    maxh = max([htmp.GetMaximum() for htmp in hasym])*1.5
-    hasym[0].GetYaxis().SetRangeUser(0,maxh)
-    leg.Draw('same')
-    OMAP.append(c)
 
 # ADDING SYSTEMATICS!
 # NOTE: BG-SUBTRACTED does not include systematic effects in the subtracted MC for now. So data error bar is statistics only.
