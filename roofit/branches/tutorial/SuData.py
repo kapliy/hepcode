@@ -365,12 +365,15 @@ class SuPlot:
         assert len(s.sys)==len(s.groups)
         print 'Created systematic variations: N =',len(s.sys)
     def update_errors(s,sysonly=False):
-        """ folds systematic variations into total TH1 error  """
+        """ folds systematic variations into total TH1 error. TODO: independent two-sided variations (non-symmetrized)  """
+        if s.hsys and sysonly==True: return s.hsys
+        if s.htot and sysonly==False: return s.htot
         stack_mode = False
         if not s.sys[0][0].h:
             assert s.sys[0][0].stack
             stack_mode = True
         s.htot = s.sys[0][0].stack.GetStack().Last().Clone() if stack_mode else s.sys[0][0].h.Clone()
+        s.htot.Sumw2()
         s.hsys = s.htot.Clone()
         [s.hsys.SetBinError(ii,0) for ii in xrange(0,s.hsys.GetNbinsX()+2)]
         i = len(s.sys[0])
@@ -380,12 +383,14 @@ class SuPlot:
                 if not i in s.enable:
                     i+=1
                     continue
+                h = hs.stack.GetStack().Last() if stack_mode else hs.h
                 for ibin in xrange(0,s.hsys.GetNbinsX()+2):
-                    h = hs.stack.GetStack().Last() if stack_mode else hs.h
                     bdiffs[ibin].append ( abs(s.hsys.GetBinContent(ibin)-h.GetBinContent(ibin)) )
                 i+=1
             for ibin in xrange(0,s.hsys.GetNbinsX()+2):
                 newerr = max(bdiffs[ibin]) if len(bdiffs[ibin])>0 else 0
+                if False and ibin==4: #FIXME DEBUG
+                    print i,'%.1f'%s.sys[0][0].stack.GetStack().Last().GetBinError(ibin),['%.1f'%zz for zz in bdiffs[ibin]],'%.1f'%newerr,'%.1f'%s.htot.GetBinError(ibin),'%.1f'%s.hsys.GetBinError(ibin)
                 # hsys
                 olderr = s.hsys.GetBinError(ibin)
                 s.hsys.SetBinError(ibin,1.0*math.sqrt(olderr*olderr + 1.0*newerr*newerr))

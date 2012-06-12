@@ -336,7 +336,7 @@ def plot_stack(spR2,var,q=2,m=0,new_scales=None,name=''):
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,var,"brNDC")
     hstack = po.stack('mc',spR2.clone(q=q),leg=leg)
     hdata = po.data('data',spR2.clone(q=q),leg=leg)
-    c.plotStack(hstack,hdata,mode=m,leg=leg)
+    c.plotStack(hstack,hdata,mode=m,leg=leg,height=1.7)
     OMAP.append(c)
 
 def plot_stacks(spR2,histos,m=0,new_scales=None,name=''):
@@ -423,9 +423,9 @@ def test_ntuple_histo(spR2,var='lepton_absetav',new_scales=None,name='ntuple_his
 
 # combined plots
 if mode=='ALL' or mode=='all':
-    if False:
-        plot_stack(spR.clone(),'lepton_absetav',q=2)
-        plot_stack(spR.clone(),'lepton_pt',q=2)
+    if True:
+        plot_stack(spR.clone(),'lepton_absetav',q=2,m=1)
+        plot_stack(spR.clone(),'lepton_pt',q=2,m=1)
     if False:
         plot_asymmetry(spR.clone(),spT.clone(),do_unfold=True)
         #plot_asymmetry(spR.clone(),None,name='asym_histo',do_unfold=False,do_errors=False,new_scales=False)
@@ -438,7 +438,7 @@ if mode=='ALL' or mode=='all':
         test_ntuple_histo(spRN.clone(path=path_reco,pre=newpre),name='asym_ntuple_d05',new_scales=False)
         newpre=opts.pre + ' && ' + 'fabs(d0sig)<10.0'
         test_ntuple_histo(spRN.clone(path=path_reco,pre=newpre),name='asym_ntuple_d10',new_scales=False)
-    if True: # studying effects of QCD normalization in histograms
+    if False: # studying effects of QCD normalization in histograms
         spR.enable_nominal()
         # FIXME TODO: mechanism to try out different QCD backgrounds.
         plots = ['lepton_absetav','lepton_pt','met','w_mt',"lepton_ptiso20r","lepton_ptiso30r","lepton_etiso30rcorr"]

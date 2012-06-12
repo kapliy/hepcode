@@ -79,6 +79,19 @@ class SuCanvas:
     h.GetXaxis().CenterTitle();
     return h
 
+  @staticmethod
+  def set_uncert_style(obj,dored=True):
+    """ set style for uncertainties """
+    if not obj: return
+    obj.SetFillColor( ROOT.kYellow );
+    obj.SetFillStyle( 3001 );
+    obj.SetMarkerSize( 0 );
+    if dored:
+      obj.SetLineColor( ROOT.kRed );
+      obj.SetMarkerColor( ROOT.kRed );
+    obj.SetLineStyle( 2 );
+    obj.SetLineWidth( 2 );
+
   def drawRatio(s,ratio):
     """ Draws a ratio histogram """
     ratio.SetFillColor( ROOT.kBlack );
@@ -225,17 +238,6 @@ class SuCanvas:
     s.hratio.Draw("AP same");
     s.update()
 
-  @staticmethod
-  def set_uncert_style(obj):
-    """ set style for uncertainties """
-    if not obj: return
-    obj.SetFillColor( ROOT.kYellow );
-    obj.SetFillStyle( 3001 );
-    obj.SetLineColor( ROOT.kRed );
-    obj.SetMarkerColor( ROOT.kRed );
-    obj.SetLineStyle( 2 );
-    obj.SetLineWidth( 2 );
-  
   def plotOne(s,hplot,mode=0,height=1.5,leg=None,title=None):
     """ A generic function to plot an instance of SuPlot.
     Mode is: 0=nominal; 1=total errors; 2=all systematic plots
@@ -398,8 +400,13 @@ class SuCanvas:
     stack.SetMaximum(maximum*height)
     # systematics
     if mode==1:
-      hsys = hstack.update_errors()
-      hsys.Draw('A SAME E3')
+      s.htot = htot = hstack.update_errors()
+      s.hsys = hsys = hstack.update_errors(sysonly=True)
+      print 'Drawing htot'
+      s.set_uncert_style(htot)
+      htot.Draw('A SAME E2')
+      s.FixupHisto(htot)
+      s.data.append((htot,hsys))
     #data
     data.SetMarkerSize(1.0)
     data.Draw("AP same")
@@ -412,7 +419,15 @@ class SuCanvas:
     s.hratio.Divide(stack.GetStack().Last())
     s.drawRefLine(s.href)
     s.drawRatio(s.hratio)
-    s.hratio.Draw("AP same");
+    #s.hratio.Draw("AP same");
+    if mode==1:
+      s.hsysr = hsysr = data.Clone("hratio_sys")
+      hsysr.Divide(s.hsys)
+      s.set_uncert_style(hsysr,dored=False)
+      # symmetrize the systematic error around ratio=1.0
+      [hsysr.SetBinContent(ii,1.0) for ii in xrange(0,hsysr.GetNbinsX()+2)]
+      hsysr.Draw('A SAME E2')
+      s.data.append(hsysr)
     s.update()
 
   def Matrix_loose(s,Nt,Nl,er,ef):
