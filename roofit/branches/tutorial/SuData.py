@@ -342,15 +342,24 @@ class SuPlot:
         add2('trigstatdown','st_w_trigstatdown',prep+'nominal_trigstatdown')
         next('MCP_TRIG')
         # JET
-        add('jet_jer',prep+'jet_jer')
-        next('JER')
-        add('jet_jesup',prep+'jet_jesup')
-        add('jet_jesdown',prep+'jet_jesdown')
-        next('JES')
+        if True:
+            add('jet_jer',prep+'jet_jer')
+            next('JER')
+            add('jet_jesup',prep+'jet_jesup')
+            add('jet_jesdown',prep+'jet_jesdown')
+            next('JES')
         # MET
-        add('met_allcluup',prep+'met_allcluup')
-        add('met_allcludown',prep+'met_allcludown')
-        next('MET')
+        if False:
+            add('met_allcluup',prep+'met_allcluup')
+            add('met_allcludown',prep+'met_allcludown')
+            next('MET')
+        else:
+            add('met_resosoftup',prep+'met_resosoftup')
+            add('met_resosoftdown',prep+'met_resosoftdown')
+            next('MET_RESO')
+            add('met_scalesoftup',prep+'met_scalesoftup')
+            add('met_scalesoftdown',prep+'met_scalesoftdown')
+            next('MET_SCALE')
         # QCD normalization
         add3('qcdup',1,prep+'nominal')
         add3('qcddown',-1,prep+'nominal')
