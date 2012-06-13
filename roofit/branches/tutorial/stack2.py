@@ -292,9 +292,9 @@ q = opts.charge
 # Reco-level plots + all systematics
 spR = SuPlot()
 spR.bootstrap(do_unfold=False,
-              unfold={'sysdir':'nominal','mc':'pythia','method':'RooUnfoldBinByBin','par':4},
+              unfold={'sysdir':'tight_nominal','mc':'pythia','method':'RooUnfoldBinByBin','par':4},
               charge=q,var=opts.var,histo=opts.hsource,
-              sysdir=['nominal','nominal','isowind'],subdir='st_w_final',basedir='baseline',
+              sysdir=['tight_nominal','tight_nominal','isowind'],subdir='st_w_final',basedir='baseline',
               qcd={'metfit':'metfit'})
 SuStack.QCD_SYS_SCALES = opts.metallsys
 spR.enable_all()
@@ -327,6 +327,7 @@ def plot_asymmetry(spR2,spT2=None,var='lepton_absetav',do_errors=True,do_unfold=
         else: #MC
             h.append( po.asym_mc('mc', spT2.clone() if spT2 else spR2.clone() ,label=M.names[i]) )
     c.plotAny(h,M=M,height='asym',title='Detector-level asymmetry' if do_unfold==False else 'Truth-level asymmetry')
+    # do summary bin here!
     OMAP.append(c)
 
 def plot_stack(spR2,var,q=2,m=0,new_scales=None,name=''):
@@ -339,9 +340,9 @@ def plot_stack(spR2,var,q=2,m=0,new_scales=None,name=''):
     c.plotStack(hstack,hdata,mode=m,leg=leg,height=1.7)
     OMAP.append(c)
 
-def plot_stacks(spR2,histos,m=0,new_scales=None,name=''):
+def plot_stacks(spR2,histos,m=0,new_scales=None,name='',qs=(0,1,2)):
     """ A wrapper to make multiple stack plots for variables listed in histos[] array """
-    for q in (0,1,2):
+    for q in qs:
         for var in histos:
             plot_stack(spR2,var,q=q,m=m,new_scales=new_scales,name=name)
 
@@ -423,9 +424,11 @@ def test_ntuple_histo(spR2,var='lepton_absetav',new_scales=None,name='ntuple_his
 
 # combined plots
 if mode=='ALL' or mode=='all':
-    if True:
-        plot_stack(spR.clone(),'lepton_absetav',q=2,m=1)
-        plot_stack(spR.clone(),'lepton_pt',q=2,m=1)
+    if False:
+        plots = ['lepton_absetav','lepton_pt','met','w_mt',"lepton_ptiso20r","lepton_ptiso30r","lepton_etiso30rcorr","njets"]
+        plot_stacks(spR.clone(),plots,m=1)
+        #plot_stack(spR.clone(),'lepton_absetav',q=2,m=1)
+        #plot_stack(spR.clone(),'lepton_pt',q=2,m=1)
     if False:
         plot_asymmetry(spR.clone(),spT.clone(),do_unfold=True)
         #plot_asymmetry(spR.clone(),None,name='asym_histo',do_unfold=False,do_errors=False,new_scales=False)
@@ -454,7 +457,7 @@ if mode=='ALL' or mode=='all':
             c.plotOne(h,mode=2,height='asym',title='Signal MC asymmetry: systematics')
         else:     # in signal
             #h = po.sig('asym',spR.clone(q=0))
-            h = po.mc('asym',spR.clone(q=0),label='pythia')
+            h = po.mc('asym',spR.clone(q=1),label='pythia')
             c.plotOne(h,mode=2,height=1.5,title='Signal MC asymmetry: systematics')
         OMAP.append(c)
         h.summary_bin(fname='index.html')

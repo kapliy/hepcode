@@ -1,3 +1,14 @@
+NOW:
+* Add and debug boson pt reweighting for wmunu samples. If it works really well, enable by default!!!
+* Shall I try to use the latest JES/JER recommendations?
+* Debug KUP/KDOWN systematics. Debug JESUP/JESDOWN, too!
+* Add tight isolation ala Massimilano. Which one to replace?
+
+1. UP/DOWN/NOMINAL: look at events common for all three samples.
+2. Plot bbmu15X template shapes on top of each other.
+   Repeat the fit with blown-up errors and see
+3. Peter: consider fitting in lepton pt - it is an easier variable / less convolved with many other objects
+
 Check out this line: - it gets triggered on met_phi in Zmumu events.
     if( safe_divide(tmp,den) > 1E6 ) { printf( "num = %f , den = %f\n" , num , den ); return 0; assert(false); } //FIXME AK                                            
 * Restore the ntuple cuts with renormalize() and see what's up with that.

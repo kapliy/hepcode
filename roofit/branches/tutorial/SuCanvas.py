@@ -402,7 +402,6 @@ class SuCanvas:
     if mode==1:
       s.htot = htot = hstack.update_errors()
       s.hsys = hsys = hstack.update_errors(sysonly=True)
-      print 'Drawing htot'
       s.set_uncert_style(htot)
       htot.Draw('A SAME E2')
       s.FixupHisto(htot)
@@ -419,7 +418,6 @@ class SuCanvas:
     s.hratio.Divide(stack.GetStack().Last())
     s.drawRefLine(s.href)
     s.drawRatio(s.hratio)
-    #s.hratio.Draw("AP same");
     if mode==1:
       s.hsysr = hsysr = data.Clone("hratio_sys")
       hsysr.Divide(s.hsys)
