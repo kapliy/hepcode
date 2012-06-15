@@ -1,3 +1,5 @@
+Add ratio to SuFit
+
 NOW:
 * Add and debug boson pt reweighting for wmunu samples. If it works really well, enable by default!!!
 * Shall I try to use the latest JES/JER recommendations?

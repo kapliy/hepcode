@@ -424,11 +424,10 @@ def test_ntuple_histo(spR2,var='lepton_absetav',new_scales=None,name='ntuple_his
 
 # combined plots
 if mode=='ALL' or mode=='all':
-    if False:
+    if True:
+        plots = ['lepton_absetav']
         plots = ['lepton_absetav','lepton_pt','met','w_mt',"lepton_ptiso20r","lepton_ptiso30r","lepton_etiso30rcorr","njets"]
         plot_stacks(spR.clone(),plots,m=1)
-        #plot_stack(spR.clone(),'lepton_absetav',q=2,m=1)
-        #plot_stack(spR.clone(),'lepton_pt',q=2,m=1)
     if False:
         plot_asymmetry(spR.clone(),spT.clone(),do_unfold=True)
         #plot_asymmetry(spR.clone(),None,name='asym_histo',do_unfold=False,do_errors=False,new_scales=False)
@@ -443,7 +442,7 @@ if mode=='ALL' or mode=='all':
         test_ntuple_histo(spRN.clone(path=path_reco,pre=newpre),name='asym_ntuple_d10',new_scales=False)
     if False: # studying effects of QCD normalization in histograms
         spR.enable_nominal()
-        # FIXME TODO: mechanism to try out different QCD backgrounds.
+        # FIXME TODO: mechanism to try out different QCD backgrounds. Plus: different EWK (for qcdsub) - both should be in systematics!
         plots = ['lepton_absetav','lepton_pt','met','w_mt',"lepton_ptiso20r","lepton_ptiso30r","lepton_etiso30rcorr"]
         plot_asymmetry(spR.clone(),spT.clone(),do_unfold=False,do_errors=False,name='bbmu15_default',new_scales=False)
         plot_stacks(spR.clone(),plots,name='bbmu15_default')

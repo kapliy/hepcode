@@ -141,7 +141,7 @@ class SuFit:
     return res
 
   def drawFit(s,ivar,title='random'):
-    """ Draw the fit for ivar's variable """
+    """ Draw the fit for ivar's variable - this one only makes the default plot, without the ratio"""
     import SuCanvas
     s.canvas = canvas = SuCanvas.SuCanvas()
     canvas.buildDefault(1024,768)
@@ -193,6 +193,66 @@ class SuFit:
       fractext.AddText( 'Scale %s = %.3f #pm %.3f'%(s.free[ift].getLegendName(),s.scales[ift],s.scalesE[ift]) )
     key.Draw("9");
     fractext.Draw("9");
+    return canvas,frame
+
+  def drawFit_new(s,ivar,title='random'):
+    """ Draw the fit for ivar's variable """
+    import SuCanvas
+    s.canvas = canvas = SuCanvas.SuCanvas()
+    canvas.buildRatio(1024,768)
+    # main plot area
+    canvas.cd_plotPad()
+    s.frame = frame = s.w.var(s.vnames[ivar]).frame()
+    RooAbsData.plotOn(s.dataHist, frame , RF.Name("dataHist") )
+    if True:
+      s.model.plotOn( frame , RF.Name("modelHist") , RF.LineColor(46) , RF.DrawOption("L") ) # RF.MoveToBack()
+      ipattern = 3001
+      s.model.plotOn( frame , RF.Name("fixedHist") , RF.Components("fixedTemplate") , RF.DrawOption("F") ,
+                      RF.FillColor(8) , RF.LineColor(8) , RF.FillStyle( ipattern ) )
+      for ift in xrange(0,len(s.free)):
+        tempName = s.free[ift].GetName()
+        tempName += "Template"
+        s.model.plotOn( frame , RF.Name( s.free[ift].GetName() ) , RF.Components( tempName ) , RF.DrawOption("F") , 
+                        RF.FillColor( s.free[ift].GetFillColor() ) , RF.LineColor( s.free[ift].GetLineColor() ) )
+    frame.GetXaxis().SetTitleOffset( canvas.getXtitleOffset() )
+    frame.GetYaxis().SetTitleOffset( canvas.getYtitleOffset() )
+    frame.GetXaxis().SetTitle( s.w.var(s.vnames[ivar]).GetName() )
+    frame.GetXaxis().SetTitleColor(ROOT.kBlack)
+    frame.GetXaxis().SetLabelSize( canvas.getLabelSize() )
+    frame.GetXaxis().SetTitleSize( canvas.getAxisTitleSize() )
+    frame.GetXaxis().CenterTitle()
+    frame.GetYaxis().SetTitle( "entries / GeV" )
+    frame.GetYaxis().SetLabelSize( canvas.getLabelSize() )
+    frame.GetYaxis().SetTitleSize( canvas.getAxisTitleSize() )
+    frame.GetYaxis().CenterTitle()
+    frame.SetTitle("")
+    frame.Draw("9")
+    
+    s.key = key = ROOT.TLegend(0.6, canvas.getY2()-(0.03*(3+len(s.free))) , canvas.getX2() , canvas.getY2() )
+    key.SetTextSize( canvas.getLegendTextSize() )
+    key.SetBorderSize( 0 )
+    key.SetFillColor( ROOT.kWhite )
+    key.AddEntry( "dataHist" ,"data","pe")
+    key.AddEntry( "modelHist" , "fit model" , "l" )
+    key.AddEntry( "fixedHist" , "EWK" , "f" )
+    for ift in xrange(len(s.free)):
+      key.AddEntry( s.free[ift].GetName() , s.free[ift].getLegendName() , "f" )
+
+    ybot = canvas.getY2()-(0.03*(3+len(s.free)))
+    s.fractext = fractext = ROOT.TPaveText( 0.6 , ybot-0.3 , canvas.getX2() , ybot-0.1 , "BL NDC" )
+    fractext.SetFillStyle( 0 ) # hollow
+    fractext.SetBorderSize( 0 )
+    fractext.SetMargin( 0 )
+    for ift,frac in enumerate(s.fractions):
+      fractext.AddText( 'Frac. %s = %.3f #pm %.3f %%'%(s.free[ift].getLegendName(),frac*100.0,s.fractionsE[ift]*100.0) )
+      fractext.AddText( 'Scale %s = %.3f #pm %.3f'%(s.free[ift].getLegendName(),s.scales[ift],s.scalesE[ift]) )
+    key.Draw("9");
+    fractext.Draw("9");
+
+    # ratio
+    canvas.cd_ratioPad()
+    canvas.update()
+
     return canvas,frame
 
 gbg_tmp = []
