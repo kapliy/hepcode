@@ -140,7 +140,7 @@ class SuFit:
       res += s.drawFit(ivar,title)
     return res
 
-  def drawFit(s,ivar,title='random'):
+  def drawFit_noratio(s,ivar,title='random'):
     """ Draw the fit for ivar's variable - this one only makes the default plot, without the ratio"""
     import SuCanvas
     s.canvas = canvas = SuCanvas.SuCanvas()
@@ -195,7 +195,7 @@ class SuFit:
     fractext.Draw("9");
     return canvas,frame
 
-  def drawFit_new(s,ivar,title='random'):
+  def drawFit(s,ivar,title='random'):
     """ Draw the fit for ivar's variable """
     import SuCanvas
     s.canvas = canvas = SuCanvas.SuCanvas()
@@ -204,16 +204,15 @@ class SuFit:
     canvas.cd_plotPad()
     s.frame = frame = s.w.var(s.vnames[ivar]).frame()
     RooAbsData.plotOn(s.dataHist, frame , RF.Name("dataHist") )
-    if True:
-      s.model.plotOn( frame , RF.Name("modelHist") , RF.LineColor(46) , RF.DrawOption("L") ) # RF.MoveToBack()
-      ipattern = 3001
-      s.model.plotOn( frame , RF.Name("fixedHist") , RF.Components("fixedTemplate") , RF.DrawOption("F") ,
-                      RF.FillColor(8) , RF.LineColor(8) , RF.FillStyle( ipattern ) )
-      for ift in xrange(0,len(s.free)):
-        tempName = s.free[ift].GetName()
-        tempName += "Template"
-        s.model.plotOn( frame , RF.Name( s.free[ift].GetName() ) , RF.Components( tempName ) , RF.DrawOption("F") , 
-                        RF.FillColor( s.free[ift].GetFillColor() ) , RF.LineColor( s.free[ift].GetLineColor() ) )
+    s.model.plotOn( frame , RF.Name("modelHist") , RF.LineColor(46) , RF.DrawOption("L") ) # RF.MoveToBack()
+    ipattern = 3001
+    s.model.plotOn( frame , RF.Name("fixedHist") , RF.Components("fixedTemplate") , RF.DrawOption("F") ,
+                    RF.FillColor(8) , RF.LineColor(8) , RF.FillStyle( ipattern ) )
+    for ift in xrange(0,len(s.free)):
+      tempName = s.free[ift].GetName()
+      tempName += "Template"
+      s.model.plotOn( frame , RF.Name( s.free[ift].GetName() ) , RF.Components( tempName ) , RF.DrawOption("F") , 
+                      RF.FillColor( s.free[ift].GetFillColor() ) , RF.LineColor( s.free[ift].GetLineColor() ) )
     frame.GetXaxis().SetTitleOffset( canvas.getXtitleOffset() )
     frame.GetYaxis().SetTitleOffset( canvas.getYtitleOffset() )
     frame.GetXaxis().SetTitle( s.w.var(s.vnames[ivar]).GetName() )
@@ -251,8 +250,18 @@ class SuFit:
 
     # ratio
     canvas.cd_ratioPad()
+    hdata = s.dataHist.createHistogram( s.w.var(s.vnames[ivar]).GetName() )
+    assert hdata
+    hmodel = s.model.createHistogram( s.w.var(s.vnames[ivar]).GetName() , hdata.GetNbinsX() )
+    assert hmodel
+    scalefactor = 1.0*hdata.Integral()/hmodel.Integral()
+    hmodel.Scale( scalefactor );
+    s.hratio,s.href = hdata.Clone('hratio'),hdata.Clone('href')
+    s.hratio.Divide(hmodel)
+    canvas.drawRefLine(s.href)
+    canvas.drawRatio(s.hratio)
+    # finalize
     canvas.update()
-
     return canvas,frame
 
 gbg_tmp = []

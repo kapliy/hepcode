@@ -290,11 +290,13 @@ gbg = []
 q = opts.charge
 
 # Reco-level plots + all systematics
+tightlvl = 'tight_'
+tightlvl = ''
 spR = SuPlot()
 spR.bootstrap(do_unfold=False,
-              unfold={'sysdir':'tight_nominal','mc':'pythia','method':'RooUnfoldBinByBin','par':4},
+              unfold={'sysdir':tightlvl+'nominal','mc':'pythia','method':'RooUnfoldBinByBin','par':4},
               charge=q,var=opts.var,histo=opts.hsource,
-              sysdir=['tight_nominal','tight_nominal','isowind'],subdir='st_w_final',basedir='baseline',
+              sysdir=[tightlvl+'nominal',tightlvl+'nominal','isowind'],subdir='st_w_final',basedir='baseline',
               qcd={'metfit':'metfit'})
 SuStack.QCD_SYS_SCALES = opts.metallsys
 spR.enable_all()
@@ -426,7 +428,7 @@ def test_ntuple_histo(spR2,var='lepton_absetav',new_scales=None,name='ntuple_his
 if mode=='ALL' or mode=='all':
     if True:
         plots = ['lepton_absetav']
-        plots = ['lepton_absetav','lepton_pt','met','w_mt',"lepton_ptiso20r","lepton_ptiso30r","lepton_etiso30rcorr","njets"]
+        #plots = ['lepton_absetav','lepton_pt','met','w_mt',"lepton_ptiso20r","lepton_ptiso30r","lepton_etiso30rcorr","njets"]
         plot_stacks(spR.clone(),plots,m=1)
     if False:
         plot_asymmetry(spR.clone(),spT.clone(),do_unfold=True)
