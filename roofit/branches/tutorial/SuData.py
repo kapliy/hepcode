@@ -23,7 +23,7 @@ class SuSys:
             return v
         else:
             return [v]*3
-    def __init__(s,name='nominal',charge=2,qcd = {}, unfold={},qcderr=0,
+    def __init__(s,name='nominal',charge=2,qcd = {}, unfold={},qcderr='NOM',
                  ntuple=None,path=None,var=None,bin=None,pre='',weight="mcw*puw*effw*trigw",
                  histo=None,sysdir=None,subdir=None,basedir=None ):
         # actual histograms
@@ -34,7 +34,7 @@ class SuSys:
         s.charge = charge
         s.unfold = unfold
         s.qcd = qcd       # special map to place ourselves into a QCD-region (e.g, anti-isolation)
-        s.qcderr = qcderr # Controls QCD scale uncertainty: 1 = sigma_up, -1 = sigma_down, 0 = nominal 
+        s.qcderr = qcderr # Controls QCD scale uncertainty: 'NOM','UP','DOWN',<float> - scale factor on nominal (e.g, 0.5 for 50%)
         # Ntuple-based resources:
         s.ntuple = ntuple # w or z
         s.path = path
@@ -269,7 +269,7 @@ class SuPlot:
         [o.qcd_region() for i,o in enumerate(res.flat) if i in res.enable]
         res.status = 1 # to prevent infinite recursion
         return res
-    def bootstrap(s,charge=2,qcd = {},unfold={},do_unfold=False,qcderr=0,
+    def bootstrap(s,charge=2,qcd = {},unfold={},do_unfold=False,qcderr='NOM',
                   ntuple=None,path=None,var=None,bin=None,pre='',weight="mcw*puw*effw*trigw",
                   histo=None,sysdir=None,subdir=None,basedir=None ):
         """ bootstraps a full collection of systematics from the nominal instance of SuSys """
@@ -361,8 +361,8 @@ class SuPlot:
             add('met_scalesoftdown',prep+'met_scalesoftdown')
             next('MET_SCALE')
         # QCD normalization
-        add3('qcdup',1,prep+'nominal')
-        add3('qcddown',-1,prep+'nominal')
+        add3('qcdup',1.5,prep+'nominal')
+        add3('qcddown',0.5,prep+'nominal')
         next('QCD_FRAC')
         # unfolding systematic
         if 'mc' in nom.unfold:
@@ -910,6 +910,21 @@ class SuStack:
             # duplicate first/last bin scales for underflow/overflow scale
             return [res[0],] + res + [res[-1],]
         return s.get_scale(d)
+    def scale_sys(s,key,qcderr):
+        """ s.scales[key] = (scale,scale_error).
+        qcderr is either NOM/UP/DOWN, or a multiplicative scale factor """
+        #print 'NOM =',s.scales[key][0]
+        return s.scales[key][0]
+        if qcderr=='NOM':
+            return s.scales[key][0]
+        elif qcderr=='UP':
+            return s.scales[key][0]*(1.0+1.0*s.scales[key][1])
+        elif qcderr=='DOWN':
+            return s.scales[key][0]*(1.0-1.0*s.scales[key][1])
+        else:
+            qcderr = float(qcderr)
+            return s.scales[key][0]*qcderr
+        assert False,'Unsupported QCD scale variation'
     def get_scale(s,d):
         """ A lookup cache of QCD scale values
         Note: d is an instance of SuSys, not SuPlot
@@ -919,7 +934,7 @@ class SuStack:
         d2.qcd_region()
         key = d2.h_path_fname()
         if key in s.scales:
-            return s.scales[key][0]*(1.0+d.qcderr*s.scales[key][1])
+            return s.scale_sys(key,d.qcderr)
         print 'COMPUTING NEW QCD WEIGHT:',key
         import SuFit
         f = SuFit.SuFit()
@@ -941,7 +956,7 @@ class SuStack:
         s.fits[key] = tmp[0]
         s.gbg.append((f,hdata,hfixed,hfree,tmp))
         s.scales[key] = (f.scales[0],f.scalesE[0])
-        return s.scales[key][0]*(1.0+d.qcderr*s.scales[key][1])
+        return s.scale_sys(key,d.qcderr)
     def histo(s,label,hname,d,norm=None):
         """ generic function to return histogram for a particular subsample """
         loop = [z for z in s.elm if z.label==label]

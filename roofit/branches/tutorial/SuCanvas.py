@@ -417,7 +417,6 @@ class SuCanvas:
     s.hratio,s.href = data.Clone("hratio"),data.Clone("href")
     s.hratio.Divide(stack.GetStack().Last())
     s.drawRefLine(s.href)
-    s.drawRatio(s.hratio)
     if mode==1:
       s.hsysr = hsysr = data.Clone("hratio_sys")
       hsysr.Divide(s.hsys)
@@ -426,6 +425,7 @@ class SuCanvas:
       [hsysr.SetBinContent(ii,1.0) for ii in xrange(0,hsysr.GetNbinsX()+2)]
       hsysr.Draw('A SAME E2')
       s.data.append(hsysr)
+    s.drawRatio(s.hratio)
     s.update()
 
   def Matrix_loose(s,Nt,Nl,er,ef):
