@@ -630,6 +630,13 @@ class SuSample:
             else:
                 h.Add( f.Get('%s/%s'%(s.topdir(f),hpath)) )
         return h
+    @staticmethod
+    def make_habseta(name='habseta_template'):
+        """ makes an instance of abseta histogram with detector-motivated binning """
+        import array
+        bins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
+        a = array.array('f',bins)
+        return ROOT.TH1F(name,name,len(a)-1,a)
     def histo(s,hname,dall,rebin=1.0,unitize=False):
         """ A wrapper around histogram-based and ntuple-based histo accessors """
         if isinstance(dall,SuSys):
@@ -644,13 +651,6 @@ class SuSample:
             else:
                 d.h = s.histo_h(hname,d,rebin)
         return dall
-    @staticmethod
-    def make_habseta(name='habseta_template'):
-        """ makes an instance of abseta histogram with detector-motivated binning """
-        import array
-        bins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
-        a = array.array('f',bins)
-        return ROOT.TH1F(name,name,len(a)-1,a)
     def histo_nt(s,hname,var,bin,cut,path=None,hsource=None,rebin=1.0):
         """ retrieve a particular histogram from ntuple (with cache) """
         path = path if path else s.path
