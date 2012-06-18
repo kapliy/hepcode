@@ -145,7 +145,23 @@ class SuSys:
         if weight!=None: res.weight = weight
         return res
     def Add(s,o,dd=1.0):
+        """ Smart add function that can handle None in either self.h or o.h
         return s.h.Add(o.h,dd) if s.h and o.h else None
+        """
+        if s.h and not o.h:
+            pass
+        elif s.h and o.h:
+            s.h.Add(o.h,dd)
+        elif not s.h and o.h:
+            s.h = o.h.Clone()
+            if dd!=1.0:
+                s.h.Scale(dd)
+        elif not s.h and not o.h:
+            print 'WARNING: attempting to add two Null histograms',s.name
+            pass
+        else:
+            assert False
+        return True
     def AddStack(s,o):
         return s.stack.Add(o.h) if s.stack and o.h else None
     def SetName(s,n):
@@ -714,9 +730,8 @@ class SuSample:
         res = s.GetHisto(hname,d.h_path(flags=s.flags))
         if not res:
             fname = os.path.basename(s.files[0].GetName())
-            print '->Missing histo:',hname, fname, d.h_path(flags=s.flags)
-            #return None   # be careful, returning None is a recipe for not noticing problems
-            assert False
+            print 'WARNING: -> Missing histo:',hname, fname, d.h_path(flags=s.flags)
+            return None   # be careful, returning None is a recipe for not noticing problems
         if s.lumi:
             res.Scale(s.scale(evcnt = s.choose_evcount('')))
         if rebin!=1:
@@ -749,18 +764,13 @@ class SuStackElm:
         """ add all files satisfying a glob pattern - using rootpath"""
         return [e.auto() for e in s.samples]
     def histo(s,hname,d,unitize=False,rebin=1.0):
-        """ sum histogram of all subsamples (legacy version for ntuples) """
+        """ sum histogram of all subsamples """
         if len(s.samples)==0:
             return None
         res = s.samples[0].histo(hname,d,rebin=rebin)
         for h in s.samples[1:]:
             htmp = h.histo(hname,d.clone(),rebin=rebin)
-            if res and not htmp:
-                continue
-            elif res and htmp:
-                res.Add(htmp)
-            elif not res:
-                res = htmp
+            res.Add(htmp)
         if res:
             res.SetLineColor(ROOT.kBlack)
             res.SetFillColor(s.color)
