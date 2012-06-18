@@ -299,6 +299,7 @@ spR.bootstrap(do_unfold=False,
               sysdir=[tightlvl+'nominal',tightlvl+'nominal','isowind'],subdir='st_w_final',basedir='baseline',
               qcd={'metfit':'metfit'})
 SuStack.QCD_SYS_SCALES = opts.metallsys
+SuStack.QCD_TF_FITTER = False
 spR.enable_all()
 # Reco-level [ntuple]
 spRN = SuPlot()
@@ -318,7 +319,7 @@ spTN.bootstrap(ntuple=opts.ntuple,histo=opts.hsource,
                weight=opts.cut,pre=fortruth(opts.pre))
 spTN.enable_nominal()
 
-def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errors=True,do_unfold=False,do_data=True,do_summary=False,new_scales=None,name=''):
+def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errorsMC=False,do_unfold=False,do_data=True,do_summary=False,new_scales=None,name=''):
     """ Plots histograms with multiple Monte-Carlos overlayed
     m = 1   :  data
     m = 2   :  data_sub
@@ -333,9 +334,9 @@ def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errors=True,do_unfold=Fa
     if spT2: spT2.update_var( var )
     c = SuCanvas('P%d_%s_%s'%(m,name,'det' if do_unfold==False else 'unf'))
     M = PlotOptions()
-    M.prefill_mc(err=do_errors if do_unfold==False else False)
+    M.prefill_mc(err=do_errorsMC if do_unfold==False else False) # if unfolded, only show errors on final data
     if do_data:
-        M.prefill_data(err=do_errors)
+        M.prefill_data(err=do_errorsDA) 
     h = []
     for i in range(M.ntot()):
         if do_data and i==M.ntot()-1: #data
@@ -457,9 +458,9 @@ def test_ntuple_histo(spR2,var='lepton_absetav',new_scales=None,name='ntuple_his
 def june17_asymmetry_do(spTN2,pre,name='truth_'):
     pre2040=prunesub(pre,'l_pt','l_pt>20 && l_pt<40')
     pre4080=prunesub(pre,'l_pt','l_pt>40 && l_pt<80')
-    plot_any(spTN2.clone(pre=pre),m=10,name=name+'_fiducial',do_unfold=False,do_errors=False,do_data=False,new_scales=False)
-    plot_any(spTN2.clone(pre=pre2040),m=10,name=name+'_lpt2040',do_unfold=False,do_errors=False,do_data=False,new_scales=False)
-    plot_any(spTN2.clone(pre=pre4080),m=10,name=name+'_lpt4080',do_unfold=False,do_errors=False,do_data=False,new_scales=False)
+    plot_any(spTN2.clone(pre=pre),m=10,name=name+'_fiducial',do_data=False,new_scales=False)
+    plot_any(spTN2.clone(pre=pre2040),m=10,name=name+'_lpt2040',do_data=False,new_scales=False)
+    plot_any(spTN2.clone(pre=pre4080),m=10,name=name+'_lpt4080',do_data=False,new_scales=False)
 def june17_asymmetry():
     pre = fortruth(opts.pre)
     # truth level:
@@ -474,31 +475,32 @@ def june17_asymmetry():
         june17_asymmetry_do(spRN.clone(weight=opts.cut+'*'+'wptw'),opts.pre,name='reco_wWPTW')
     # histograms
     # truth
-    plot_any(spTN.clone(weight=opts.cut,pre=pre,var='w_pt',histo='',bin='50,0,100'),var='w_pt',m=1,name='truth_fiducial_wpt_wADEF',do_unfold=False,do_errors=False,do_data=False,new_scales=False)
-    plot_any(spTN.clone(weight=opts.cut+'*'+'wptw',pre=pre,var='w_pt',histo='',bin='50,0,100'),var='w_pt',m=1,name='truth_fiducial_wpt_wWPTW',do_unfold=False,do_errors=False,do_data=False,new_scales=False)
+    plot_any(spTN.clone(weight=opts.cut,pre=pre,var='w_pt',histo='',bin='50,0,100'),var='w_pt',m=1,name='truth_fiducial_wpt_wADEF',do_data=False,new_scales=False)
+    plot_any(spTN.clone(weight=opts.cut+'*'+'wptw',pre=pre,var='w_pt',histo='',bin='50,0,100'),var='w_pt',m=1,name='truth_fiducial_wpt_wWPTW',do_data=False,new_scales=False)
     # reco
-    plot_any(spRN.clone(weight=opts.cut,pre=opts.pre,var='w_pt',histo='',bin='50,0,100',q=2),var='w_pt',m=1,name='reco_fiducial_wpt_wADEF',do_unfold=False,do_errors=False,do_data=False,new_scales=False)
-    plot_any(spRN.clone(weight=opts.cut+'*'+'wptw',pre=opts.pre,var='w_pt',histo='',bin='50,0,100',q=2),var='w_pt',m=1,name='reco_fiducial_wpt_wWPTW',do_unfold=False,do_errors=False,do_data=False,new_scales=False)
+    plot_any(spRN.clone(weight=opts.cut,pre=opts.pre,var='w_pt',histo='',bin='50,0,100',q=2),var='w_pt',m=1,name='reco_fiducial_wpt_wADEF',do_data=False,new_scales=False)
+    plot_any(spRN.clone(weight=opts.cut+'*'+'wptw',pre=opts.pre,var='w_pt',histo='',bin='50,0,100',q=2),var='w_pt',m=1,name='reco_fiducial_wpt_wWPTW',do_data=False,new_scales=False)
     plot_stack(spRN.clone(weight=opts.cut,pre=opts.pre,var='w_pt',histo='',bin='50,0,100',q=2),var='w_pt',q=2,m=0,new_scales=False,name='wpt_stack_wADEF')
     plot_stack(spRN.clone(weight=opts.cut+'*'+'wptw',pre=opts.pre,var='w_pt',histo='',bin='50,0,100',q=2),var='w_pt',q=2,m=0,new_scales=False,name='wpt_stack_wWPTW')
-    
+
 # combined plots
 if mode=='ALL' or mode=='all':
-    if True: # june17 plots without data: asymmetries at truth and a bit at reco level
+    if False: # june17 plots without data: asymmetries at truth and a bit at reco level
+        cmd="""
+        ./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso20/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --cut "mcw*puw*effw*trigw" -m ALL --bgsig 2 --bgqcd 0 #--metallsys #d0sig was 10, then was fabs(d0sig)<5.0
+        """
         june17_asymmetry()
     if False:
         plots = ['lepton_absetav']
         #plots = ['lepton_absetav','lepton_pt','met','w_mt',"lepton_ptiso20r","lepton_ptiso30r","lepton_etiso30rcorr","njets"]
         plot_stacks(spR.clone(),plots,m=1)
-    if False:
-        plot_any(spR.clone(),spT.clone(),m=20,do_unfold=True)
-        #plot_any(spR.clone(),None,m=20,name='asym_histo',do_unfold=False,do_errors=False,new_scales=False)
-        #plot_any(spRN.clone(path=path_reco),None,m=20,name='asym_ntuple',do_unfold=False,do_errors=False,new_scales=False)
+    if True:
+        plot_any(spR.clone(),spT.clone(),m=20,do_unfold=True,do_errorsDA=True)
         if False: # validate TH1 vs ntuple MC-only asymmetries. Small difference see in truth tree -not sure why
-            plot_any(spRN.clone(path=path_reco),None,m=20,name='reco_ntuple',do_unfold=False,do_errors=False,do_data=False,new_scales=False)
-            plot_any(spR.clone(),None,name='reco_histo',m=20,do_unfold=False,do_errors=False,do_data=False,new_scales=False)
-            plot_any(spTN.clone(),None,name='truth_ntuple',m=20,do_unfold=False,do_errors=False,do_data=False,new_scales=False)
-            plot_any(spT.clone(),None,name='truth_histo',m=20,do_unfold=False,do_errors=False,do_data=False,new_scales=False)
+            plot_any(spRN.clone(path=path_reco),None,m=20,name='reco_ntuple',do_data=False,new_scales=False)
+            plot_any(spR.clone(),None,name='reco_histo',m=20,do_data=False,new_scales=False)
+            plot_any(spTN.clone(),None,name='truth_ntuple',m=20,do_data=False,new_scales=False)
+            plot_any(spT.clone(),None,name='truth_histo',m=20,do_data=False,new_scales=False)
     if False: # compares TH1 vs ntuple based basic histogram results, ignoring QCD normalization issues
         spR.enable_nominal()
         test_ntuple_histo(spR.clone(),name='asym_histo',new_scales=False)
@@ -511,9 +513,9 @@ if mode=='ALL' or mode=='all':
         spR.enable_nominal()
         # FIXME TODO: mechanism to try out different QCD backgrounds. Plus: different EWK (for qcdsub) - both should be in systematics!
         plots = ['lepton_absetav','lepton_pt','met','w_mt',"lepton_ptiso20r","lepton_ptiso30r","lepton_etiso30rcorr"]
-        plot_any(spR.clone(),spT.clone(),m=20,do_unfold=False,do_errors=False,name='bbmu15_default',new_scales=False)
+        plot_any(spR.clone(),spT.clone(),m=20,name='bbmu15_default',new_scales=False)
         plot_stacks(spR.clone(),plots,name='bbmu15_default')
-        plot_any(spR.clone(),spT.clone(),m=20,do_unfold=False,do_errors=False,name='bbmu15_qcdfit',new_scales=True)
+        plot_any(spR.clone(),spT.clone(),m=20,name='bbmu15_qcdfit',new_scales=True)
         plot_stacks(spR.clone(),plots,name='bbmu15_qcdfit')
     if False: # mel test: look at systematic variations in signal only, see if it is one-sided
         spR.update_var( 'lepton_absetav' )
@@ -569,6 +571,8 @@ if mode=='ALL' or mode=='all':
         c.plotMany([h1R,h2R],M=M,mode=0,height=1.7)
         #c.plotOne(h1R,mode=2,height=1.7)
         OMAP.append(c)
+    if False: # antonio study of muon exms_pt/id_pt in low-pt muon region. refLine = 0.0,3.0
+        plot_stack(spRN.clone(var='l_pt_exms/l_pt_id',histo='',bin='50,0.5,1.5',q=2),var='l_pt_exms/l_pt_id',q=2,m=0,new_scales=False,name='antonio_ptEXMS_ptID')
     
 if mode=='1': # total stack histo
     spR2 = spR
