@@ -786,6 +786,7 @@ class SuStack:
     This class does not own the histograms it creates!
     """
     QCD_SYS_SCALES = False
+    QCD_TF_FITTER = True
     def __init__(s):
         """ constructor """
         # stack elements
@@ -958,8 +959,16 @@ class SuStack:
         hfixed.getLegendName = lambda : 'EWK backgrounds'
         hfree.getLegendName = lambda : 'QCD'
         f.setDataBackgrounds(hdata,hfixed,hfree)
-        f.doFit()
-        tmp = f.drawFits(key)
+        if False: # check the effect of model errors on the fit
+            f.blowUpErrors(0,100,inc=True)
+        tmp = None
+        if SuStack.QCD_TF_FITTER:
+            f.doFitTF()
+            tmp = f.drawFitsTF(key)
+        else:
+            f.doFit()
+            tmp = f.drawFits(key)
+        assert tmp
         s.fits[key] = tmp[0]
         s.gbg.append((f,hdata,hfixed,hfree,tmp))
         s.scales[key] = (f.scales[0],f.scalesE[0])

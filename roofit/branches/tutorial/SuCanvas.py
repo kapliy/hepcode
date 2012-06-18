@@ -65,7 +65,7 @@ class SuCanvas:
   def __init__(s,name='plot'):
     s.data = []
     s._ratioDrawn = False
-    s.savename = name
+    s.savename = SuCanvas.cleanse(name)
     s._plotPad,s._coverPad,s._ratioPad,s._canvas = None,None,None,None
 
   def FixupHisto(s,h):
@@ -368,7 +368,7 @@ class SuCanvas:
         h.SetLineColor( PlotOptions.autocolor(i) )
       h.Draw() if i==0 else h.Draw('A SAME')
       if htot:
-        htot.Draw('A E3 same')
+        htot.Draw('A same E2')
       s.FixupHisto(h)
     maxh = max([h.GetMaximum() for h in hs])
     if height=='asym':

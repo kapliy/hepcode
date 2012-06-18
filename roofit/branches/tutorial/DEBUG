@@ -1,15 +1,14 @@
 #!/bin/bash
 
 input=/share/t3data3/antonk/ana/ana_v29D_04292012_DtoM_unfold_stacoCB_all
-input=/share/t3data3/antonk/ana/ana_v29D_06092012_DtoM_prejes_stacoCB_all        # new systematics i guess
-input=/share/t3data3/antonk/ana/ana_v29D_06162012_DtoM_maxiso_wptw_stacoCB_all
-
+input=/share/t3data3/antonk/ana/ana_v29D_06092012_DtoM_prejes_stacoCB_all        # new systematics
 #input=/share/t3data3/antonk/ana/ana_v29D_06162012_DtoM_maxiso_wptw_stacoCB_all   # new tight iso per Max
-#input=/share/t3data3/antonk/ana/ana_v29D_06122012_DtoM_maxiso_wptw_stacoCB_all   # new tight iso per Max               [buggy]
-#input=/share/t3data3/antonk/ana/ana_v29D_06122012_DtoM_maxiso_wptw_h_stacoCB_all # new tight iso per Max + wpt weights [buggy]
 
 # RESURRECTING NTUPLE-BASED PLOTTING:
-./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso20/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --cut "mcw*puw*effw*trigw" -m ALL --bgsig 2 --bgqcd 0 #--metallsys #d0sig was 10, then was fabs(d0sig)<5.0
+./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso20/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --cut "mcw*puw*effw*trigw" -m ALL --bgsig 2 --bgqcd 2 #--metallsys #d0sig was 10, then was fabs(d0sig)<5.0
+
+#ANTONIO
+#./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso40/l_pt<0.1 && etiso30corr/l_pt<0.1 && met>25.0 && l_pt>20.0 && l_pt<30.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --cut "mcw*puw*effw*trigw" -m ALL --bgsig 2 --bgqcd 0 --refline 0.0,3.0 #--metallsys #d0sig was 10, then was fabs(d0sig)<5.0
 
 # USED FOR MOST MAY STUDIES:
 #./stack2.py --input ${input}/ -o TEST -b --hsource "lepton_absetav" -t TEST -m ALL --bgqcd 2 --bgsig 2 #--metallsys
