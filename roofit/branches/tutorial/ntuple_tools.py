@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import re
 
 POS,NEG,ALL=range(3)
 QMAP = {}
@@ -23,7 +24,7 @@ def prunesub(pre,lvar,sub):
         keep = True
         for lvar in lvars:
             if re.match(lvar,elm):
-                print '-> pruning away: ',elm
+                print '-> pruning away: ',elm,' --> ',sub
                 keep = False
                 break
         if keep:
@@ -71,7 +72,7 @@ def fortruth(pre):
     for elm in pre.split(' && '):
         if re.search('iso',elm) or re.match('idhits',elm) or re.search('d0',elm) or re.search('z0',elm) or re.search('exms',elm):
             continue
-        if re.search('trig',elm) or re.search('nmuons',elm):
+        if re.search('trig',elm):
             continue
         res.append(elm)
     return ' && '.join(res)
@@ -149,6 +150,7 @@ def looseisoreg(pre):
     return prune(pre, ('ptiso','lP_ptiso','l_ptiso','etiso','lP_etiso','lN_etiso','nmuons','l_trigEF') )
 
 def run_fit(pre,var='met',bin='100,5,100',cut='mcw*puw'):
+    """ Deprecated interface to SuFit - this has not been integrated into SuData """
     import SuFit
     f = SuFit.SuFit()
     f.addFitVar( var, float(bin.split(',')[1]) , float(bin.split(',')[2]) , var );

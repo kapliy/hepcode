@@ -456,10 +456,17 @@ class SuPlot:
         sys.stdout = oldsys
         if f: f.close()
         #print 'http://rendera.heroku.com/'
-    def update_histo(s,histo):
+    def update_var(s,histo,bin=None):
+        """ Updates histogram name and ntuple-expression (aka variable)
+        In reality, only one of these applies for a given SuData instance.
+        """
         for i,o in enumerate(s.flat):
             if i in s.enable:
-                o.histo = histo
+                if bin:
+                    o.var = histo
+                    o.bin = bin
+                else:
+                    o.histo = histo
     def clone(s,q=None,enable=None,histo=None,do_unfold=None,ntuple=None,path=None,var=None,bin=None,pre=None,weight=None):
         """ Clones an entire SuPlot.
         Each SuSys is cloned individually to avoid soft pointer links

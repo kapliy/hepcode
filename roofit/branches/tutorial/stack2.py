@@ -289,7 +289,7 @@ if False:
 gbg = []
 q = opts.charge
 
-# Reco-level plots + all systematics
+# Reco-level [histo]
 tightlvl = 'tight_'
 tightlvl = ''
 spR = SuPlot()
@@ -300,41 +300,71 @@ spR.bootstrap(do_unfold=False,
               qcd={'metfit':'metfit'})
 SuStack.QCD_SYS_SCALES = opts.metallsys
 spR.enable_all()
-# Truth-level plots
-spT= SuPlot()
-spT.bootstrap(charge=q,var=opts.var,histo=opts.hsource,
-              sysdir='truth',subdir='st_w_final',basedir='baseline')
-spT.enable_nominal()
-# Reco-level ntuple
+# Reco-level [ntuple]
 spRN = SuPlot()
 spRN.bootstrap(ntuple=opts.ntuple,histo=opts.hsource,
                charge=q,var=opts.var,path=path_reco,bin=opts.bin,
                weight=opts.cut,pre=opts.pre)
 spRN.enable_nominal()
+# Truth-level [histo]
+spT= SuPlot()
+spT.bootstrap(charge=q,var=opts.var,histo=opts.hsource,
+              sysdir='truth',subdir='st_w_final',basedir='baseline')
+spT.enable_nominal()
+# Truth-level [ntuple]
+spTN = SuPlot()
+spTN.bootstrap(ntuple=opts.ntuple,histo=opts.hsource,
+               charge=q,var=opts.var,path=path_truth,bin=opts.bin,
+               weight=opts.cut,pre=fortruth(opts.pre))
+spTN.enable_nominal()
 
-def plot_asymmetry(spR2,spT2=None,var='lepton_absetav',do_errors=True,do_unfold=False,new_scales=None,name=''):
+def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errors=True,do_unfold=False,do_data=True,do_summary=False,new_scales=None,name=''):
+    """ Plots histograms with multiple Monte-Carlos overlayed
+    m = 1   :  data
+    m = 2   :  data_sub
+    m = 10  :  asym_data
+    m = 20  :  asym_data_sub
+    """
+    assert m in (1,2,10,20)
+    is_asym = m in (10,20)
     assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
     if new_scales!=None: SuStackElm.new_scales = new_scales
-    if spR2: spR2.update_histo( var )
-    if spT2: spT2.update_histo( var )
-    c = SuCanvas('asym_%s_%s'%(name,'detector' if do_unfold==False else 'unfolded'))
+    if spR2: spR2.update_var( var )
+    if spT2: spT2.update_var( var )
+    c = SuCanvas('P%d_%s_%s'%(m,name,'det' if do_unfold==False else 'unf'))
     M = PlotOptions()
     M.prefill_mc(err=do_errors if do_unfold==False else False)
-    M.prefill_data(err=do_errors)
+    if do_data:
+        M.prefill_data(err=do_errors)
     h = []
     for i in range(M.ntot()):
-        if i==M.ntot()-1: #data
-            #h.append( po.asym_data('data',spR2.clone(do_unfold=do_unfold)) )
-            h.append( po.asym_data_sub('datasub',spR2.clone(do_unfold=do_unfold)) )
-        else: #MC
-            h.append( po.asym_mc('mc', spT2.clone() if spT2 else spR2.clone() ,label=M.names[i]) )
-    c.plotAny(h,M=M,height='asym',title='Detector-level asymmetry' if do_unfold==False else 'Truth-level asymmetry')
-    # do summary bin here!
+        if do_data and i==M.ntot()-1: #data
+            if m==1:
+                h.append( po.data('data',spR2.clone(do_unfold=do_unfold)) )
+            elif m==2:
+                h.append( po.data_sub('data',spR2.clone(do_unfold=do_unfold)) )
+            elif m==10:
+                h.append( po.asym_data('data',spR2.clone(do_unfold=do_unfold)) )
+            elif m==20:
+                h.append( po.asym_data_sub('data',spR2.clone(do_unfold=do_unfold)) )
+        else: #MC: use truth-level histograms if possible
+            if m in (1,2):
+                h.append( po.mc('mc', spT2.clone() if spT2 else spR2.clone() ,label=M.names[i]) )
+            elif m in (10,20):
+                h.append( po.asym_mc('mc', spT2.clone() if spT2 else spR2.clone() ,label=M.names[i]) )
+    height = 'asym' if is_asym else 1.7
+    title = var
+    if is_asym:
+        title='Detector-level asymmetry' if do_unfold==False else 'Truth-level asymmetry'
+    c.plotAny(h,M=M,height=height,title=title)
+    if do_summary:
+        # do summary bin here!
+        pass
     OMAP.append(c)
 
 def plot_stack(spR2,var,q=2,m=0,new_scales=None,name=''):
     if new_scales!=None: SuStackElm.new_scales = new_scales
-    spR2.update_histo( var )
+    spR2.update_var( var )
     c = SuCanvas('stack_'+var+'_'+SuSys.QMAP[q][1]+('_'+name if name !='' else ''))
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,var,"brNDC")
     hstack = po.stack('mc',spR2.clone(q=q),leg=leg)
@@ -353,8 +383,8 @@ def test_unfolding(spR2,spT2,asym=True,name='test_unfolding'):
     #SuSample.debug = True
     #spR2.enable_nominal()
     var = 'lepton_absetav'
-    spR2.update_histo( var )
-    spT2.update_histo( var )
+    spR2.update_var( var )
+    spT2.update_var( var )
     c = SuCanvas(name)
     h = []
     if asym:
@@ -409,7 +439,7 @@ def test_from_slices_sys(spR):
 def test_ntuple_histo(spR2,var='lepton_absetav',new_scales=None,name='ntuple_histo'):
     assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
     if new_scales!=None: SuStackElm.new_scales = new_scales
-    if spR2: spR2.update_histo( var )
+    if spR2: spR2.update_var( var )
     c = SuCanvas('%s_%s'%(name,'detector'))
     M = PlotOptions()
     M.prefill_mc()
@@ -424,16 +454,51 @@ def test_ntuple_histo(spR2,var='lepton_absetav',new_scales=None,name='ntuple_his
     #c.plotAny(h,M=M,height=4000*1000,title='Ntuple-Histo comparison')
     OMAP.append(c)
 
+def june17_asymmetry_do(spTN2,pre,name='truth_'):
+    pre2040=prunesub(pre,'l_pt','l_pt>20 && l_pt<40')
+    pre4080=prunesub(pre,'l_pt','l_pt>40 && l_pt<80')
+    plot_any(spTN2.clone(pre=pre),m=10,name=name+'_fiducial',do_unfold=False,do_errors=False,do_data=False,new_scales=False)
+    plot_any(spTN2.clone(pre=pre2040),m=10,name=name+'_lpt2040',do_unfold=False,do_errors=False,do_data=False,new_scales=False)
+    plot_any(spTN2.clone(pre=pre4080),m=10,name=name+'_lpt4080',do_unfold=False,do_errors=False,do_data=False,new_scales=False)
+def june17_asymmetry():
+    pre = fortruth(opts.pre)
+    # truth level:
+    if True:
+        june17_asymmetry_do(spTN.clone(weight=opts.cut),pre,name='truth_wADEF')
+        june17_asymmetry_do(spTN.clone(weight=opts.cut+'*'+'lha_CT10'),pre,name='truth_wCT10')
+        june17_asymmetry_do(spTN.clone(weight=opts.cut+'*'+'wptw'),pre,name='truth_wWPTW')
+    # reco level:
+    if True:
+        june17_asymmetry_do(spRN.clone(weight=opts.cut),opts.pre,name='reco_wADEF')
+        june17_asymmetry_do(spRN.clone(weight=opts.cut+'*'+'lha_CT10'),opts.pre,name='reco_wCT10')
+        june17_asymmetry_do(spRN.clone(weight=opts.cut+'*'+'wptw'),opts.pre,name='reco_wWPTW')
+    # histograms
+    # truth
+    plot_any(spTN.clone(weight=opts.cut,pre=pre,var='w_pt',histo='',bin='50,0,100'),var='w_pt',m=1,name='truth_fiducial_wpt_wADEF',do_unfold=False,do_errors=False,do_data=False,new_scales=False)
+    plot_any(spTN.clone(weight=opts.cut+'*'+'wptw',pre=pre,var='w_pt',histo='',bin='50,0,100'),var='w_pt',m=1,name='truth_fiducial_wpt_wWPTW',do_unfold=False,do_errors=False,do_data=False,new_scales=False)
+    # reco
+    plot_any(spRN.clone(weight=opts.cut,pre=opts.pre,var='w_pt',histo='',bin='50,0,100',q=2),var='w_pt',m=1,name='reco_fiducial_wpt_wADEF',do_unfold=False,do_errors=False,do_data=False,new_scales=False)
+    plot_any(spRN.clone(weight=opts.cut+'*'+'wptw',pre=opts.pre,var='w_pt',histo='',bin='50,0,100',q=2),var='w_pt',m=1,name='reco_fiducial_wpt_wWPTW',do_unfold=False,do_errors=False,do_data=False,new_scales=False)
+    plot_stack(spRN.clone(weight=opts.cut,pre=opts.pre,var='w_pt',histo='',bin='50,0,100',q=2),var='w_pt',q=2,m=0,new_scales=False,name='wpt_stack_wADEF')
+    plot_stack(spRN.clone(weight=opts.cut+'*'+'wptw',pre=opts.pre,var='w_pt',histo='',bin='50,0,100',q=2),var='w_pt',q=2,m=0,new_scales=False,name='wpt_stack_wWPTW')
+    
 # combined plots
 if mode=='ALL' or mode=='all':
-    if True:
+    if True: # june17 plots without data: asymmetries at truth and a bit at reco level
+        june17_asymmetry()
+    if False:
         plots = ['lepton_absetav']
         #plots = ['lepton_absetav','lepton_pt','met','w_mt',"lepton_ptiso20r","lepton_ptiso30r","lepton_etiso30rcorr","njets"]
         plot_stacks(spR.clone(),plots,m=1)
     if False:
-        plot_asymmetry(spR.clone(),spT.clone(),do_unfold=True)
-        #plot_asymmetry(spR.clone(),None,name='asym_histo',do_unfold=False,do_errors=False,new_scales=False)
-        #plot_asymmetry(spRN.clone(path=path_reco),None,name='asym_ntuple',do_unfold=False,do_errors=False,new_scales=False)
+        plot_any(spR.clone(),spT.clone(),m=20,do_unfold=True)
+        #plot_any(spR.clone(),None,m=20,name='asym_histo',do_unfold=False,do_errors=False,new_scales=False)
+        #plot_any(spRN.clone(path=path_reco),None,m=20,name='asym_ntuple',do_unfold=False,do_errors=False,new_scales=False)
+        if False: # validate TH1 vs ntuple MC-only asymmetries. Small difference see in truth tree -not sure why
+            plot_any(spRN.clone(path=path_reco),None,m=20,name='reco_ntuple',do_unfold=False,do_errors=False,do_data=False,new_scales=False)
+            plot_any(spR.clone(),None,name='reco_histo',m=20,do_unfold=False,do_errors=False,do_data=False,new_scales=False)
+            plot_any(spTN.clone(),None,name='truth_ntuple',m=20,do_unfold=False,do_errors=False,do_data=False,new_scales=False)
+            plot_any(spT.clone(),None,name='truth_histo',m=20,do_unfold=False,do_errors=False,do_data=False,new_scales=False)
     if False: # compares TH1 vs ntuple based basic histogram results, ignoring QCD normalization issues
         spR.enable_nominal()
         test_ntuple_histo(spR.clone(),name='asym_histo',new_scales=False)
@@ -446,12 +511,12 @@ if mode=='ALL' or mode=='all':
         spR.enable_nominal()
         # FIXME TODO: mechanism to try out different QCD backgrounds. Plus: different EWK (for qcdsub) - both should be in systematics!
         plots = ['lepton_absetav','lepton_pt','met','w_mt',"lepton_ptiso20r","lepton_ptiso30r","lepton_etiso30rcorr"]
-        plot_asymmetry(spR.clone(),spT.clone(),do_unfold=False,do_errors=False,name='bbmu15_default',new_scales=False)
+        plot_any(spR.clone(),spT.clone(),m=20,do_unfold=False,do_errors=False,name='bbmu15_default',new_scales=False)
         plot_stacks(spR.clone(),plots,name='bbmu15_default')
-        plot_asymmetry(spR.clone(),spT.clone(),do_unfold=False,do_errors=False,name='bbmu15_qcdfit',new_scales=True)
+        plot_any(spR.clone(),spT.clone(),m=20,do_unfold=False,do_errors=False,name='bbmu15_qcdfit',new_scales=True)
         plot_stacks(spR.clone(),plots,name='bbmu15_qcdfit')
     if False: # mel test: look at systematic variations in signal only, see if it is one-sided
-        spR.update_histo( 'lepton_absetav' )
+        spR.update_var( 'lepton_absetav' )
         c = SuCanvas('systematics')
         if False: # in asymmetry
             h = po.asym_sig('asym',spR.clone(do_unfold=0))
