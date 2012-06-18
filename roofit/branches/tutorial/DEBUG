@@ -2,6 +2,9 @@
 
 input=/share/t3data3/antonk/ana/ana_v29D_04292012_DtoM_unfold_stacoCB_all
 input=/share/t3data3/antonk/ana/ana_v29D_06092012_DtoM_prejes_stacoCB_all        # new systematics i guess
+input=/share/t3data3/antonk/ana/ana_v29D_06162012_DtoM_maxiso_wptw_stacoCB_all
+
+#input=/share/t3data3/antonk/ana/ana_v29D_06162012_DtoM_maxiso_wptw_stacoCB_all   # new tight iso per Max
 #input=/share/t3data3/antonk/ana/ana_v29D_06122012_DtoM_maxiso_wptw_stacoCB_all   # new tight iso per Max               [buggy]
 #input=/share/t3data3/antonk/ana/ana_v29D_06122012_DtoM_maxiso_wptw_h_stacoCB_all # new tight iso per Max + wpt weights [buggy]
 
