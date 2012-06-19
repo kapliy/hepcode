@@ -339,8 +339,8 @@ q = opts.charge
 MAP_BGSIG = {0:'pythia',1:'mcnlo',2:'alpgen_herwig',3:'alpgen_pythia',4:'powheg_herwig',5:'powheg_pythia'}
 
 # Reco-level [histo]
-unfmethod = 'RooUnfoldBayes'
 unfmethod = 'RooUnfoldBinByBin'
+unfmethod = 'RooUnfoldBayes'
 tightlvl = 'tight_'
 #tightlvl = ''
 spR = SuPlot()
@@ -381,8 +381,8 @@ def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errors
     is_asym = m in (10,20)
     assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
     if new_scales!=None: SuStackElm.new_scales = new_scales
-    if spR2: spR2.update_var( var )
-    if spT2: spT2.update_var( var )
+    if spR2 and var!=None: spR2.update_var( var )
+    if spT2 and var!=None: spT2.update_var( var )
     c = SuCanvas('P%d_%s_%s'%(m,name,'det' if do_unfold==False else 'unf'))
     M = PlotOptions()
     M.prefill_mc(err=do_errorsMC if do_unfold==False else False) # if unfolded, only show errors on final data
@@ -553,6 +553,10 @@ if mode=='ALL' or mode=='all':
             plot_any(spR.clone(),None,name='reco_histo',m=20,do_data=False,new_scales=False)
             plot_any(spTN.clone(),None,name='truth_ntuple',m=20,do_data=False,new_scales=False)
             plot_any(spT.clone(),None,name='truth_histo',m=20,do_data=False,new_scales=False)
+    if True:
+        histo = 'bin_%d/lpt:0:5'
+        #plot_any(spR.clone(),spT.clone(),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='DIRECT')
+        plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='SLICES')
     if False: # compares TH1 vs ntuple based basic histogram results, ignoring QCD normalization issues
         spR.enable_nominal()
         test_ntuple_histo(spR.clone(),name='asym_histo',new_scales=False)
@@ -583,24 +587,24 @@ if mode=='ALL' or mode=='all':
         h.summary_bin(fname='index.html')
     if False: # stopped working 06/19/2012
         test_unfolding(spR.clone(),spT.clone(),asym=False)
-    if False:
+    if False: # make sure rebuilding of abseta from bin-by-bin slices is identical to direct histogram
         test_from_slices(spR.clone(),spT.clone(),1)
-    if True:
+    if False: # same as above, but compaing at unfolded level. I.e., this also validates direct unfolding vs pt-unfolding inside eta slices
         c = SuCanvas('test_slices_norm')
         SuStack.QCD_SYS_SCALES = False #FIXME
         spR.enable_nominal() #FIXME
         print '--------->', 'Making default'
         do_unfold = True
-        h1R = po.asym_data_sub('pos',spR.clone(q=0,do_unfold=do_unfold))
+        h1R = po.asym_data_sub('pos',spR.clone(do_unfold=do_unfold))
         print '--------->', 'Making inbins combined'
-        h2R = po.asym_data_sub('pos',spR.clone(q=0,do_unfold=do_unfold,histo='bin_%d/lpt:0:5'))
+        h2R = po.asym_data_sub('pos',spR.clone(do_unfold=do_unfold,histo='bin_%d/lpt:0:5'))
         hpt = []
         print '--------->', 'Making inbins pt20..25'
-        #hpt.append( po.asym_data_sub('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:1:1')) )
+        #hpt.append( po.asym_data_sub('pos',spR.clone(do_unfold=False,histo='bin_%d/lpt:1:1')) )
         print '--------->', 'Making inbins pt25..40'
-        #hpt.append( po.asym_data_sub('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:2:2')) )
-        #hpt.append( po.asym_data_sub('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:3:3')) )
-        #hpt.append( po.asym_data_sub('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:4:4')) )
+        #hpt.append( po.asym_data_sub('pos',spR.clone(do_unfold=False,histo='bin_%d/lpt:2:2')) )
+        #hpt.append( po.asym_data_sub('pos',spR.clone(do_unfold=False,histo='bin_%d/lpt:3:3')) )
+        #hpt.append( po.asym_data_sub('pos',spR.clone(do_unfold=False,histo='bin_%d/lpt:4:4')) )
         M = PlotOptions()
         M.add('default','default')
         M.add('inbins','inbins')

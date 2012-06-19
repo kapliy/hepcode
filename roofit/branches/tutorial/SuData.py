@@ -940,7 +940,7 @@ class SuStack:
             h = d.h if d.h else d.stack.GetStack().Last()
             assert response
             method = d.unfold['method']
-            print 'Unfolding method:',d.name,d.unfold['mc'] # FIXME AK
+            print 'Unfolding method:',method,d.name,d.unfold['mc']
             par = d.unfold['par']
             unfold = None
             if method=='RooUnfoldBayes':
@@ -1139,12 +1139,24 @@ class SuStack:
         hname = horig.split('/')[1]  # lpt
         imin,imax = [int(cc) for cc in hspec.split(':')[1:1+2]]
         assert hname in ('lpt','met','njets','wmt','wpt')
-        hdir = loop[0].samples[0].get_from_file( d.nominal().h_path_folder() )
-        assert hdir
-        allkeys = [z.GetName() for z in hdir.GetListOfKeys() if re.match('bin_',z.GetName())]
-        idxs = sorted([ int(z.replace('bin_','')) for z in allkeys ])
+        # locate list of eta bins
+        idxs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]  # temp. hack: just put it by hand!
+        if False:
+            hdir = loop[0].samples[0].get_from_file( d.nominal().h_path_folder() )
+            assert hdir
+            allkeys = [z.GetName() for z in hdir.GetListOfKeys() if re.match('bin_',z.GetName())]
+            idxs = sorted([ int(z.replace('bin_','')) for z in allkeys ])
+            print idxs, d.nominal().h_path_folder()
         assert idxs[-1]==len(idxs)-1
-        heta = loop[0].samples[0].get_from_file( d.nominal().h_path_folder() + '/' + 'lepton_absetav' )
+        # locate heta [should always be able to find it]
+        heta = None
+        for ilp in loop:
+            if heta: break
+            for ismpl in ilp.samples:
+                if heta: break
+                #loops[0].samples[0]
+                heta = ismpl.get_from_file( d.nominal().h_path_folder() + '/' + 'lepton_absetav' )
+                if heta: break
         assert heta
         heta = heta.Clone()
         heta.SetLineColor(ROOT.kBlack)
