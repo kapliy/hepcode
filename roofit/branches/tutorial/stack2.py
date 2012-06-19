@@ -554,9 +554,13 @@ if mode=='ALL' or mode=='all':
             plot_any(spTN.clone(),None,name='truth_ntuple',m=20,do_data=False,new_scales=False)
             plot_any(spT.clone(),None,name='truth_histo',m=20,do_data=False,new_scales=False)
     if True:
+        plot_any(spR.clone(),spT.clone(),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='INCLUSIVE_DIRECT')
         histo = 'bin_%d/lpt:0:5'
-        #plot_any(spR.clone(),spT.clone(),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='DIRECT')
-        plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='SLICES')
+        plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='INCLUSIVE_SLICES')
+        histo = 'bin_%d/lpt:1:2'
+        plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='PT2040')
+        histo = 'bin_%d/lpt:3:3'
+        plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='PT4080')
     if False: # compares TH1 vs ntuple based basic histogram results, ignoring QCD normalization issues
         spR.enable_nominal()
         test_ntuple_histo(spR.clone(),name='asym_histo',new_scales=False)

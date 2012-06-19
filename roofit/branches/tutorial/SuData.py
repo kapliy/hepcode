@@ -1141,7 +1141,7 @@ class SuStack:
         assert hname in ('lpt','met','njets','wmt','wpt')
         # locate list of eta bins
         idxs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]  # temp. hack: just put it by hand!
-        if False:
+        if False: #TODO: loop over multiple samples
             hdir = loop[0].samples[0].get_from_file( d.nominal().h_path_folder() )
             assert hdir
             allkeys = [z.GetName() for z in hdir.GetListOfKeys() if re.match('bin_',z.GetName())]
@@ -1154,10 +1154,9 @@ class SuStack:
             if heta: break
             for ismpl in ilp.samples:
                 if heta: break
-                #loops[0].samples[0]
                 heta = ismpl.get_from_file( d.nominal().h_path_folder() + '/' + 'lepton_absetav' )
                 if heta: break
-        assert heta
+        assert heta,'Cannot locate %s in any sample'%d.nominal().h_path_folder()
         heta = heta.Clone()
         heta.SetLineColor(ROOT.kBlack)
         heta.SetFillColor(ROOT.kBlack)
