@@ -266,7 +266,8 @@ class SuFit:
       tempName = s.free[ift].GetName()
       tempName += "Template"
       # hmmmm is this even normalized correctly??
-      s.model.plotOn( frame , RF.Name( s.free[ift].GetName() ) , RF.Components( tempName ) , RF.DrawOption("F") , 
+      s.model.plotOn( frame , RF.Name( s.free[ift].GetName() ) , RF.Components( tempName ) , RF.DrawOption("F") ,
+                      RF.Normalization(1.0/s.scales[ift]),
                       RF.FillColor( s.free[ift].GetFillColor() ) , RF.LineColor( s.free[ift].GetLineColor() ) )
     frame.GetXaxis().SetTitleOffset( canvas.getXtitleOffset() )
     frame.GetYaxis().SetTitleOffset( canvas.getYtitleOffset() )

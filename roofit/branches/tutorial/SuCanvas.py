@@ -38,14 +38,14 @@ class PlotOptions:
         s.add('datasub','Data',color=1,style=21,err=err)
     def prefill_mc(s,err=0):
         """ pre-fill with all available MC samples """
-        s.add('pythia','Pythia(MRSTMCal)',err=err)
-        #s.add('pythia','Pythia(MRSTMCal->CTEQ6L1)',cut='lha_CT10') #cut='lha_cteq6ll')
-        #s.add('sherpa','Sherpa(CTEQ6L1)')
-        s.add('alpgen_herwig','Alpgen/Herwig(CTEQ6L1)',ratio=True,err=err)
-        #s.add('alpgen_pythia','Alpgen/Pythia(CTEQ6L1)')
-        s.add('mcnlo','MC@NLO(CT10)',ratio=True,err=err)
-        s.add('powheg_herwig','PowHeg/Herwig(CT10)',ratio=True,err=err)
-        s.add('powheg_pythia','PowHeg/Pythia(CT10)',ratio=True,err=err)
+        s.add('sig_pythia','Pythia(MRSTMCal)',err=err)
+        #s.add('sig_pythia','Pythia(MRSTMCal->CTEQ6L1)',cut='lha_CT10') #cut='lha_cteq6ll')
+        #s.add('sig_sherpa','Sherpa(CTEQ6L1)')
+        s.add('sig_alpgen_herwig','Alpgen/Herwig(CTEQ6L1)',ratio=True,err=err)
+        #s.add('sig_alpgen_pythia','Alpgen/Pythia(CTEQ6L1)')
+        s.add('sig_mcnlo','MC@NLO(CT10)',ratio=True,err=err)
+        s.add('sig_powheg_herwig','PowHeg/Herwig(CT10)',ratio=True,err=err)
+        s.add('sig_powheg_pythia','PowHeg/Pythia(CT10)',ratio=True,err=err)
     @staticmethod
     def autocolor(i):
         """ choose a reasonable sequence of colors """
