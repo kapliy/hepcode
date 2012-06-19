@@ -745,12 +745,13 @@ class SuStackElm:
     For example: jimmy_wmunu_np{0..5}
     """
     new_scales = True
-    def __init__(s,label,samples,color=ROOT.kBlack,flags=[],table={},po=None):
+    def __init__(s,name,label,samples,color=ROOT.kBlack,flags=[],table={},po=None):
         """ constructor """
         s.samples = [SuSample(a) for a in samples]
-        s.label = label
+        s.name = name     # internal name to refer to this set of SuSamples
+        s.label = label   # label used in printouts and on the legend
         s.color = color
-        s.flags = [a.lower() for a in flags]
+        s.flags = list(set([a.lower() for a in flags]))
         s.table = table
         s.po = po # for back-navigation
         for a in s.samples: # propagate the flags to individual SuSample's
@@ -820,6 +821,38 @@ class SuStack:
             for sam in elm.samples:
                 assert path in sam.nt.keys()
                 sam.path = path
+    @staticmethod
+    def add_flag(m,v='no'):
+        if not v in m.flags:
+            m.flags+=[v]
+    @staticmethod
+    def rm_flag(m,v='no'):
+        if v in m.flags:
+            m.flags.remove(v)
+    def choose_flag(s,name,flag):
+        """ Select a particular subsample with a given flag, turning all others off """
+        loop = [e for e in s.elm if flag in e.flags]
+        for elm in loop:
+            if elm.name == name:
+                SuStack.rm_flag(elm,'no')
+            else:
+                SuStack.add_flag(elm,'no')
+        pass
+    def choose_qcd(s,name):
+        """ Select QCD sample, turning all others off """
+        return s.choose_flag(name,'qcd')
+    def choose_sig(s,name):
+        """ Select signal sample, turning all others off """
+        return s.choose_flag(name,'sig')
+    def choose_wtaunu(s,name):
+        """ Select signal sample, turning all others off """
+        return s.choose_flag(name,'wtaunu')
+    def choose_zmumu(s,name):
+        """ Select signal sample, turning all others off """
+        return s.choose_flag(name,'zmumu')
+    def choose_ztautau(s,name):
+        """ Select signal sample, turning all others off """
+        return s.choose_flag(name,'ztautau')
     def all_samples(s):
         """ returns all samples """
         res = []
@@ -831,18 +864,22 @@ class SuStack:
         """ print nevents for each sample """
         tot = 0
         for elm in s.elm:
-            print '==',elm.label,'=='
+            print '==',elm.name,elm.label,'=='
             for sam in elm.samples:
                 print '--->',sam.name,sam.nentries()
                 tot += sam.nentries()
         print 'Total:',tot
-    def add(s,label,samples,color,flags=[],table={}):
+    def add(s,name,samples,color,flags=[],table={},label=None):
         """ backward-compatible interface:
             po.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen)
         """
         if not isinstance(samples,list):
             samples = [samples,]
-        s.elm.append( SuStackElm(label,samples,color,flags,table,po=s) )
+        if label==None: label = name
+        s.elm.append( SuStackElm(name,label,samples,color,flags,table,po=s) )
+    def adn(s,name,samples,color,flags=[],table={},label=None):
+        """ add with flags=['no',...] """
+        return s.add(name,samples,color,flags+['no'],table,label)
     def load_unfolding(s):
         """ Loads unfolding migration matrices """
         # make sure RooUnfold.so is loadable:
@@ -983,9 +1020,9 @@ class SuStack:
         s.gbg.append((f,hdata,hfixed,hfree,tmp))
         s.scales[key] = (f.scales[0],f.scalesE[0])
         return s.scale_sys(key,d.qcderr)
-    def histo(s,label,hname,d,norm=None):
+    def histo(s,name,hname,d,norm=None):
         """ generic function to return histogram for a particular subsample """
-        loop = [z for z in s.elm if z.label==label]
+        loop = [z for z in s.elm if z.name==name]
         return s.histosum(loop,hname,d,norm)
     def asym_generic(s,method,hname,d,*args,**kwargs):
         """ Generic function that builds asymmetry for a given method """
@@ -1020,12 +1057,12 @@ class SuStack:
         return res
     def asym_data_sub(s,*args,**kwargs):
         return s.asym_generic(s.data_sub,*args,**kwargs)
-    def mc(s,hname,d,label=None):
+    def mc(s,hname,d,name=None):
         """ MC summed histogram """
-        if not label: # use flags to determine which MC to plot
+        if not name: # use flags to determine which MC to plot
             loop = [e for e in s.elm if 'mc' in e.flags and 'no' not in e.flags]
         else:         # manually specify what to plot
-            loop = [e for e in s.elm if e.label==label]
+            loop = [e for e in s.elm if e.name==name]
         return s.histosum(loop,hname,d)
     def asym_mc(s,*args,**kwargs):
         return s.asym_generic(s.mc,*args,**kwargs)

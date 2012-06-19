@@ -198,7 +198,7 @@ mc.append(MCR(105985,'mc_herwig_ww','*',29.592*1.52/1000.0,0.38863,250000))
 mc.append(MCR(105987,'mc_herwig_wz','*',3.432*1.58/1000.0,1.0,250000))
 mc.append(MCR(105986,'mc_herwig_zz','*',4.60*1.41/1000.0,0.21152,250000))
 
-# ttbar (mc11c_p833_info.txt, ATL-COM-PHYS-2011-1522.pdf)
+# ttbar (mc11c_p833_info.txt, ATL-COM-PHYS-2011-1522.pdf) - mc@nlo, actually
 mc.append(MCR(105200,'mc_jimmy_ttbar','*',0.16457,0.5551,500000))
 
 # single top  (mc11c_p833_info.txt)
