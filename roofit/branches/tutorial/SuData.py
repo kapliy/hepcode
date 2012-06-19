@@ -113,7 +113,7 @@ class SuSys:
         """ Returns True if s.histo represents a folder of histograms in eta-slices """
         return re.search('bin_',s.histo) if s.histo else False
     def clone(s,sysdir=None,sysdir_mc=None,subdir=None,subdir_mc=None,basedir=None,
-              qcderr=None,name=None,q=None,histo=None,unfold=None,unfdir=None,
+              qcderr=None,qcdadd=None,name=None,q=None,histo=None,unfold=None,unfdir=None,
               ntuple=None,path=None,var=None,bin=None,pre=None,weight=None):
         """ deep copy, also allowing to update some members on-the-fly (useful to spawn systematics) """
         import copy
@@ -128,12 +128,16 @@ class SuSys:
         if subdir!=None: res.subdir = s.qlist(subdir)
         if basedir!=None: res.basedir = s.qlist(basedir)
         if qcderr!=None: res.qcderr = qcderr
+        if qcdadd!=None: # addition to qcd map for fine-control of QCD fits
+            qcd = copy.copy(res.qcd)
+            qcd.update(qcdadd)
+            res.qcd = qcd
         if name!=None: res.name = name
         if histo!=None: res.histo = histo
         if q!=None: res.charge = q
         if unfold!=None:
             res.unfold = copy.copy(unfold)
-        else:
+        else: # always make a copy of unfolding map
             res.unfold = copy.copy(s.unfold)
         if unfdir!=None: res.unfold['sysdir'] = unfdir
         # ntuple replacements
@@ -306,9 +310,9 @@ class SuPlot:
             return
         # systematic variations
         res = []
-        def add(n,ss,unfss=None):
+        def add(n,ss,unfss=None,qcdadd=None):
             """ Clones sysdir """
-            res.append(nom.clone(name=n,sysdir_mc=ss,unfdir=unfss if unfss!=None else ss))
+            res.append(nom.clone(name=n,sysdir_mc=ss,qcdadd=qcdadd,unfdir=unfss if unfss!=None else ss))
             s.flat.append(res[-1])
         def add2(n,ss,unfss=None):
             """ Clones subdir (e.g., for efficiencies) """
@@ -328,6 +332,7 @@ class SuPlot:
             s.sys.append(res[:])
             s.groups.append(nn)
             del res[:]
+        qcdadd = {'forcenominal':True}
         # MCP smearing UP
         add('mcp_msup',prep+'mcp_msup')
         add('mcp_msdown',prep+'mcp_msdown')
@@ -359,10 +364,10 @@ class SuPlot:
         next('MCP_TRIG')
         # JET
         if True:
-            add('jet_jer',prep+'jet_jer')
+            add('jet_jer',prep+'jet_jer',qcdadd=qcdadd)
             next('JER')
-            add('jet_jesup',prep+'jet_jesup')
-            add('jet_jesdown',prep+'jet_jesdown')
+            add('jet_jesup',prep+'jet_jesup',qcdadd=qcdadd)
+            add('jet_jesdown',prep+'jet_jesdown',qcdadd=qcdadd)
             next('JES')
         # MET
         if False:
@@ -370,11 +375,11 @@ class SuPlot:
             add('met_allcludown',prep+'met_allcludown')
             next('MET')
         else:
-            add('met_resosoftup',prep+'met_resosoftup')
-            add('met_resosoftdown',prep+'met_resosoftdown')
+            add('met_resosoftup',prep+'met_resosoftup',qcdadd=qcdadd)
+            add('met_resosoftdown',prep+'met_resosoftdown',qcdadd=qcdadd)
             next('MET_RESO')
-            add('met_scalesoftup',prep+'met_scalesoftup')
-            add('met_scalesoftdown',prep+'met_scalesoftdown')
+            add('met_scalesoftup',prep+'met_scalesoftup',qcdadd=qcdadd)
+            add('met_scalesoftdown',prep+'met_scalesoftdown',qcdadd=qcdadd)
             next('MET_SCALE')
         # QCD normalization
         add3('qcdup',1.5,prep+'nominal')
@@ -383,16 +388,16 @@ class SuPlot:
         # unfolding systematic
         if 'mc' in nom.unfold:
             add4('unfold_pythia','pythia',prep+'nominal')
-            add4('unfold_alpgen','alpgen',prep+'nominal')
-            add4('unfold_powheg','powheg',prep+'nominal')
             add4('unfold_mcnlo','mcnlo',prep+'nominal')
+            add4('unfold_alpgen_herwig','alpgen_herwig',prep+'nominal')
+            add4('unfold_powheg_pythia','powheg_pythia',prep+'nominal')
             next('UNFOLDING')
         assert len(s.sys)==len(s.groups)
         print 'Created systematic variations: N =',len(s.sys)
-    def update_errors(s,sysonly=False):
+    def update_errors(s,sysonly=False,force=False):
         """ folds systematic variations into total TH1 error. TODO: independent two-sided variations (non-symmetrized)  """
-        if s.hsys and sysonly==True: return s.hsys
-        if s.htot and sysonly==False: return s.htot
+        if s.hsys and sysonly==True and not force: return s.hsys
+        if s.htot and sysonly==False and not force: return s.htot
         stack_mode = False
         if not s.sys[0][0].h:
             assert s.sys[0][0].stack
@@ -885,29 +890,41 @@ class SuStack:
         # make sure RooUnfold.so is loadable:
         from ROOT import RooUnfold
         hpythia = os.path.join(SuSample.rootpath,'unfold_pythia.root')
-        halpgen = os.path.join(SuSample.rootpath,'unfold_alpgen.root')
-        hpowheg = os.path.join(SuSample.rootpath,'unfold_powheg.root')
         hmcnlo  = os.path.join(SuSample.rootpath,'unfold_mcnlo.root')
+        halpgen_herwig = os.path.join(SuSample.rootpath,'unfold_alpgen_herwig.root')
+        halpgen_pythia = os.path.join(SuSample.rootpath,'unfold_alpgen_pythia.root')
+        hpowheg_herwig = os.path.join(SuSample.rootpath,'unfold_powheg_herwig.root')
+        hpowheg_pythia = os.path.join(SuSample.rootpath,'unfold_powheg_pythia.root')
         if os.path.exists(hpythia):
             s.funfold['pythia'] = ROOT.TFile.Open(hpythia)
             print 'Found unfolding matrices for:','pythia'
         else:
             print 'Cannot find unfolding matrices for:','pythia',hpythia
-        if os.path.exists(halpgen):
-            s.funfold['alpgen'] = ROOT.TFile.Open(halpgen)
-            print 'Found unfolding matrices for:','alpgen'
-        else:
-            print 'Cannot find unfolding matrices for:','alpgen',halpgen
-        if os.path.exists(hpowheg):
-            s.funfold['powheg'] = ROOT.TFile.Open(hpowheg)
-            print 'Found unfolding matrices for:','powheg'
-        else:
-            print 'Cannot find unfolding matrices for:','powheg',hpowheg
         if os.path.exists(hmcnlo):
             s.funfold['mcnlo'] = ROOT.TFile.Open(hmcnlo)
             print 'Found unfolding matrices for:','mcnlo'
         else:
             print 'Cannot find unfolding matrices for:','mcnlo',hmcnlo
+        if os.path.exists(halpgen_herwig):
+            s.funfold['alpgen_herwig'] = ROOT.TFile.Open(halpgen_herwig)
+            print 'Found unfolding matrices for:','alpgen_herwig'
+        else:
+            print 'Cannot find unfolding matrices for:','alpgen_herwig',halpgen_herwig
+        if os.path.exists(halpgen_pythia):
+            s.funfold['alpgen_pythia'] = ROOT.TFile.Open(halpgen_pythia)
+            print 'Found unfolding matrices for:','alpgen_pythia'
+        else:
+            print 'Cannot find unfolding matrices for:','alpgen_pythia',halpgen_pythia
+        if os.path.exists(hpowheg_herwig):
+            s.funfold['powheg_herwig'] = ROOT.TFile.Open(hpowheg_herwig)
+            print 'Found unfolding matrices for:','powheg_herwig'
+        else:
+            print 'Cannot find unfolding matrices for:','powheg_herwig',hpowheg_herwig
+        if os.path.exists(hpowheg_pythia):
+            s.funfold['powheg_pythia'] = ROOT.TFile.Open(hpowheg_pythia)
+            print 'Found unfolding matrices for:','powheg_pythia'
+        else:
+            print 'Cannot find unfolding matrices for:','powheg_pythia',hpowheg_pythia
     def run_unfolding(s,dall):
         """ Unfolds SuSys histograms to particle level """
         if isinstance(dall,SuSys) or not dall.do_unfold: return dall
@@ -935,11 +952,15 @@ class SuStack:
         return out
     def get_scales(s,d):
         if not SuStack.QCD_SYS_SCALES:
-            return s.get_scale_wrap(d.sys[0][0])
+            return s.get_scale_wrap(d.nominal())
         res = []
         for i,o in enumerate(d.flat):
             if i not in d.enable: continue
-            res.append(s.get_scale_wrap(o))
+            # special treatment for systematics for which we choose NOT to redo QCD fits
+            if 'forcenominal' in o.qcd:
+                res.append(s.get_scale_wrap(d.nominal()))
+            else:
+                res.append(s.get_scale_wrap(o))
         return res
     def get_scale_wrap(s,d):
         """ A wrapper around get_scale() that knows how to deal with bin_%d/lpt sliced histograms
