@@ -539,12 +539,13 @@ if mode=='ALL' or mode=='all':
         ./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso20/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --cut "mcw*puw*effw*trigw" -m ALL --bgsig 2 --bgqcd 0 #--metallsys #d0sig was 10, then was fabs(d0sig)<5.0
         """
         june17_asymmetry()
-    if False:
+    if True:
         #plots = ['lepton_absetav']
         plots = ['lepton_absetav','lepton_pt','met','w_mt',"lepton_ptiso20r","lepton_ptiso30r","lepton_etiso30rcorr","njets"]
         plot_stacks(spR.clone(),plots,m=1)
-    if False:
+    if True:
         plot_any(spR.clone(),spT.clone(),m=20,do_unfold=True,do_errorsDA=True,do_summary=True)
+        plot_any(spR.clone(),None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False)
         if False: # validate TH1 vs ntuple MC-only asymmetries. Small difference see in truth tree -not sure why
             plot_any(spRN.clone(path=path_reco),None,m=20,name='reco_ntuple',do_data=False,new_scales=False)
             plot_any(spR.clone(),None,name='reco_histo',m=20,do_data=False,new_scales=False)
