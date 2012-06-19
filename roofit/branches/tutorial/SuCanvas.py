@@ -363,7 +363,7 @@ class SuCanvas:
         leg.AddEntry(h,M.labels[i],'LP')
         if htot:
           htot.SetFillColor(M.colors[i])
-          htot.SetFillStyle(3001)
+          htot.SetFillStyle(3004)
       else:
         h.SetLineColor( PlotOptions.autocolor(i) )
       h.Draw() if i==0 else h.Draw('A SAME')

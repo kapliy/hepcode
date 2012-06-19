@@ -1,15 +1,13 @@
-* TODO: Debug in which case QCD component is not plotted correctly
 * Set up multiple-QCD studies ala Adrian Lewis
 * Get back to working on unfolding-in-pt-slices stuff
 
 NOW:
 * Shall I try to use the latest JES/JER recommendations?
 * Debug KUP/KDOWN systematics. Debug JESUP/JESDOWN, too!
-
 1. UP/DOWN/NOMINAL: look at events common for all three samples.
 2. Plot bbmu15X template shapes on top of each other.
    Repeat the fit with blown-up errors and see
-3. Peter: consider fitting in lepton pt - it is an easier variable / less convolved with many other objects
+3. NEXT!!! -> Peter: consider fitting in lepton pt - it is an easier variable / less convolved with many other objects
 
 Check out this line: - it gets triggered on met_phi in Zmumu events.
     if( safe_divide(tmp,den) > 1E6 ) { printf( "num = %f , den = %f\n" , num , den ); return 0; assert(false); } //FIXME AK                                            

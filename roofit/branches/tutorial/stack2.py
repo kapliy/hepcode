@@ -177,6 +177,9 @@ def particle(h,inp=opts.input,var=opts.var,bin=opts.bin,q=opts.charge):
         f.Close()
     return h
 
+# this is used to select default unfolding matrix
+MAP_BGSIG = {0:'pythia',1:'mcnlo',2:'alpgen_herwig',3:'alpgen_pythia',4:'powheg_herwig',5:'powheg_pythia'}
+
 # MC stack order
 pw,pz = [SuStack() for zz in xrange(2)]
 # w samples:
@@ -337,10 +340,10 @@ q = opts.charge
 
 # Reco-level [histo]
 tightlvl = 'tight_'
-tightlvl = ''
+#tightlvl = ''
 spR = SuPlot()
 spR.bootstrap(do_unfold=False,
-              unfold={'sysdir':tightlvl+'nominal','mc':'pythia','method':'RooUnfoldBinByBin','par':4},
+              unfold={'sysdir':tightlvl+'nominal','mc':MAP_BGSIG[opts.bgsig],'method':'RooUnfoldBinByBin','par':4},
               charge=q,var=opts.var,histo=opts.hsource,
               sysdir=[tightlvl+'nominal',tightlvl+'nominal','isowind'],subdir='st_w_final',basedir='baseline',
               qcd={'metfit':'metfit'})
@@ -405,7 +408,7 @@ def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errors
         title='Detector-level asymmetry' if do_unfold==False else 'Truth-level asymmetry'
     c.plotAny(h,M=M,height=height,title=title)
     if do_summary:
-        # do summary bin here!
+        h[-1].summary_bin(fname='index.html')
         pass
     OMAP.append(c)
 
@@ -537,11 +540,11 @@ if mode=='ALL' or mode=='all':
         """
         june17_asymmetry()
     if False:
-        plots = ['lepton_absetav']
-        #plots = ['lepton_absetav','lepton_pt','met','w_mt',"lepton_ptiso20r","lepton_ptiso30r","lepton_etiso30rcorr","njets"]
+        #plots = ['lepton_absetav']
+        plots = ['lepton_absetav','lepton_pt','met','w_mt',"lepton_ptiso20r","lepton_ptiso30r","lepton_etiso30rcorr","njets"]
         plot_stacks(spR.clone(),plots,m=1)
-    if True:
-        plot_any(spR.clone(),spT.clone(),m=20,do_unfold=True,do_errorsDA=False)
+    if False:
+        plot_any(spR.clone(),spT.clone(),m=20,do_unfold=True,do_errorsDA=True,do_summary=True)
         if False: # validate TH1 vs ntuple MC-only asymmetries. Small difference see in truth tree -not sure why
             plot_any(spRN.clone(path=path_reco),None,m=20,name='reco_ntuple',do_data=False,new_scales=False)
             plot_any(spR.clone(),None,name='reco_histo',m=20,do_data=False,new_scales=False)
