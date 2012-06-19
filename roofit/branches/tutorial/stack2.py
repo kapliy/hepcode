@@ -177,9 +177,6 @@ def particle(h,inp=opts.input,var=opts.var,bin=opts.bin,q=opts.charge):
         f.Close()
     return h
 
-# this is used to select default unfolding matrix
-MAP_BGSIG = {0:'pythia',1:'mcnlo',2:'alpgen_herwig',3:'alpgen_pythia',4:'powheg_herwig',5:'powheg_pythia'}
-
 # MC stack order
 pw,pz = [SuStack() for zz in xrange(2)]
 # w samples:
@@ -338,12 +335,17 @@ if False:
 gbg = []
 q = opts.charge
 
+# this is used to select default unfolding matrix
+MAP_BGSIG = {0:'pythia',1:'mcnlo',2:'alpgen_herwig',3:'alpgen_pythia',4:'powheg_herwig',5:'powheg_pythia'}
+
 # Reco-level [histo]
+unfmethod = 'RooUnfoldBayes'
+unfmethod = 'RooUnfoldBinByBin'
 tightlvl = 'tight_'
 #tightlvl = ''
 spR = SuPlot()
 spR.bootstrap(do_unfold=False,
-              unfold={'sysdir':tightlvl+'nominal','mc':MAP_BGSIG[opts.bgsig],'method':'RooUnfoldBinByBin','par':4},
+              unfold={'sysdir':tightlvl+'nominal','histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
               charge=q,var=opts.var,histo=opts.hsource,
               sysdir=[tightlvl+'nominal',tightlvl+'nominal','isowind'],subdir='st_w_final',basedir='baseline',
               qcd={'metfit':'metfit'})
@@ -539,11 +541,11 @@ if mode=='ALL' or mode=='all':
         ./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso20/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --cut "mcw*puw*effw*trigw" -m ALL --bgsig 2 --bgqcd 0 #--metallsys #d0sig was 10, then was fabs(d0sig)<5.0
         """
         june17_asymmetry()
-    if True:
+    if False:
         #plots = ['lepton_absetav']
         plots = ['lepton_absetav','lepton_pt','met','w_mt',"lepton_ptiso20r","lepton_ptiso30r","lepton_etiso30rcorr","njets"]
         plot_stacks(spR.clone(),plots,m=1)
-    if True:
+    if False:
         plot_any(spR.clone(),spT.clone(),m=20,do_unfold=True,do_errorsDA=True,do_summary=True)
         plot_any(spR.clone(),None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False)
         if False: # validate TH1 vs ntuple MC-only asymmetries. Small difference see in truth tree -not sure why
@@ -561,7 +563,7 @@ if mode=='ALL' or mode=='all':
         test_ntuple_histo(spRN.clone(path=path_reco,pre=newpre),name='asym_ntuple_d10',new_scales=False)
     if False: # studying effects of QCD normalization in histograms
         spR.enable_nominal()
-        # FIXME TODO: mechanism to try out different QCD backgrounds. Plus: different EWK (for qcdsub) - both should be in systematics!
+        # FIXME TODO: exploit mechanism to try different QCD backgrounds, EWK (for qcdsub) - both should be in systematics!
         plots = ['lepton_absetav','lepton_pt','met','w_mt',"lepton_ptiso20r","lepton_ptiso30r","lepton_etiso30rcorr"]
         plot_any(spR.clone(),spT.clone(),m=20,name='bbmu15_default',new_scales=False)
         plot_stacks(spR.clone(),plots,name='bbmu15_default')
@@ -579,29 +581,31 @@ if mode=='ALL' or mode=='all':
             c.plotOne(h,mode=2,height=1.5,title='Signal MC asymmetry: systematics')
         OMAP.append(c)
         h.summary_bin(fname='index.html')
-    if False:
+    if False: # stopped working 06/19/2012
         test_unfolding(spR.clone(),spT.clone(),asym=False)
     if False:
         test_from_slices(spR.clone(),spT.clone(),1)
-    if False:
+    if True:
         c = SuCanvas('test_slices_norm')
-        SuStack.QCD_SYS_SCALES = True
+        SuStack.QCD_SYS_SCALES = False #FIXME
+        spR.enable_nominal() #FIXME
         print '--------->', 'Making default'
-        h1R = po.asym_data_sub('pos',spR.clone(q=0,do_unfold=False))
+        do_unfold = True
+        h1R = po.asym_data_sub('pos',spR.clone(q=0,do_unfold=do_unfold))
         print '--------->', 'Making inbins combined'
-        h2R = po.asym_data_sub('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:0:5'))
+        h2R = po.asym_data_sub('pos',spR.clone(q=0,do_unfold=do_unfold,histo='bin_%d/lpt:0:5'))
         hpt = []
         print '--------->', 'Making inbins pt20..25'
-        hpt.append( po.asym_data_sub('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:1:1')) )
+        #hpt.append( po.asym_data_sub('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:1:1')) )
         print '--------->', 'Making inbins pt25..40'
-        hpt.append( po.asym_data_sub('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:2:2')) )
+        #hpt.append( po.asym_data_sub('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:2:2')) )
         #hpt.append( po.asym_data_sub('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:3:3')) )
         #hpt.append( po.asym_data_sub('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:4:4')) )
         M = PlotOptions()
         M.add('default','default')
         M.add('inbins','inbins')
-        M.add('pt2025','pt2025')
-        M.add('pt2540','pt2540')
+        #M.add('pt2025','pt2025')
+        #M.add('pt2540','pt2540')
         #M.add('pt4080','pt4080')
         #M.add('pt80200','pt80200')
         print '--------->', 'Starting plotting...'

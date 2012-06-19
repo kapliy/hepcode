@@ -93,6 +93,8 @@ class SuSys:
         return re.sub(r'[^\w]', '_', out)
     def unfold_get_path(s,ibin=None,ivar=None):
         path = s.unfold['sysdir'] + SuSys.QMAP[s.charge][0] + '/'
+        path += s.unfold['histo']
+        return path
         if ibin==None:
             path += 'abseta'
         else:
@@ -113,7 +115,7 @@ class SuSys:
         """ Returns True if s.histo represents a folder of histograms in eta-slices """
         return re.search('bin_',s.histo) if s.histo else False
     def clone(s,sysdir=None,sysdir_mc=None,subdir=None,subdir_mc=None,basedir=None,
-              qcderr=None,qcdadd=None,name=None,q=None,histo=None,unfold=None,unfdir=None,
+              qcderr=None,qcdadd=None,name=None,q=None,histo=None,unfold=None,unfdir=None,unfhisto=None,
               ntuple=None,path=None,var=None,bin=None,pre=None,weight=None):
         """ deep copy, also allowing to update some members on-the-fly (useful to spawn systematics) """
         import copy
@@ -140,6 +142,7 @@ class SuSys:
         else: # always make a copy of unfolding map
             res.unfold = copy.copy(s.unfold)
         if unfdir!=None: res.unfold['sysdir'] = unfdir
+        if unfhisto!=None: res.unfold['histo'] = unfhisto
         # ntuple replacements
         if ntuple!=None: res.ntuple = ntuple
         if path!=None: res.path = path
@@ -488,7 +491,8 @@ class SuPlot:
                     o.bin = bin
                 else:
                     o.histo = histo
-    def clone(s,q=None,enable=None,histo=None,do_unfold=None,ntuple=None,path=None,var=None,bin=None,pre=None,weight=None):
+    def clone(s,q=None,enable=None,histo=None,do_unfold=None,unfhisto=None,
+              ntuple=None,path=None,var=None,bin=None,pre=None,weight=None):
         """ Clones an entire SuPlot.
         Each SuSys is cloned individually to avoid soft pointer links
         """
@@ -502,7 +506,7 @@ class SuPlot:
         for sgroups in s.sys:
             bla = []
             for sinst in sgroups:
-                bla.append(sinst.clone(q=q,histo=histo,ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight))
+                bla.append(sinst.clone(q=q,histo=histo,unfhisto=unfhisto,ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight))
                 res.flat.append(bla[-1])
             res.sys.append( bla )
         return res
@@ -1134,7 +1138,7 @@ class SuStack:
         horig = hspec.split(':')[0]  # bin_%d/lpt
         hname = horig.split('/')[1]  # lpt
         imin,imax = [int(cc) for cc in hspec.split(':')[1:1+2]]
-        assert hname in ('lpt','met','nj25','nj30','wmt','wpt')
+        assert hname in ('lpt','met','njets','wmt','wpt')
         hdir = loop[0].samples[0].get_from_file( d.nominal().h_path_folder() )
         assert hdir
         allkeys = [z.GetName() for z in hdir.GetListOfKeys() if re.match('bin_',z.GetName())]
@@ -1149,7 +1153,10 @@ class SuStack:
         # loop over each eta bin
         ds = []
         for idx in idxs:
-            ds.append( s.histosum_apply(loop,hname,d.clone(histo=(horig%idx)),norm,weights) )
+            # update histo and unfhisto to bin_7/lpt
+            hnew = horig%idx
+            ds.append( s.histosum_apply(loop,hname,d.clone(histo=hnew,unfhisto=hnew),norm,weights) )
+        # now we have final unfolded histograms (vs lpt) in each eta bin. Go back into eta space:
         d.update_from_slices(ds,heta,imin,imax)
         return d
     def histosum_apply(s,loop,hname,d,norm=None,weights=None):
