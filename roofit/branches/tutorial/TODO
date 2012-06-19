@@ -1,5 +1,3 @@
-* Set up multiple-QCD studies ala Adrian Lewis
-* Get back to working on unfolding-in-pt-slices stuff
 
 NOW:
 * Shall I try to use the latest JES/JER recommendations?
@@ -8,6 +6,9 @@ NOW:
 2. Plot bbmu15X template shapes on top of each other.
    Repeat the fit with blown-up errors and see
 3. NEXT!!! -> Peter: consider fitting in lepton pt - it is an easier variable / less convolved with many other objects
+4. Set up multiple-QCD studies ala Adrian Lewis
+
+SPEEDUP: ability to return original unsliced 2d histograms, and slice them later at plotting level!
 
 Check out this line: - it gets triggered on met_phi in Zmumu events.
     if( safe_divide(tmp,den) > 1E6 ) { printf( "num = %f , den = %f\n" , num , den ); return 0; assert(false); } //FIXME AK                                            
