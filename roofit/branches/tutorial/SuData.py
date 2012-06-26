@@ -817,6 +817,8 @@ class SuStack:
         s.fits = {}
         # for unfolding:
         s.funfold = {}
+        # stack composition flags
+        s.flagsum = {}
     def addchain(s,path):
         """ add one of the TNtuples """
         return [e.addchain(path) for e in s.elm]
@@ -838,12 +840,20 @@ class SuStack:
     def rm_flag(m,v='no'):
         if v in m.flags:
             m.flags.remove(v)
+    def get_flagsum(s):
+        """ Returns the flag-summary string that summarizes the choice of MC samples and QCD normalizations """
+        res = []
+        keys = sorted(s.flagsum.keys())
+        for key in keys:
+            res.append('%s_%s'%(key,s.flagsum[key]))
+        return '_'.join(res)
     def choose_flag(s,name,flag):
         """ Select a particular subsample with a given flag, turning all others off """
         loop = [e for e in s.elm if flag in e.flags]
         for elm in loop:
             if elm.name == name:
                 SuStack.rm_flag(elm,'no')
+                s.flagsum[flag] = name
             else:
                 SuStack.add_flag(elm,'no')
         pass
@@ -983,6 +993,9 @@ class SuStack:
                 tmin = int(hpt.GetBinLowEdge(ib+1))
                 tmax = tmin + int(hpt.GetBinWidth(ib+1))
                 tname = '%s%s%s'%(os.path.basename(d.h_path()),tmin,tmax) #lpt2025
+                # special treatment for njets:
+                if re.match('njets',tname):
+                    tname = '%s%d'%('nj30',ib if ib<4 else 3) #njets2
                 # modify basedir to become metfit/lpt2025
                 dtmp = d.clone()
                 dtmp.basedir = dtmp.qlist( d.basedir[2] + '/' + tname )   # nominal/lpt2025
@@ -1012,7 +1025,7 @@ class SuStack:
         # massage the path to put us in the QCD region
         d2 = d.clone()
         d2.qcd_region()
-        key = d2.h_path_fname()
+        key = s.get_flagsum()+'__'+d2.h_path_fname()
         if key in s.scales:
             return s.scale_sys(key,d.qcderr)
         print 'COMPUTING NEW QCD WEIGHT:',key
