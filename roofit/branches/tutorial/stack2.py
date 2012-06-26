@@ -77,9 +77,10 @@ parser.add_option("-d","--dataperiods",dest="dataperiods",
 _DATA_PERIODS_DEFAULT = ('D','E','F','G','H','I','J','K','L','M') # default
 #1340.03*1000.0 - BtoI with pro08
 #4713.11*1000.0 - BtoM with pro10
-#4701.37*1000.0 - DtoM with pro10
+#4701.37*1000.0 - DtoM with pro10, OflLumi-7TeV-002
+#4644.00*1000.0 - DtoM with pro10, OflLumi-7TeV-003
 parser.add_option("--lumi",dest="lumi",
-                  type="float", default=4701.37*1000.0,
+                  type="float", default=4644.0*1000.0,
                   help="Integrated luminosity for data (in nb^-1)")
 parser.add_option("--qcd",dest="qcdscale",
                   type="string", default='1.0',
@@ -177,6 +178,11 @@ def particle(h,inp=opts.input,var=opts.var,bin=opts.bin,q=opts.charge):
         f.Close()
     return h
 
+# this is used to select default unfolding matrix
+MAP_BGSIG = {0:'pythia',1:'mcnlo',2:'alpgen_herwig',3:'alpgen_pythia',4:'powheg_herwig',5:'powheg_pythia'}
+# this is used to select specific monte-carlos for signal/qcd/etc
+MAP_BGQCD = {0:'mc',1:'bb',2:'JX',3:'driven'}
+
 # MC stack order
 pw,pz = [SuStack() for zz in xrange(2)]
 # w samples:
@@ -228,14 +234,8 @@ if True:
     pw.adn(name='qcd_bb',label='bbmu15X',samples=['mc_pythia_bbmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     pw.adn(name='qcd_JX',label='QCD J0..J5',samples=['mc_pythia_J%d'%v for v in xrange(5)],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     pw.adn(name='qcd_driven',label='QCD data-driven',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kCyan,flags=['bg','mc','qcd','driven'])
-    if opts.bgqcd==0:
-        pw.choose_qcd('qcd_mc')
-    elif opts.bgqcd==1:
-        pw.choose_qcd('qcd_bb')
-    elif opts.bgqcd==2:
-        pw.choose_qcd('qcd_JX')
-    elif opts.bgqcd==3:
-        pw.choose_qcd('qcd_driven')
+    if opts.bgqcd in MAP_BGQCD.keys():
+        pw.choose_qcd('qcd_'+MAP_BGQCD[opts.bgqcd])
     else:
         assert False,'Unknown bgqcd option: %s'%opts.bgqcd
     #SIG:
@@ -246,19 +246,10 @@ if True:
     pw.adn(name='sig_powheg_pythia',label='W#rightarrow#mu#nu',samples=['mc_powheg_pythia_wminmunu','mc_powheg_pythia_wplusmunu'],color=10,flags=['sig','mc','ewk','wmunu'])
     pw.adn(name='sig_alpgen_herwig',label='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk','wmunu'])
     pw.adn(name='sig_alpgen_pythia',label='W#rightarrow#mu#nu+jets',samples=['mc_alpgen_pythia_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk','wmunu'])
-    if opts.bgsig==0:
-        pw.choose_sig('sig_pythia')
-    elif opts.bgsig==1:
-        pw.choose_sig('sig_mcnlo')
-    elif opts.bgsig==2:
-        pw.choose_sig('sig_alpgen_herwig')
-    elif opts.bgsig==3:
-        pw.choose_sig('sig_alpgen_pythia')
-    elif opts.bgsig==4:
-        pw.choose_sig('sig_powheg_herwig')
-    elif opts.bgsig==5:
-        pw.choose_sig('sig_powheg_pythia')
+    if opts.bgsig in MAP_BGSIG.keys():
+        pw.choose_sig('sig_'+MAP_BGSIG[opts.bgsig])
     else:
+        print MAP_BGSIG
         assert False,'Unknown bgsig option: %s'%opts.bgsig
 
 # z samples:
@@ -334,9 +325,6 @@ if False:
 
 gbg = []
 q = opts.charge
-
-# this is used to select default unfolding matrix
-MAP_BGSIG = {0:'pythia',1:'mcnlo',2:'alpgen_herwig',3:'alpgen_pythia',4:'powheg_herwig',5:'powheg_pythia'}
 
 # Reco-level [histo]
 unfmethod = 'RooUnfoldBinByBin'
@@ -414,6 +402,7 @@ def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errors
         pass
     OMAP.append(c)
 
+#FIXME TODO: modify m=0 to m=isys, with extra string values to do total-systematic
 def plot_stack(spR2,var,q=2,m=0,new_scales=None,name=''):
     if new_scales!=None: SuStackElm.new_scales = new_scales
     spR2.update_var( var )
@@ -531,21 +520,17 @@ def june17_asymmetry():
     # reco
     plot_any(spRN.clone(weight=opts.cut,pre=opts.pre,var='w_pt',histo='',bin='50,0,100',q=2),var='w_pt',m=1,name='reco_fiducial_wpt_wADEF',do_data=False,new_scales=False)
     plot_any(spRN.clone(weight=opts.cut+'*'+'wptw',pre=opts.pre,var='w_pt',histo='',bin='50,0,100',q=2),var='w_pt',m=1,name='reco_fiducial_wpt_wWPTW',do_data=False,new_scales=False)
-    plot_stack(spRN.clone(weight=opts.cut,pre=opts.pre,var='w_pt',histo='',bin='50,0,100',q=2),var='w_pt',q=2,m=0,new_scales=False,name='wpt_stack_wADEF')
-    plot_stack(spRN.clone(weight=opts.cut+'*'+'wptw',pre=opts.pre,var='w_pt',histo='',bin='50,0,100',q=2),var='w_pt',q=2,m=0,new_scales=False,name='wpt_stack_wWPTW')
+    plot_stack(spRN.clone(weight=opts.cut,pre=opts.pre,var='w_pt',histo='',bin='50,0,100',q=2),var='w_pt',q=2,new_scales=False,name='wpt_stack_wADEF')
+    plot_stack(spRN.clone(weight=opts.cut+'*'+'wptw',pre=opts.pre,var='w_pt',histo='',bin='50,0,100',q=2),var='w_pt',q=2,new_scales=False,name='wpt_stack_wWPTW')
 
 # combined plots
 if mode=='ALL' or mode=='all':
-    if False: # june17 plots without data: asymmetries at truth and a bit at reco level
-        cmd="""
-        ./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso20/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --cut "mcw*puw*effw*trigw" -m ALL --bgsig 2 --bgqcd 0 #--metallsys #d0sig was 10, then was fabs(d0sig)<5.0
-        """
-        june17_asymmetry()
     if False:
         #plots = ['lepton_absetav']
-        plots = ['lepton_absetav','lepton_pt','met','w_mt',"lepton_ptiso20r","lepton_ptiso30r","lepton_etiso30rcorr","njets"]
+        #plots = ['lepton_absetav','lepton_pt','met','w_mt',"lepton_ptiso20r","lepton_ptiso30r","lepton_etiso30rcorr","njets"]
+        plots = ['met']
         plot_stacks(spR.clone(),plots,m=1)
-    if False:
+    if False: # inclusive reco-level and truth-level asymmetry
         plot_any(spR.clone(),spT.clone(),m=20,do_unfold=True,do_errorsDA=True,do_summary=True)
         plot_any(spR.clone(),None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False)
         if False: # validate TH1 vs ntuple MC-only asymmetries. Small difference see in truth tree -not sure why
@@ -553,7 +538,7 @@ if mode=='ALL' or mode=='all':
             plot_any(spR.clone(),None,name='reco_histo',m=20,do_data=False,new_scales=False)
             plot_any(spTN.clone(),None,name='truth_ntuple',m=20,do_data=False,new_scales=False)
             plot_any(spT.clone(),None,name='truth_histo',m=20,do_data=False,new_scales=False)
-    if True:
+    if False: # FINAL asymmetry in slices of various variables
         plot_any(spR.clone(),spT.clone(),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='INCLUSIVE_DIRECT')
         histo = 'bin_%d/lpt:0:5'
         plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='INCLUSIVE_SLICES')
@@ -569,6 +554,16 @@ if mode=='ALL' or mode=='all':
         test_ntuple_histo(spRN.clone(path=path_reco,pre=newpre),name='asym_ntuple_d05',new_scales=False)
         newpre=opts.pre + ' && ' + 'fabs(d0sig)<10.0'
         test_ntuple_histo(spRN.clone(path=path_reco,pre=newpre),name='asym_ntuple_d10',new_scales=False)
+    if True: # rudimentary QCD studies: comparing various template sources (both QCD and EWK)
+        plots = ['met']
+        #MAP_BGSIG = {0:'pythia',1:'mcnlo',2:'alpgen_herwig',3:'alpgen_pythia',4:'powheg_herwig',5:'powheg_pythia'}
+        #MAP_BGQCD = {0:'mc',1:'bb',2:'JX',3:'driven'}
+        for bgsig in (1,2,5):
+            for bgqcd in (0,3):
+                print 'Working on:','SIG:',MAP_BGSIG[bgsig],'QCD:',MAP_BGQCD[bgqcd]
+                po.choose_sig('sig_'+MAP_BGSIG[bgsig])
+                po.choose_qcd('qcd_'+MAP_BGQCD[bgqcd])
+                plot_stacks(spR.clone(),plots,m=1,name='SIG_%s__QCD_%s'%(MAP_BGSIG[bgsig],MAP_BGQCD[bgqcd]))
     if False: # studying effects of QCD normalization in histograms
         spR.enable_nominal()
         # FIXME TODO: exploit mechanism to try different QCD backgrounds, EWK (for qcdsub) - both should be in systematics!
@@ -589,7 +584,7 @@ if mode=='ALL' or mode=='all':
             c.plotOne(h,mode=2,height=1.5,title='Signal MC asymmetry: systematics')
         OMAP.append(c)
         h.summary_bin(fname='index.html')
-    if False: # stopped working 06/19/2012
+    if False: # stopped working 06/19/2012. I think before it worked "almost" correctly, but now is substantially off
         test_unfolding(spR.clone(),spT.clone(),asym=False)
     if False: # make sure rebuilding of abseta from bin-by-bin slices is identical to direct histogram
         test_from_slices(spR.clone(),spT.clone(),1)
@@ -634,7 +629,12 @@ if mode=='ALL' or mode=='all':
         #c.plotOne(h1R,mode=2,height=1.7)
         OMAP.append(c)
     if False: # antonio study of muon exms_pt/id_pt in low-pt muon region. refLine = 0.0,3.0
-        plot_stack(spRN.clone(var='l_pt_exms/l_pt_id',histo='',bin='50,0.5,1.5',q=2),var='l_pt_exms/l_pt_id',q=2,m=0,new_scales=False,name='antonio_ptEXMS_ptID')
+        plot_stack(spRN.clone(var='l_pt_exms/l_pt_id',histo='',bin='50,0.5,1.5',q=2),var='l_pt_exms/l_pt_id',q=2,new_scales=False,name='antonio_ptEXMS_ptID')
+    if False: # june17 plots without data: asymmetries at truth and a bit at reco level
+        cmd="""
+        ./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso20/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --cut "mcw*puw*effw*trigw" -m ALL --bgsig 2 --bgqcd 0 #--metallsys #d0sig was 10, then was fabs(d0sig)<5.0
+        """
+        june17_asymmetry()
     
 if mode=='1': # total stack histo
     spR2 = spR
