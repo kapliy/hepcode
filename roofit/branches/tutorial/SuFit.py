@@ -33,6 +33,12 @@ class SuFit:
     s.fractionsE = []
     s.scalesE = []
 
+    # optional: same for EWK template
+    s.Wfractions = []
+    s.Wscales = []
+    s.WfractionsE = []
+    s.WscalesE = []
+
     s.model = None
     s.dataHist = None
     s.rebin = 1
@@ -76,9 +82,11 @@ class SuFit:
     return RooArgList(s.w.var(s.vnames[0]))
   def ArgSet(s):
     return RooArgSet(s.w.var(s.vnames[0]))
-
   def doFitTF(s):
-    """ A version of doFit using TFractionFitter - which takes into account uncertainties on the model """
+    """ A version of doFit using TFractionFitter
+    This supposedlt takes into account uncertainties on the model (but doesn't)
+    I also think EWK contribution is allowed to float, too
+    """
     assert s.data and s.fixed and len(s.free)==1, 'SuFit has not been supplied with all required input histograms'
     # clear results from previous fit
     s.fractions = []
@@ -96,8 +104,13 @@ class SuFit:
     s.fitmin,s.fitmax = s.data.FindFixBin(var.getMin()) , s.data.FindFixBin(var.getMax())
     fit.SetRangeX(s.fitmin,s.fitmax) # choose MET fit range
     s.status = fit.Fit()      # perform the fit
+    #s.status = fit.Fit()     # sometimes need to repeat the fit!
+    if s.status!=0:
+      print 'ERROR: fit failed to converge'
+      return
     # prepare the results
     value=ROOT.Double(); error=ROOT.Double()
+    # QCD FLOAT NORMALIZATION VALUES:
     fit.GetResult(1, value, error);
     # fractions
     s.fractions.append( float(value) )
@@ -109,6 +122,18 @@ class SuFit:
     s.scalesE.append( float(error) )
     s.scalesE[-1] *= s.data.Integral()
     s.scalesE[-1] /= s.free[0].Integral() # original qcd fraction
+    # EWK FIXED NORMALIZATION VALUES:
+    fit.GetResult(0, value, error);
+    # fractions
+    s.Wfractions.append( float(value) )
+    s.WfractionsE.append( float(error) )
+    # scales
+    s.Wscales.append( float(value) )
+    s.Wscales[-1] *= s.data.Integral()
+    s.Wscales[-1] /= s.fixed.Integral() # original ewk fraction
+    s.WscalesE.append( float(error) )
+    s.WscalesE[-1] *= s.data.Integral()
+    s.WscalesE[-1] /= s.fixed.Integral() # original ewk fraction
 
   def doFit(s):
     """ do fit and return weights """
