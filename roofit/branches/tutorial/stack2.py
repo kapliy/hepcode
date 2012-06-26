@@ -178,11 +178,6 @@ def particle(h,inp=opts.input,var=opts.var,bin=opts.bin,q=opts.charge):
         f.Close()
     return h
 
-# this is used to select default unfolding matrix
-MAP_BGSIG = {0:'pythia',1:'mcnlo',2:'alpgen_herwig',3:'alpgen_pythia',4:'powheg_herwig',5:'powheg_pythia'}
-# this is used to select specific monte-carlos for signal/qcd/etc
-MAP_BGQCD = {0:'mc',1:'bb',2:'JX',3:'driven'}
-
 # MC stack order
 pw,pz = [SuStack() for zz in xrange(2)]
 # w samples:
@@ -203,30 +198,30 @@ if True:
     #DIBOSON:
     pw.add(name='WW/WZ/ZZ',samples=['mc_herwig_ww','mc_herwig_wz','mc_herwig_zz'],color=11,flags=['bg','mc','ewk','diboson'])
     #EWK SEL: (defaults to alpgen, wherever possible)
-    if opts.bgewk==0:
-        pw.choose_wtaunu('wtaunu_pythia')
-        pw.choose_zmumu('zmumu_pythia')
-        pw.choose_ztautau('ztautau_pythia')
+    if opts.bgewk==0: #pythia
+        pw.choose_wtaunu(0)
+        pw.choose_zmumu(0)
+        pw.choose_ztautau(0)
     elif opts.bgewk==1: # mcnlo
-        pw.choose_wtaunu('wtaunu_alpgen_herwig') #NA
-        pw.choose_zmumu('zmumu_mcnlo')
-        pw.choose_ztautau('ztautau_alpgen_herwig') #NA
+        pw.choose_wtaunu(2) #NA
+        pw.choose_zmumu(1)
+        pw.choose_ztautau(2) #NA
     elif opts.bgewk==2: # alpgen/herwig
-        pw.choose_wtaunu('wtaunu_alpgen_herwig')
-        pw.choose_zmumu('zmumu_alpgen_herwig')
-        pw.choose_ztautau('ztautau_alpgen_herwig')
+        pw.choose_wtaunu(2)
+        pw.choose_zmumu(2)
+        pw.choose_ztautau(2)
     elif opts.bgewk==3: # alpgen/pythia
-        pw.choose_wtaunu('wtaunu_alpgen_herwig') #NA
-        pw.choose_zmumu('zmumu_alpgen_herwig') #NA
-        pw.choose_ztautau('ztautau_alpgen_herwig') #NA
+        pw.choose_wtaunu(2) #NA
+        pw.choose_zmumu(2) #NA
+        pw.choose_ztautau(2) #NA
     elif opts.bgewk==4: # powheg/herwig
-        pw.choose_wtaunu('wtaunu_alpgen_herwig') #NA
-        pw.choose_zmumu('zmumu_powheg_herwig')
-        pw.choose_ztautau('ztautau_alpgen_herwig') #NA
+        pw.choose_wtaunu(2) #NA
+        pw.choose_zmumu(4)
+        pw.choose_ztautau(2) #NA
     elif opts.bgewk==5: # powheg/pythia
-        pw.choose_wtaunu('wtaunu_powheg_herwig')
-        pw.choose_zmumu('zmumu_powheg_herwig')
-        pw.choose_ztautau('ztautau_alpgen_herwig') #NA
+        pw.choose_wtaunu(5)
+        pw.choose_zmumu(5)
+        pw.choose_ztautau(2) #NA
     else:
         assert False,'Unknown bgewk option: %s'%opts.bgewk
     #QCD:
@@ -235,7 +230,7 @@ if True:
     pw.adn(name='qcd_JX',label='QCD J0..J5',samples=['mc_pythia_J%d'%v for v in xrange(5)],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     pw.adn(name='qcd_driven',label='QCD data-driven',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kCyan,flags=['bg','mc','qcd','driven'])
     if opts.bgqcd in MAP_BGQCD.keys():
-        pw.choose_qcd('qcd_'+MAP_BGQCD[opts.bgqcd])
+        pw.choose_qcd(opts.bgqcd)
     else:
         assert False,'Unknown bgqcd option: %s'%opts.bgqcd
     #SIG:
@@ -247,7 +242,7 @@ if True:
     pw.adn(name='sig_alpgen_herwig',label='W#rightarrow#mu#nu+jets',samples=['mc_jimmy_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk','wmunu'])
     pw.adn(name='sig_alpgen_pythia',label='W#rightarrow#mu#nu+jets',samples=['mc_alpgen_pythia_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk','wmunu'])
     if opts.bgsig in MAP_BGSIG.keys():
-        pw.choose_sig('sig_'+MAP_BGSIG[opts.bgsig])
+        pw.choose_sig(opts.bgsig)
     else:
         print MAP_BGSIG
         assert False,'Unknown bgsig option: %s'%opts.bgsig
@@ -336,7 +331,7 @@ spR.bootstrap(do_unfold=False,
               unfold={'sysdir':tightlvl+'nominal','histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
               charge=q,var=opts.var,histo=opts.hsource,
               sysdir=[tightlvl+'nominal',tightlvl+'nominal','isowind'],subdir='st_w_final',basedir='baseline',
-              qcd={'metfit':'metfit'})
+              qcd={'var':'met','min':0,'max':100,'metfit':'metfit','forcenominal':False})
 SuStack.QCD_SYS_SCALES = opts.metallsys
 SuStack.QCD_TF_FITTER = False
 spR.enable_all()
@@ -358,7 +353,7 @@ spTN.bootstrap(ntuple=opts.ntuple,histo=opts.hsource,
                weight=opts.cut,pre=fortruth(opts.pre))
 spTN.enable_nominal()
 
-def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errorsMC=False,do_unfold=False,do_data=True,do_summary=False,new_scales=None,name=''):
+def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errorsMC=False,do_unfold=False,do_data=True,do_mc=True,do_summary=False,new_scales=None,name=''):
     """ Plots histograms with multiple Monte-Carlos overlayed
     m = 1   :  data
     m = 2   :  data_sub
@@ -373,7 +368,8 @@ def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errors
     if spT2 and var!=None: spT2.update_var( var )
     c = SuCanvas('P%d_%s_%s'%(m,name,'det' if do_unfold==False else 'unf'))
     M = PlotOptions()
-    M.prefill_mc(err=do_errorsMC if do_unfold==False else False) # if unfolded, only show errors on final data
+    if do_mc:
+        M.prefill_mc(err=do_errorsMC if do_unfold==False else False) # if unfolded, only show errors on final data
     if do_data:
         M.prefill_data(err=do_errorsDA) 
     h = []
@@ -387,11 +383,13 @@ def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errors
                 h.append( po.asym_data('data',spR2.clone(do_unfold=do_unfold)) )
             elif m==20:
                 h.append( po.asym_data_sub('data',spR2.clone(do_unfold=do_unfold)) )
-        else: #MC: use truth-level histograms if possible
+        elif do_mc: #MC: use truth-level histograms if possible
             if m in (1,2):
                 h.append( po.mc('mc', spT2.clone() if spT2 else spR2.clone() , name=M.names[i]) )
             elif m in (10,20):
                 h.append( po.asym_mc('mc', spT2.clone() if spT2 else spR2.clone() , name=M.names[i]) )
+        else:
+            assert False, 'ERROR: this can never happen'
     height = 'asym' if is_asym else 1.7
     title = var
     if is_asym:
@@ -401,6 +399,7 @@ def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errors
         h[-1].summary_bin(fname='index.html')
         pass
     OMAP.append(c)
+    return h[-1]
 
 #FIXME TODO: modify m=0 to m=isys, with extra string values to do total-systematic
 def plot_stack(spR2,var,q=2,m=0,new_scales=None,name=''):
@@ -554,15 +553,41 @@ if mode=='ALL' or mode=='all':
         test_ntuple_histo(spRN.clone(path=path_reco,pre=newpre),name='asym_ntuple_d05',new_scales=False)
         newpre=opts.pre + ' && ' + 'fabs(d0sig)<10.0'
         test_ntuple_histo(spRN.clone(path=path_reco,pre=newpre),name='asym_ntuple_d10',new_scales=False)
-    if True: # rudimentary QCD studies: comparing various template sources (both QCD and EWK)
+    if True: # rudimentary QCD studies: comparing effects of fit range
         plots = ['met']
+        spR.enable_nominal()
+        bgsig = 2
+        bgqcd = 3
+        po.choose_sig(bgsig)
+        po.choose_qcd(bgqcd)
+        #plot_stacks(spR.clone(),plots,m=0,name='SIG_%s__QCD_%s'%(MAP_BGSIG[bgsig],MAP_BGQCD[bgqcd]))
+        res = []
+        def q(n,qcdadd):
+            d = plot_any(spR.clone(qcdadd=qcdadd),None,m=20,do_unfold=False,do_mc=False,do_summary=False,name=n)
+            res.append( (n,d.nominal_h().GetBinContent(1),d.nominal_h().GetBinContent(6),d.nominal_h().GetBinContent(11)) )
+        q('met0to100',{'var':'met','min':0,'max':100})
+        q('met5to100',{'var':'met','min':5,'max':100})
+        q('met10to100',{'var':'met','min':10,'max':100})
+        q('met25to100',{'var':'met','min':25,'max':100})
+        q('met0to200',{'var':'met','min':0,'max':200})
+        q('met25to200',{'var':'met','min':25,'max':200})
+        q('lpt20to100',{'var':'lepton_pt','min':20,'max':100})
+        q('lpt25to100',{'var':'lepton_pt','min':25,'max':100})
+        q('lpt20to200',{'var':'lepton_pt','min':20,'max':200})
+        q('wmt40to100',{'var':'w_mt','min':40,'max':100})
+        q('wmt40to200',{'var':'w_mt','min':40,'max':200})
+        print res
+    if False: # rudimentary QCD studies: comparing various template sources (both QCD and EWK)
+        plots = ['met']
+        #FIXME: understand why, despite enable_nominal, we are seeing systematic bands is m=1 (something gets filled!)
+        #spR.enable_nominal()
         #MAP_BGSIG = {0:'pythia',1:'mcnlo',2:'alpgen_herwig',3:'alpgen_pythia',4:'powheg_herwig',5:'powheg_pythia'}
         #MAP_BGQCD = {0:'mc',1:'bb',2:'JX',3:'driven'}
         for bgsig in (1,2,5):
-            for bgqcd in (0,3):
+            for bgqcd in (3,):
                 print 'Working on:','SIG:',MAP_BGSIG[bgsig],'QCD:',MAP_BGQCD[bgqcd]
-                po.choose_sig('sig_'+MAP_BGSIG[bgsig])
-                po.choose_qcd('qcd_'+MAP_BGQCD[bgqcd])
+                po.choose_sig(bgsig)
+                po.choose_qcd(bgqcd)
                 plot_stacks(spR.clone(),plots,m=1,name='SIG_%s__QCD_%s'%(MAP_BGSIG[bgsig],MAP_BGQCD[bgqcd]))
     if False: # studying effects of QCD normalization in histograms
         spR.enable_nominal()
@@ -1208,7 +1233,7 @@ if mode=='99': # Floating QCD normalization
 
 for key,val in po.fits.iteritems():
     print 'Adding a normalization fit:',key
-    val.savename = 'qcdfit_'+key
+    val.savename = key
     OMAP.append(val)
 
 # save images
@@ -1237,3 +1262,5 @@ if opts.antondb:
             a.add(path,VMAP)
         if len(OMAP)>0:
             a.add_root(path,[oo._canvas for oo in OMAP if hasattr(oo,'_canvas')])
+
+print 'stack.py finished'

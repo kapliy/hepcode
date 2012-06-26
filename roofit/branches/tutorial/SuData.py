@@ -9,6 +9,11 @@ from hashlib import md5
 import ROOT
 from FileLock import FileLock
 
+# this is used to select default unfolding matrix
+MAP_BGSIG = {0:'pythia',1:'mcnlo',2:'alpgen_herwig',3:'alpgen_pythia',4:'powheg_herwig',5:'powheg_pythia'}
+# this is used to select specific monte-carlos for signal/qcd/etc
+MAP_BGQCD = {0:'mc',1:'bb',2:'JX',3:'driven'}
+
 class SuSys:
     """ Generic class that describes where to get the data for one histogram (systematic).
     Basically, it generalizes ntuple-based and histo-based data access.
@@ -109,8 +114,9 @@ class SuSys:
         if len(s.basedir[2].split('/'))>1:  # nominal/lpt2025/tight
             basedir = '/' + '/'.join( s.basedir[2].split('/')[1:]) # lpt2025/tight
         basedir = s.qcd['metfit']+basedir   # metfit/lpt2025/tight [/POS/absetav_histo]
-        s.basedir = [basedir]*3 # disable MET>25 cut
-        s.histo = 'met'
+        if s.qcd['var']=='met': # only disable MET>25 cut if we are actually fitting in MET
+            s.basedir = [basedir]*3
+        s.histo = s.qcd['var']
     def is_sliced(s):
         """ Returns True if s.histo represents a folder of histograms in eta-slices """
         return re.search('bin_',s.histo) if s.histo else False
@@ -491,7 +497,7 @@ class SuPlot:
                     o.bin = bin
                 else:
                     o.histo = histo
-    def clone(s,q=None,enable=None,histo=None,do_unfold=None,unfhisto=None,
+    def clone(s,q=None,enable=None,histo=None,do_unfold=None,unfhisto=None,qcdadd=None,
               ntuple=None,path=None,var=None,bin=None,pre=None,weight=None):
         """ Clones an entire SuPlot.
         Each SuSys is cloned individually to avoid soft pointer links
@@ -506,7 +512,7 @@ class SuPlot:
         for sgroups in s.sys:
             bla = []
             for sinst in sgroups:
-                bla.append(sinst.clone(q=q,histo=histo,unfhisto=unfhisto,ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight))
+                bla.append(sinst.clone(q=q,histo=histo,unfhisto=unfhisto,qcdadd=qcdadd,ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight))
                 res.flat.append(bla[-1])
             res.sys.append( bla )
         return res
@@ -845,33 +851,37 @@ class SuStack:
         res = []
         keys = sorted(s.flagsum.keys())
         for key in keys:
-            res.append('%s_%s'%(key,s.flagsum[key]))
-        return '_'.join(res)
+            res.append('%s%s'%(key,s.flagsum[key]))
+        return ''.join(res)
     def choose_flag(s,name,flag):
         """ Select a particular subsample with a given flag, turning all others off """
         loop = [e for e in s.elm if flag in e.flags]
         for elm in loop:
             if elm.name == name:
                 SuStack.rm_flag(elm,'no')
-                s.flagsum[flag] = name
             else:
                 SuStack.add_flag(elm,'no')
         pass
-    def choose_qcd(s,name):
+    def choose_qcd(s,i):
         """ Select QCD sample, turning all others off """
-        return s.choose_flag(name,'qcd')
-    def choose_sig(s,name):
+        s.flagsum['Q']=i
+        return s.choose_flag('qcd_'+MAP_BGQCD[i],'qcd')
+    def choose_sig(s,i):
         """ Select signal sample, turning all others off """
-        return s.choose_flag(name,'sig')
-    def choose_wtaunu(s,name):
+        s.flagsum['S']=i
+        return s.choose_flag('sig_'+MAP_BGSIG[i],'sig')
+    def choose_wtaunu(s,i):
         """ Select signal sample, turning all others off """
-        return s.choose_flag(name,'wtaunu')
-    def choose_zmumu(s,name):
+        s.flagsum['X']=i
+        return s.choose_flag('wtaunu_'+MAP_BGSIG[i],'wtaunu')
+    def choose_zmumu(s,i):
         """ Select signal sample, turning all others off """
-        return s.choose_flag(name,'zmumu')
-    def choose_ztautau(s,name):
+        s.flagsum['Y']=i
+        return s.choose_flag('zmumu_'+MAP_BGSIG[i],'zmumu')
+    def choose_ztautau(s,i):
         """ Select signal sample, turning all others off """
-        return s.choose_flag(name,'ztautau')
+        s.flagsum['Z']=i
+        return s.choose_flag('ztautau_'+MAP_BGSIG[i],'ztautau')
     def all_samples(s):
         """ returns all samples """
         res = []
@@ -1025,13 +1035,14 @@ class SuStack:
         # massage the path to put us in the QCD region
         d2 = d.clone()
         d2.qcd_region()
-        key = s.get_flagsum()+'__'+d2.h_path_fname()
+        # key encodes stack composition + path to metfit histogram with histo name + range of fit
+        key = s.get_flagsum()+'_'+d2.h_path_fname()+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max'])
         if key in s.scales:
             return s.scale_sys(key,d.qcderr)
         print 'COMPUTING NEW QCD WEIGHT:',key
         import SuFit
         f = SuFit.SuFit()
-        f.addFitVar( 'met', 0 , 100 , 'MET (GeV)' );
+        f.addFitVar( d2.qcd['var'], d2.qcd['min'] , d2.qcd['max'] , '%s (GeV)'%(d2.qcd['var']) );
         # get histograms
         hdata   = s.data('data',d2).h
         hfixed = s.ewk('bgfixed',d2).h
