@@ -861,7 +861,7 @@ class SuStack:
                 SuStack.rm_flag(elm,'no')
             else:
                 SuStack.add_flag(elm,'no')
-        pass
+        return True
     def choose_qcd(s,i):
         """ Select QCD sample, turning all others off """
         s.flagsum['Q']=i
@@ -870,6 +870,11 @@ class SuStack:
         """ Select signal sample, turning all others off """
         s.flagsum['S']=i
         return s.choose_flag('sig_'+MAP_BGSIG[i],'sig')
+    def choose_ewk(s,i):
+        """ Select all electroweak samples, turning all others off """
+        s.choose_wtaunu(s,i)
+        s.choose_zmumu(s,i)
+        s.choose_ztautau(s,i)
     def choose_wtaunu(s,i):
         """ Select signal sample, turning all others off """
         s.flagsum['X']=i

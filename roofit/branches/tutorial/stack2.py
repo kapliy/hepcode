@@ -521,6 +521,46 @@ def june17_asymmetry():
     plot_any(spRN.clone(weight=opts.cut+'*'+'wptw',pre=opts.pre,var='w_pt',histo='',bin='50,0,100',q=2),var='w_pt',m=1,name='reco_fiducial_wpt_wWPTW',do_data=False,new_scales=False)
     plot_stack(spRN.clone(weight=opts.cut,pre=opts.pre,var='w_pt',histo='',bin='50,0,100',q=2),var='w_pt',q=2,new_scales=False,name='wpt_stack_wADEF')
     plot_stack(spRN.clone(weight=opts.cut+'*'+'wptw',pre=opts.pre,var='w_pt',histo='',bin='50,0,100',q=2),var='w_pt',q=2,new_scales=False,name='wpt_stack_wWPTW')
+def june26_asymmetry_all_slices():
+    if True: # FINAL asymmetry in slices of various variables
+        plot_any(spR.clone(),spT.clone(),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='INCLUSIVE_DIRECT')
+        if opts.extra=='1':
+            histo = 'bin_%d/lpt:0:5'
+            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='INCLUSIVE_SLICES')
+            histo = 'bin_%d/lpt:1:1'
+            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='LPT2025')
+            histo = 'bin_%d/lpt:1:2'
+            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='LPT2040')
+            histo = 'bin_%d/lpt:3:3'
+            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='LPT4080')
+        elif opts.extra=='2':
+            histo = 'bin_%d/wpt:1:1'
+            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WPT0010')
+            histo = 'bin_%d/wpt:2:2'
+            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WPT1020')
+            histo = 'bin_%d/wpt:3:3'
+            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WPT20200')
+        elif opts.extra=='3':
+            histo = 'bin_%d/wmt:1:1'
+            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WMT4060')
+            histo = 'bin_%d/wmt:2:2'
+            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WMT6080')
+            histo = 'bin_%d/wmt:3:3'
+            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WMT80200')
+        elif opts.extra=='4':
+            histo = 'bin_%d/met:1:1'
+            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='MET2540')
+            histo = 'bin_%d/met:2:2'
+            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='MET40200')
+        elif opts.extra=='5':
+            histo = 'bin_%d/njets:1:1'
+            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='NJETS0')
+            histo = 'bin_%d/njets:2:2'
+            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='NJETS1')
+            histo = 'bin_%d/njets:3:3'
+            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='NJETS2')
+            histo = 'bin_%d/njets:4:5'
+            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='NJETS3UP')
 
 # combined plots
 if mode=='ALL' or mode=='all':
@@ -577,26 +617,16 @@ if mode=='ALL' or mode=='all':
         q('wmt40to100',{'var':'w_mt','min':40,'max':100})
         q('wmt40to200',{'var':'w_mt','min':40,'max':200})
         print res
-    if False: # rudimentary QCD studies: comparing various template sources (both QCD and EWK)
+    if True: # rudimentary QCD studies: comparing various template sources (both QCD and EWK)
         plots = ['met']
         #FIXME: understand why, despite enable_nominal, we are seeing systematic bands is m=1 (something gets filled!)
         #spR.enable_nominal()
-        #MAP_BGSIG = {0:'pythia',1:'mcnlo',2:'alpgen_herwig',3:'alpgen_pythia',4:'powheg_herwig',5:'powheg_pythia'}
-        #MAP_BGQCD = {0:'mc',1:'bb',2:'JX',3:'driven'}
         for bgsig in (1,2,5):
             for bgqcd in (3,):
                 print 'Working on:','SIG:',MAP_BGSIG[bgsig],'QCD:',MAP_BGQCD[bgqcd]
                 po.choose_sig(bgsig)
                 po.choose_qcd(bgqcd)
                 plot_stacks(spR.clone(),plots,m=1,name='SIG_%s__QCD_%s'%(MAP_BGSIG[bgsig],MAP_BGQCD[bgqcd]))
-    if False: # studying effects of QCD normalization in histograms
-        spR.enable_nominal()
-        # FIXME TODO: exploit mechanism to try different QCD backgrounds, EWK (for qcdsub) - both should be in systematics!
-        plots = ['lepton_absetav','lepton_pt','met','w_mt',"lepton_ptiso20r","lepton_ptiso30r","lepton_etiso30rcorr"]
-        plot_any(spR.clone(),spT.clone(),m=20,name='bbmu15_default',new_scales=False)
-        plot_stacks(spR.clone(),plots,name='bbmu15_default')
-        plot_any(spR.clone(),spT.clone(),m=20,name='bbmu15_qcdfit',new_scales=True)
-        plot_stacks(spR.clone(),plots,name='bbmu15_qcdfit')
     if False: # mel test: look at systematic variations in signal only, see if it is one-sided
         spR.update_var( 'lepton_absetav' )
         c = SuCanvas('systematics')
