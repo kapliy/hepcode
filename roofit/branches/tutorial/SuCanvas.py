@@ -186,6 +186,13 @@ class SuCanvas:
       hsum.SetBinError(i,SuCanvas.asym_error(Np,sNp,Nm,sNm))
     hsum.SetTitle(title)
     return hsum
+  @staticmethod
+  def WRatio(hplus,hminus,title='ratio'):
+    """ W+ / W-  workhorse function with correct errors """
+    hsum = hplus.Clone(hplus.GetName()+" ratio")
+    hsum.Divide(hminus)
+    hsum.SetTitle(title)
+    return hsum
 
   @staticmethod
   def from_slices(hpts,heta,imin=1,imax=-1):

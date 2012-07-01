@@ -250,14 +250,14 @@ class SuPlot:
         imin and imax give a range of bins in pT histogram that gets projected on final eta plot
         heta is a dummy abseta histogram that's used to determine binning for the final histogram
         """
-        print '--------->', 'update_from_slices: starting working on',s.flat[0].histo #FIXME
+        print '--------->', 'update_from_slices: starting working on',s.flat[0].histo
         import SuCanvas
         # create final eta histogram for each systematic
         for i,dsys in enumerate(s.flat):
             if not i in s.enable: continue
             hpts = [d.flat[i].h for d in ds] # loop over slices
             assert all(hpts)
-            print '--------->', 'update_from_slices: looping',dsys.histo,i #FIXME
+            print '--------->', 'update_from_slices: looping',dsys.histo,i
             dsys.h = SuCanvas.SuCanvas.from_slices(hpts,heta,imin,imax)
         return s
     def get(s,sysname):
@@ -428,7 +428,7 @@ class SuPlot:
                 i+=1
             for ibin in xrange(0,s.hsys.GetNbinsX()+2):
                 newerr = max(bdiffs[ibin]) if len(bdiffs[ibin])>0 else 0
-                if False and ibin==4: #FIXME DEBUG
+                if False and ibin==4: #DEBUG
                     print i,'%.1f'%s.sys[0][0].stack.GetStack().Last().GetBinError(ibin),['%.1f'%zz for zz in bdiffs[ibin]],'%.1f'%newerr,'%.1f'%s.htot.GetBinError(ibin),'%.1f'%s.hsys.GetBinError(ibin)
                 # hsys
                 olderr = s.hsys.GetBinError(ibin)
@@ -794,14 +794,14 @@ class SuStackElm:
             if unitize:
                 res.Unitize()
             elif SuStackElm.new_scales==True and 'qcd' in s.flags and (isinstance(d,SuPlot) and d.status==0):
-                print '--------->', 'qcd scaling start:',hname #FIXME
+                print '--------->', 'qcd scaling start:',hname
                 scales = s.po.get_scales(d)
-                print '--------->', 'qcd scaling applying:',hname #FIXME
+                print '--------->', 'qcd scaling applying:',hname
                 if SuStack.QCD_SYS_SCALES:
                     res.Scale(scales)
                 else:
                     res.ScaleOne(scales)
-                print '--------->', 'qcd scaling end:',hname #FIXME
+                print '--------->', 'qcd scaling end:',hname
         assert res,'Failed to create: ' + hname
         return res
 
@@ -1081,15 +1081,28 @@ class SuStack:
     def asym_generic(s,method,hname,d,*args,**kwargs):
         """ Generic function that builds asymmetry for a given method """
         import SuCanvas
-        print '--------->', 'asym_generic: preparing hPOS' #FIXME
+        print '--------->', 'asym_generic: preparing hPOS'
         hPOSs = method(hname+'_POS',d.clone(q=0),*args,**kwargs)
-        print '--------->', 'asym_generic: preparing hNEG' #FIXME
+        print '--------->', 'asym_generic: preparing hNEG'
         hNEGs = method(hname+'_NEG',d.clone(q=1),*args,**kwargs)
         assert len(hPOSs.flat) == len(hNEGs.flat)
         for i,(hPOS,hNEG) in enumerate( zip(hPOSs.flat,hNEGs.flat) ):
             if not i in hPOSs.enable: continue
             if hPOS.h and hNEG.h:
                 d.flat[i].h = SuCanvas.SuCanvas.WAsymmetry(hPOS.h,hNEG.h)
+        return d
+    def ratio_generic(s,method,hname,d,*args,**kwargs):
+        """ Generic function that builds W+/W- ratio for a given method """
+        import SuCanvas
+        print '--------->', 'ratio_generic: preparing hPOS'
+        hPOSs = method(hname+'_POS',d.clone(q=0),*args,**kwargs)
+        print '--------->', 'ratio_generic: preparing hNEG'
+        hNEGs = method(hname+'_NEG',d.clone(q=1),*args,**kwargs)
+        assert len(hPOSs.flat) == len(hNEGs.flat)
+        for i,(hPOS,hNEG) in enumerate( zip(hPOSs.flat,hNEGs.flat) ):
+            if not i in hPOSs.enable: continue
+            if hPOS.h and hNEG.h:
+                d.flat[i].h = SuCanvas.SuCanvas.WRatio(hPOS.h,hNEG.h)
         return d
     def data(s,hname,d,leg=None):
         """ data summed histogram """
@@ -1100,6 +1113,8 @@ class SuStack:
         return res
     def asym_data(s,*args,**kwargs):
         return s.asym_generic(s.data,*args,**kwargs)
+    def ratio_data(s,*args,**kwargs):
+        return s.ratio_generic(s.data,*args,**kwargs)
     def data_sub(s,hname,d):
         """ bg-subtracted data """
         loop1 = [e for e in s.elm if 'data' in e.flags and 'no' not in e.flags]
@@ -1111,6 +1126,8 @@ class SuStack:
         return res
     def asym_data_sub(s,*args,**kwargs):
         return s.asym_generic(s.data_sub,*args,**kwargs)
+    def ratio_data_sub(s,*args,**kwargs):
+        return s.ratio_generic(s.data_sub,*args,**kwargs)
     def mc(s,hname,d,name=None):
         """ MC summed histogram """
         if not name: # use flags to determine which MC to plot
@@ -1120,12 +1137,16 @@ class SuStack:
         return s.histosum(loop,hname,d)
     def asym_mc(s,*args,**kwargs):
         return s.asym_generic(s.mc,*args,**kwargs)
+    def ratio_mc(s,*args,**kwargs):
+        return s.ratio_generic(s.mc,*args,**kwargs)
     def sig(s,hname,d):
         """ signal MC summed histogram """
         loop = [e for e in s.elm if 'sig' in e.flags and 'no' not in e.flags]
         return s.histosum(loop,hname,d)
     def asym_sig(s,*args,**kwargs):
         return s.asym_generic(s.sig,*args,**kwargs)
+    def ratio_sig(s,*args,**kwargs):
+        return s.ratio_generic(s.sig,*args,**kwargs)
     def bg(s,hname,d):
         """ background MC summed histogram """
         loop = [e for e in s.elm if 'mc' in e.flags and 'sig' not in e.flags and 'no' not in e.flags]
