@@ -566,8 +566,8 @@ def june26_asymmetry_all_slices():
 if mode=='ALL' or mode=='all':
     if False:
         #plots = ['lepton_absetav']
-        #plots = ['lepton_absetav','lepton_pt','met','w_mt',"lepton_ptiso20r","lepton_ptiso30r","lepton_etiso30rcorr","njets"]
-        plots = ['met']
+        #plots = ['met']
+        plots = ['lepton_absetav','lepton_pt','met','w_mt',"njets"]
         plot_stacks(spR.clone(),plots,m=1)
     if False: # inclusive reco-level and truth-level asymmetry
         plot_any(spR.clone(),spT.clone(),m=20,do_unfold=True,do_errorsDA=True,do_summary=True)
@@ -593,7 +593,7 @@ if mode=='ALL' or mode=='all':
         test_ntuple_histo(spRN.clone(path=path_reco,pre=newpre),name='asym_ntuple_d05',new_scales=False)
         newpre=opts.pre + ' && ' + 'fabs(d0sig)<10.0'
         test_ntuple_histo(spRN.clone(path=path_reco,pre=newpre),name='asym_ntuple_d10',new_scales=False)
-    if True: # rudimentary QCD studies: comparing effects of fit range
+    if False: # rudimentary QCD studies: comparing effects of fit range
         plots = ['met']
         spR.enable_nominal()
         bgsig = 2
@@ -619,6 +619,7 @@ if mode=='ALL' or mode=='all':
         print res
     if True: # rudimentary QCD studies: comparing various template sources (both QCD and EWK)
         plots = ['met']
+        plots = ['lepton_absetav','lepton_pt','met','w_mt',"njets"]
         #FIXME: understand why, despite enable_nominal, we are seeing systematic bands is m=1 (something gets filled!)
         #spR.enable_nominal()
         for bgsig in (1,2,5):

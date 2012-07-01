@@ -1,20 +1,19 @@
 * Build basic cutflow using the D3PD framework.
 * Compare against TrigFTKAna!
 
-
+* Remove 2d histograms and unfoldings
+* Add average_mu plot somewhere
+* Add pThard MET systematics (x6)
+* DONE: What to do about jet calibrations? - capability=yes, but disabled
+* Proper jet smearing systematic.
 
 Peter: WZ D3PDs have huge truth
 * Ask MCP about efficiency corrections.
-
 
 Added interface for changing met fit range and evaluating effect on asymmetry. To be finished. TODO: understand why powheg and mcnlo normalizations are wrong. Understand why the TFractionFitter metfit fails in some cases yet succeeds if it is attempted one more time. Understand if ewk normalization is floating, and if so, add it to canvas printout
 
 Z weights
 * Consider allowing floating normalization to EWK
-
-* FIXED:
-- Muon systematics were not propagated to MET because they used MS, not EXMS values.
-- Jets in MET calculation had pt-cut applied based on calibrated/smeared/scaled jets. Recommendation is to apply based on original jets!
 
 NOW:
 * Shall I try to use the latest JES/JER recommendations?
