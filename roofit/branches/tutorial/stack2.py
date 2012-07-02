@@ -564,10 +564,8 @@ def june26_asymmetry_all_slices():
 
 # combined plots
 if mode=='ALL' or mode=='all':
-    if False:
-        #plots = ['lepton_absetav']
-        #plots = ['met']
-        plots = ['lepton_absetav','lepton_pt','met','w_mt',"njets"]
+    if True:
+        plots = ['lepton_absetav','lpt','met','wmt']
         plot_stacks(spR.clone(),plots,m=1)
     if False: # inclusive reco-level and truth-level asymmetry
         plot_any(spR.clone(),spT.clone(),m=20,do_unfold=True,do_errorsDA=True,do_summary=True)
@@ -617,9 +615,9 @@ if mode=='ALL' or mode=='all':
         q('wmt40to100',{'var':'w_mt','min':40,'max':100})
         q('wmt40to200',{'var':'w_mt','min':40,'max':200})
         print res
-    if True: # rudimentary QCD studies: comparing various template sources (both QCD and EWK)
+    if False: # rudimentary QCD studies: comparing various template sources (both QCD and EWK)
         plots = ['met']
-        plots = ['lepton_absetav','lepton_pt','met','w_mt',"njets"]
+        plots = ['lepton_absetav','lpt','met','wmt']
         #FIXME: understand why, despite enable_nominal, we are seeing systematic bands is m=1 (something gets filled!)
         #spR.enable_nominal()
         for bgsig in (1,2,5):

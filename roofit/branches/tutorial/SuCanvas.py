@@ -283,6 +283,8 @@ class SuCanvas:
     maxh = max([h.GetMaximum() for h in hs])
     if height=='asym':
       hs[0].GetYaxis().SetRangeUser(0,0.5);
+    elif height=='ratio':
+      hs[0].GetYaxis().SetRangeUser(0,2.0);
     else:
       hs[0].GetYaxis().SetRangeUser(0,maxh*float(height));
     if mode==2: # draw legend for multi-systematic studies
@@ -330,6 +332,8 @@ class SuCanvas:
     maxh = max([h.GetMaximum() for h in hs])
     if height=='asym':
       hs[0].GetYaxis().SetRangeUser(0,0.5);
+    elif height=='ratio':
+      hs[0].GetYaxis().SetRangeUser(0,2.0);
     else:
       hs[0].GetYaxis().SetRangeUser(0,maxh*float(height));
     if True:
@@ -380,6 +384,8 @@ class SuCanvas:
     maxh = max([h.GetMaximum() for h in hs])
     if height=='asym':
       hs[0].GetYaxis().SetRangeUser(0,0.5);
+    elif height=='ratio':
+      hs[0].GetYaxis().SetRangeUser(0,2.0);
     elif height<3.0:
       hs[0].GetYaxis().SetRangeUser(0,maxh*float(height));
     else:
