@@ -28,7 +28,7 @@ class SuSys:
             return v
         else:
             return [v]*3
-    def __init__(s,name='nominal',charge=2,qcd = {}, unfold={},qcderr='NOM',
+    def __init__(s,name='nominal',charge=2,qcd = {}, unfold={},qcderr='NOM',slice=None,
                  ntuple=None,path=None,var=None,bin=None,pre='',weight="mcw*puw*effw*trigw",
                  histo=None,sysdir=None,subdir=None,basedir=None ):
         # actual histograms
@@ -39,7 +39,8 @@ class SuSys:
         s.charge = charge
         s.unfold = unfold
         s.qcd = qcd       # special map to place ourselves into a QCD-region (e.g, anti-isolation)
-        s.qcderr = qcderr # Controls QCD scale uncertainty: 'NOM','UP','DOWN',<float> - scale factor on nominal (e.g, 0.5 for 50%)
+        s.qcderr = qcderr # controls QCD scale uncertainty: 'NOM','UP','DOWN',<float> - scale factor on nominal (e.g, 0.5 for 50%)
+        s.slice = slice   # if not None, this says this SuSys refers to a particular |eta| slice
         # Ntuple-based resources:
         s.ntuple = ntuple # w or z
         s.path = path
@@ -83,7 +84,12 @@ class SuSys:
                 i=2
             else:
                 i=1
+        #isowind/st_w_final/metfit/bin_0/lpt_0/POS => #isowind/st_w_final/metfit/POS/bin_0/lpt_0
         hpath = os.path.join(s.sysdir[i],s.subdir[i],s.basedir[i]) + SuSys.QMAP[s.charge][0]
+        if re.search('/bin_',hpath):
+            helms = hpath.split('/')
+            helms2 = helms[:-3] + helms[-1:] + helms[-3:-1]
+            hpath = '/'.join(helms2)
         return hpath
     def h_path(s,i=0,flags=None):
         """ Returns the path to the histogram. Index i has the following meaning:
@@ -114,7 +120,7 @@ class SuSys:
         if len(s.basedir[2].split('/'))>1:  # nominal/lpt2025/tight
             basedir = '/' + '/'.join( s.basedir[2].split('/')[1:]) # lpt2025/tight
         basedir = s.qcd['metfit']+basedir   # metfit/lpt2025/tight [/POS/absetav_histo]
-        if s.qcd['var']=='met': # only disable MET>25 cut if we are actually fitting in MET
+        if s.qcd['var'][-3:]=='met': # only disable MET>25 cut if we are actually fitting in MET
             s.basedir = [basedir]*3
         s.histo = s.qcd['var']
     def is_sliced(s):
@@ -122,7 +128,8 @@ class SuSys:
         return re.search('bin_',s.histo) if s.histo else False
     def clone(s,sysdir=None,sysdir_mc=None,subdir=None,subdir_mc=None,basedir=None,
               qcderr=None,qcdadd=None,name=None,q=None,histo=None,unfold=None,unfdir=None,unfhisto=None,
-              ntuple=None,path=None,var=None,bin=None,pre=None,weight=None):
+              ntuple=None,path=None,var=None,bin=None,pre=None,weight=None,
+              slice=None):
         """ deep copy, also allowing to update some members on-the-fly (useful to spawn systematics) """
         import copy
         res =  copy.copy(s)
@@ -156,6 +163,8 @@ class SuSys:
         if bin!=None: res.bin = bin
         if pre!=None: res.pre = pre
         if weight!=None: res.weight = weight
+        # other
+        if slice!=None: res.slice = slice
         return res
     def Add(s,o,dd=1.0):
         """ Smart add function that can handle None in either self.h or o.h
@@ -250,14 +259,13 @@ class SuPlot:
         imin and imax give a range of bins in pT histogram that gets projected on final eta plot
         heta is a dummy abseta histogram that's used to determine binning for the final histogram
         """
-        print '--------->', 'update_from_slices: starting working on',s.flat[0].histo
+        print '--------->', 'update_from_slices: started working on',s.flat[0].histo
         import SuCanvas
         # create final eta histogram for each systematic
         for i,dsys in enumerate(s.flat):
             if not i in s.enable: continue
             hpts = [d.flat[i].h for d in ds] # loop over slices
             assert all(hpts)
-            print '--------->', 'update_from_slices: looping',dsys.histo,i
             dsys.h = SuCanvas.SuCanvas.from_slices(hpts,heta,imin,imax)
         return s
     def get(s,sysname):
@@ -498,6 +506,7 @@ class SuPlot:
                 else:
                     o.histo = histo
     def clone(s,q=None,enable=None,histo=None,do_unfold=None,unfhisto=None,qcdadd=None,
+              slice=None,
               ntuple=None,path=None,var=None,bin=None,pre=None,weight=None):
         """ Clones an entire SuPlot.
         Each SuSys is cloned individually to avoid soft pointer links
@@ -512,7 +521,7 @@ class SuPlot:
         for sgroups in s.sys:
             bla = []
             for sinst in sgroups:
-                bla.append(sinst.clone(q=q,histo=histo,unfhisto=unfhisto,qcdadd=qcdadd,ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight))
+                bla.append(sinst.clone(q=q,histo=histo,unfhisto=unfhisto,qcdadd=qcdadd,ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight,slice=slice))
                 res.flat.append(bla[-1])
             res.sys.append( bla )
         return res
@@ -542,6 +551,7 @@ class SuSample:
         s.path = None  # current ntuple path
         # fast histogram cache
         s.data = {}
+        s.missing = {} # keep track of missing histo printouts
     def addchain(s,path='st_w_final/ntuple'):
         """ add one of the TNtuples
         path excludes dg/
@@ -745,7 +755,10 @@ class SuSample:
         res = s.GetHisto(hname,d.h_path(flags=s.flags))
         if not res:
             fname = os.path.basename(s.files[0].GetName())
-            print 'WARNING: -> Missing histo:',hname, fname, d.h_path(flags=s.flags)
+            key = hname + fname + d.h_path(flags=s.flags)
+            if key not in s.missing:
+                print 'WARNING: -> Missing histo:',hname, fname, d.h_path(flags=s.flags)
+                s.missing[key] = True
             return None   # be careful, returning None is a recipe for not noticing problems
         if s.lumi:
             res.Scale(s.scale(evcnt = s.choose_evcount('')))
@@ -1007,17 +1020,14 @@ class SuStack:
             for ib in xrange(nb):
                 tmin = int(hpt.GetBinLowEdge(ib+1))
                 tmax = tmin + int(hpt.GetBinWidth(ib+1))
-                tname = '%s%s%s'%(os.path.basename(d.h_path()),tmin,tmax) #lpt2025
-                # special treatment for njets:
-                if re.match('njets',tname):
-                    tname = '%s%d'%('nj30',ib if ib<4 else 3) #njets2
-                # modify basedir to become metfit/lpt2025
+                tname = '%s_%d'%(os.path.basename(d.h_path()),ib) #lpt_0
+                # modify basedir to become metfit/bin_%d/lpt_%d
                 dtmp = d.clone()
-                dtmp.basedir = dtmp.qlist( d.basedir[2] + '/' + tname )   # nominal/lpt2025
+                dtmp.basedir = dtmp.qlist( d.basedir[2] + '/bin_%d'%d.slice + '/' + tname ) # nominal/bin_%(ieta)/lpt_%(ipt)
                 res.append(s.get_scale(dtmp))
             # duplicate first/last bin scales for underflow/overflow scale
             return [res[0],] + res + [res[-1],]
-        return s.get_scale(d)
+        return s.get_scale(d)  #same scale factor for all bins
     def scale_sys(s,key,qcderr):
         """ s.scales[key] = (scale,scale_error).
         qcderr is either NOM/UP/DOWN, or a multiplicative scale factor """
@@ -1052,6 +1062,9 @@ class SuStack:
         hdata   = s.data('data',d2).h
         hfixed = s.ewk('bgfixed',d2).h
         hfree = s.qcd('bgfree',d2).h
+        if not (hdata and hfree and hfixed):
+            print 'WARNING: missing histogram for QCD normalization',hdata,hfree,hfixed
+            return 1.0
         assert hdata,'Failed to find data'
         assert hfixed,'Failed to find fixed backgrounds'
         assert hfree,'Failed to find free backgrounds'
@@ -1072,7 +1085,7 @@ class SuStack:
         assert tmp
         s.fits[key] = tmp[0]
         s.gbg.append((f,hdata,hfixed,hfree,tmp))
-        s.scales[key] = (f.scales[0],f.scalesE[0])
+        s.scales[key] = (f.scales[0],f.scalesE[0],f.fractions[0],f.fractionsE[0])
         return s.scale_sys(key,d.qcderr)
     def histo(s,name,hname,d,norm=None):
         """ generic function to return histogram for a particular subsample """
@@ -1216,7 +1229,7 @@ class SuStack:
         for idx in idxs:
             # update histo and unfhisto to bin_7/lpt
             hnew = horig%idx
-            ds.append( s.histosum_apply(loop,hname,d.clone(histo=hnew,unfhisto=hnew),norm,weights) )
+            ds.append( s.histosum_apply(loop,hname,d.clone(histo=hnew,unfhisto=hnew,slice=idx),norm,weights) )
         # now we have final unfolded histograms (vs lpt) in each eta bin. Go back into eta space:
         d.update_from_slices(ds,heta,imin,imax)
         return d
