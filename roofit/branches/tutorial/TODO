@@ -1,17 +1,54 @@
+There is a flag in AnaJet that says something like "has_cs" - make sure it is set in NtD3PDPhysics.cxx!!!
+Put abort() back into DgAdd!
+
+CUTFLOW CONVERGENCE:
+* removed overlap-removal stuff
+* Make sure to use recalc jets
+
+
+Max meeting:
+
+Q: discuss statistics issue
+
+Q: chi2 plot script 
+   number of sigma
+   data-mc / (sum of errors). For fit, chi2 is directly from the fit bin-by-bin. sqrt(chi2). Sign is comparing template to data. MC below - > chi2 contribution positive.
+
+Q: muon efficiency: correlated uncertainty?
+   TODO: discuss with MCP - follow up
+   TODO: remind about scale - Max will do it
+
+TODO - check in data and MC. Data: counts, MC: CW 
+Q: calibration of jets - not do in data? why? In mc: calibrate by default?
+   In data: in-situ
+   ZZllnunu negligible effect.
+
+Q: lpt binning: up to 120? (20.0)(25.0)(30.0)(35.0)(40.0)(45.0)(50.0)(100.0)
+   Try 10 and 5 GeV
+
+Q: wpt reweighting - which status/etc
+
+Q: D3PD skims
+   DaTri!
+
+Q: unfolding
+   EWUNFOLD - xml unfolding steering.
+
+
+
+
+
+
 * Build basic cutflow using the D3PD framework.
 * Compare against TrigFTKAna!
-
-* Remove 2d histograms and unfoldings
-* Add average_mu plot somewhere
+* I think QCD fits are not normalized correctly in roofit/.
+* Add additional isolations. Get rid of extraneous plots (metfit where we don't need it)
+* Proper jet smearing (aka resolution) systematic.
 * Add pThard MET systematics (x6)
-* DONE: What to do about jet calibrations? - capability=yes, but disabled
-* Proper jet smearing systematic.
 
 Peter: WZ D3PDs have huge truth
-* Ask MCP about efficiency corrections.
 
 Added interface for changing met fit range and evaluating effect on asymmetry. To be finished. TODO: understand why powheg and mcnlo normalizations are wrong. Understand why the TFractionFitter metfit fails in some cases yet succeeds if it is attempted one more time. Understand if ewk normalization is floating, and if so, add it to canvas printout
-
 Z weights
 * Consider allowing floating normalization to EWK
 
@@ -19,15 +56,11 @@ NOW:
 * Shall I try to use the latest JES/JER recommendations?
 * Debug KUP/KDOWN systematics. Debug JESUP/JESDOWN, too!
 1. UP/DOWN/NOMINAL: look at events common for all three samples.
-2. Plot bbmu15X template shapes on top of each other.
-   Repeat the fit with blown-up errors and see
-3. NEXT!!! -> Peter: consider fitting in lepton pt - it is an easier variable / less convolved with many other objects
-4. Set up multiple-QCD studies ala Adrian Lewis
 
 SPEEDUP: ability to return original unsliced 2d histograms, and slice them later at plotting level!
 
 Check out this line: - it gets triggered on met_phi in Zmumu events.
-    if( safe_divide(tmp,den) > 1E6 ) { printf( "num = %f , den = %f\n" , num , den ); return 0; assert(false); } //FIXME AK                                            
+    if( safe_divide(tmp,den) > 1E6 ) { printf( "num = %f , den = %f\n" , num , den ); return 0; assert(false); } //FIXME AK
 * Modify dgplot to be able to plot TH1 objects. Then, draw msup/msdown/nominal variations.
 
 Peter: Photos  -> Dressed truth should be the same

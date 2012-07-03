@@ -564,7 +564,7 @@ def june26_asymmetry_all_slices():
 
 # combined plots
 if mode=='ALL' or mode=='all':
-    if True:
+    if False:
         plots = ['lepton_absetav','lpt','met','wmt']
         plot_stacks(spR.clone(),plots,m=1)
     if False: # inclusive reco-level and truth-level asymmetry
@@ -575,14 +575,11 @@ if mode=='ALL' or mode=='all':
             plot_any(spR.clone(),None,name='reco_histo',m=20,do_data=False,new_scales=False)
             plot_any(spTN.clone(),None,name='truth_ntuple',m=20,do_data=False,new_scales=False)
             plot_any(spT.clone(),None,name='truth_histo',m=20,do_data=False,new_scales=False)
-    if False: # FINAL asymmetry in slices of various variables
-        plot_any(spR.clone(),spT.clone(),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='INCLUSIVE_DIRECT')
-        histo = 'bin_%d/lpt:0:5'
-        plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='INCLUSIVE_SLICES')
-        histo = 'bin_%d/lpt:1:2'
-        plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='PT2040')
-        histo = 'bin_%d/lpt:3:3'
-        plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='PT4080')
+    if True: # reconstruction in |eta| slices + QCD fits in |eta| x pT bins
+        spR.enable_nominal()
+        #plot_any(spR.clone(),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='INCLUSIVE_DIRECT')
+        histo = 'bin_%d/lpt:0:9'
+        plot_any(spR.clone(histo=histo),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='INCLUSIVE_SLICES')
     if False: # compares TH1 vs ntuple based basic histogram results, ignoring QCD normalization issues
         spR.enable_nominal()
         test_ntuple_histo(spR.clone(),name='asym_histo',new_scales=False)
@@ -1264,6 +1261,38 @@ for key,val in po.fits.iteritems():
     print 'Adding a normalization fit:',key
     val.savename = key
     OMAP.append(val)
+
+# summarize QCD normalization fits [TODO - move next to the test]
+if True:
+    n = 'Q3S2X2Y2Z2_isowind__tight_nominal_st_w_final_metfit_bin_%d_lpt_%d_%s_met_0to100'
+    f = open('qcd.html','w')
+    print >>f,'<HTML><BODY>'
+    for iq in ('POS','NEG'):
+        print >>f,iq,'<BR>'
+        #print table
+        print >>f,'<TABLE border="1">'
+        for ieta in xrange(0,10+1):
+            print >>f,'<TR>'
+            for ipt in xrange(0,7+1):
+                key = n%(ieta,ipt,iq)
+                v = -1.0
+                if key in po.scales:
+                    v = po.scales[key][0]*100.0
+                print >>f,'<TD>','%.1f'%(v),'</TD>'
+            print >>f,'</TR>'
+        print >>f,'</TABLE>'
+        # print images
+        NF='http://www.wzone.com/myimages/PageNotFound-Man.jpg'
+        print >>f,'<BR>'
+        for ieta in xrange(0,10+1):
+            print >>f,'<BR>'
+            for ipt in xrange(0,7+1):
+                key = n%(ieta,ipt,iq)
+                print >>f,'<img src="TEST/%s_%s.png" width="280"/>'%(opts.tag,SuCanvas.cleanse(key))
+                if(ipt==3): print >>f,'<BR>'
+        print >>f,'<BR>'
+    print >>f,'</BODY></HTML>'
+    f.close()
 
 # save images
 if not opts.antondb:
