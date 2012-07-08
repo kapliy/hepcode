@@ -1,10 +1,6 @@
-There is a flag in AnaJet that says something like "has_cs" - make sure it is set in NtD3PDPhysics.cxx!!!
-Put abort() back into DgAdd!
-
-CUTFLOW CONVERGENCE:
-* removed overlap-removal stuff
-* Make sure to use recalc jets
-
+wire up the flag is_syst to skip initialization of many classes, in particular having to do with jet stuffs
+MET propagation: see if KC corrections are actually valid for low-pt muons, which are used for MET propagation!
+Peter: isolation is very different between b and c. Need to worry about the mix.
 
 Max meeting:
 
@@ -43,13 +39,10 @@ Q: unfolding
 * Compare against TrigFTKAna!
 * I think QCD fits are not normalized correctly in roofit/.
 * Add additional isolations. Get rid of extraneous plots (metfit where we don't need it)
-* Proper jet smearing (aka resolution) systematic.
-* Add pThard MET systematics (x6)
 
 Peter: WZ D3PDs have huge truth
-
-Added interface for changing met fit range and evaluating effect on asymmetry. To be finished. TODO: understand why powheg and mcnlo normalizations are wrong. Understand why the TFractionFitter metfit fails in some cases yet succeeds if it is attempted one more time. Understand if ewk normalization is floating, and if so, add it to canvas printout
-Z weights
+Understand why the TFractionFitter metfit fails in some cases yet succeeds if it is attempted one more time. Understand if ewk normalization is floating, and if so, add it to canvas printout
+z0 reweighting
 * Consider allowing floating normalization to EWK
 
 NOW:
