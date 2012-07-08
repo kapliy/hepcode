@@ -561,6 +561,48 @@ def june26_asymmetry_all_slices():
             plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='NJETS2')
             histo = 'bin_%d/njets:4:5'
             plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='NJETS3UP')
+def july02_summarize_qcd_fits():
+    n = 'Q3S%dX2Y2Z2_'%opts.bgsig+'isowind__tight_nominal_st_w_final_metfit_bin_%d_lpt_%d_%s_met_0to100'
+    #n = 'Q3S%dX2Y2Z2_'%opts.bgsig+'isowind__tight_nominal_st_w_final_baseline_bin_%d_lpt_%d_%s_wmt_40to200'
+    f = open('qcd.html','w')
+    etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
+    ptbins = [20,25,30,35,40,45,50,100,200]
+    print >>f,'<HTML><BODY>'
+    for iq in ('POS','NEG'):
+        print >>f,'<HR>'
+        print >>f,iq
+        print >>f,'<HR>'
+        #print table
+        print >>f,'<TABLE border="1" width="900">'
+        print >>f,'<TR>'
+        print >>f, '<TD width="100">pT/eta</TD>'
+        for ipt in xrange(0,7+1):
+            print >>f,'<TD width="50">','%d&lt;pT&lt;%d'%(ptbins[ipt],ptbins[ipt+1]),'</TD>'
+        print >>f,'</TR>'
+        for ieta in xrange(0,10+1):
+            print >>f,'<TR>'
+            print >>f, '<TD width="100">','%.2f&lt;|eta|&lt;%.2f'%(etabins[ieta],etabins[ieta+1]),"</TD>"
+            for ipt in xrange(0,7+1):
+                key = n%(ieta,ipt,iq)
+                v = -1.0
+                if key in po.scales:
+                    v = po.scales[key][0]
+                print >>f,'<TD width="50">','%.2f'%(v),'</TD>'
+            print >>f,'</TR>'
+        print >>f,'</TABLE>'
+        # print images
+        print >>f,'<BR>'
+        print >>f,'<TABLE border="0" width="2240">'
+        NF='http://www.wzone.com/myimages/PageNotFound-Man.jpg'
+        for ieta in xrange(0,10+1):
+            print >>f,'<TR>'
+            for ipt in xrange(0,7+1):
+                key = n%(ieta,ipt,iq)
+                print >>f,'<TD width="280" align="center"><img src="TEST/%s_%s.png" width="270"/></TD>'%(opts.tag,SuCanvas.cleanse(key))
+            print >>f,'</TR>'
+        print >>f,'</TABLE>'
+    print >>f,'</BODY></HTML>'
+    f.close()
 
 # combined plots
 if mode=='ALL' or mode=='all':
@@ -575,11 +617,15 @@ if mode=='ALL' or mode=='all':
             plot_any(spR.clone(),None,name='reco_histo',m=20,do_data=False,new_scales=False)
             plot_any(spTN.clone(),None,name='truth_ntuple',m=20,do_data=False,new_scales=False)
             plot_any(spT.clone(),None,name='truth_histo',m=20,do_data=False,new_scales=False)
-    if True: # reconstruction in |eta| slices + QCD fits in |eta| x pT bins
+    if False: # reconstruction in |eta| slices + QCD fits in |eta| x pT bins
         spR.enable_nominal()
         #plot_any(spR.clone(),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='INCLUSIVE_DIRECT')
         histo = 'bin_%d/lpt:0:9'
-        plot_any(spR.clone(histo=histo),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='INCLUSIVE_SLICES')
+        #opts.bgsig = 2
+        #po.choose_sig(opts.bgsig)
+        #qcdadd={'var':'wmt','min':40,'max':200} #FIXME
+        plot_any(spR.clone(histo=histo,qcdadd=qcdadd),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='INCLUSIVE_SLICES')
+        #july02_summarize_qcd_fits()
     if False: # compares TH1 vs ntuple based basic histogram results, ignoring QCD normalization issues
         spR.enable_nominal()
         test_ntuple_histo(spR.clone(),name='asym_histo',new_scales=False)
@@ -1262,44 +1308,10 @@ for key,val in po.fits.iteritems():
     val.savename = key
     OMAP.append(val)
 
-# summarize QCD normalization fits [TODO - move next to the test]
-if True:
-    n = 'Q3S2X2Y2Z2_isowind__tight_nominal_st_w_final_metfit_bin_%d_lpt_%d_%s_met_0to100'
-    f = open('qcd.html','w')
-    print >>f,'<HTML><BODY>'
-    for iq in ('POS','NEG'):
-        print >>f,iq,'<BR>'
-        #print table
-        print >>f,'<TABLE border="1">'
-        for ieta in xrange(0,10+1):
-            print >>f,'<TR>'
-            for ipt in xrange(0,7+1):
-                key = n%(ieta,ipt,iq)
-                v = -1.0
-                if key in po.scales:
-                    v = po.scales[key][0]*100.0
-                print >>f,'<TD>','%.1f'%(v),'</TD>'
-            print >>f,'</TR>'
-        print >>f,'</TABLE>'
-        # print images
-        NF='http://www.wzone.com/myimages/PageNotFound-Man.jpg'
-        print >>f,'<BR>'
-        for ieta in xrange(0,10+1):
-            print >>f,'<BR>'
-            for ipt in xrange(0,7+1):
-                key = n%(ieta,ipt,iq)
-                print >>f,'<img src="TEST/%s_%s.png" width="280"/>'%(opts.tag,SuCanvas.cleanse(key))
-                if(ipt==3): print >>f,'<BR>'
-        print >>f,'<BR>'
-    print >>f,'</BODY></HTML>'
-    f.close()
-
 # save images
 if not opts.antondb:
     if not os.path.isdir(opts.output):
         os.makedirs(SuCanvas.savedir)
-    # save main plot
-    #c.SaveAs('%s_%s_%s_%s_%s_%s'%(opts.tag,os.path.basename(opts.input),QMAP[opts.charge][1],opts.var,opts.cut,mode),'png',DIR=DIR)
     # save all plots
     for i,obj in enumerate(OMAP):
         savename = obj.savename
