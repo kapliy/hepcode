@@ -653,23 +653,24 @@ if mode=='ALL' or mode=='all':
         q('met25to100',{'var':'met','min':25,'max':100})
         q('met0to200',{'var':'met','min':0,'max':200})
         q('met25to200',{'var':'met','min':25,'max':200})
-        q('lpt20to100',{'var':'lepton_pt','min':20,'max':100})
-        q('lpt25to100',{'var':'lepton_pt','min':25,'max':100})
-        q('lpt20to200',{'var':'lepton_pt','min':20,'max':200})
-        q('wmt40to100',{'var':'w_mt','min':40,'max':100})
-        q('wmt40to200',{'var':'w_mt','min':40,'max':200})
+        q('lpt20to100',{'var':'lpt','min':20,'max':100})
+        q('lpt25to100',{'var':'lpt','min':25,'max':100})
+        q('lpt20to200',{'var':'lpt','min':20,'max':200})
+        q('wmt40to100',{'var':'wmt','min':40,'max':100})
+        q('wmt40to200',{'var':'wmt','min':40,'max':200})
         print res
-    if False: # rudimentary QCD studies: comparing various template sources (both QCD and EWK)
-        plots = ['met']
+    if True: # rudimentary QCD studies: comparing various template sources (both QCD and EWK)
         plots = ['lepton_absetav','lpt','met','wmt']
+        plot_sys = False
         #FIXME: understand why, despite enable_nominal, we are seeing systematic bands is m=1 (something gets filled!)
-        #spR.enable_nominal()
+        spR.enable_nominal()
+        po.choose_ewk(5)
         for bgsig in (1,2,5):
             for bgqcd in (3,):
                 print 'Working on:','SIG:',MAP_BGSIG[bgsig],'QCD:',MAP_BGQCD[bgqcd]
                 po.choose_sig(bgsig)
                 po.choose_qcd(bgqcd)
-                plot_stacks(spR.clone(),plots,m=1,name='SIG_%s__QCD_%s'%(MAP_BGSIG[bgsig],MAP_BGQCD[bgqcd]))
+                plot_stacks(spR.clone(),plots,m=1 if plot_sys==True else 0,name='SIG_%s__QCD_%s'%(MAP_BGSIG[bgsig],MAP_BGQCD[bgqcd]))
     if False: # mel test: look at systematic variations in signal only, see if it is one-sided
         spR.update_var( 'lepton_absetav' )
         c = SuCanvas('systematics')
