@@ -1,6 +1,7 @@
 wire up the flag is_syst to skip initialization of many classes, in particular having to do with jet stuffs
 MET propagation: see if KC corrections are actually valid for low-pt muons, which are used for MET propagation!
 Peter: isolation is very different between b and c. Need to worry about the mix.
+For merge jobs, require 4GB of RAM (?)
 
 Max meeting:
 

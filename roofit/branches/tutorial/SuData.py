@@ -387,11 +387,7 @@ class SuPlot:
             add('jet_jesdown',prep+'jet_jesdown',qcdadd=qcdadd)
             next('JES')
         # MET
-        if False:
-            add('met_allcluup',prep+'met_allcluup')
-            add('met_allcludown',prep+'met_allcludown')
-            next('MET')
-        else:
+        if True:
             add('met_resosoftup',prep+'met_resosoftup',qcdadd=qcdadd)
             add('met_resosoftdown',prep+'met_resosoftdown',qcdadd=qcdadd)
             next('MET_RESO')
@@ -399,9 +395,10 @@ class SuPlot:
             add('met_scalesoftdown',prep+'met_scalesoftdown',qcdadd=qcdadd)
             next('MET_SCALE')
         # QCD normalization
-        add3('qcdup',1.5,prep+'nominal')
-        add3('qcddown',0.5,prep+'nominal')
-        next('QCD_FRAC')
+        if True:
+            add3('qcdup',1.5,prep+'nominal')
+            add3('qcddown',0.5,prep+'nominal')
+            next('QCD_FRAC')
         # unfolding systematic
         if 'mc' in nom.unfold:
             add4('unfold_pythia','pythia',prep+'nominal')
