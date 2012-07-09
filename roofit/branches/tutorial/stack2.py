@@ -325,12 +325,14 @@ q = opts.charge
 unfmethod = 'RooUnfoldBinByBin'
 unfmethod = 'RooUnfoldBayes'
 tightlvl = 'tight_'
-#tightlvl = ''
+tightlvl = '' #FIXME
+jetlvl = ''
+jetlvl = '_caljet'  #FIXME
 spR = SuPlot()
 spR.bootstrap(do_unfold=False,
-              unfold={'sysdir':tightlvl+'nominal','histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
+              unfold={'sysdir':tightlvl+'nominal'+jetlvl,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
               charge=q,var=opts.var,histo=opts.hsource,
-              sysdir=[tightlvl+'nominal',tightlvl+'nominal','isowind'],subdir='st_w_final',basedir='baseline',
+              sysdir=[tightlvl+'nominal'+jetlvl,tightlvl+'nominal'+jetlvl,'isowind'+jetlvl],subdir='st_w_final',basedir='baseline',
               qcd={'var':'met','min':0,'max':100,'metfit':'metfit','forcenominal':False})
 SuStack.QCD_SYS_SCALES = opts.metallsys
 SuStack.QCD_TF_FITTER = False
@@ -607,7 +609,8 @@ def july02_summarize_qcd_fits(fitvar,fitrange):
 
 # combined plots
 if mode=='ALL' or mode=='all':
-    if False:
+    if True:
+        spR.enable_nominal() #FIXME
         plots = ['lepton_absetav','lpt','met','wmt']
         plot_stacks(spR.clone(),plots,m=1)
     if False: # inclusive reco-level and truth-level asymmetry
@@ -659,7 +662,7 @@ if mode=='ALL' or mode=='all':
         q('wmt40to100',{'var':'wmt','min':40,'max':100})
         q('wmt40to200',{'var':'wmt','min':40,'max':200})
         print res
-    if True: # rudimentary QCD studies: comparing various template sources (both QCD and EWK)
+    if False: # rudimentary QCD studies: comparing various template sources (both QCD and EWK)
         plots = ['lepton_absetav','lpt','met','wmt']
         plot_sys = False
         #FIXME: understand why, despite enable_nominal, we are seeing systematic bands is m=1 (something gets filled!)
