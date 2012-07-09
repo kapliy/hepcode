@@ -882,9 +882,9 @@ class SuStack:
         return s.choose_flag('sig_'+MAP_BGSIG[i],'sig')
     def choose_ewk(s,i):
         """ Select all electroweak samples, turning all others off """
-        s.choose_wtaunu(s,i)
-        s.choose_zmumu(s,i)
-        s.choose_ztautau(s,i)
+        s.choose_wtaunu(i)
+        s.choose_zmumu(i)
+        s.choose_ztautau(i)
     def choose_wtaunu(s,i):
         """ Select signal sample, turning all others off """
         s.flagsum['X']=i
