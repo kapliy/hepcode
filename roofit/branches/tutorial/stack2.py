@@ -668,7 +668,7 @@ if mode=='ALL' or mode=='all':
         qcdadd={'var':'met','min':0,'max':100}
         plot_any(spR.clone(histo=histo,qcdadd=qcdadd),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='INCLUSIVE_SLICES')
         july02_summarize_qcd_fits(qcdadd['var'],(qcdadd['min'],qcdadd['max']))
-    if True: # simple comparison of TH1 and ntuple-based histograms results
+    if False: # simple comparison of TH1 and ntuple-based histograms results
         c = SuCanvas('TEST')
         M = PlotOptions()
         M.add('h','histo')
@@ -679,18 +679,25 @@ if mode=='ALL' or mode=='all':
         SuSample.debug = True
         SuSample.GLOBAL_CACHE = None
         spR.enable_nominal()
-        h.append( po.mc('mc',spR.clone(q=2),name='sig_pythia') )
-        h.append( po.mc('mc',spRN.clone(q=2,pre=pre,weight=weight),name='sig_pythia') )
+        if False:
+            h.append( po.data('mcd',spR.clone(q=2)) )
+            h.append( po.data('mcd',spRN.clone(q=2,pre=pre,weight=weight)) )
+        else:
+            h.append( po.mc('mc',spR.clone(q=2),name='sig_pythia') )
+            h.append( po.mc('mc',spRN.clone(q=2,pre=pre,weight=weight),name='sig_pythia') )
         c.plotAny(h,M=M,height=1.6,title='Ntuple-Histo comparison')
         OMAP.append(c)
-    if False: # compares TH1 vs ntuple based basic histogram results, ignoring QCD normalization issues
+    if True: # compares TH1 vs ntuple based basic histogram results, ignoring QCD normalization issues
+        SuSample.debug = True
         spR.enable_nominal()
+        po.choose_qcd(0)
         test_ntuple_histo(spR.clone(),name='asym_histo',new_scales=False)
         test_ntuple_histo(spRN.clone(path=path_reco),name='asym_ntuple_all',new_scales=False)
-        newpre=opts.pre + ' && ' + 'fabs(d0sig)<5.0'
-        test_ntuple_histo(spRN.clone(path=path_reco,pre=newpre),name='asym_ntuple_d05',new_scales=False)
-        newpre=opts.pre + ' && ' + 'fabs(d0sig)<10.0'
-        test_ntuple_histo(spRN.clone(path=path_reco,pre=newpre),name='asym_ntuple_d10',new_scales=False)
+        if False: # study effect of d0 cuts
+            newpre=opts.pre + ' && ' + 'fabs(d0sig)<5.0'
+            test_ntuple_histo(spRN.clone(path=path_reco,pre=newpre),name='asym_ntuple_d05',new_scales=False)
+            newpre=opts.pre + ' && ' + 'fabs(d0sig)<10.0'
+            test_ntuple_histo(spRN.clone(path=path_reco,pre=newpre),name='asym_ntuple_d10',new_scales=False)
     if False: # rudimentary QCD studies: comparing effects of fit range
         plots = ['met']
         spR.enable_nominal()
