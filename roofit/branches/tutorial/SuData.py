@@ -46,7 +46,7 @@ class SuSys:
         s.path = path
         s.var = var
         s.bin = bin
-        s.pre = pre
+        s.pre = s.qlist(pre)
         s.weight = weight
         # Histogram-based resources
         s.histo = histo
@@ -57,13 +57,24 @@ class SuSys:
     def use_ntuple(s):
         """ True or False """
         return s.ntuple!=None
-    def nt_prew(s):
-        """ Returns a TTree::Draw cut string for w ntuple """
+    def nt_prew(s,i=0,flags=None):
+        """ Returns a TTree::Draw cut string for w ntuple.  Index i has the following meaning:
+        i=0 - data
+        i=1 - MC
+        i=2 - data-driven QCD template
+        """
         assert s.var
         assert s.bin
         assert s.pre
-        return '(%s)*(%s)*(%s)' % (SuSys.QMAP[s.charge][2] , s.pre, s.weight)
-    def nt_prez(s):
+        if flags:
+            if 'data' in flags:
+                i=0
+            elif 'driven' in flags:
+                i=2
+            else:
+                i=1
+        return '(%s)*(%s)*(%s)' % (SuSys.QMAP[s.charge][2] , s.pre[i], s.weight)
+    def nt_prez(s,i=0,flags=None):
         assert False,'Not implemented'
         return '(%s)*(%s)' % ( s.pre, s.weight )
     def h_path_folder(s,i=0,flags=None):
@@ -161,7 +172,7 @@ class SuSys:
         if path!=None: res.path = path
         if var!=None: res.var = var
         if bin!=None: res.bin = bin
-        if pre!=None: res.pre = pre
+        if pre!=None: res.pre = s.qlist(pre)
         if weight!=None: res.weight = weight
         # other
         if slice!=None: res.slice = slice
@@ -301,7 +312,7 @@ class SuPlot:
                 idx += 1
     def qcd_region(s):
         """ Puts all SuSys in qcd region based on qcd map """
-        # This function is unused. Rather, we normally call qcd_region directly on individual SuSys's
+        assert False, "This function is unused. Rather, we normally call qcd_region directly on individual SuSys's"
         res = s.clone()
         [o.qcd_region() for i,o in enumerate(res.flat) if i in res.enable]
         res.status = 1 # to prevent infinite recursion
@@ -697,7 +708,7 @@ class SuSample:
         for i,d in enumerate(dall.flat):
             if not i in dall.enable: continue
             if d.use_ntuple():
-                d.h = s.histo_nt(hname,d.var,d.bin,d.nt_prew(),path=d.path,rebin=rebin,hsource=d.histo)
+                d.h = s.histo_nt(hname,d.var,d.bin,d.nt_prew(flags=s.flags),path=d.path,rebin=rebin,hsource=d.histo)
             else:
                 d.h = s.histo_h(hname,d,rebin)
         return dall
@@ -732,10 +743,12 @@ class SuSample:
                 xtra = ' with special abseta binning'
             print '--> creating %s%s'%(hname,xtra)
             # build from TNtuple
+            drawstring = '%s>>%s'%(var,hname)
             if usebin:
-                s.nt[path].Draw('%s>>%s(%s)'%(var,hname,bin),cut,'goff')
-            else:
-                s.nt[path].Draw('%s>>%s'%(var,hname),cut,'goff')
+                drawstring = '%s>>%s(%s)'%(var,hname,bin)
+            if SuSample.debug==True:
+                print 'TTree::Draw :',drawstring,'|',cut
+            s.nt[path].Draw(drawstring,cut,'goff')
             if not ROOT.gDirectory.Get(hname):
                 return None
             s.data[key] = ROOT.gDirectory.Get(hname).Clone()
