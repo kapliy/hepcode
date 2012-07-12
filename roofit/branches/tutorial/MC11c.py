@@ -74,7 +74,7 @@ class MC_samples:
 # VALUES FROM MASSIMILIANO BELLOMO (June 27)
 m_xsec = {}
 m_xsec["DrellYan"]      = 1250.0;
-m_xsec["Zll"]           = 990.0;
+m_xsec["Zll"]           = 990.0;     #   Quoted Z xsec is for Mll>60 GeV. MLL factor extrapolates to another region (e.g., Mll>53.8 GeV)
 m_xsec["W+ln"]          = 6160.0;
 m_xsec["W-ln"]          = 4300.0;
 m_xsec["Wlnu"]          = 10460.0;
@@ -111,25 +111,28 @@ mc.append(MCR(106059,'mc_pythia_ccmu15x',m_xsec["ccmu15"]/1000.0))
 
 # MC@NLO samples (updated from Physics_mc11_7TeV.xls, but not usings its 0.9 efficiency factor)
 # zmumu sample seems to be wrong based on data/mc agreements
+MLL = 5.16582  # this is due to a bug; new MC@NLO Z samples with require Mll>60 GeV!
 mc.append(MCR(106083,'mc_mcnlo_wplusmunu',m_xsec["W+ln"]/1000.0))
 mc.append(MCR(106084,'mc_mcnlo_wminmunu',m_xsec["W-ln"]/1000.0))
-mc.append(MCR(106088,'mc_mcnlo_zmumu',m_xsec["Zll"]/1000.0))
+mc.append(MCR(106088,'mc_mcnlo_zmumu',m_xsec["Zll"]/1000.0,MLL))
 mc.append(MCR(108328,'mc_mcnlo_wplustaunu',m_xsec["W+ln"]/1000.0))
 mc.append(MCR(108329,'mc_mcnlo_wmintaunu',m_xsec["W-ln"]/1000.0))
-mc.append(MCR(106062,'mc_mcnlo_ztautau',m_xsec["Zll"]/1000.0))
+mc.append(MCR(106062,'mc_mcnlo_ztautau',m_xsec["Zll"]/1000.0,MLL))
 
 # PowHeg+Pythia NLO samples
 # updated with Max's NNLO values
+MLL = 1.01591
 mc.append(MCR(108298,'mc_powheg_pythia_wplusmunu',m_xsec["W+ln"]/1000.0))
 mc.append(MCR(108301,'mc_powheg_pythia_wminmunu',m_xsec["W-ln"]/1000.0))
-mc.append(MCR(108304,'mc_powheg_pythia_zmumu',m_xsec["Zll"]/1000.0))
+mc.append(MCR(108304,'mc_powheg_pythia_zmumu',m_xsec["Zll"]/1000.0,MLL))
 mc.append(MCR(107390,'mc_powheg_pythia_wplustaunu',m_xsec["W+ln"]/1000.0))
 mc.append(MCR(107391,'mc_powheg_pythia_wmintaunu',m_xsec["W-ln"]/1000.0))
-mc.append(MCR(107392,'mc_powheg_pythia_ztautau',m_xsec["Zll"]/1000.0))
+mc.append(MCR(107392,'mc_powheg_pythia_ztautau',m_xsec["Zll"]/1000.0,MLL))
 # PowHeg+Herwig NLO samples
+MLL = 1.01636
 mc.append(MCR(113187,'mc_powheg_herwig_wplusmunu',m_xsec["W+ln"]/1000.0))
 mc.append(MCR(113185,'mc_powheg_herwig_wminmunu',m_xsec["W-ln"]/1000.0))
-mc.append(MCR(126007,'mc_powheg_herwig_zmumu',m_xsec["Zll"]/1000.0))
+mc.append(MCR(126007,'mc_powheg_herwig_zmumu',m_xsec["Zll"]/1000.0,MLL))
 
 # Herwig diboson (mc11c_p833_info.txt) - updated with Max's values
 mc.append(MCR(105985,'mc_herwig_ww',m_xsec["WW"]/1000.0))
