@@ -127,6 +127,10 @@ class SuSys:
         """ Puts this SuSys in qcd region based on qcd map
         If the original basedir includes a subfolder, we preserve it
         """
+        if s.use_ntuple():
+            assert 'descr' in s.qcd and s.qcd['pre'] and len(s.qcd['pre'])==3
+            s.pre = s.qcd['pre']
+            return
         basedir=''
         if len(s.basedir[2].split('/'))>1:  # nominal/lpt2025/tight
             basedir = '/' + '/'.join( s.basedir[2].split('/')[1:]) # lpt2025/tight
@@ -134,6 +138,7 @@ class SuSys:
         if s.qcd['var'][-3:]=='met': # only disable MET>25 cut if we are actually fitting in MET
             s.basedir = [basedir]*3
         s.histo = s.qcd['var']
+        return
     def is_sliced(s):
         """ Returns True if s.histo represents a folder of histograms in eta-slices """
         return re.search('bin_',s.histo) if s.histo else False
@@ -690,6 +695,8 @@ class SuSample:
                 h.Sumw2()
             else:
                 h.Add( f.Get('%s/%s'%(s.topdir(f),hpath)) )
+        if h:
+            h.SetTitle(os.path.basename(s.files[0].GetName())+' : '+hname+" "+hpath)
         return h
     @staticmethod
     def make_habseta(name='habseta_template'):
@@ -700,8 +707,12 @@ class SuSample:
         return ROOT.TH1F(name,name,len(a)-1,a)
     def histo(s,hname,dall,rebin=1.0,unitize=False):
         """ A wrapper around histogram-based and ntuple-based histo accessors """
-        if isinstance(dall,SuSys):
-            dall.h = s.histo_h(hname,dall,rebin)
+        if isinstance(dall,SuSys):  # QCD fits
+            d = dall
+            if d.use_ntuple():
+                d.h = s.histo_nt(hname,d.var,d.bin,d.nt_prew(flags=s.flags),path=d.path,rebin=rebin,hsource=d.histo)
+            else:
+                d.h = s.histo_h(hname,d,rebin)
             return dall
         # This is where d splits into per-systematic loop
         # and calls histo_nt or histo_h on a particular SuSys
@@ -728,6 +739,8 @@ class SuSample:
                 s.cache = ROOT.TFile.Open(s.GLOBAL_CACHE,'READ')
                 assert s.cache and s.cache.IsOpen()
                 if s.cache.Get(key_str):
+                    if SuSample.debug==True:
+                        print 'TTree::Cache :',os.path.basename(s.files[0].GetName()),var,'|',bin,'|',cut
                     s.data[key]=s.cache.Get(key_str).Clone(hname)
                     s.data[key].SetDirectory(0)
                     needs_saving = False
@@ -1074,7 +1087,12 @@ class SuStack:
         d2 = d.clone()
         d2.qcd_region()
         # key encodes stack composition + path to metfit histogram with histo name + range of fit
-        key = s.get_flagsum()+'_'+d2.h_path_fname()+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max'])
+        key = None
+        if d2.use_ntuple(): # todo: add d2.path if we end up using unbinned ntuples for systematics
+            key = s.get_flagsum()+'_'+d2.qcd['descr']+'_'+d2.qcd['var']+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max'])
+        else:
+            key = s.get_flagsum()+'_'+d2.h_path_fname()+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max'])
+        assert key
         if key in s.scales:
             return s.scale_sys(key,d.qcderr)
         print 'COMPUTING NEW QCD WEIGHT:',key
