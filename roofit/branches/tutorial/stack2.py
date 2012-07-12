@@ -183,7 +183,7 @@ pw,pz = [SuStack() for zz in xrange(2)]
 # w samples:
 if True:
     #TOP:
-    pw.add(name='t#bar{t}',samples='mc_alpgen_herwig_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
+    pw.add(name='t#bar{t}',samples='mc_mcnlo_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
     #ZTAUTAU:
     pw.adn(name='ztautau_alpgen_herwig',label='Z#rightarrow#tau#tau',samples=['mc_alpgen_herwig_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta,flags=['bg','mc','ewk','ztautau'])
     pw.adn(name='ztautau_pythia',label='Z#rightarrow#tau#tau',samples='mc_pythia_ztautau',color=ROOT.kMagenta,flags=['bg','mc','ewk','ztautau'])
@@ -193,8 +193,10 @@ if True:
     pw.adn(name='wtaunu_powheg_pythia',label='W#rightarrow#tau#nu',samples=['mc_powheg_pythia_wplustaunu','mc_powheg_pythia_wmintaunu'],color=ROOT.kYellow,flags=['bg','mc','ewk','wtaunu'])
     #ZMUMU:
     pw.adn(name='zmumu_alpgen_herwig',label='Z#rightarrow#mu#mu',samples=['mc_alpgen_herwig_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['bg','mc','ewk','zmumu'])
-    pw.adn(name='zmumu_pythia',label='Z#rightarrow#mu#mu',samples='mc_pythia_zmumu',color=ROOT.kRed,flags=['bg','mc','ewk','zmumu'])
+    pw.adn(name='zmumu_pythia',label='Z#rightarrow#mu#mu',samples=['mc_pythia_zmumu'],color=ROOT.kRed,flags=['bg','mc','ewk','zmumu'])
     pw.adn(name='zmumu_powheg_pythia',label='Z#rightarrow#mu#mu',samples='mc_powheg_pythia_zmumu',color=ROOT.kRed,flags=['bg','mc','ewk','zmumu'])
+    #DYAN (Zll = 15 .. 60 GeV):
+    #pw.add(name='dyan_pythia',label='Drell-Yan',samples='mc_pythia_dyan',color=156,flags=['bg','mc','ewk','dyan'])
     #DIBOSON:
     pw.add(name='WW/WZ/ZZ',samples=['mc_herwig_ww','mc_herwig_wz','mc_herwig_zz'],color=11,flags=['bg','mc','ewk','diboson'])
     #EWK SEL: (defaults to alpgen, wherever possible)
@@ -250,7 +252,7 @@ if True:
 # z samples:
 if opts.bgsig in (0,1,2,3,4,5,6): # z inclusive
     #assert False,'To be updated - similar to pw case'
-    pz.add(name='t#bar{t}',samples='mc_alpgen_herwig_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
+    pz.add(name='t#bar{t}',samples='mc_mcnlo_ttbar',color=ROOT.kGreen,flags=['bg','mc','ewk'])
     pz.add(name='W#rightarrow#mu#nu',samples=['mc_alpgen_herwig_wmunu_np%d'%v for v in range(6)],color=10,flags=['sig','mc','ewk'])
     #pz.add(name='W#rightarrow#mu#nu',samples='mc_pythia_wmunu',color=10,flags=['bg','mc','ewk'])
     pz.add(name='Z#rightarrow#tau#tau',samples=['mc_alpgen_herwig_ztautau_np%d'%v for v in range(6)],color=ROOT.kMagenta,flags=['bg','mc','ewk'])
@@ -325,9 +327,9 @@ q = opts.charge
 unfmethod = 'RooUnfoldBinByBin'
 unfmethod = 'RooUnfoldBayes'
 tightlvl = 'tight_'
-tightlvl = '' #FIXME
+tightlvl = ''
+jetlvl = '_caljet'
 jetlvl = ''
-jetlvl = '_caljet'  #FIXME
 spR = SuPlot()
 spR.bootstrap(do_unfold=False,
               unfold={'sysdir':tightlvl+'nominal'+jetlvl,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
@@ -607,12 +609,53 @@ def july02_summarize_qcd_fits(fitvar,fitrange):
     print >>f,'</BODY></HTML>'
     f.close()
 
+def study_jet_calibration_effects():
+    if True:   # manually plot MET shapes to study jet calibratione effects
+        spR.enable_nominal()
+        VARMAP = {}
+        VARMAP['met'] = 'Missing ET'
+        VARMAP['lpt'] = 'Muon p_{T}'
+        VARMAP['lepton_abseta_fine'] = 'Muon |#eta|'
+        for var in ('met','lpt','lepton_abseta_fine'):
+            spR.update_var( var )
+            c = SuCanvas('JetCal_data_%s'%var)
+            h = []
+            M = PlotOptions()
+            M.add('default','MET from default jets',size=0.4)
+            M.add('calib','MET from calibrated jets',size=0.2)
+            h.append( po.data('data',spR.clone(q=2,sysdir='nominal')) )
+            h.append( po.data('data',spR.clone(q=2,sysdir='nominal_caljet')) )
+            c.plotAny(h,M=M,height=1.7,title='Legend',xtitle=VARMAP[var])
+            OMAP.append(c)
+        for var in ('met','lpt','lepton_abseta_fine'):
+            spR.update_var( var )
+            po.choose_sig(5)
+            c = SuCanvas('JetCal_mc_%s'%var)
+            h = []
+            M = PlotOptions()
+            M.add('default','MET from default jets',size=0.4)
+            M.add('calib','MET from calibrated jets',size=0.2)
+            #M.add('default','MET from smeared jets',size=0.2)
+            M.add('default','MET from JES+UP jets',size=0.2)
+            M.add('default','MET from JES+DOWN jets',size=0.2)
+            h.append( po.sig('sig',spR.clone(q=2,sysdir='nominal')) )
+            h.append( po.sig('sig',spR.clone(q=2,sysdir='nominal_caljet')) )
+            #h.append( po.sig('sig',spR.clone(q=2,sysdir='jet_jer')) )
+            h.append( po.sig('sig',spR.clone(q=2,sysdir='jet_jesup')) )
+            h.append( po.sig('sig',spR.clone(q=2,sysdir='jet_jesdown')) )
+            c.plotAny(h,M=M,height=1.7,title='Legend',xtitle=VARMAP[var])
+            OMAP.append(c)
+
 # combined plots
 if mode=='ALL' or mode=='all':
     if True:
-        spR.enable_nominal() #FIXME
-        plots = ['lepton_absetav','lpt','met','wmt']
-        plot_stacks(spR.clone(),plots,m=1)
+        #plots = ['lepton_absetav','lpt','met','wmt']
+        plots = ['met']
+
+        #FIXME
+        spR.enable_nominal()
+
+        plot_stacks(spR.clone(),plots,m=1,qs=(2,))
     if False: # inclusive reco-level and truth-level asymmetry
         plot_any(spR.clone(),spT.clone(),m=20,do_unfold=True,do_errorsDA=True,do_summary=True)
         plot_any(spR.clone(),None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False)
@@ -669,7 +712,7 @@ if mode=='ALL' or mode=='all':
         spR.enable_nominal()
         po.choose_ewk(5)
         for bgsig in (1,2,5):
-            for bgqcd in (3,):
+            for bgqcd in (3,0):
                 print 'Working on:','SIG:',MAP_BGSIG[bgsig],'QCD:',MAP_BGQCD[bgqcd]
                 po.choose_sig(bgsig)
                 po.choose_qcd(bgqcd)
@@ -734,7 +777,7 @@ if mode=='ALL' or mode=='all':
         plot_stack(spRN.clone(var='l_pt_exms/l_pt_id',histo='',bin='50,0.5,1.5',q=2),var='l_pt_exms/l_pt_id',q=2,new_scales=False,name='antonio_ptEXMS_ptID')
     if False: # june17 plots without data: asymmetries at truth and a bit at reco level
         cmd="""
-        ./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso20/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --cut "mcw*puw*effw*trigw" -m ALL --bgsig 2 --bgqcd 0 #--metallsys #d0sig was 10, then was fabs(d0sig)<5.0
+        ./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso20/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --cut "mcw*puw*effw*trigw" -m ALL --bgsig 2 --bgqcd 0
         """
         june17_asymmetry()
     

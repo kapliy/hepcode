@@ -1,3 +1,26 @@
+* Add dressed muons for C_W factors!
+* Utilize DgEventInfo extras to add truth quantities to reco ntuples - for cuts
+  This is not quite good for response matrices because it's missing inefficiency terms:(
+
+
+
+Follow up: geometric shift could change efficiency.
+EM -> JES
+LC -> JES
+
+
+MAX: make fits as a function of eta. 2010 standard.
+
+MAX: MET disagreement in PowHeg - understand
+     ABCD: iso - MET
+
+MAX: why muon pt cut not 25 GeV?
+MAX: cutflow convergence!
+MAX: C_W vs unfolding. Default: born
+
+
+Understand why MC event counts (CUTFLOW) are rounded to integers!!!
+
 wire up the flag is_syst to skip initialization of many classes, in particular having to do with jet stuffs
 MET propagation: see if KC corrections are actually valid for low-pt muons, which are used for MET propagation!
 Peter: isolation is very different between b and c. Need to worry about the mix.
@@ -15,29 +38,9 @@ Q: muon efficiency: correlated uncertainty?
    TODO: discuss with MCP - follow up
    TODO: remind about scale - Max will do it
 
-TODO - check in data and MC. Data: counts, MC: CW 
-Q: calibration of jets - not do in data? why? In mc: calibrate by default?
-   In data: in-situ
-   ZZllnunu negligible effect.
-
-Q: lpt binning: up to 120? (20.0)(25.0)(30.0)(35.0)(40.0)(45.0)(50.0)(100.0)
-   Try 10 and 5 GeV
-
-Q: wpt reweighting - which status/etc
-
-Q: D3PD skims
-   DaTri!
-
 Q: unfolding
    EWUNFOLD - xml unfolding steering.
 
-
-
-
-
-
-* Build basic cutflow using the D3PD framework.
-* Compare against TrigFTKAna!
 * I think QCD fits are not normalized correctly in roofit/.
 * Add additional isolations. Get rid of extraneous plots (metfit where we don't need it)
 
@@ -46,30 +49,17 @@ Understand why the TFractionFitter metfit fails in some cases yet succeeds if it
 z0 reweighting
 * Consider allowing floating normalization to EWK
 
-NOW:
-* Shall I try to use the latest JES/JER recommendations?
-* Debug KUP/KDOWN systematics. Debug JESUP/JESDOWN, too!
-1. UP/DOWN/NOMINAL: look at events common for all three samples.
-
-SPEEDUP: ability to return original unsliced 2d histograms, and slice them later at plotting level!
-
 Check out this line: - it gets triggered on met_phi in Zmumu events.
     if( safe_divide(tmp,den) > 1E6 ) { printf( "num = %f , den = %f\n" , num , den ); return 0; assert(false); } //FIXME AK
-* Modify dgplot to be able to plot TH1 objects. Then, draw msup/msdown/nominal variations.
 
 Peter: Photos  -> Dressed truth should be the same
-FEWS has no ewk FSR term. -> FEWZ 3.0
-* add ability to turn log-scale in saved plots!
-
+FEWZ has no ewk FSR term. -> FEWZ 3.0
 
 Ntuple based studies:
 * Compare QCD template shapes as a function of isolation cone.
 * Compare data/MC agreement in roofit for tigher cone (0.1)
 
-Run overnight:
-* Try etcone changed to 0.1
-* email constantinos: ABCD method qcd template
-  CM: ABCD = isolation and MULTIJET_LIKE{met<X && mT<X && nlepton=small}
+* CM: ABCD = isolation and MULTIJET_LIKE{met<X && mT<X && nlepton=small}
 
 Work in progress:
 * understand njets distribution issues. Isolation? Ntuple/histo difference?
