@@ -381,18 +381,29 @@ class SuPlot:
         next('MCP_TRIG')
         # JET
         if True:
-            add('jet_jer',prep+'jet_jer',qcdadd=qcdadd)
+            #add('jet_jer',prep+'jet_jer',qcdadd=qcdadd)
+            add('jet_jer',prep+'jet_jer')
             next('JER')
-            add('jet_jesup',prep+'jet_jesup',qcdadd=qcdadd)
-            add('jet_jesdown',prep+'jet_jesdown',qcdadd=qcdadd)
+            add('jet_jesup',prep+'jet_jesup')
+            add('jet_jesdown',prep+'jet_jesdown')
             next('JES')
         # MET
         if True:
-            add('met_resosoftup',prep+'met_resosoftup',qcdadd=qcdadd)
-            add('met_resosoftdown',prep+'met_resosoftdown',qcdadd=qcdadd)
+            add('met_resosoftup',prep+'met_resosoftup')
+            add('met_resosoftdown',prep+'met_resosoftdown')
             next('MET_RESO')
-            add('met_scalesoftup',prep+'met_scalesoftup',qcdadd=qcdadd)
-            add('met_scalesoftdown',prep+'met_scalesoftdown',qcdadd=qcdadd)
+            add('met_scalesoftup',prep+'met_scalesoftup')
+            add('met_scalesoftdown',prep+'met_scalesoftdown')
+            next('MET_SCALE')
+        else:  # new recommended MET systematic
+            add('met_resosofttermsup',prep+'met_resosofttermsup')
+            add('met_resosofttermsdown',prep+'met_resosofttermsdown')
+            next('MET_RESO_COR')
+            add('met_resosofttermsupdown',prep+'met_resosofttermsupdown')
+            add('met_resosofttermsdownup',prep+'met_resosofttermsdownup')
+            next('MET_RESO_ACOR')
+            add('met_scalesofttermsup',prep+'met_scalesofttermsup')
+            add('met_scalesofttermsdown',prep+'met_scalesofttermsdown')
             next('MET_SCALE')
         # QCD normalization
         if True:
@@ -503,6 +514,7 @@ class SuPlot:
                 else:
                     o.histo = histo
     def clone(s,q=None,enable=None,histo=None,do_unfold=None,unfhisto=None,qcdadd=None,
+              sysdir=None,
               slice=None,
               ntuple=None,path=None,var=None,bin=None,pre=None,weight=None):
         """ Clones an entire SuPlot.
@@ -518,7 +530,7 @@ class SuPlot:
         for sgroups in s.sys:
             bla = []
             for sinst in sgroups:
-                bla.append(sinst.clone(q=q,histo=histo,unfhisto=unfhisto,qcdadd=qcdadd,ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight,slice=slice))
+                bla.append(sinst.clone(q=q,histo=histo,unfhisto=unfhisto,qcdadd=qcdadd,sysdir=sysdir,ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight,slice=slice))
                 res.flat.append(bla[-1])
             res.sys.append( bla )
         return res
@@ -806,7 +818,7 @@ class SuStackElm:
             elif SuStackElm.new_scales==True and 'qcd' in s.flags and (isinstance(d,SuPlot) and d.status==0):
                 print '--------->', 'qcd scaling start:',hname
                 scales = s.po.get_scales(d)
-                print '--------->', 'qcd scaling applying:',hname
+                print '--------->', 'qcd scaling applying (QCD_SYS_SCALES=%d):'%SuStack.QCD_SYS_SCALES,hname
                 if SuStack.QCD_SYS_SCALES:
                     res.Scale(scales)
                 else:
@@ -996,7 +1008,8 @@ class SuStack:
         for i,o in enumerate(d.flat):
             if i not in d.enable: continue
             # special treatment for systematics for which we choose NOT to redo QCD fits
-            if 'forcenominal' in o.qcd:
+            if 'forcenominal' in o.qcd and o.qcd['forcenominal']==True:
+                print 'INFO: forcing *nominal* QCD fit for sytematic %d (%s)'%(i,o.name)
                 res.append(s.get_scale_wrap(d.nominal()))
             else:
                 res.append(s.get_scale_wrap(o))
