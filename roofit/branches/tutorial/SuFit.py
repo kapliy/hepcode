@@ -104,8 +104,20 @@ class SuFit:
     s.fitmin,s.fitmax = s.data.FindFixBin(var.getMin()) , s.data.FindFixBin(var.getMax())
     fit.SetRangeX(s.fitmin,s.fitmax) # choose MET fit range
     s.status = fit.Fit()      # perform the fit
-    #s.status = fit.Fit()     # sometimes need to repeat the fit!
+    s.nfits = 1
     if s.status!=0:
+      print 'WARNING: repeating the QCD normalization fit'
+      s.status = fit.Fit()
+      s.nfits += 1
+    if s.status!=0:
+      s.fractions.append( 0 )
+      s.fractionsE.append( 0 )
+      s.scales.append( 0 )
+      s.scalesE.append( 0 )
+      s.Wfractions.append( 0 )
+      s.WfractionsE.append( 0 )
+      s.Wscales.append( 0 )
+      s.WscalesE.append( 0 )
       print 'ERROR: fit failed to converge'
       return
     # prepare the results

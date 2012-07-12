@@ -334,10 +334,10 @@ spR = SuPlot()
 spR.bootstrap(do_unfold=False,
               unfold={'sysdir':tightlvl+'nominal'+jetlvl,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
               charge=q,var=opts.var,histo=opts.hsource,
-              sysdir=[tightlvl+'nominal'+jetlvl,tightlvl+'nominal'+jetlvl,'isowind'+jetlvl],subdir='st_w_final',basedir='baseline',
+              sysdir=[tightlvl+'nominal'+jetlvl,tightlvl+'nominal'+jetlvl,'isofail'+jetlvl],subdir='st_w_final',basedir='baseline',   #FIXME:isowind
               qcd={'var':'met','min':0,'max':100,'metfit':'metfit','forcenominal':False})
 SuStack.QCD_SYS_SCALES = opts.metallsys
-SuStack.QCD_TF_FITTER = False
+SuStack.QCD_TF_FITTER = True
 spR.enable_all()
 # Reco-level [ntuple]
 spRN = SuPlot()
@@ -670,16 +670,22 @@ if mode=='ALL' or mode=='all':
         july02_summarize_qcd_fits(qcdadd['var'],(qcdadd['min'],qcdadd['max']))
     if True: # stack compaison of TH1 and ntuple-based histograms
         spR.enable_nominal()
-        po.choose_qcd(0)
-        SuStackElm.new_scales = False
+        po.choose_qcd(3)
+        SuStackElm.new_scales = True
         SuSample.debug = True
         var = 'met'
         bin = '200,0,200'
-        pre = 'ptiso20/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2'
+        preNN  = 'ptiso20/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2'
+        preNQ = 'ptiso20/l_pt>0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2 && l_trigEF<0.2'
+        preFN  = 'ptiso20/l_pt<0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2'
+        preFQ = 'ptiso20/l_pt>0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2 && l_trigEF<0.2'
+        presN = (preNN,preNN,preNQ) # pre strings for normal plots   (e.g., nominal or anti-isolation)
+        presF = (preFN,preFN,preFQ) # pre strings for QCD fit region (e.g., lowering MET cut to zero)
+        qcdadd={'var':'met','min':0,'max':100,'descr':'antiso20_0p1','pre':presF}
         weight = 'mcw*puw*effw*trigw*wptw'
         plot_stack(spR.clone(),var,q=2,m=0,name='histo')
         #spRN.update_var(var,bin)
-        plot_stack(spRN.clone(pre=pre,weight=weight,var=var,bin=bin),var,q=2,m=0,name='ntuple')
+        plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=2,m=0,name='ntuple')
     if False: # simple histogram comparison of TH1 and ntuple-based histograms: one MC and Data only
         c = SuCanvas('TEST')
         M = PlotOptions()
@@ -738,7 +744,7 @@ if mode=='ALL' or mode=='all':
     if False: # rudimentary QCD studies: comparing various template sources (both QCD and EWK)
         plots = ['lepton_absetav','lpt','met','wmt']
         plot_sys = False
-        #FIXME: understand why, despite enable_nominal, we are seeing systematic bands is m=1 (something gets filled!)
+        #Note: despite enable_nominal, we are seeing systematic bands is m=1 (must be stat. error on BG - but are we double-counting?)
         spR.enable_nominal()
         po.choose_ewk(5)
         for bgsig in (1,2,5):
@@ -765,8 +771,8 @@ if mode=='ALL' or mode=='all':
         test_from_slices(spR.clone(),spT.clone(),1)
     if False: # same as above, but compaing at unfolded level. I.e., this also validates direct unfolding vs pt-unfolding inside eta slices
         c = SuCanvas('test_slices_norm')
-        SuStack.QCD_SYS_SCALES = False #FIXME
-        spR.enable_nominal() #FIXME
+        SuStack.QCD_SYS_SCALES = False
+        spR.enable_nominal()
         print '--------->', 'Making default'
         do_unfold = True
         h1R = po.asym_data_sub('pos',spR.clone(do_unfold=do_unfold))
