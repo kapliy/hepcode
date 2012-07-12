@@ -648,13 +648,8 @@ def study_jet_calibration_effects():
 
 # combined plots
 if mode=='ALL' or mode=='all':
-    if True:
-        #plots = ['lepton_absetav','lpt','met','wmt']
-        plots = ['met']
-
-        #FIXME
-        spR.enable_nominal()
-
+    if False:
+        plots = ['lepton_absetav','lpt','met','wmt']
         plot_stacks(spR.clone(),plots,m=1,qs=(2,))
     if False: # inclusive reco-level and truth-level asymmetry
         plot_any(spR.clone(),spT.clone(),m=20,do_unfold=True,do_errorsDA=True,do_summary=True)
@@ -673,6 +668,21 @@ if mode=='ALL' or mode=='all':
         qcdadd={'var':'met','min':0,'max':100}
         plot_any(spR.clone(histo=histo,qcdadd=qcdadd),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='INCLUSIVE_SLICES')
         july02_summarize_qcd_fits(qcdadd['var'],(qcdadd['min'],qcdadd['max']))
+    if True: # simple comparison of TH1 and ntuple-based histograms results
+        c = SuCanvas('TEST')
+        M = PlotOptions()
+        M.add('h','histo')
+        M.add('nt','ntuple')
+        h = []
+        pre = 'ptiso20/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2'
+        weight = 'mcw*puw*effw*trigw*wptw'
+        SuSample.debug = True
+        SuSample.GLOBAL_CACHE = None
+        spR.enable_nominal()
+        h.append( po.mc('mc',spR.clone(q=2),name='sig_pythia') )
+        h.append( po.mc('mc',spRN.clone(q=2,pre=pre,weight=weight),name='sig_pythia') )
+        c.plotAny(h,M=M,height=1.6,title='Ntuple-Histo comparison')
+        OMAP.append(c)
     if False: # compares TH1 vs ntuple based basic histogram results, ignoring QCD normalization issues
         spR.enable_nominal()
         test_ntuple_histo(spR.clone(),name='asym_histo',new_scales=False)
