@@ -340,7 +340,7 @@ class SuCanvas:
       leg.Draw("same")
     s.update()
 
-  def plotAny(s,hplots,M=None,height=1.7,leg=None,title=None):
+  def plotAny(s,hplots,M=None,height=1.7,leg=None,title=None,xtitle=None):
     """ A generic function to plot several SuPlot's.
     M is: a PlotOptions object describing formatting and colors
     In this version, systematic error mode is encoded inside M
@@ -390,6 +390,7 @@ class SuCanvas:
       hs[0].GetYaxis().SetRangeUser(0,maxh*float(height));
     else:
       hs[0].GetYaxis().SetRangeUser(0,height);
+    if xtitle!=None: hs[0].GetXaxis().SetTitle(xtitle)
     if True:
       leg.Draw("same")
     s.update()
