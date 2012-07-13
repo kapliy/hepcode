@@ -34,6 +34,9 @@ class SuSys:
         # actual histograms
         s.h = None
         s.stack = None
+        # other post-filled resources
+        s.scales = []
+        s.fits   = []
         # Common resources:
         s.name = name
         s.charge = charge
@@ -182,6 +185,13 @@ class SuSys:
         # other
         if slice!=None: res.slice = slice
         return res
+    def stack_bg_frac(s,iback=1):
+        """ Returns integral fraction of background NBG-iback (NBG corresponds to wmunu) """
+        NBG = s.stack.GetStack().GetLast()
+        totevts = s.stack.GetStack().Last().Integral()
+        qcdevts = s.stack.GetHists().At(NBG - iback).Integral()  # TList::At(NBG) = signal
+        qcdfrac = qcdevts / totevts
+        return qcdfrac
     def Add(s,o,dd=1.0):
         """ Smart add function that can handle None in either self.h or o.h
         return s.h.Add(o.h,dd) if s.h and o.h else None
@@ -1064,21 +1074,26 @@ class SuStack:
             # duplicate first/last bin scales for underflow/overflow scale
             return [res[0],] + res + [res[-1],]
         return s.get_scale(d)  #same scale factor for all bins
-    def scale_sys(s,key,qcderr):
+    def scale_sys(s,key,d):
         """ s.scales[key] = (scale,scale_error).
-        qcderr is either NOM/UP/DOWN, or a multiplicative scale factor """
-        #print 'NOM =',s.scales[key][0]
-        return s.scales[key][0]
-        if qcderr=='NOM':
-            return s.scales[key][0]
-        elif qcderr=='UP':
-            return s.scales[key][0]*(1.0+1.0*s.scales[key][1])
-        elif qcderr=='DOWN':
-            return s.scales[key][0]*(1.0-1.0*s.scales[key][1])
+        d.qcderr is either NOM/UP/DOWN, or a multiplicative scale factor.
+        Note that this function also propagates the results of scale fit to SuSys object d"""
+        res = None
+        if d.qcderr=='NOM':
+            res = s.scales[key][0]
+        elif d.qcderr=='UP':
+            res = s.scales[key][0]*(1.0+1.0*s.scales[key][1])
+        elif d.qcderr=='DOWN':
+            res = s.scales[key][0]*(1.0-1.0*s.scales[key][1])
         else:
-            qcderr = float(qcderr)
-            return s.scales[key][0]*qcderr
-        assert False,'Unsupported QCD scale variation'
+            qcderr = float(d.qcderr)
+            res =  s.scales[key][0]*qcderr
+        assert res,'Unsupported QCD scale variation'
+        # propagate fractions/scales and their errors to SuSys object
+        #assert len(d.scales)==0  # not true in slices!
+        d.scales += s.scales[key] # includes all scales, fractions, and errors
+        d.fits   += [s.fits[key]]
+        return res
     def get_scale(s,d):
         """ A lookup cache of QCD scale values
         Note: d is an instance of SuSys, not SuPlot
@@ -1094,7 +1109,7 @@ class SuStack:
             key = s.get_flagsum()+'_'+d2.h_path_fname()+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max'])
         assert key
         if key in s.scales:
-            return s.scale_sys(key,d.qcderr)
+            return s.scale_sys(key,d)
         print 'COMPUTING NEW QCD WEIGHT:',key
         import SuFit
         f = SuFit.SuFit()
@@ -1126,8 +1141,8 @@ class SuStack:
         assert tmp
         s.fits[key] = tmp[0]
         s.gbg.append((f,hdata,hfixed,hfree,tmp))
-        s.scales[key] = (f.scales[0],f.scalesE[0],f.fractions[0],f.fractionsE[0])
-        return s.scale_sys(key,d.qcderr)
+        s.scales[key] = (f.scales[0],f.scalesE[0],f.fractions[0],f.fractionsE[0],f.Wscales[0],f.WscalesE[0],f.Wfractions[0],f.WfractionsE[0])
+        return s.scale_sys(key,d)
     def histo(s,name,hname,d,norm=None):
         """ generic function to return histogram for a particular subsample """
         loop = [z for z in s.elm if z.name==name]
