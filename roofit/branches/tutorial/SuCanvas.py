@@ -435,7 +435,7 @@ class SuCanvas:
         fractext.SetBorderSize( 0 )
         fractext.SetMargin( 0 )
         staterr = hstack.nominal().scales[3]/hstack.nominal().scales[2]
-        fractext.AddText( 'QCD Frac. = %.3f #pm %.2f%%'%(qcdfrac,staterr*100.0) )
+        fractext.AddText( 'QCD Frac. = %.3f #pm %.1f%%'%(qcdfrac,staterr*100.0) )
         fractext.Draw('same')
     # ratio
     s.cd_ratioPad();
