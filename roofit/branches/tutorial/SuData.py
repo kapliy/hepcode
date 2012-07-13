@@ -130,9 +130,11 @@ class SuSys:
         """ Puts this SuSys in qcd region based on qcd map
         If the original basedir includes a subfolder, we preserve it
         """
+        print s.qcd
         if s.use_ntuple():
             assert 'descr' in s.qcd and s.qcd['pre'] and len(s.qcd['pre'])==3
             s.pre = s.qcd['pre']
+            s.update_var( s.qcd['var'] , ','.join([str(s.qcd['nbins']),str(s.qcd['min']),str(s.qcd['max'])]) )
             return
         basedir=''
         if len(s.basedir[2].split('/'))>1:  # nominal/lpt2025/tight
@@ -192,6 +194,16 @@ class SuSys:
         qcdevts = s.stack.GetHists().At(NBG - iback).Integral()  # TList::At(NBG) = signal
         qcdfrac = qcdevts / totevts
         return qcdfrac
+    def update_var(s,histo,bin=None):
+        """ Updates histogram name and ntuple-expression (aka variable)
+        In reality, only one of these applies for a given SuData instance.
+        """
+        if bin:
+            s.var = histo
+            s.bin = bin
+        else:
+            s.histo = histo
+        return True
     def Add(s,o,dd=1.0):
         """ Smart add function that can handle None in either self.h or o.h
         return s.h.Add(o.h,dd) if s.h and o.h else None
@@ -534,11 +546,7 @@ class SuPlot:
         """
         for i,o in enumerate(s.flat):
             if i in s.enable:
-                if bin:
-                    o.var = histo
-                    o.bin = bin
-                else:
-                    o.histo = histo
+                o.update_var(histo,bin)
     def clone(s,q=None,enable=None,histo=None,do_unfold=None,unfhisto=None,qcdadd=None,
               sysdir=None,
               slice=None,
@@ -744,8 +752,8 @@ class SuSample:
             key_str = md5(key_str_all).hexdigest()
         needs_saving = s.GLOBAL_CACHE
         if s.GLOBAL_CACHE and os.path.exists(s.GLOBAL_CACHE):
-            #with FileLock(s.GLOBAL_CACHE):
-            if True:
+            #if True:
+            with FileLock(s.GLOBAL_CACHE):
                 s.cache = ROOT.TFile.Open(s.GLOBAL_CACHE,'READ')
                 assert s.cache and s.cache.IsOpen()
                 if s.cache.Get(key_str):
@@ -1104,7 +1112,7 @@ class SuStack:
         # key encodes stack composition + path to metfit histogram with histo name + range of fit
         key = None
         if d2.use_ntuple(): # todo: add d2.path if we end up using unbinned ntuples for systematics
-            key = s.get_flagsum()+'_'+d2.qcd['descr']+'_'+d2.qcd['var']+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max'])
+            key = SuSys.QMAP[d2.charge][1]+'_'+s.get_flagsum()+'_'+d2.qcd['descr']+'_'+d2.qcd['var']+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max'])
         else:
             key = s.get_flagsum()+'_'+d2.h_path_fname()+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max'])
         assert key
@@ -1132,9 +1140,10 @@ class SuStack:
         if False: # check the effect of model errors on the fit
             f.blowUpErrors(0,100,inc=True)
         tmp = None
+        logscale = 'log' in d2.qcd and d2.qcd['log']==True
         if SuStack.QCD_TF_FITTER:
             f.doFitTF()
-            tmp = f.drawFitsTF(key)
+            tmp = f.drawFitsTF(key,logscale=logscale)
         else:
             f.doFit()
             tmp = f.drawFits(key)

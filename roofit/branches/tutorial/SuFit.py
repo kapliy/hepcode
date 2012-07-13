@@ -227,21 +227,21 @@ class SuFit:
     # return final weights
     return s.scales
 
-  def drawFits(s,title='random'):
+  def drawFits(s,title='random',logscale=False):
     """ Draw fits in all variables """
     res = []
     for ivar in xrange(len(s.vnames)):
       res += s.drawFit(ivar,title)
     return res
 
-  def drawFitsTF(s,title='random'):
+  def drawFitsTF(s,title='random',logscale=False):
     """ Draw fits in all variables - using the TFractionFitter version """
     res = []
     for ivar in xrange(len(s.vnames)):
       res += s.drawFitTF(ivar,title)
     return res
 
-  def drawFit_noratio(s,ivar,title='random'):
+  def drawFit_noratio(s,ivar,title='random',logscale=False):
     """ Draw the fit for ivar's variable - this one only makes the default plot, without the ratio"""
     import SuCanvas
     s.canvas = canvas = SuCanvas.SuCanvas()
@@ -296,7 +296,7 @@ class SuFit:
     fractext.Draw("9");
     return canvas,frame
 
-  def drawFit(s,ivar,title='random'):
+  def drawFit(s,ivar,title='random',logscale=False):
     """ Draw the fit for ivar's variable """
     import SuCanvas
     s.canvas = canvas = SuCanvas.SuCanvas()
@@ -367,7 +367,7 @@ class SuFit:
     canvas.update()
     return canvas,frame
 
-  def drawFitTF(s,ivar,title='random'):
+  def drawFitTF(s,ivar,title='random',logscale=False):
     """ Draw the fit for ivar's variable - TFractionFitter version """
 
     import SuCanvas
@@ -441,6 +441,9 @@ class SuFit:
       fractext.AddText( '%s Scale = %.3f #pm %.2f %%'%('EWK',s.Wscales[ift],s.WscalesE[ift]/s.Wscales[ift]*100.0) )
     key.Draw("9");
     fractext.Draw("9");
+
+    if logscale:
+      ROOT.gPad.SetLogy(ROOT.kTRUE)
 
     # ratio
     canvas.cd_ratioPad()

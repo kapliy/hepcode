@@ -1,7 +1,7 @@
 * Add dressed muons for C_W factors!
 * Utilize DgEventInfo extras to add truth quantities to reco ntuples - for cuts
   This is not quite good for response matrices because it's missing inefficiency terms:(
-
+* add qcdlog flag to turn on log scale in qcd fits in isolation variable!
 
 
 Follow up: geometric shift could change efficiency.
