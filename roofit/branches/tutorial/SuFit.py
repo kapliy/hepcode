@@ -375,24 +375,26 @@ class SuFit:
     data.Draw('X0')
     data.GetXaxis().SetRange(s.fitmin,s.fitmax)
     if s.status==0:
-      # model
+      # model - already scaled to expectation
       s.hmodel = model = s.fit.GetPlot().Clone()
       model.SetLineColor(46)
       model.SetFillStyle(0)
       model.Draw('A SAME')
-      # fixed
+      # fixed - must be scaled
       ipattern = 3001
       s.hfixed = fixed = fit.GetMCPrediction(0).Clone()
       fixed.SetLineColor(8)
       fixed.SetFillColor(8)
       fixed.SetFillStyle(ipattern)
+      fixed.Scale(s.Wscales[0])
       fixed.Draw('A SAME H')
-      # free (qcd)
+      # free (qcd) - must be scaled
       ift = 0
       s.hfree = free = fit.GetMCPrediction(1).Clone()
       free.SetFillColor(s.free[ift].GetFillColor())
       free.SetLineColor(s.free[ift].GetFillColor())
       free.SetFillStyle(1001)
+      free.Scale(s.scales[0])
       free.Draw('A SAME H')
 
     # prettify
@@ -423,8 +425,10 @@ class SuFit:
     fractext.SetBorderSize( 0 )
     fractext.SetMargin( 0 )
     for ift,frac in enumerate(s.fractions):
-      fractext.AddText( 'Frac. %s = %.3f #pm %.3f %%'%(s.free[ift].getLegendName(),frac*100.0,s.fractionsE[ift]*100.0) )
+      fractext.AddText( 'Frac. %s = %.2f #pm %.2f %%'%(s.free[ift].getLegendName(),frac*100.0,s.fractionsE[ift]*100.0) )
       fractext.AddText( 'Scale %s = %.3f #pm %.3f'%(s.free[ift].getLegendName(),s.scales[ift],s.scalesE[ift]) )
+      fractext.AddText( 'Frac. %s = %.2f #pm %.2f %%'%('EWK',s.Wfractions[ift]*100.0,s.WfractionsE[ift]*100.0) )
+      fractext.AddText( 'Scale %s = %.3f #pm %.3f'%('EWK',s.Wscales[ift],s.WscalesE[ift]) )
     key.Draw("9");
     fractext.Draw("9");
 
@@ -432,12 +436,13 @@ class SuFit:
     canvas.cd_ratioPad()
     if s.status==0:
       hmodel = model.Clone()
-      scalefactor = 1.0*data.Integral()/model.Integral()
-      hmodel.Scale( scalefactor ); # scale model to actual data integral (needed?)
+      #scalefactor = 1.0*data.Integral()/model.Integral()
+      #hmodel.Scale( scalefactor ); # scale model to actual data integral (not needed!)
       s.hratio,s.href = data.Clone('hratio'),data.Clone('href')
       s.hratio.Divide(hmodel)
       canvas.drawRefLine(s.href)
       canvas.drawRatio(s.hratio)
+      s.hratio.Draw("AP same")
       s.hratio.GetXaxis().SetRange(s.fitmin,s.fitmax)
     # finalize
     canvas.update()
