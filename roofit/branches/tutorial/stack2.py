@@ -50,6 +50,18 @@ parser.add_option("--prebef",dest="prebef",
 parser.add_option("--preaft",dest="preaft",
                   type="string", default=_AFT,
                   help="Cuts AFTER applying studied cut")
+parser.add_option("--preNN",dest="preNN",
+                  type="string", default="",
+                  help="QCD fits: nominal cut for histogram we are plotting")
+parser.add_option("--preNQ",dest="preNQ",
+                  type="string", default="",
+                  help="QCD fits: QCD template shape cut (eg, anti-isolation)")
+parser.add_option("--preFN",dest="preFN",
+                  type="string", default="",
+                  help="QCD fits: nominal cut for histogram we are plotting + FIT REGION")
+parser.add_option("--preFQ",dest="preFQ",
+                  type="string", default="",
+                  help="QCD fits: QCD template shape cut (eg, anti-isolation) + FIT REGION")
 parser.add_option("--cut",dest="cut",
                   type="string", default='mcw*puw', # *effw*trigw
                   help="Additional cut to select events")
@@ -668,23 +680,24 @@ if mode=='ALL' or mode=='all':
         qcdadd={'var':'met','min':0,'max':100}
         plot_any(spR.clone(histo=histo,qcdadd=qcdadd),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='INCLUSIVE_SLICES')
         july02_summarize_qcd_fits(qcdadd['var'],(qcdadd['min'],qcdadd['max']))
-    if True: # stack compaison of TH1 and ntuple-based histograms
+    if False: # stack compaison of TH1 and ntuple-based histograms
         spR.enable_nominal()
         po.choose_qcd(3)
         SuStackElm.new_scales = True
         SuSample.debug = True
         var = 'met'
         bin = '200,0,200'
-        preNN  = 'ptiso20/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2'
-        preNQ = 'ptiso20/l_pt>0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2 && l_trigEF<0.2'
-        preFN  = 'ptiso20/l_pt<0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2'
-        preFQ = 'ptiso20/l_pt>0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2 && l_trigEF<0.2'
+        etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
+        x = ' && fabs(l_eta)>=%f && fabs(l_eta)<=%f'%(etabins[0],etabins[0+1])
+        preNN = 'ptiso20/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2'+x
+        preNQ = 'ptiso20/l_pt>0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2 && l_trigEF<0.2'+x
+        preFN = 'ptiso20/l_pt<0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2'+x
+        preFQ = 'ptiso20/l_pt>0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2 && l_trigEF<0.2'+x
         presN = (preNN,preNN,preNQ) # pre strings for normal plots   (e.g., nominal or anti-isolation)
         presF = (preFN,preFN,preFQ) # pre strings for QCD fit region (e.g., lowering MET cut to zero)
         qcdadd={'var':'met','min':0,'max':100,'descr':'antiso20_0p1','pre':presF}
-        weight = 'mcw*puw*effw*trigw*wptw'
+        weight = "mcw*puw*effw*trigw*wptw"
         plot_stack(spR.clone(),var,q=2,m=0,name='histo')
-        #spRN.update_var(var,bin)
         plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=2,m=0,name='ntuple')
     if False: # simple histogram comparison of TH1 and ntuple-based histograms: one MC and Data only
         c = SuCanvas('TEST')
@@ -817,14 +830,25 @@ if mode=='ALL' or mode=='all':
         """
         june17_asymmetry()
     
-if mode=='1': # total stack histo
-    spR2 = spR
-    c = SuCanvas()
-    leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
-    hmc,hdata = None,None
-    hmc = po.stack('mc',spR2,leg=leg)
-    hdata = po.data('data',spR2,leg=leg)
-    c.plotStackHisto(hmc.flat[0].stack,hdata.flat[0].h,leg)
+if mode=='qcdfit': # to study QCD fits
+    spR.enable_nominal()
+    SuStackElm.new_scales = True
+    SuSample.debug = True
+    var = opts.var
+    bin = opts.bin
+    etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
+    x = ' && fabs(l_eta)>=%.3f && fabs(l_eta)<=%.3f'%(etabins[0],etabins[0+1])
+    x= ''
+    preNN = opts.preNN + x
+    preNQ = opts.preNQ + x
+    preFN = opts.preFN + x
+    preFQ = opts.preFQ + x
+    presN = (preNN,preNN,preNQ) # pre strings for normal plots   (e.g., nominal or anti-isolation)
+    presF = (preFN,preFN,preFQ) # pre strings for QCD fit region (e.g., lowering MET cut to zero)
+    qcdadd={'var':'met','min':0,'max':100,'descr':'antiso20_0p1','pre':presF}
+    weight = opts.cut
+    plot_stack(spR.clone(),var,q=2,m=0,name='histo')
+    plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=2,m=0,name='ntuple')
 
 if mode=='2': # signal - directly from MC, or bg-subtracted data - allow application of efficiency histogram
     assert opts.ntuple=='w','Only w ntuple supported for now'
