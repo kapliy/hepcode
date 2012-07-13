@@ -833,12 +833,14 @@ if mode=='ALL' or mode=='all':
 if mode=='qcdfit': # to study QCD fits
     spR.enable_nominal()
     SuStackElm.new_scales = True
-    SuSample.debug = True
+    #SuSample.debug = True
     var = opts.var
     bin = opts.bin
     etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
-    x = ' && fabs(l_eta)>=%.3f && fabs(l_eta)<=%.3f'%(etabins[0],etabins[0+1])
     x= ''
+    if opts.extra!=None:
+        ie = int(opts.extra)
+        x = ' && fabs(l_eta)>=%.3f && fabs(l_eta)<=%.3f'%(etabins[ie],etabins[ie+1])
     preNN = opts.preNN + x
     preNQ = opts.preNQ + x
     preFN = opts.preFN + x
@@ -847,7 +849,7 @@ if mode=='qcdfit': # to study QCD fits
     presF = (preFN,preFN,preFQ) # pre strings for QCD fit region (e.g., lowering MET cut to zero)
     qcdadd={'var':'met','min':0,'max':100,'descr':'antiso20_0p1','pre':presF}
     weight = opts.cut
-    plot_stack(spR.clone(),var,q=2,m=0,name='histo')
+    #plot_stack(spR.clone(),var,q=2,m=0,name='histo')
     plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=2,m=0,name='ntuple')
 
 if mode=='2': # signal - directly from MC, or bg-subtracted data - allow application of efficiency histogram
