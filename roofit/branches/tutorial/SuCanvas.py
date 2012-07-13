@@ -395,7 +395,7 @@ class SuCanvas:
       leg.Draw("same")
     s.update()
 
-  def plotStack(s,hstack,hdata,leg=None,height=1.5,mode=0):
+  def plotStack(s,hstack,hdata,leg=None,height=1.5,mode=0,pave=True):
     """ Wrapper to make a complete plot of stack and data overlayed - SuData version
     mode=0 - nominal only
     mode=1 - apply systematics
@@ -425,21 +425,17 @@ class SuCanvas:
     data.Draw("AP same")
     s.FixupHisto(data)
     # calculate QCD fraction
-    qcdfrac = None
-    if True:
-      ibg = stack.GetStack().GetLast()
-      totevts = stack.GetStack().Last().Integral()
-      qcdevts = stack.GetHists().At(ibg - 1).Integral()  # At(ibg) is signal
-      qcdfrac = qcdevts / totevts
     if leg:
       leg.Draw("same")
       x1,x2,y1,y2 = leg.GetX1(),leg.GetX2(),leg.GetY1(),leg.GetY2() # 0.55 0.88 0.7 0.88
-      if qcdfrac!=None:  #todo: attach fits to SuPlot
+      qcdfrac = hstack.nominal().stack_bg_frac()
+      if pave and qcdfrac!=None:
         s.fractext = fractext = ROOT.TPaveText( x1 , y1-0.07 , x2 , y1-0.01 , "BR NDC" )
         fractext.SetFillStyle( 0 ) # hollow
         fractext.SetBorderSize( 0 )
         fractext.SetMargin( 0 )
-        fractext.AddText( 'QCD Frac. = %.3f %%'%(qcdfrac*100.0) )
+        staterr = hstack.nominal().scales[3]/hstack.nominal().scales[2]
+        fractext.AddText( 'QCD Frac. = %.3f #pm %.2f%%'%(qcdfrac,staterr*100.0) )
         fractext.Draw('same')
     # ratio
     s.cd_ratioPad();
