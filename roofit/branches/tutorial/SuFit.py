@@ -161,6 +161,12 @@ class SuFit:
     s.fractionsE = []
     s.scalesE = []
 
+    # fill with dummy values (compatibility - not actually computed in this version of doFit)
+    s.Wfractions.append( 0 )
+    s.WfractionsE.append( 0 )
+    s.Wscales.append( 0 )
+    s.WscalesE.append( 0 )
+    
     # create RooDataHist for data
     s.dataHist = RooDataHist( "dataHist" , "dataHist" , s.ArgList() , s.data )
     
@@ -280,8 +286,8 @@ class SuFit:
     fractext.SetBorderSize( 0 )
     fractext.SetMargin( 0 )
     for ift,frac in enumerate(s.fractions):
-      fractext.AddText( 'Frac. %s = %.3f #pm %.3f %%'%(s.free[ift].getLegendName(),frac*100.0,s.fractionsE[ift]*100.0) )
-      fractext.AddText( 'Scale %s = %.3f #pm %.3f'%(s.free[ift].getLegendName(),s.scales[ift],s.scalesE[ift]) )
+      fractext.AddText( 'Frac. %s = %.3f #pm %.2f %%'%(s.free[ift].getLegendName(),frac,s.fractionsE[ift]/frac*100.0) )
+      fractext.AddText( 'Scale %s = %.3f #pm %.2f %%'%(s.free[ift].getLegendName(),s.scales[ift],s.scalesE[ift]/s.scales[ift]*100.0) )
     key.Draw("9");
     fractext.Draw("9");
     return canvas,frame
@@ -425,10 +431,10 @@ class SuFit:
     fractext.SetBorderSize( 0 )
     fractext.SetMargin( 0 )
     for ift,frac in enumerate(s.fractions):
-      fractext.AddText( 'Frac. %s = %.2f #pm %.2f %%'%(s.free[ift].getLegendName(),frac*100.0,s.fractionsE[ift]*100.0) )
-      fractext.AddText( 'Scale %s = %.3f #pm %.3f'%(s.free[ift].getLegendName(),s.scales[ift],s.scalesE[ift]) )
-      fractext.AddText( 'Frac. %s = %.2f #pm %.2f %%'%('EWK',s.Wfractions[ift]*100.0,s.WfractionsE[ift]*100.0) )
-      fractext.AddText( 'Scale %s = %.3f #pm %.3f'%('EWK',s.Wscales[ift],s.WscalesE[ift]) )
+      fractext.AddText( '%s Frac. = %.2f #pm %.2f %%'%(s.free[ift].getLegendName(),s.fractions[ift],s.fractionsE[ift]/s.fractions[ift]*100.0) )
+      fractext.AddText( '%s Scale = %.3f #pm %.2f %%'%(s.free[ift].getLegendName(),s.scales[ift],s.scalesE[ift]/s.scales[ift]*100.0) )
+      fractext.AddText( '%s Frac. = %.2f #pm %.2f %%'%('EWK',s.Wfractions[ift],s.WfractionsE[ift]/s.Wfractions[ift]*100.0) )
+      fractext.AddText( '%s Scale = %.3f #pm %.2f %%'%('EWK',s.Wscales[ift],s.WscalesE[ift]/s.Wscales[ift]*100.0) )
     key.Draw("9");
     fractext.Draw("9");
 
