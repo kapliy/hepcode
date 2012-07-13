@@ -418,9 +418,9 @@ def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errors
     return h[-1]
 
 #FIXME TODO: modify m=0 to m=isys, with extra string values to do total-systematic
-def plot_stack(spR2,var,q=2,m=0,new_scales=None,name=''):
+def plot_stack(spR2,var,bin=None,q=2,m=0,new_scales=None,name=''):
     if new_scales!=None: SuStackElm.new_scales = new_scales
-    spR2.update_var( var )
+    spR2.update_var( var , bin )
     c = SuCanvas('stack_'+var+'_'+SuSys.QMAP[q][1]+('_'+name if name !='' else ''))
     leg = ROOT.TLegend(0.55,0.70,0.88,0.88,var,"brNDC")
     hstack = po.stack('mc',spR2.clone(q=q),leg=leg)
@@ -428,11 +428,11 @@ def plot_stack(spR2,var,q=2,m=0,new_scales=None,name=''):
     c.plotStack(hstack,hdata,mode=m,leg=leg,height=1.7)
     OMAP.append(c)
 
-def plot_stacks(spR2,histos,m=0,new_scales=None,name='',qs=(0,1,2)):
+def plot_stacks(spR2,histos,bin=None,m=0,new_scales=None,name='',qs=(0,1,2)):
     """ A wrapper to make multiple stack plots for variables listed in histos[] array """
     for q in qs:
         for var in histos:
-            plot_stack(spR2,var,q=q,m=m,new_scales=new_scales,name=name)
+            plot_stack(spR2,var,bin=None,q=q,m=m,new_scales=new_scales,name=name)
 
 def test_unfolding(spR2,spT2,asym=True,name='test_unfolding'):
     """ tests unfolding on one signal monte-carlo """
@@ -837,6 +837,7 @@ if mode=='qcdfit': # to study QCD fits
     var = opts.var
     bin = opts.bin
     etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
+    # cut string for the ntuple
     x= ''
     if opts.extra!=None:
         ie = int(opts.extra)
@@ -847,10 +848,15 @@ if mode=='qcdfit': # to study QCD fits
     preFQ = opts.preFQ + x
     presN = (preNN,preNN,preNQ) # pre strings for normal plots   (e.g., nominal or anti-isolation)
     presF = (preFN,preFN,preFQ) # pre strings for QCD fit region (e.g., lowering MET cut to zero)
-    qcdadd={'var':'met','min':0,'max':100,'descr':'antiso20_0p1','pre':presF}
+    # QCD fit variable and range
+    lvar = opts.lvar
+    assert len(opts.lbin.split(','))==3,'Wrong format of --lbin argument. Example: 100,-2.5,2.5'
+    lmin = float(opts.lbin.split(',')[1])
+    lmax = float(opts.lbin.split(',')[2])
+    qcdadd={'var':lvar,'min':lmin,'max':lmax,'descr':'template','pre':presF}
     weight = opts.cut
-    #plot_stack(spR.clone(),var,q=2,m=0,name='histo')
-    plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=2,m=0,name='ntuple')
+    #def plot_stacks(spR2,histos,m=0,new_scales=None,name='',qs=(0,1,2)):
+    plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=2,m=0,name=po.get_flagsum()+'_'+opts.lvar+'_'+opts.lbin)
 
 if mode=='2': # signal - directly from MC, or bg-subtracted data - allow application of efficiency histogram
     assert opts.ntuple=='w','Only w ntuple supported for now'
