@@ -106,9 +106,13 @@ class SuFit:
     s.status = fit.Fit()      # perform the fit
     s.nfits = 1
     if s.status!=0:
-      print 'WARNING: repeating the QCD normalization fit'
+      print 'WARNING: repeating (N=2) the QCD normalization fit'
       s.status = fit.Fit()
       s.nfits += 1
+      if s.status!=0:
+        print 'WARNING: repeating (N=3) the QCD normalization fit'
+        s.status = fit.Fit()
+        s.nfits += 1
     if s.status!=0:
       s.fractions.append( 0 )
       s.fractionsE.append( 0 )
@@ -431,9 +435,9 @@ class SuFit:
     fractext.SetBorderSize( 0 )
     fractext.SetMargin( 0 )
     for ift,frac in enumerate(s.fractions):
-      fractext.AddText( '%s Frac. = %.2f #pm %.2f %%'%(s.free[ift].getLegendName(),s.fractions[ift],s.fractionsE[ift]/s.fractions[ift]*100.0) )
+      fractext.AddText( '%s Frac. = %.3f #pm %.2f %%'%(s.free[ift].getLegendName(),s.fractions[ift],s.fractionsE[ift]/s.fractions[ift]*100.0) )
       fractext.AddText( '%s Scale = %.3f #pm %.2f %%'%(s.free[ift].getLegendName(),s.scales[ift],s.scalesE[ift]/s.scales[ift]*100.0) )
-      fractext.AddText( '%s Frac. = %.2f #pm %.2f %%'%('EWK',s.Wfractions[ift],s.WfractionsE[ift]/s.Wfractions[ift]*100.0) )
+      fractext.AddText( '%s Frac. = %.3f #pm %.2f %%'%('EWK',s.Wfractions[ift],s.WfractionsE[ift]/s.Wfractions[ift]*100.0) )
       fractext.AddText( '%s Scale = %.3f #pm %.2f %%'%('EWK',s.Wscales[ift],s.WscalesE[ift]/s.Wscales[ift]*100.0) )
     key.Draw("9");
     fractext.Draw("9");
