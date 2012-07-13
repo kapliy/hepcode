@@ -34,10 +34,13 @@ parser.add_option("--bin",dest="bin",
                   help="Binning for var")
 parser.add_option("--lvar",dest="lvar",
                   type="string", default='lY_eta',
-                  help="Variable that slices the dataset in Z studies")
+                  help="Variable that (1) slices the dataset in Z studies, or (2) used to fit QCD")
 parser.add_option("--lbin",dest="lbin",
                   type="string", default='25,-2.5,2.5',
                   help="Binning for lvar")
+parser.add_option("--llog", default=False,
+                  action="store_true",dest="llog",
+                  help="If set to true, QCD fit in lvar is plotted on log scale")
 parser.add_option("--extra",dest="extra",
                   type="string", default=None,
                   help="General-purpose extra parameter")
@@ -347,7 +350,7 @@ spR.bootstrap(do_unfold=False,
               unfold={'sysdir':tightlvl+'nominal'+jetlvl,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
               charge=q,var=opts.var,histo=opts.hsource,
               sysdir=[tightlvl+'nominal'+jetlvl,tightlvl+'nominal'+jetlvl,'isofail'+jetlvl],subdir='st_w_final',basedir='baseline',   #FIXME:isowind
-              qcd={'var':'met','min':0,'max':100,'metfit':'metfit','forcenominal':False})
+              qcd={'var':'met','nbins':100,'min':0,'max':100,'metfit':'metfit','forcenominal':False})
 SuStack.QCD_SYS_SCALES = opts.metallsys
 SuStack.QCD_TF_FITTER = True
 spR.enable_all()
@@ -851,12 +854,12 @@ if mode=='qcdfit': # to study QCD fits
     # QCD fit variable and range
     lvar = opts.lvar
     assert len(opts.lbin.split(','))==3,'Wrong format of --lbin argument. Example: 100,-2.5,2.5'
+    nbins = int(opts.lbin.split(',')[1])
     lmin = float(opts.lbin.split(',')[1])
     lmax = float(opts.lbin.split(',')[2])
-    qcdadd={'var':lvar,'min':lmin,'max':lmax,'descr':'template','pre':presF}
+    qcdadd={'var':lvar,'nbins':nbins,'min':lmin,'max':lmax,'log':opts.llog,'descr':'X','pre':presF}
     weight = opts.cut
-    #def plot_stacks(spR2,histos,m=0,new_scales=None,name='',qs=(0,1,2)):
-    plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=2,m=0,name=po.get_flagsum()+'_'+opts.lvar+'_'+opts.lbin)
+    plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=opts.charge,m=0,name=po.get_flagsum()+'_'+opts.lvar+'_'+opts.lbin)
 
 if mode=='2': # signal - directly from MC, or bg-subtracted data - allow application of efficiency histogram
     assert opts.ntuple=='w','Only w ntuple supported for now'
