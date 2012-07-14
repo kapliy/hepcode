@@ -27,17 +27,22 @@ class SuFit:
     s.w = RooWorkspace('w',ROOT.kTRUE)
     s.vnames = []
     s.fnames = []
-    
+
+    # fractions and scales for QCD template
     s.fractions = []
     s.scales = []
     s.fractionsE = []
     s.scalesE = []
 
-    # optional: same for EWK template
+    # same for EWK template
     s.Wfractions = []
     s.Wscales = []
     s.WfractionsE = []
     s.WscalesE = []
+
+    # general fit quality
+    s.chi2 = []
+    s.ndf = []
 
     s.model = None
     s.dataHist = None
@@ -103,6 +108,8 @@ class SuFit:
     var = s.w.var(s.vnames[0])
     s.fitmin,s.fitmax = s.data.FindFixBin(var.getMin()) , s.data.FindFixBin(var.getMax())
     fit.SetRangeX(s.fitmin,s.fitmax) # choose MET fit range
+    # extra parameters
+    vFit = fit.GetFitter();
     s.status = fit.Fit()      # perform the fit
     s.nfits = 1
     if s.status!=0:
@@ -113,6 +120,10 @@ class SuFit:
         print 'WARNING: repeating (N=3) the QCD normalization fit'
         s.status = fit.Fit()
         s.nfits += 1
+        if s.status!=0:
+          print 'WARNING: repeating (N=4) the QCD normalization fit'
+          s.status = fit.Fit()
+          s.nfits += 1
     if s.status!=0:
       s.fractions.append( 0 )
       s.fractionsE.append( 0 )
@@ -122,6 +133,8 @@ class SuFit:
       s.WfractionsE.append( 0 )
       s.Wscales.append( 0 )
       s.WscalesE.append( 0 )
+      s.chi2.append(0)
+      s.ndf.append(0)
       print 'ERROR: fit failed to converge'
       return
     # prepare the results
@@ -150,6 +163,10 @@ class SuFit:
     s.WscalesE.append( float(error) )
     s.WscalesE[-1] *= s.data.Integral()
     s.WscalesE[-1] /= s.fixed.Integral() # original ewk fraction
+    # fit quality
+    #s.chi2.append( fit.GetChisquare() )
+    s.chi2.append( data.Chi2Test( s.fit.GetPlot(), "UW CHI2" )  )
+    s.ndf.append( fit.GetNDF() )
 
   def doFit(s):
     """ do fit and return weights """
@@ -231,14 +248,14 @@ class SuFit:
     """ Draw fits in all variables """
     res = []
     for ivar in xrange(len(s.vnames)):
-      res += s.drawFit(ivar,title)
+      res += s.drawFit(ivar,title,logscale=logscale)
     return res
 
   def drawFitsTF(s,title='random',logscale=False):
     """ Draw fits in all variables - using the TFractionFitter version """
     res = []
     for ivar in xrange(len(s.vnames)):
-      res += s.drawFitTF(ivar,title)
+      res += s.drawFitTF(ivar,title,logscale=logscale)
     return res
 
   def drawFit_noratio(s,ivar,title='random',logscale=False):
@@ -385,11 +402,6 @@ class SuFit:
     data.Draw('X0')
     data.GetXaxis().SetRange(s.fitmin,s.fitmax)
     if s.status==0:
-      # model - already scaled to expectation
-      s.hmodel = model = s.fit.GetPlot().Clone()
-      model.SetLineColor(46)
-      model.SetFillStyle(0)
-      model.Draw('A SAME')
       # fixed - must be scaled
       ipattern = 3001
       s.hfixed = fixed = fit.GetMCPrediction(0).Clone()
@@ -397,16 +409,26 @@ class SuFit:
       fixed.SetFillColor(8)
       fixed.SetFillStyle(ipattern)
       fixed.Scale(s.Wscales[0])
-      fixed.Draw('A SAME H')
+      #fixed.Draw('A SAME H')
       # free (qcd) - must be scaled
       ift = 0
+      ipattern=1001
       s.hfree = free = fit.GetMCPrediction(1).Clone()
       free.SetFillColor(s.free[ift].GetFillColor())
       free.SetLineColor(s.free[ift].GetFillColor())
-      free.SetFillStyle(1001)
+      free.SetFillStyle(ipattern)
       free.Scale(s.scales[0])
-      free.Draw('A SAME H')
-
+      #free.Draw('A SAME H')
+      # make a stack
+      s.stack = stack = ROOT.THStack('qcd_stack','Final QCD stack')
+      stack.Add(fixed)
+      stack.Add(free)
+      stack.Draw('A SAME HIST')
+      # model - already scaled to expectation
+      s.hmodel = model = s.fit.GetPlot().Clone()
+      model.SetLineColor(46)
+      model.SetFillStyle(0)
+      model.Draw('A SAME')
     # prettify
     data.GetXaxis().SetTitleOffset( canvas.getXtitleOffset() )
     data.GetYaxis().SetTitleOffset( canvas.getYtitleOffset() )
@@ -435,14 +457,16 @@ class SuFit:
     fractext.SetBorderSize( 0 )
     fractext.SetMargin( 0 )
     for ift,frac in enumerate(s.fractions):
-      fractext.AddText( '%s Frac. = %.3f #pm %.2f %%'%(s.free[ift].getLegendName(),s.fractions[ift],s.fractionsE[ift]/s.fractions[ift]*100.0) )
-      fractext.AddText( '%s Scale = %.3f #pm %.2f %%'%(s.free[ift].getLegendName(),s.scales[ift],s.scalesE[ift]/s.scales[ift]*100.0) )
-      fractext.AddText( '%s Frac. = %.3f #pm %.2f %%'%('EWK',s.Wfractions[ift],s.WfractionsE[ift]/s.Wfractions[ift]*100.0) )
-      fractext.AddText( '%s Scale = %.3f #pm %.2f %%'%('EWK',s.Wscales[ift],s.WscalesE[ift]/s.Wscales[ift]*100.0) )
+      fractext.AddText( '%s Frac. = %.3f #pm %.2f%%'%(s.free[ift].getLegendName(),s.fractions[ift],s.fractionsE[ift]/s.fractions[ift]*100.0) )
+      fractext.AddText( '%s Scale = %.3f #pm %.2f%%'%(s.free[ift].getLegendName(),s.scales[ift],s.scalesE[ift]/s.scales[ift]*100.0) )
+      fractext.AddText( '%s Frac. = %.3f #pm %.2f%%'%('EWK',s.Wfractions[ift],s.WfractionsE[ift]/s.Wfractions[ift]*100.0) )
+      fractext.AddText( '%s Scale = %.3f #pm %.2f%%'%('EWK',s.Wscales[ift],s.WscalesE[ift]/s.Wscales[ift]*100.0) )
+      fractext.AddText( 'CHI2 = %.1f  CHI2/NDF=%.1f'%(s.chi2[ift],s.chi2[ift]/s.ndf[ift]) )
     key.Draw("9");
     fractext.Draw("9");
 
     if logscale:
+      print 'Applying log scale'
       ROOT.gPad.SetLogy(ROOT.kTRUE)
 
     # ratio
