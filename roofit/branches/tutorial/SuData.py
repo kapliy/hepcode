@@ -34,7 +34,7 @@ class SuSys:
         # actual histograms
         s.h = None
         s.stack = None
-        # other post-filled resources
+        # other post-filled resources: symlink to fit results
         s.scales = []
         s.fits   = []
         # Common resources:
@@ -130,7 +130,6 @@ class SuSys:
         """ Puts this SuSys in qcd region based on qcd map
         If the original basedir includes a subfolder, we preserve it
         """
-        print s.qcd
         if s.use_ntuple():
             assert 'descr' in s.qcd and s.qcd['pre'] and len(s.qcd['pre'])==3
             s.pre = s.qcd['pre']
@@ -1150,7 +1149,7 @@ class SuStack:
         assert tmp
         s.fits[key] = tmp[0]
         s.gbg.append((f,hdata,hfixed,hfree,tmp))
-        s.scales[key] = (f.scales[0],f.scalesE[0],f.fractions[0],f.fractionsE[0],f.Wscales[0],f.WscalesE[0],f.Wfractions[0],f.WfractionsE[0])
+        s.scales[key] = (f.scales[0],f.scalesE[0], f.fractions[0],f.fractionsE[0], f.Wscales[0],f.WscalesE[0], f.Wfractions[0],f.WfractionsE[0], f.chi2[0],f.ndf[0])
         return s.scale_sys(key,d)
     def histo(s,name,hname,d,norm=None):
         """ generic function to return histogram for a particular subsample """
