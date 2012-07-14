@@ -349,7 +349,7 @@ spR = SuPlot()
 spR.bootstrap(do_unfold=False,
               unfold={'sysdir':tightlvl+'nominal'+jetlvl,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
               charge=q,var=opts.var,histo=opts.hsource,
-              sysdir=[tightlvl+'nominal'+jetlvl,tightlvl+'nominal'+jetlvl,'isofail'+jetlvl],subdir='st_w_final',basedir='baseline',   #FIXME:isowind
+              sysdir=[tightlvl+'nominal'+jetlvl,tightlvl+'nominal'+jetlvl,'isowind'+jetlvl],subdir='st_w_final',basedir='baseline',   #FIXME:isowind
               qcd={'var':'met','nbins':100,'min':0,'max':100,'metfit':'metfit','forcenominal':False})
 SuStack.QCD_SYS_SCALES = opts.metallsys
 SuStack.QCD_TF_FITTER = True
@@ -666,7 +666,7 @@ if mode=='ALL' or mode=='all':
     if False:
         plots = ['lepton_absetav','lpt','met','wmt']
         plot_stacks(spR.clone(),plots,m=1,qs=(2,))
-    if False: # inclusive reco-level and truth-level asymmetry
+    if True: # inclusive reco-level and truth-level asymmetry
         plot_any(spR.clone(),spT.clone(),m=20,do_unfold=True,do_errorsDA=True,do_summary=True)
         plot_any(spR.clone(),None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False)
         if False: # validate TH1 vs ntuple MC-only asymmetries. Small difference see in truth tree -not sure why

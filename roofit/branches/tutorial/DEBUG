@@ -1,13 +1,9 @@
 #!/bin/bash
 
-input=/share/t3data3/antonk/ana/ana_v29D_04292012_DtoM_unfold_stacoCB_all
-input=/share/t3data3/antonk/ana/ana_v29D_06252012_DtoM_maxiso_msmetfx_jetordr_stacoCB_all  # fixed jet met recomp (orijets), propagate MCP smear/scale to met, ALL NEW classes - charge-dependent efficiency, new JES/JER etc
-input=/share/t3data3/antonk/ana/ana_v29D_06302012_DtoM_maxiso_msmetfx_jetordr_29D_stacoCB_all
-input=/share/t3data3/antonk/ana/ana_v29G_07072012_DtoM_jerjes_stacoCB_all  # includes bugfix for KC systematics (tight was actully doing default); new jerjes studies (rawjet vs caljet); new pileup histo; fixed lauren's bug average_mu was rounded off to int; V29G from tier3 xrootd (copied); removed overlap removal for met propagation; 
-input=/share/t3data3/antonk/ana/ana_v29G_07102012_DtoM_jerjes_wptw_stacoCB_all #  wpt weight applied to histograms; require born level mu/nu status AND require parent match -> very rarely get two muons per event!!!
+input=/share/t3data3/antonk/ana/ana_v29G_07102012_DtoM_jerjes_wptw_stacoCB_all 
 
 # RESURRECTING NTUPLE-BASED PLOTTING:
-./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso20/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --cut "mcw*puw*effw*trigw*wptw" -m ALL --bgsig 2 --bgewk 2 --bgqcd 3 --metallsys
+./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso20/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --cut "mcw*puw*effw*trigw*wptw" -m ALL --bgsig 5 --bgewk 5 --bgqcd 3 #--metallsys
 
 #ANTONIO
 #./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso40/l_pt<0.1 && etiso30corr/l_pt<0.1 && met>25.0 && l_pt>20.0 && l_pt<30.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --cut "mcw*puw*effw*trigw" -m ALL --bgsig 2 --bgqcd 0 --refline 0.0,3.0 #--metallsys #d0sig was 10, then was fabs(d0sig)<5.0
