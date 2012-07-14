@@ -60,10 +60,10 @@ parser.add_option("--preNQ",dest="preNQ",
                   type="string", default="",
                   help="QCD fits: QCD template shape cut (eg, anti-isolation)")
 parser.add_option("--preFN",dest="preFN",
-                  type="string", default="",
+                  type="string", default=None,
                   help="QCD fits: nominal cut for histogram we are plotting + FIT REGION")
 parser.add_option("--preFQ",dest="preFQ",
-                  type="string", default="",
+                  type="string", default=None,
                   help="QCD fits: QCD template shape cut (eg, anti-isolation) + FIT REGION")
 parser.add_option("--cut",dest="cut",
                   type="string", default='mcw*puw', # *effw*trigw
@@ -836,27 +836,34 @@ if mode=='ALL' or mode=='all':
 if mode=='qcdfit': # to study QCD fits
     spR.enable_nominal()
     SuStackElm.new_scales = True
-    #SuSample.debug = True
+    SuSample.debug = True
     var = opts.var
     bin = opts.bin
     etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
+    # QCD fit variable and range
+    lvar = opts.lvar
+    assert len(opts.lbin.split(','))==3,'Wrong format of --lbin argument. Example: 100,-2.5,2.5'
+    nbins = int(opts.lbin.split(',')[0])
+    lmin = float(opts.lbin.split(',')[1])
+    lmax = float(opts.lbin.split(',')[2])
+    lpre = '%s>=%.2f && %s<=%.2f'%(lvar,lmin,lvar,lmax)
     # cut string for the ntuple
     x= ''
     if opts.extra!=None:
         ie = int(opts.extra)
-        x = ' && fabs(l_eta)>=%.3f && fabs(l_eta)<=%.3f'%(etabins[ie],etabins[ie+1])
-    preNN = opts.preNN + x
-    preNQ = opts.preNQ + x
-    preFN = opts.preFN + x
-    preFQ = opts.preFQ + x
+        x = ' && fabs(l_eta)>=%.2f && fabs(l_eta)<=%.2f'%(etabins[ie],etabins[ie+1])
+    preNN = opts.preNN + x   # regular cut
+    if opts.preFN!=None:     # qcd cut
+        preFN = opts.preFN + x
+    else:
+        preFN = prunesub(opts.preNN,lvar,lpre) + x
+    preNQ = opts.preNQ + x   # regular cut (fit region)
+    if opts.preFQ!=None:     # qcd cut (fit region)
+        preFQ = opts.preFQ + x
+    else:
+        preFQ = prunesub(opts.preNQ,lvar,lpre) + x
     presN = (preNN,preNN,preNQ) # pre strings for normal plots   (e.g., nominal or anti-isolation)
     presF = (preFN,preFN,preFQ) # pre strings for QCD fit region (e.g., lowering MET cut to zero)
-    # QCD fit variable and range
-    lvar = opts.lvar
-    assert len(opts.lbin.split(','))==3,'Wrong format of --lbin argument. Example: 100,-2.5,2.5'
-    nbins = int(opts.lbin.split(',')[1])
-    lmin = float(opts.lbin.split(',')[1])
-    lmax = float(opts.lbin.split(',')[2])
     qcdadd={'var':lvar,'nbins':nbins,'min':lmin,'max':lmax,'log':opts.llog,'descr':'X','pre':presF}
     weight = opts.cut
     plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=opts.charge,m=0,name=po.get_flagsum()+'_'+opts.lvar+'_'+opts.lbin)
