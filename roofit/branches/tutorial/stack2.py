@@ -430,6 +430,7 @@ def plot_stack(spR2,var,bin=None,q=2,m=0,new_scales=None,name=''):
     hdata = po.data('data',spR2.clone(q=q),leg=leg)
     c.plotStack(hstack,hdata,mode=m,leg=leg,height=1.7)
     OMAP.append(c)
+    return hdata,hstack
 
 def plot_stacks(spR2,histos,bin=None,m=0,new_scales=None,name='',qs=(0,1,2)):
     """ A wrapper to make multiple stack plots for variables listed in histos[] array """
@@ -865,10 +866,38 @@ if mode=='qcdfit': # to study QCD fits
     presN = (preNN,preNN,preNQ) # pre strings for normal plots   (e.g., nominal or anti-isolation)
     presF = (preFN,preFN,preFQ) # pre strings for QCD fit region (e.g., lowering MET cut to zero)
     qcdadd={'var':lvar,'nbins':nbins,'min':lmin,'max':lmax,'log':opts.llog,'descr':'X','pre':presF}
-    qcdadd['etabins']=True  #FIXME: this is only for QCD shape calculation and comparison
+    PLOT_ETA_NORMS = True #this is only for QCD shape calculation and comparison
+    if PLOT_ETA_NORMS:
+        qcdadd['etabins']=True
     weight = opts.cut
     #SuSample.GLOBAL_CACHE = None
-    plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,bin=bin,q=opts.charge,m=0,name=po.get_flagsum()+'_'+opts.lvar+'_'+opts.lbin)
+    hdata,hstack = plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,bin=bin,q=opts.charge,m=0,name=po.get_flagsum()+'_'+opts.lvar+'_'+opts.lbin)
+    # BIG LOOP TO SAVE ALL OBJECTS INTO A ROOT FILE:
+    if PLOT_ETA_NORMS:
+        ff = ROOT.TFile.Open("file_"+SuSys.QMAP[q][1]+".root","RECREATE")
+        ff.cd()
+        adir = ff.mkdir(SuSys.QMAP[q][1])
+        adir.cd()
+        hstack = hstack.nominal().stack ; hstack.SetTitle("stack")
+        hdata = hdata.nominal().h ; hdata.SetTitle("data")
+        hdata.Write("data",ROOT.TObject.kOverwrite)
+        NBG = hstack.GetStack().GetLast()
+        for i in xrange(0,NBG):
+            hh =  hstack.GetHists().At(i)  # TList::At(NBG) = top-most
+            if re.search('mc_data_period',hh.GetTitle()): hh.SetTitle('bg_QCD')
+            else:
+                newt = hh.GetTitle()
+                hh.SetTitle(re.sub('mc_mc_','bg_',newt))
+            hh.Write(hh.GetTitle(),ROOT.TObject.kOverwrite)
+        OMAP[-1]._canvas.Write("canvas_eta",ROOT.TObject.kOverwrite)
+        hstack.Write("stack",ROOT.TObject.kOverwrite)
+        # QCD fits
+        for key,val in po.fits.iteritems():
+            savename = po.fitnames[key] #            NEG_Q3S5X5Y5Z2_X_met_0.0to120.0_eta0
+            etabin = savename.split('_')[-1]
+            val._canvas.Write('QCD_FIT_bin'+etabin,ROOT.TObject.kOverwrite)
+        ff.Close()
+        pass
 
 if mode=='2': # signal - directly from MC, or bg-subtracted data - allow application of efficiency histogram
     assert opts.ntuple=='w','Only w ntuple supported for now'
@@ -1432,7 +1461,7 @@ if mode=='99': # Floating QCD normalization
 ####################################
 
 for key,val in po.fits.iteritems():
-    print 'Adding a normalization fit:',key
+    print 'Adding a normalization fit:',po.fitnames[key]
     val.savename = po.fitnames[key]
     OMAP.append(val)
 
