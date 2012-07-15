@@ -746,10 +746,11 @@ class SuSample:
         return dall
     def histo_nt(s,hname,var,bin,cut,path=None,hsource=None,rebin=1.0):
         """ retrieve a particular histogram from ntuple (with cache) """
-        _HSOURCE_SPECIAL = ['lepton_absetav']
+        _HSPECIAL =  []   # special values of var and hsource
+        _HSPECIAL += [('fabs(l_eta)','lepton_absetav')]
         path = path if path else s.path
         key = None
-        if hsource in _HSOURCE_SPECIAL:
+        if hsource=='lepton_absetav' and var=='fabs(l_eta)':
             key = (s.rootpath,s.name,path,var,bin,cut,hsource)
         else:
             key = (s.rootpath,s.name,path,var,bin,cut)
@@ -777,7 +778,7 @@ class SuSample:
             hname = hname + '_' + s.name
             usebin,xtra = True,''
             # special handling to create variable-bin eta histograms:
-            if hsource=='lepton_absetav':
+            if hsource=='lepton_absetav' and var=='fabs(l_eta)':
                 s.habseta = s.make_habseta(hname)
                 usebin = False
                 xtra = ' with special abseta binning'
