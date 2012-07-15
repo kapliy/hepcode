@@ -23,8 +23,9 @@ if True:
     #RES[ebin][lvpair][bgsig] = hfrac
     print >>f,'<HTML><BODY>'
     print >>f,memo,'<BR>'
-    for iq in ('POS',):
-        QMAP = {'POS':'mu+','NEG':'mu-'}
+    for iq in (0,1,2):
+        QMAP = {0:'mu+',1:'mu-',2:'both charges'}
+        print 'Working on: ',QMAP[iq]
         print >>f,'<HR>'
         print >>f,QMAP[iq]
         print >>f,'<HR>'
@@ -42,8 +43,8 @@ if True:
                 print >>f,'<TR>'
                 print >>f, '<TD width="130">',lvar,'('+SIGMAP[bgsig]+')'+'</TD>'
                 for ieta in xrange(0,10+1):
-                    nom = R[ieta]['met'][5]
-                    v =   R[ieta][lvar][bgsig]
+                    nom = R[iq][ieta]['met'][5]
+                    v =   R[iq][ieta][lvar][bgsig]
                     per = (v - nom)/nom*100.0
                     if per>maxv[ieta]: maxv[ieta]=per
                     if v<0 or nom<0:
