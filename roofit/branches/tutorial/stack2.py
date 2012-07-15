@@ -869,7 +869,7 @@ if mode=='qcdfit': # to study QCD fits
     presN = (preNN,preNN,preNQ) # pre strings for normal plots   (e.g., nominal or anti-isolation)
     presF = (preFN,preFN,preFQ) # pre strings for QCD fit region (e.g., lowering MET cut to zero)
     qcdadd={'var':lvar,'nbins':nbins,'min':lmin,'max':lmax,'log':opts.llog,'descr':'X','pre':presF}
-    PLOT_ETA_NORMS = True #this is only for QCD shape calculation and comparison
+    PLOT_ETA_NORMS = False #this is only for QCD shape calculation and comparison [to send to Max]
     if PLOT_ETA_NORMS:
         qcdadd['etabins']=True
     weight = opts.cut
@@ -920,52 +920,53 @@ if mode=='qcdsys': # to study QCD fit systematic due to fitting in different var
     EXC.append( (POS,7,'met',1) )
     RES = {}
     eloop = range(0,len(etabins)-1)  # 0 to 10
-    if opts.extra:
-        eloop = [int(opts.extra),]
-    for ebin in eloop:
-        RES[ebin] = {}
-        for lvpair in LVARS:
-            lvar = lvpair[0]
-            lbin = lvpair[1]
-            RES[ebin][lvar] = {}
-            for bgsig in (1,4,5):
-                # different MC
-                po.choose_sig(bgsig)
-                # QCD fit variable and range
-                assert len(lbin.split(','))==3,'Wrong format of --lbin argument. Example: 100,-2.5,2.5'
-                nbins = int(lbin.split(',')[0])
-                lmin = float(lbin.split(',')[1])
-                lmax = float(lbin.split(',')[2])
-                lpre = '%s>=%.2f && %s<=%.2f'%(lvar,lmin,lvar,lmax)
-                # restrict --pre string to a particular eta bin
-                x = ''
-                ie = ebin
-                x = ' && fabs(l_eta)>=%.2f && fabs(l_eta)<=%.2f'%(etabins[ie],etabins[ie+1])
-                # cut string for the ntuple
-                preNN = opts.preNN + x   # regular cut
-                if opts.preFN!=None:     # qcd cut
-                    preFN = opts.preFN + x
-                else:
-                    preFN = prunesub(opts.preNN,lvar,lpre) + x
-                preNQ = opts.preNQ + x   # regular cut (fit region)
-                if opts.preFQ!=None:     # qcd cut (fit region)
-                    preFQ = opts.preFQ + x
-                else:
-                    preFQ = prunesub(opts.preNQ,lvar,lpre) + x
-                presN = (preNN,preNN,preNQ) # pre strings for normal plots   (e.g., nominal or anti-isolation)
-                presF = (preFN,preFN,preFQ) # pre strings for QCD fit region (e.g., lowering MET cut to zero)
-                qcdadd={'var':lvar,'nbins':nbins,'min':lmin,'max':lmax,'log':opts.llog,'descr':'ebin%d'%ebin,'pre':presF}
-                weight = opts.cut
-                #SuSample.GLOBAL_CACHE = None
-                print '============ RUNNING: ebin/lvar/bgsig =',ebin,lvar,bgsig
-                curex=(opts.charge,ebin,lvar,bgsig)
-                if curex in EXC:
-                    print 'WARNING: skipping',curex
-                    hfrac = -1
-                else:
-                    hdata,hstack = plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,bin=bin,q=opts.charge,m=0,name=po.get_flagsum()+'_'+lvar+'_'+lbin)
-                    hfrac=hstack.nominal().stack_bg_frac()
-                RES[ebin][lvar][bgsig] = hfrac
+    if opts.extra: eloop = [int(opts.extra),]
+    for charge in (0,1,2):
+        RES[charge] = {}
+        for ebin in eloop:
+            RES[charge][ebin] = {}
+            for lvpair in LVARS:
+                lvar = lvpair[0]
+                lbin = lvpair[1]
+                RES[charge][ebin][lvar] = {}
+                for bgsig in (1,4,5):
+                    # different MC
+                    po.choose_sig(bgsig)
+                    # QCD fit variable and range
+                    assert len(lbin.split(','))==3,'Wrong format of --lbin argument. Example: 100,-2.5,2.5'
+                    nbins = int(lbin.split(',')[0])
+                    lmin = float(lbin.split(',')[1])
+                    lmax = float(lbin.split(',')[2])
+                    lpre = '%s>=%.2f && %s<=%.2f'%(lvar,lmin,lvar,lmax)
+                    # restrict --pre string to a particular eta bin
+                    x = ''
+                    ie = ebin
+                    x = ' && fabs(l_eta)>=%.2f && fabs(l_eta)<=%.2f'%(etabins[ie],etabins[ie+1])
+                    # cut string for the ntuple
+                    preNN = opts.preNN + x   # regular cut
+                    if opts.preFN!=None:     # qcd cut
+                        preFN = opts.preFN + x
+                    else:
+                        preFN = prunesub(opts.preNN,lvar,lpre) + x
+                    preNQ = opts.preNQ + x   # regular cut (fit region)
+                    if opts.preFQ!=None:     # qcd cut (fit region)
+                        preFQ = opts.preFQ + x
+                    else:
+                        preFQ = prunesub(opts.preNQ,lvar,lpre) + x
+                    presN = (preNN,preNN,preNQ) # pre strings for normal plots   (e.g., nominal or anti-isolation)
+                    presF = (preFN,preFN,preFQ) # pre strings for QCD fit region (e.g., lowering MET cut to zero)
+                    qcdadd={'var':lvar,'nbins':nbins,'min':lmin,'max':lmax,'log':opts.llog,'descr':'Q%d_ebin%d'%(charge,ebin),'pre':presF}
+                    weight = opts.cut
+                    #SuSample.GLOBAL_CACHE = None
+                    print '============ RUNNING: ebin/lvar/bgsig =',ebin,lvar,bgsig
+                    curex=(charge,ebin,lvar,bgsig)
+                    if curex in EXC:
+                        print 'WARNING: skipping',curex
+                        hfrac = -1
+                    else:
+                        hdata,hstack = plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,bin=bin,q=charge,m=0,name=po.get_flagsum()+'_'+lvar+'_'+lbin)
+                        hfrac=hstack.nominal().stack_bg_frac()
+                    RES[charge][ebin][lvar][bgsig] = hfrac
     import pickle
     pickle.dump( RES, open( "save.pickle", "w" ) )
 
