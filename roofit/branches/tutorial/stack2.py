@@ -865,8 +865,10 @@ if mode=='qcdfit': # to study QCD fits
     presN = (preNN,preNN,preNQ) # pre strings for normal plots   (e.g., nominal or anti-isolation)
     presF = (preFN,preFN,preFQ) # pre strings for QCD fit region (e.g., lowering MET cut to zero)
     qcdadd={'var':lvar,'nbins':nbins,'min':lmin,'max':lmax,'log':opts.llog,'descr':'X','pre':presF}
+    #qcdadd['etabins']=True
     weight = opts.cut
-    plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=opts.charge,m=0,name=po.get_flagsum()+'_'+opts.lvar+'_'+opts.lbin)
+    #SuSample.GLOBAL_CACHE = None
+    plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,bin=bin,q=opts.charge,m=0,name=po.get_flagsum()+'_'+opts.lvar+'_'+opts.lbin)
 
 if mode=='2': # signal - directly from MC, or bg-subtracted data - allow application of efficiency histogram
     assert opts.ntuple=='w','Only w ntuple supported for now'
@@ -1431,7 +1433,7 @@ if mode=='99': # Floating QCD normalization
 
 for key,val in po.fits.iteritems():
     print 'Adding a normalization fit:',key
-    val.savename = key
+    val.savename = po.fitnames[key]
     OMAP.append(val)
 
 # save images
