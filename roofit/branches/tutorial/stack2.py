@@ -853,9 +853,11 @@ if mode=='qcdfit' or mode=='qcdfit_summary': # to study QCD fits
     lpre = '%s>=%.2f && %s<=%.2f'%(lvar,lmin,lvar,lmax)
     # cut string for the ntuple
     x= ''
+    ebin = 999
     if opts.extra!=None:
         ie = int(opts.extra)
         x = ' && fabs(l_eta)>=%.2f && fabs(l_eta)<=%.2f'%(etabins[ie],etabins[ie+1])
+        ebin = ie
     preNN = opts.preNN + x   # regular cut
     if opts.preFN!=None:     # qcd cut
         preFN = opts.preFN + x
@@ -868,13 +870,13 @@ if mode=='qcdfit' or mode=='qcdfit_summary': # to study QCD fits
         preFQ = prunesub(opts.preNQ,lvar,lpre) + x
     presN = (preNN,preNN,preNQ) # pre strings for normal plots   (e.g., nominal or anti-isolation)
     presF = (preFN,preFN,preFQ) # pre strings for QCD fit region (e.g., lowering MET cut to zero)
-    qcdadd={'var':lvar,'nbins':nbins,'min':lmin,'max':lmax,'log':opts.llog,'descr':'X','pre':presF}
+    qcdadd={'var':lvar,'nbins':nbins,'min':lmin,'max':lmax,'log':opts.llog,'descr':'ebin%d'%ebin,'pre':presF}
     PLOT_ETA_NORMS = (mode=='qcdfit_summary')  #this is only for QCD shape calculation and comparison [to send to Max]
     if PLOT_ETA_NORMS:
         qcdadd['etabins']=True
     weight = opts.cut
     #SuSample.GLOBAL_CACHE = None
-    hdata,hstack = plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,bin=bin,q=opts.charge,m=0,name=po.get_flagsum()+'_'+opts.lvar+'_'+opts.lbin)
+    hdata,hstack = plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,bin=bin,q=opts.charge,m=0,name='ebin%d'%ebin+'_'+po.get_flagsum()+'_'+opts.lvar+'_'+opts.lbin)
     # BIG LOOP TO SAVE ALL OBJECTS INTO A ROOT FILE:
     if PLOT_ETA_NORMS:
         ff = ROOT.TFile.Open("file_"+SuSys.QMAP[q][1]+".root","RECREATE")
@@ -955,16 +957,16 @@ if mode=='qcdsys': # to study QCD fit systematic due to fitting in different var
                         preFQ = prunesub(opts.preNQ,lvar,lpre) + x
                     presN = (preNN,preNN,preNQ) # pre strings for normal plots   (e.g., nominal or anti-isolation)
                     presF = (preFN,preFN,preFQ) # pre strings for QCD fit region (e.g., lowering MET cut to zero)
-                    qcdadd={'var':lvar,'nbins':nbins,'min':lmin,'max':lmax,'log':opts.llog,'descr':'Q%d_ebin%d'%(charge,ebin),'pre':presF}
+                    qcdadd={'var':lvar,'nbins':nbins,'min':lmin,'max':lmax,'log':opts.llog,'descr':'ebin%d'%ebin,'pre':presF}
                     weight = opts.cut
                     #SuSample.GLOBAL_CACHE = None
-                    print '============ RUNNING: ebin/lvar/bgsig =',ebin,lvar,bgsig
+                    print '============ RUNNING: Q/ebin/lvar/bgsig =',charge,ebin,lvar,bgsig
                     curex=(charge,ebin,lvar,bgsig)
                     if curex in EXC:
                         print 'WARNING: skipping',curex
                         hfrac = -1
                     else:
-                        hdata,hstack = plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,bin=bin,q=charge,m=0,name=po.get_flagsum()+'_'+lvar+'_'+lbin)
+                        hdata,hstack = plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,bin=bin,q=charge,m=0,name='ebin%d'%ebin+'_'+po.get_flagsum()+'_'+lvar+'_'+lbin)
                         hfrac=hstack.nominal().stack_bg_frac()
                     RES[charge][ebin][lvar][bgsig] = hfrac
     import pickle
