@@ -146,6 +146,9 @@ class SuSys:
     def is_sliced(s):
         """ Returns True if s.histo represents a folder of histograms in eta-slices """
         return re.search('bin_',s.histo) if s.histo else False
+    def is_ntuple_etabins(s):
+        """ Returns True if we are doing a qcd fit in |eta| bins """
+        return s.use_ntuple() and 'etabins' in s.qcd
     def clone(s,sysdir=None,sysdir_mc=None,subdir=None,subdir_mc=None,basedir=None,
               qcderr=None,qcdadd=None,name=None,q=None,histo=None,unfold=None,unfdir=None,unfhisto=None,
               ntuple=None,path=None,var=None,bin=None,pre=None,weight=None,
@@ -1080,6 +1083,17 @@ class SuStack:
                 res.append(s.get_scale(dtmp))
             # duplicate first/last bin scales for underflow/overflow scale
             return [res[0],] + res + [res[-1],]
+        elif d.is_ntuple_etabins():
+            etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
+            res = []
+            for ib in xrange(0,len(etabins)-1):
+                x = ' && fabs(l_eta)>=%.2f && fabs(l_eta)<=%.2f'%(etabins[ib],etabins[ib+1])
+                # modify pre string
+                oldpre = d.pre
+                dtmp = d.clone(pre=oldpre+x)
+                res.append(s.get_scale(dtmp))
+            # duplicate first/last bin scales for underflow/overflow scale
+            return [res[0],] + res + [res[-1],]
         return s.get_scale(d)  #same scale factor for all bins
     def scale_sys(s,key,d):
         """ s.scales[key] = (scale,scale_error).
@@ -1145,7 +1159,8 @@ class SuStack:
             tmp = f.drawFitsTF(key,logscale=logscale)
         else:
             f.doFit()
-            tmp = f.drawFits(key)
+            tmp = f.drawFitsTF(key,logscale=logscale)
+            #tmp = f.drawFits(key)
         assert tmp
         s.fits[key] = tmp[0]
         s.gbg.append((f,hdata,hfixed,hfree,tmp))
