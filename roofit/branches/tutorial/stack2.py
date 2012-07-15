@@ -211,7 +211,7 @@ if True:
     pw.adn(name='zmumu_pythia',label='Z#rightarrow#mu#mu',samples=['mc_pythia_zmumu'],color=ROOT.kRed,flags=['bg','mc','ewk','zmumu'])
     pw.adn(name='zmumu_powheg_pythia',label='Z#rightarrow#mu#mu',samples='mc_powheg_pythia_zmumu',color=ROOT.kRed,flags=['bg','mc','ewk','zmumu'])
     #DYAN (Zll = 15 .. 60 GeV):
-    #pw.add(name='dyan_pythia',label='Drell-Yan',samples='mc_pythia_dyan',color=156,flags=['bg','mc','ewk','dyan'])
+    pw.add(name='dyan_pythia',label='Drell-Yan',samples='mc_pythia_dyan',color=156,flags=['bg','mc','ewk','dyan'])
     #DIBOSON:
     pw.add(name='WW/WZ/ZZ',samples=['mc_herwig_ww','mc_herwig_wz','mc_herwig_zz'],color=11,flags=['bg','mc','ewk','diboson'])
     #EWK SEL: (defaults to alpgen, wherever possible)
@@ -238,7 +238,7 @@ if True:
     elif opts.bgewk==5: # powheg/pythia
         pw.choose_wtaunu(5)
         pw.choose_zmumu(5)
-        pw.choose_ztautau(2) #NA
+        pw.choose_ztautau(5) #NA
     else:
         assert False,'Unknown bgewk option: %s'%opts.bgewk
     #QCD:
@@ -882,14 +882,20 @@ if mode=='qcdfit': # to study QCD fits
         hdata = hdata.nominal().h ; hdata.SetTitle("data")
         hdata.Write("data",ROOT.TObject.kOverwrite)
         NBG = hstack.GetStack().GetLast()
-        for i in xrange(0,NBG):
+        for i in xrange(0,NBG+1):
             hh =  hstack.GetHists().At(i)  # TList::At(NBG) = top-most
             if re.search('mc_data_period',hh.GetTitle()): hh.SetTitle('bg_QCD')
             else:
                 newt = hh.GetTitle()
                 hh.SetTitle(re.sub('mc_mc_','bg_',newt))
+            if hh.GetTitle()=='bg_herwig_ww': hh.SetTitle('bg_herwig_diboson')
+            if hh.GetTitle()=='bg_pythia_dyan': hh.SetTitle('bg_pythia_DrellYan')
+            if hh.GetTitle()=='bg_powheg_pythia_wplustaunu': hh.SetTitle('bg_powheg_pythia_wtaunu')
+            if hh.GetTitle()=='bg_powheg_pythia_wmintaunu': hh.SetTitle('bg_powheg_pythia_wtaunu')
+            if hh.GetTitle()=='bg_powheg_pythia_wplusmunu': hh.SetTitle('bg_powheg_pythia_wmunu')
+            if hh.GetTitle()=='bg_powheg_pythia_wminmunu': hh.SetTitle('bg_powheg_pythia_wmunu')
             hh.Write(hh.GetTitle(),ROOT.TObject.kOverwrite)
-        OMAP[-1]._canvas.Write("canvas_eta",ROOT.TObject.kOverwrite)
+        OMAP[-1]._canvas.Write("canvas_stack",ROOT.TObject.kOverwrite)
         hstack.Write("stack",ROOT.TObject.kOverwrite)
         # QCD fits
         for key,val in po.fits.iteritems():
