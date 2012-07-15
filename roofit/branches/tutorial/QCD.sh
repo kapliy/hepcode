@@ -26,7 +26,7 @@ echo "Processing job id = $id"
 source bashmap.sh
 
 input=/share/t3data3/antonk/ana/ana_v29G_07102012_DtoM_jerjes_wptw_stacoCB_all
-bgqcd=0
+bgqcd=3
 
 i=0
 preNN='ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2'
@@ -40,13 +40,14 @@ ivar=0
 gput tagv ${ivar} met "--var met --bin 200,0,200" ; ((ivar++))
 gput tagv ${ivar} w_mt "--var w_mt --bin 200,0,200" ; ((ivar++))
 gput tagv ${ivar} l_pt "--var l_pt --bin 200,0,200" ; ((ivar++))
+gput tagv ${ivar} l_abseta "--var fabs\(l_eta\) --bin 10,0,2.5 --hsource lepton_absetav" ; ((ivar++))
 
 irun=0
 for itag in `gkeys tagz`; do
     tag=`ggeta tagz $itag`
     opts=`ggetb tagz $itag`
-    for iq in 0 1 2; do
-	for bgsig in 0 1 4 5; do
+    for iq in 0 1; do
+	for bgsig in 1 4 5; do
 	    for ivar in `gkeys tagv`; do
 		optsv=`ggetb tagv $ivar`
 		if [ "$id" == "$irun" -o "$id" == "ALL" ]; then
