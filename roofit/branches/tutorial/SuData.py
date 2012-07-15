@@ -37,6 +37,7 @@ class SuSys:
         # other post-filled resources: symlink to fit results
         s.scales = []
         s.fits   = []
+        s.fitnames = []
         # Common resources:
         s.name = name
         s.charge = charge
@@ -148,7 +149,7 @@ class SuSys:
         return re.search('bin_',s.histo) if s.histo else False
     def is_ntuple_etabins(s):
         """ Returns True if we are doing a qcd fit in |eta| bins """
-        return s.use_ntuple() and 'etabins' in s.qcd
+        return s.use_ntuple() and 'etabins' in s.qcd and s.qcd['etabins']==True
     def clone(s,sysdir=None,sysdir_mc=None,subdir=None,subdir_mc=None,basedir=None,
               qcderr=None,qcdadd=None,name=None,q=None,histo=None,unfold=None,unfdir=None,unfhisto=None,
               ntuple=None,path=None,var=None,bin=None,pre=None,weight=None,
@@ -200,10 +201,10 @@ class SuSys:
         """ Updates histogram name and ntuple-expression (aka variable)
         In reality, only one of these applies for a given SuData instance.
         """
-        if bin:
+        if bin: #ntuple
             s.var = histo
             s.bin = bin
-        else:
+        else:   #histo
             s.histo = histo
         return True
     def Add(s,o,dd=1.0):
@@ -240,7 +241,7 @@ class SuSys:
     def Scale(s,c):
         """ special treatment: if c is a list, then the scales are to be applied per-bin """
         if isinstance(c,list) or isinstance(c,tuple):
-            assert len(c)==s.h.GetNbinsX()+2
+            assert len(c)==s.h.GetNbinsX()+2,'Found scale array of size=%d, but need %d'%(len(c),s.h.GetNbinsX()+2)
             for i,v in enumerate(c):
                 s.h.SetBinContent(i, s.h.GetBinContent(i)*v)
                 s.h.SetBinError(i, s.h.GetBinError(i)*v)
@@ -745,12 +746,18 @@ class SuSample:
         return dall
     def histo_nt(s,hname,var,bin,cut,path=None,hsource=None,rebin=1.0):
         """ retrieve a particular histogram from ntuple (with cache) """
+        _HSOURCE_SPECIAL = ['lepton_absetav']
         path = path if path else s.path
-        key = (s.rootpath,s.name,path,var,bin,cut)
+        key = None
+        if hsource in _HSOURCE_SPECIAL:
+            key = (s.rootpath,s.name,path,var,bin,cut,hsource)
+        else:
+            key = (s.rootpath,s.name,path,var,bin,cut)
+        assert key
         if False:
             key_str = re.sub(r'[^\w]', '_', '_'.join(key))
         else:
-            key_str_all =  '_'.join(key)
+            key_str_all =  '_'.join([str(zz) for zz in key])
             key_str = md5(key_str_all).hexdigest()
         needs_saving = s.GLOBAL_CACHE
         if s.GLOBAL_CACHE and os.path.exists(s.GLOBAL_CACHE):
@@ -888,6 +895,7 @@ class SuStack:
         # garbage collector
         s.scales = {} # cache of QCD normalization scales
         s.gbg = []
+        s.fitnames = {}
         s.fits = {}
         # for unfolding:
         s.funfold = {}
@@ -1084,14 +1092,23 @@ class SuStack:
             # duplicate first/last bin scales for underflow/overflow scale
             return [res[0],] + res + [res[-1],]
         elif d.is_ntuple_etabins():
+            print 'INFO: creating QCD scales in eta bins'
             etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
             res = []
+            oldpre = [zz for zz in d.pre]
+            oldpreqcd = [zz for zz in d.qcd['pre']]
             for ib in xrange(0,len(etabins)-1):
-                x = ' && fabs(l_eta)>=%.2f && fabs(l_eta)<=%.2f'%(etabins[ib],etabins[ib+1])
-                # modify pre string
-                oldpre = d.pre
-                dtmp = d.clone(pre=oldpre+x)
-                res.append(s.get_scale(dtmp))
+                ibb = ib
+                ibb = 0
+                x = ' && fabs(l_eta)>=%.2f && fabs(l_eta)<=%.2f'%(etabins[ibb],etabins[ibb+1])
+                # modify pre string - but via s.qcd['pre'] because that's what will be used!
+                assert len(d.pre)==3
+                assert len(d.qcd['pre'])==3
+                newpre = [zz+x for zz in oldpre]
+                dtmp = d.clone(pre=newpre)
+                newpre = [zz+x for zz in oldpreqcd]
+                d.qcd['pre'] = newpre
+                res.append(s.get_scale(dtmp,fitsfx='_eta%d'%ib))
             # duplicate first/last bin scales for underflow/overflow scale
             return [res[0],] + res + [res[-1],]
         return s.get_scale(d)  #same scale factor for all bins
@@ -1115,7 +1132,7 @@ class SuStack:
         d.scales += s.scales[key] # includes all scales, fractions, and errors
         d.fits   += [s.fits[key]]
         return res
-    def get_scale(s,d):
+    def get_scale(s,d,fitsfx=''):
         """ A lookup cache of QCD scale values
         Note: d is an instance of SuSys, not SuPlot
         """
@@ -1124,10 +1141,13 @@ class SuStack:
         d2.qcd_region()
         # key encodes stack composition + path to metfit histogram with histo name + range of fit
         key = None
-        if d2.use_ntuple(): # todo: add d2.path if we end up using unbinned ntuples for systematics
-            key = SuSys.QMAP[d2.charge][1]+'_'+s.get_flagsum()+'_'+d2.qcd['descr']+'_'+d2.qcd['var']+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max'])
+        fitname = None
+        if d2.use_ntuple():
+            key = SuSys.QMAP[d2.charge][1]+'_'+s.get_flagsum()+'_'+d2.qcd['descr']+'_'+d2.qcd['var']+d2.pre[2]+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max'])
+            fitname = SuSys.QMAP[d2.charge][1]+'_'+s.get_flagsum()+'_'+d2.qcd['descr']+'_'+d2.qcd['var']+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max'])+fitsfx
         else:
             key = s.get_flagsum()+'_'+d2.h_path_fname()+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max'])
+            fitname = key
         assert key
         if key in s.scales:
             return s.scale_sys(key,d)
@@ -1162,6 +1182,7 @@ class SuStack:
             tmp = f.drawFitsTF(key,logscale=logscale)
             #tmp = f.drawFits(key)
         assert tmp
+        s.fitnames[key] = fitname
         s.fits[key] = tmp[0]
         s.gbg.append((f,hdata,hfixed,hfree,tmp))
         s.scales[key] = (f.scales[0],f.scalesE[0], f.fractions[0],f.fractionsE[0], f.Wscales[0],f.WscalesE[0], f.Wfractions[0],f.WfractionsE[0], f.chi2[0],f.ndf[0])
