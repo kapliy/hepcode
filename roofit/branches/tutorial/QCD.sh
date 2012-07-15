@@ -26,6 +26,7 @@ echo "Processing job id = $id"
 source bashmap.sh
 
 input=/share/t3data3/antonk/ana/ana_v29G_07102012_DtoM_jerjes_wptw_stacoCB_all
+input=/share/t3data3/antonk/ana/ana_v29G_07112012_DtoM_jerjes_wptw_stacoCB_all
 bgqcd=3
 
 i=0
@@ -47,7 +48,7 @@ irun=0
 for itag in `gkeys tagz`; do
     tag=`ggeta tagz $itag`
     opts=`ggetb tagz $itag`
-    for iq in 0 1; do
+    for iq in 0 1 2; do
 	for bgsig in 1 4 5; do
 	    for ivar in `gkeys tagv`; do
 		optsv=`ggetb tagv $ivar`

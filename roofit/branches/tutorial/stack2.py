@@ -834,7 +834,7 @@ if mode=='ALL' or mode=='all':
         """
         june17_asymmetry()
     
-if mode=='qcdfit': # to study QCD fits
+if mode=='qcdfit' or mode=='qcdfit_summary': # to study QCD fits
     cmd="""
     ./stack2.py --input /share/t3data3/antonk/ana/ana_v29G_07102012_DtoM_jerjes_wptw_stacoCB_all -b --charge 0 --lvar met --lbin 50,0,120 --preNN "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --preNQ "ptiso40/l_pt>0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2 && l_trigEF<0.2" --var 'fabs(l_eta)' --bin 10,0,2.5 --hsource lepton_absetav -o TEST -t aiso_met0to120 --cut mcw*puw*effw*trigw*wptw -m qcdfit --bgsig 5 --bgewk 5 --bgqcd 3
     """
@@ -869,7 +869,7 @@ if mode=='qcdfit': # to study QCD fits
     presN = (preNN,preNN,preNQ) # pre strings for normal plots   (e.g., nominal or anti-isolation)
     presF = (preFN,preFN,preFQ) # pre strings for QCD fit region (e.g., lowering MET cut to zero)
     qcdadd={'var':lvar,'nbins':nbins,'min':lmin,'max':lmax,'log':opts.llog,'descr':'X','pre':presF}
-    PLOT_ETA_NORMS = False #this is only for QCD shape calculation and comparison [to send to Max]
+    PLOT_ETA_NORMS = (mode=='qcdfit_summary')  #this is only for QCD shape calculation and comparison [to send to Max]
     if PLOT_ETA_NORMS:
         qcdadd['etabins']=True
     weight = opts.cut
