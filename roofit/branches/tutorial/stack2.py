@@ -835,6 +835,9 @@ if mode=='ALL' or mode=='all':
         june17_asymmetry()
     
 if mode=='qcdfit': # to study QCD fits
+    cmd="""
+    ./stack2.py --input /share/t3data3/antonk/ana/ana_v29G_07102012_DtoM_jerjes_wptw_stacoCB_all -b --charge 0 --lvar met --lbin 50,0,120 --preNN "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --preNQ "ptiso40/l_pt>0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2 && l_trigEF<0.2" --var 'fabs(l_eta)' --bin 10,0,2.5 --hsource lepton_absetav -o TEST -t aiso_met0to120 --cut mcw*puw*effw*trigw*wptw -m qcdfit --bgsig 5 --bgewk 5 --bgqcd 3
+    """
     spR.enable_nominal()
     SuStackElm.new_scales = True
     SuSample.debug = True
@@ -904,6 +907,67 @@ if mode=='qcdfit': # to study QCD fits
             val._canvas.Write('QCD_FIT_bin'+etabin,ROOT.TObject.kOverwrite)
         ff.Close()
         pass
+
+if mode=='qcdsys': # to study QCD fit systematic due to fitting in different variables, in eta bins
+    spR.enable_nominal()
+    SuStackElm.new_scales = True
+    #SuSample.debug = True
+    var = opts.var
+    bin = opts.bin
+    etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
+    LVARS = [ ('met','50,0,120') , ('w_mt','50,40,120') , ('l_pt','50,20,70') ]
+    EXC = []
+    EXC.append( (POS,7,'met',1) )
+    RES = {}
+    eloop = range(0,len(etabins)-1)  # 0 to 10
+    if opts.extra:
+        eloop = [int(opts.extra),]
+    for ebin in eloop:
+        RES[ebin] = {}
+        for lvpair in LVARS:
+            lvar = lvpair[0]
+            lbin = lvpair[1]
+            RES[ebin][lvar] = {}
+            for bgsig in (1,4,5):
+                # different MC
+                po.choose_sig(bgsig)
+                # QCD fit variable and range
+                assert len(lbin.split(','))==3,'Wrong format of --lbin argument. Example: 100,-2.5,2.5'
+                nbins = int(lbin.split(',')[0])
+                lmin = float(lbin.split(',')[1])
+                lmax = float(lbin.split(',')[2])
+                lpre = '%s>=%.2f && %s<=%.2f'%(lvar,lmin,lvar,lmax)
+                # restrict --pre string to a particular eta bin
+                x = ''
+                ie = ebin
+                x = ' && fabs(l_eta)>=%.2f && fabs(l_eta)<=%.2f'%(etabins[ie],etabins[ie+1])
+                # cut string for the ntuple
+                preNN = opts.preNN + x   # regular cut
+                if opts.preFN!=None:     # qcd cut
+                    preFN = opts.preFN + x
+                else:
+                    preFN = prunesub(opts.preNN,lvar,lpre) + x
+                preNQ = opts.preNQ + x   # regular cut (fit region)
+                if opts.preFQ!=None:     # qcd cut (fit region)
+                    preFQ = opts.preFQ + x
+                else:
+                    preFQ = prunesub(opts.preNQ,lvar,lpre) + x
+                presN = (preNN,preNN,preNQ) # pre strings for normal plots   (e.g., nominal or anti-isolation)
+                presF = (preFN,preFN,preFQ) # pre strings for QCD fit region (e.g., lowering MET cut to zero)
+                qcdadd={'var':lvar,'nbins':nbins,'min':lmin,'max':lmax,'log':opts.llog,'descr':'ebin%d'%ebin,'pre':presF}
+                weight = opts.cut
+                #SuSample.GLOBAL_CACHE = None
+                print '============ RUNNING: ebin/lvar/bgsig =',ebin,lvar,bgsig
+                curex=(opts.charge,ebin,lvar,bgsig)
+                if curex in EXC:
+                    print 'WARNING: skipping',curex
+                    hfrac = -1
+                else:
+                    hdata,hstack = plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,bin=bin,q=opts.charge,m=0,name=po.get_flagsum()+'_'+lvar+'_'+lbin)
+                    hfrac=hstack.nominal().stack_bg_frac()
+                RES[ebin][lvar][bgsig] = hfrac
+    import pickle
+    pickle.dump( RES, open( "save.pickle", "w" ) )
 
 if mode=='2': # signal - directly from MC, or bg-subtracted data - allow application of efficiency histogram
     assert opts.ntuple=='w','Only w ntuple supported for now'
