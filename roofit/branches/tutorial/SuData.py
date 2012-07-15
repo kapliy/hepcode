@@ -1100,7 +1100,7 @@ class SuStack:
             oldpreqcd = [zz for zz in d.qcd['pre']]
             for ib in xrange(0,len(etabins)-1):
                 ibb = ib
-                ibb = 0
+                #ibb = 0
                 x = ' && fabs(l_eta)>=%.2f && fabs(l_eta)<=%.2f'%(etabins[ibb],etabins[ibb+1])
                 # modify pre string - but via s.qcd['pre'] because that's what will be used!
                 assert len(d.pre)==3
