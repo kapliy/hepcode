@@ -7,7 +7,7 @@ due to different signal MC or different fit variables.
 
 memo = """
 <pre>
-In each cell, the first number is the QCD fraction (multiplied by 100%) in the region MET=25..120 GeV.
+In each cell, the first number is the QCD fraction (multiplied by 100%) in the region MET=25..200 GeV.
 The second number is the relative deviation of QCD fraction with respect to the nominal case (Powheg+Pythia MET fit)
 </pre>
 """
