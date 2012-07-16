@@ -853,7 +853,7 @@ if mode=='qcdfit' or mode=='qcdfit_summary': # to study QCD fits
     lpre = '%s>=%.2f && %s<=%.2f'%(lvar,lmin,lvar,lmax)
     # cut string for the ntuple
     x= ''
-    ebin = 999
+    ebin = 99
     if opts.extra!=None:
         ie = int(opts.extra)
         x = ' && fabs(l_eta)>=%.2f && fabs(l_eta)<=%.2f'%(etabins[ie],etabins[ie+1])

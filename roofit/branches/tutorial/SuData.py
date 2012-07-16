@@ -577,7 +577,7 @@ class SuSample:
     Encapsulates a single TChain
     For example: jimmy_wmunu_np0
     """
-    GLOBAL_CACHE = 'cache.root' # if None, global cache is disabled
+    GLOBAL_CACHE = 'cache/%s.root' # if None, global cache is disabled
     cache = None
     rootpath = None
     lumi = None
@@ -761,10 +761,10 @@ class SuSample:
             key_str_all =  '_'.join([str(zz) for zz in key])
             key_str = md5(key_str_all).hexdigest()
         needs_saving = s.GLOBAL_CACHE
-        if s.GLOBAL_CACHE and os.path.exists(s.GLOBAL_CACHE):
+        if s.GLOBAL_CACHE and os.path.exists(s.GLOBAL_CACHE%s.name):
             #if True:
-            with FileLock(s.GLOBAL_CACHE):
-                s.cache = ROOT.TFile.Open(s.GLOBAL_CACHE,'READ')
+            with FileLock(s.GLOBAL_CACHE%s.name):
+                s.cache = ROOT.TFile.Open(s.GLOBAL_CACHE%s.name,'READ')
                 assert s.cache and s.cache.IsOpen()
                 if s.cache.Get(key_str):
                     if SuSample.debug==True:
@@ -795,8 +795,8 @@ class SuSample:
             s.data[key] = ROOT.gDirectory.Get(hname).Clone()
             if needs_saving:
                 #print 'SAVING INTO CACHE:',key
-                with FileLock(s.GLOBAL_CACHE):
-                    s.cache = ROOT.TFile.Open(s.GLOBAL_CACHE,'UPDATE')
+                with FileLock(s.GLOBAL_CACHE%s.name):
+                    s.cache = ROOT.TFile.Open(s.GLOBAL_CACHE%s.name,'UPDATE')
                     assert s.cache and s.cache.IsOpen()
                     s.cache.cd()
                     htmp = s.data[key].Clone()
@@ -1145,7 +1145,7 @@ class SuStack:
         fitname = None
         if d2.use_ntuple():
             key = SuSys.QMAP[d2.charge][1]+'_'+s.get_flagsum()+'_'+d2.qcd['descr']+'_'+d2.qcd['var']+d2.pre[2]+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max'])
-            fitname = SuSys.QMAP[d2.charge][1]+'_'+s.get_flagsum()+'_'+d2.qcd['descr']+'_'+d2.qcd['var']+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max'])+fitsfx
+            fitname = SuSys.QMAP[d2.charge][1]+'_'+d2.qcd['descr']+fitsfx+'_'+s.get_flagsum()+'_'+d2.qcd['var']+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max'])
         else:
             key = s.get_flagsum()+'_'+d2.h_path_fname()+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max'])
             fitname = key
