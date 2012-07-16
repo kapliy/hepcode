@@ -341,15 +341,15 @@ q = opts.charge
 # Reco-level [histo]
 unfmethod = 'RooUnfoldBinByBin'
 unfmethod = 'RooUnfoldBayes'
+#tightlvl = ''
 tightlvl = 'tight_'
-tightlvl = ''
-jetlvl = '_caljet'
+#jetlvl = '_caljet'
 jetlvl = ''
 spR = SuPlot()
 spR.bootstrap(do_unfold=False,
               unfold={'sysdir':tightlvl+'nominal'+jetlvl,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
               charge=q,var=opts.var,histo=opts.hsource,
-              sysdir=[tightlvl+'nominal'+jetlvl,tightlvl+'nominal'+jetlvl,'isowind'+jetlvl],subdir='st_w_final',basedir='baseline',   #FIXME:isowind
+              sysdir=[tightlvl+'nominal'+jetlvl,tightlvl+'nominal'+jetlvl,'isowind'+jetlvl],subdir='st_w_final',basedir='baseline',
               qcd={'var':'met','nbins':100,'min':0,'max':100,'metfit':'metfit','forcenominal':False})
 SuStack.QCD_SYS_SCALES = opts.metallsys
 SuStack.QCD_TF_FITTER = True
