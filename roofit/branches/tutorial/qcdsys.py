@@ -29,28 +29,28 @@ if True:
         print >>f,'<HR>'
         print >>f,QMAP[iq]
         print >>f,'<HR>'
-        print >>f,'<TABLE border="1" CELLPADDING="0" CELLSPACING="1" width="1300">'
+        print >>f,'<TABLE border="1" CELLPADDING="0" CELLSPACING="1" width="1200">'
         print >>f,'<TR>'
-        print >>f, '<TD width="130">|eta| bin</TD>'
+        print >>f, '<TD width="120">|&eta;| bin</TD>'
         for ieta in xrange(0,10+1):
-            print >>f, '<TD width="80">','%.2f&lt;|eta|&lt;%.2f'%(etabins[ieta],etabins[ieta+1]),"</TD>"
+            print >>f, '<TD width="80">','%.2f&lt;|&eta;|&lt;%.2f'%(etabins[ieta],etabins[ieta+1]),"</TD>"
         print >>f,'</TR>'
-        maxv = [-1]*len(etabins)
+        maxv = [0.0]*len(etabins)
         for lvar in ('met','w_mt','l_pt'):
-            SIGMAP = { 1 : "MC@NLO", 4 : "PowHeg+Herwig", 5 : "PowHeg+Pythia" }
+            SIGMAP = { 1 : "MC@NLO", 4 : "PowHeg+Her", 5 : "PowHeg+Pyt" }
             print >>f, '<TR><TD colspan="%d"></TR>'%(len(etabins)+1)
             for bgsig in (5,4,1):
                 print >>f,'<TR>'
-                print >>f, '<TD width="130">',lvar,'('+SIGMAP[bgsig]+')'+'</TD>'
+                print >>f, '<TD width="120">',lvar,'('+SIGMAP[bgsig]+')'+'</TD>'
                 for ieta in xrange(0,10+1):
                     nom = R[iq][ieta]['met'][5]
                     v =   R[iq][ieta][lvar][bgsig]
-                    per = (v - nom)/nom*100.0
-                    if per>maxv[ieta]: maxv[ieta]=per
                     if v<0 or nom<0:
-                        v = -0.01
-                        per = 0
-                    print >>f,'<TD width="80">','%.1f | %s%.1f%%'%(v*100.0,'' if per<0 else '+',per),'</TD>'
+                        print >>f,'<TD width="80">N/A</TD>'
+                    else:
+                        per = (v - nom)/nom*100.0
+                        if abs(per)>abs(maxv[ieta]): maxv[ieta]=per
+                        print >>f,'<TD width="80">','%.1f | %s%.1f%%'%(v*100.0,'' if per<0 else '+',per),'</TD>'
                 print >>f,'</TR>'
         print >>f, '<TR><TD colspan="%d"></TR>'%(len(etabins)+1)
         print >>f, '<TR>'
