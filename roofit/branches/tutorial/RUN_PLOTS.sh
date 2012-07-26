@@ -69,7 +69,7 @@ for itag in `gkeys tags`; do
 	    echo "#PBS -l cput=07:00:00" >> $J
 	    echo "#PBS -l walltime=07:00:00" >> $J
 	    echo "source ~/.bashrc" >> $J
-	    echo "anaquick2" >> $J
+	    echo "anaquick5" >> $J
 	    echo "cd ${ROOTDIR}" >> $J
 	    cmd="./stack2.py -b -t ${tag} --antondb ${antondb} ${tt} -q ${q} ${opts}"
 	    echo $cmd

@@ -447,16 +447,17 @@ class SuPlot:
             add('met_scalesofttermsdown',prep+'met_scalesofttermsdown')
             next('MET_SCALE')
         # QCD normalization
-        if True:
+        if False:
             add3('qcdup',1.5,prep+'nominal')
             add3('qcddown',0.5,prep+'nominal')
             next('QCD_FRAC')
         # unfolding systematic
         if 'mc' in nom.unfold:
-            add4('unfold_pythia','pythia',prep+'nominal')
+            #add4('unfold_pythia','pythia',prep+'nominal')
             add4('unfold_mcnlo','mcnlo',prep+'nominal')
-            add4('unfold_alpgen_herwig','alpgen_herwig',prep+'nominal')
+            #add4('unfold_alpgen_herwig','alpgen_herwig',prep+'nominal')
             add4('unfold_powheg_pythia','powheg_pythia',prep+'nominal')
+            add4('unfold_powheg_herwig','powheg_herwig',prep+'nominal')
             next('UNFOLDING')
         assert len(s.sys)==len(s.groups)
         print 'Created systematic variations: N =',len(s.sys)
@@ -504,6 +505,7 @@ class SuPlot:
         pass
     def summary_bin(s,b=None,fname=None):
         """ Prints relative deviation of various systematics in a given bin, compared with the statistical uncertainty """
+        MAKE_PLOT = True
         nom = s.nominal_h()
         bins = b if b else range(1,nom.GetNbinsX()+1)
         oldsys,f = sys.stdout,None
@@ -526,23 +528,53 @@ class SuPlot:
             err  = 100.0*(nom.GetBinError(b))/nom.GetBinContent(b) if nom.GetBinContent(b) else -999
             print '<TD>%.2f</TD>'%(err)
         print '</TR>'
+        Cc,Hh,Ll = None,[],None
+        colorlist = [2,3,4,5,6,20,28,41,46]
+        colorlist += colorlist
+        colorlist += colorlist
+        markerlist = [20,21,22,23]
+        markerlist+= markerlist
+        markerlist+= markerlist
+        if MAKE_PLOT:
+            Cc = ROOT.TCanvas('SYSC','SYSC',800,600)
+            Cc.cd()
+            for ig,hss in enumerate(s.sys[1:]):
+                Hh.append( SuSample.make_habseta('hsys%d'%ig) )
+                Hh[-1].SetLineColor(colorlist[ig])
+                #Hh[-1].SetFillColor(colorlist[ig])
+                Hh[-1].SetMarkerColor(colorlist[ig])
+                Hh[-1].SetMarkerStyle(markerlist[ig])
+            Ll = ROOT.TLegend(0.75,0.60,0.92,0.88,'Systematics',"brNDC")
+            Ll.SetFillColor(0)
+            Ll.SetHeader('Systematics:')
         for ig,hss in enumerate(s.sys[1:]):
             print '<TR><TD colspan="%d">'%(len(bins)+1)
             print s.groups[ig+1]
             print '</TD></TR>'
+            maxd = [0]*(len(bins)+2)
             for hs in hss:
                 name = hs.name
                 print '<TR>'
                 print '<TD>%s</TD>'%name
                 for b in bins:
                     diff = 100.0*(hs.h.GetBinContent(b) - nom.GetBinContent(b))/nom.GetBinContent(b) if nom.GetBinContent(b) else -999
-                    print '<TD>%.2f</TD>'%diff
+                    maxd[b] = maxd[b] if maxd[b]>abs(diff) else abs(diff)
                 print '</TR>'
+            if MAKE_PLOT:
+                [ Hh[ig].SetBinContent(b,maxd[b]) for b in bins ]
+                Ll.AddEntry(Hh[ig],s.groups[ig+1],'LP')
         print '</TABLE>'
         print '</BODY></HTML>'
         sys.stdout = oldsys
         if f: f.close()
-        #print 'http://rendera.heroku.com/'
+        if MAKE_PLOT:
+            Hh[0].Draw('C P0')
+            Hh[0].GetYaxis().SetRangeUser(0.0,4.0)
+            Hh[0].GetYaxis().SetTitle('Percentage deviation')
+            Hh[0].GetXaxis().SetTitle('|#eta|')
+            [ih.Draw('C P0 same') for ih in Hh[1:]]
+            Ll.Draw('same')
+            Cc.SaveAs("SYSC.png")
     def update_var(s,histo,bin=None):
         """ Updates histogram name and ntuple-expression (aka variable)
         In reality, only one of these applies for a given SuData instance.

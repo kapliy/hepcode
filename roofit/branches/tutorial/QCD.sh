@@ -9,7 +9,7 @@ if [ -z "$SITEROOT" ]; then
     echo "Sourcing environment..."
     echo $HOSTNAME
     source /home/antonk/.bashrc
-    anaquick
+    anaquick5
     cd /home/antonk/roofit
     date
     echo "Running id = ${id}"
@@ -25,17 +25,17 @@ fi
 echo "Processing job id = $id"
 source bashmap.sh
 
-input=/share/t3data3/antonk/ana/ana_v29G_07102012_DtoM_jerjes_wptw_stacoCB_all
 input=/share/t3data3/antonk/ana/ana_v29G_07112012_DtoM_jerjes_wptw_stacoCB_all
+input=/share/t3data3/antonk/ana/ana_v29G_07252012_newROOT_stacoCB_all
 bgqcd=3
 
 i=0
-preNN='ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2'
-preNQ='ptiso40/l_pt>0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2 && l_trigEF<0.2'
-#preNQ='ptiso20/l_pt>0.1 && ptiso20/l_pt<0.2 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2 && l_trigEF<0.2'
+preNN='ptiso40/l_pt<0.1 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2'
+preNQ='ptiso40/l_pt>0.1 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2 && l_trigEF<0.2'
+#preNQ='ptiso20/l_pt>0.1 && ptiso20/l_pt<0.2 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2 && l_trigEF<0.2'
 gput tagz ${i} aiso_met0to120 "--lvar met --lbin 50,0,120 --preNN \"${preNN}\" --preNQ \"${preNQ}\" " ; ((i++))
 gput tagz ${i} aiso_wmt40to120 "--lvar w_mt --lbin 50,40,120 --preNN \"${preNN}\" --preNQ \"${preNQ}\" "  ; ((i++))
-gput tagz ${i} aiso_lpt20to70 "--lvar l_pt --lbin 50,20,70 --preNN \"${preNN}\" --preNQ \"${preNQ}\" "  ; ((i++))
+gput tagz ${i} aiso_lpt25to70 "--lvar l_pt --lbin 50,25,70 --preNN \"${preNN}\" --preNQ \"${preNQ}\" "  ; ((i++))
 #gput tagz ${i} lomet_isor0to1 "--llog --lvar ptiso40/l_pt --lbin 100,0,1 --preNN \"${preNN}\" --preNQ \"${preNQ}\" "  ; ((i++))
 
 ivar=0
