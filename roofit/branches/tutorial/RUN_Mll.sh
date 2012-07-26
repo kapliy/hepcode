@@ -42,7 +42,7 @@ for itag in `gkeys tags`; do
 	    echo "#PBS -l cput=8:00:00" >> $J
 	    echo "#PBS -l walltime=8:00:00" >> $J
 	    echo "source ~/.bashrc" >> $J
-	    echo "anaquick2" >> $J
+	    echo "anaquick5" >> $J
 	    echo "cd ${ROOTDIR}" >> $J
 	    ndata=100000
 	    cmd="./zkolmogorov.py -b --antondb ${antondb} ${opts} --tt ${tt} --region ${reg} --tag ${tag} --ndata $ndata ${xtra}"

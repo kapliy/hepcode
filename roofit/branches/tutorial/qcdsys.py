@@ -12,19 +12,26 @@ The second number is the relative deviation of QCD fraction with respect to the 
 </pre>
 """
 
-import sys,pickle
+import sys,pickle,os
 
 etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
+
+import ROOT
+fupd_name = 'QCD_W_PTCONE4.root'
 
 if True:
     fin = open('save.pickle','r')
     R = pickle.load(fin)
     f = open('index2.html','w')
     #RES[ebin][lvpair][bgsig] = hfrac
+    fupd = None
+    if os.path.exists(fupd_name):
+        fupd = ROOT.TFile.Open(fupd_name,"UPDATE")
     print >>f,'<HTML><BODY>'
     print >>f,memo,'<BR>'
     for iq in (0,1,2):
         QMAP = {0:'mu+',1:'mu-',2:'both charges'}
+        QMAPN = {0:'POS',1:'NEG',2:'ALL'}
         print 'Working on: ',QMAP[iq]
         print >>f,'<HR>'
         print >>f,QMAP[iq]
@@ -59,4 +66,30 @@ if True:
             print >>f, '<TD>%.1f%%</TD>'%maxv[ieta]
         print >>f, '</TR>'
         print >>f,'</TABLE>'
+        if fupd and fupd.IsOpen():
+            STATMAP = [vv/100.0 for vv in maxv][:-1]
+            hh = fupd.Get(QMAPN[iq]+'/bg_QCD')
+            fupd.cd(QMAPN[iq])
+            hup = hh.Clone('bg_QCD_sysup')
+            hup.SetTitle('bg_QCD_sysup')
+            hdown = hh.Clone('bg_QCD_sysdown')
+            hdown.SetTitle('bg_QCD_sysdown')
+            assert (hh.GetNbinsX() == len(STATMAP))
+            for ieta in xrange(0,hh.GetNbinsX()):
+                assert abs(STATMAP[ieta])>=0
+                hup.SetBinContent(ieta+1 , hup.GetBinContent(ieta+1) * (1.0+abs(STATMAP[ieta])))
+                hup.SetBinError(ieta+1 , hup.GetBinError(ieta+1) * (1.0+abs(STATMAP[ieta])))
+                if hup.GetBinContent(ieta+1)<0:
+                    hup.SetBinContent(ieta+1 , 0)
+                    hup.SetBinError(ieta+1 , 0)
+                hdown.SetBinContent(ieta+1 , hdown.GetBinContent(ieta+1) * (1.0-abs(STATMAP[ieta])))
+                hdown.SetBinError(ieta+1 , hdown.GetBinError(ieta+1) * (1.0-abs(STATMAP[ieta])))
+                if hdown.GetBinContent(ieta+1)<0:
+                    hdown.SetBinContent(ieta+1 , 0)
+                    hdown.SetBinError(ieta+1 , 0)
+            hup.Write(hup.GetTitle(),ROOT.TObject.kOverwrite)
+            hdown.Write(hdown.GetTitle(),ROOT.TObject.kOverwrite)
+            pass
+    if fupd and fupd.IsOpen():
+        fupd.Close()
     print >>f,'</BODY></HTML>'

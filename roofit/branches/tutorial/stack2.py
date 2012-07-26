@@ -412,7 +412,7 @@ def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errors
     height = 'asym' if is_asym else 1.7
     title = var
     if is_asym:
-        title='Detector-level asymmetry' if do_unfold==False else 'Truth-level asymmetry'
+        title='Detector-level asymmetry' if do_unfold==False else 'Born-level asymmetry'
     c.plotAny(h,M=M,height=height,title=title)
     if do_summary:
         h[-1].summary_bin(fname='index.html')
@@ -669,7 +669,7 @@ if mode=='ALL' or mode=='all':
         plot_stacks(spR.clone(),plots,m=1,qs=(2,))
     if True: # inclusive reco-level and truth-level asymmetry
         plot_any(spR.clone(),spT.clone(),m=20,do_unfold=True,do_errorsDA=True,do_summary=True)
-        plot_any(spR.clone(),None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False)
+        #plot_any(spR.clone(),None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False)
         if False: # validate TH1 vs ntuple MC-only asymmetries. Small difference see in truth tree -not sure why
             plot_any(spRN.clone(path=path_reco),None,m=20,name='reco_ntuple',do_data=False,new_scales=False)
             plot_any(spR.clone(),None,name='reco_histo',m=20,do_data=False,new_scales=False)
@@ -886,6 +886,17 @@ if mode=='qcdfit' or mode=='qcdfit_summary': # to study QCD fits
         hstack = hstack.nominal().stack ; hstack.SetTitle("stack")
         hdata = hdata.nominal().h ; hdata.SetTitle("data")
         hdata.Write("data",ROOT.TObject.kOverwrite)
+        # prepare an array containing statistical uncertainties on QCD fit in each |eta| bin
+        STATMAP = [-1.0]*(len(etabins)-1)
+        for key,val in po.fits.iteritems():
+            savename = po.fitnames[key] # NEG_ebin99_eta0_Q3S5X5Y5Z5_met_0_0to120_0.png
+            etabin = [el for el in savename.split('_') if re.match('eta',el)]
+            assert len(etabin)==1
+            ieta = int(  re.sub('eta','',etabin[0])  )
+            assert ieta < len(STATMAP)
+            assert STATMAP[ieta]<0
+            STATMAP[ieta] = po.scales[key][1]/po.scales[key][0]
+        # save all backgrounds from the stack
         NBG = hstack.GetStack().GetLast()
         for i in xrange(0,NBG+1):
             hh =  hstack.GetHists().At(i)  # TList::At(NBG) = top-most
@@ -900,13 +911,29 @@ if mode=='qcdfit' or mode=='qcdfit_summary': # to study QCD fits
             if hh.GetTitle()=='bg_powheg_pythia_wplusmunu': hh.SetTitle('bg_powheg_pythia_wmunu')
             if hh.GetTitle()=='bg_powheg_pythia_wminmunu': hh.SetTitle('bg_powheg_pythia_wmunu')
             hh.Write(hh.GetTitle(),ROOT.TObject.kOverwrite)
+            # save variations of QCD template: statup and statdown (reflecting stat. uncertainty on QCD fit)
+            if hh.GetTitle() == 'bg_QCD':
+                hup = hh.Clone('bg_QCD_statup')
+                hup.SetTitle('bg_QCD_statup')
+                hdown = hh.Clone('bg_QCD_statdown')
+                hdown.SetTitle('bg_QCD_statdown')
+                assert (hh.GetNbinsX() == len(STATMAP))
+                for ieta in xrange(0,hh.GetNbinsX()):
+                    assert STATMAP[ieta]>=0
+                    hup.SetBinContent(ieta+1 , hup.GetBinContent(ieta+1) * (1.0+STATMAP[ieta]))
+                    hup.SetBinError(ieta+1 , hup.GetBinError(ieta+1) * (1.0+STATMAP[ieta]))
+                    hdown.SetBinContent(ieta+1 , hdown.GetBinContent(ieta+1) * (1.0-STATMAP[ieta]))
+                    hdown.SetBinError(ieta+1 , hdown.GetBinError(ieta+1) * (1.0-STATMAP[ieta]))
+                hup.Write(hup.GetTitle(),ROOT.TObject.kOverwrite)
+                hdown.Write(hdown.GetTitle(),ROOT.TObject.kOverwrite)
         OMAP[-1]._canvas.Write("canvas_stack",ROOT.TObject.kOverwrite)
         hstack.Write("stack",ROOT.TObject.kOverwrite)
         # QCD fits
         for key,val in po.fits.iteritems():
-            savename = po.fitnames[key] #            NEG_Q3S5X5Y5Z2_X_met_0.0to120.0_eta0
-            etabin = savename.split('_')[-1]
-            val._canvas.Write('QCD_FIT_bin'+etabin,ROOT.TObject.kOverwrite)
+            savename = po.fitnames[key] #            NEG_ebin99_eta0_Q3S5X5Y5Z5_met_0_0to120_0.png
+            etabin = [el for el in savename.split('_') if re.match('eta',el)]
+            assert len(etabin)==1
+            val._canvas.Write('QCD_FIT_bin'+etabin[0],ROOT.TObject.kOverwrite)
         ff.Close()
         pass
 
