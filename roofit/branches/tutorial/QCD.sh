@@ -30,12 +30,14 @@ input=/share/t3data3/antonk/ana/ana_v29G_07252012_newROOT_stacoCB_all
 bgqcd=3
 
 i=0
-preNN='ptiso40/l_pt<0.1 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2'
-preNQ='ptiso40/l_pt>0.1 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2 && l_trigEF<0.2'
-#preNQ='ptiso20/l_pt>0.1 && ptiso20/l_pt<0.2 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2 && l_trigEF<0.2'
+preNN='ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2'
+preNQ='ptiso40/l_pt>0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2 && l_trigEF<0.2'
+#preNQ='ptiso20/l_pt>0.1 && ptiso20/l_pt<0.2 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2 && l_trigEF<0.2'
 gput tagz ${i} aiso_met0to120 "--lvar met --lbin 50,0,120 --preNN \"${preNN}\" --preNQ \"${preNQ}\" " ; ((i++))
 gput tagz ${i} aiso_wmt40to120 "--lvar w_mt --lbin 50,40,120 --preNN \"${preNN}\" --preNQ \"${preNQ}\" "  ; ((i++))
-gput tagz ${i} aiso_lpt25to70 "--lvar l_pt --lbin 50,25,70 --preNN \"${preNN}\" --preNQ \"${preNQ}\" "  ; ((i++))
+gput tagz ${i} aiso_wmt30to120 "--lvar w_mt --lbin 55,30,120 --preNN \"${preNN}\" --preNQ \"${preNQ}\" "  ; ((i++))
+gput tagz ${i} aiso_lpt20to70 "--lvar l_pt --lbin 50,20,70 --preNN \"${preNN}\" --preNQ \"${preNQ}\" "  ; ((i++))
+#gput tagz ${i} aiso_lpt15to70 "--lvar l_pt --lbin 50,15,70 --preNN \"${preNN}\" --preNQ \"${preNQ}\" "  ; ((i++))
 #gput tagz ${i} lomet_isor0to1 "--llog --lvar ptiso40/l_pt --lbin 100,0,1 --preNN \"${preNN}\" --preNQ \"${preNQ}\" "  ; ((i++))
 
 ivar=0
@@ -48,18 +50,18 @@ irun=0
 for itag in `gkeys tagz`; do
     tag=`ggeta tagz $itag`
     opts=`ggetb tagz $itag`
-    for iq in 0 1 2; do
+    for iq in 0 1; do
 	for bgsig in 1 4 5; do
 	    for ivar in `gkeys tagv`; do
 		optsv=`ggetb tagv $ivar`
 		if [ "$id" == "$irun" -o "$id" == "ALL" ]; then
-		    eval ./stack2.py --input ${input} -b --charge $iq ${opts} ${optsv} -o TEST_Q${iq} -t ${tag} --cut "mcw*puw*effw*trigw*wptw" -m qcdfit --bgsig ${bgsig} --bgewk 5 --bgqcd ${bgqcd}
+		    eval ./stack2.py --input ${input} -b --charge $iq ${opts} ${optsv} -o TEST_Q${iq} -t ${tag} --cut "mcw*puw*effw*trigw*wptw*isow" -m qcdfit --bgsig ${bgsig} --bgewk 5 --bgqcd ${bgqcd}
 		fi
 		((irun++))
-		for ieta in {0..10}; do
+		for ieta in {9..10}; do
 		    #continue #disable
 		    if [ "$id" == "$irun" -o "$id" == "ALL" ]; then
-			eval ./stack2.py --input ${input} -b --charge $iq ${opts} ${optsv} -o TEST_Q${iq}/ETA${ieta} -t ${tag} --cut "mcw*puw*effw*trigw*wptw" -m qcdfit --bgsig ${bgsig} --bgewk 5 --bgqcd ${bgqcd} --extra ${ieta}
+			eval ./stack2.py --input ${input} -b --charge $iq ${opts} ${optsv} -o TEST_Q${iq}/ETA${ieta} -t ${tag} --cut "mcw*puw*effw*trigw*wptw*isow" -m qcdfit --bgsig ${bgsig} --bgewk 5 --bgqcd ${bgqcd} --extra ${ieta}
 		    fi
 		    ((irun++))
 		done

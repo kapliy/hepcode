@@ -10,47 +10,49 @@ class PlotOptions:
     """ Handles colors and marker styles for various MC generators """
     msize = 1.5
     def __init__(s):
-        s.n = 0
-        s.names = []
-        s.labels = []
-        s.colors = []
-        s.sizes = []
-        s.styles = []
-        s.cuts = []
-        s.ratios = []
-        s.errors = []
+      s.n = 0
+      s.names = []
+      s.labels = []
+      s.colors = []
+      s.sizes = []
+      s.styles = []
+      s.cuts = []
+      s.ratios = []
+      s.errors = []
     def ntot(s):
-        assert s.n == len(s.cuts)
-        return s.n
+      assert s.n == len(s.cuts)
+      return s.n
+    def any_ratios(s):
+      return any(s.ratios)
     def add(s,name,label,color=None,size=0.7,style=20,cut=None,ratio=None,err=0):
-        """ Add one sample """
-        s.names.append(name)
-        s.labels.append(label)
-        s.colors.append( color if color else s.autocolor(len(s.cuts)) )
-        s.sizes.append(size*s.msize)
-        s.styles.append(style)
-        s.cuts.append(cut)
-        s.ratios.append(ratio)
-        s.errors.append(err)
-        s.n+=1
+      """ Add one sample """
+      s.names.append(name)
+      s.labels.append(label)
+      s.colors.append( color if color else s.autocolor(len(s.cuts)) )
+      s.sizes.append(size*s.msize)
+      s.styles.append(style)
+      s.cuts.append(cut)
+      s.ratios.append(ratio)
+      s.errors.append(err)
+      s.n+=1
     def prefill_data(s,err=0):
-        """ if we also plan to overlay the data """
-        s.add('datasub','Data',color=1,style=21,err=err)
+      """ if we also plan to overlay the data """
+      s.add('datasub','Data',color=1,style=21,err=err)
     def prefill_mc(s,err=0):
-        """ pre-fill with all available MC samples """
-        s.add('sig_pythia','Pythia(MRSTMCal)',err=err)
-        #s.add('sig_pythia','Pythia(MRSTMCal->CTEQ6L1)',cut='lha_CT10') #cut='lha_cteq6ll')
-        #s.add('sig_sherpa','Sherpa(CTEQ6L1)')
-        s.add('sig_alpgen_herwig','Alpgen/Herwig(CTEQ6L1)',ratio=True,err=err)
-        #s.add('sig_alpgen_pythia','Alpgen/Pythia(CTEQ6L1)')
-        s.add('sig_mcnlo','MC@NLO(CT10)',ratio=True,err=err)
-        s.add('sig_powheg_herwig','PowHeg/Herwig(CT10)',ratio=True,err=err)
-        s.add('sig_powheg_pythia','PowHeg/Pythia(CT10)',ratio=True,err=err)
+      """ pre-fill with all available MC samples """
+      #s.add('sig_pythia','Pythia(MRSTMCal)',err=err)
+      #s.add('sig_pythia','Pythia(MRSTMCal->CTEQ6L1)',cut='lha_CT10') #cut='lha_cteq6ll')
+      #s.add('sig_sherpa','Sherpa(CTEQ6L1)')
+      #s.add('sig_alpgen_herwig','Alpgen/Herwig(CTEQ6L1)',ratio=True,err=err)
+      #s.add('sig_alpgen_pythia','Alpgen/Pythia(CTEQ6L1)',ratio=True,err=err)
+      s.add('sig_powheg_pythia','PowHeg/Pythia(CT10)',ratio=True,err=err)
+      s.add('sig_powheg_herwig','PowHeg/Herwig(CT10)',ratio=True,err=err)
+      s.add('sig_mcnlo','MC@NLO(CT10)',ratio=True,err=err)
     @staticmethod
     def autocolor(i):
-        """ choose a reasonable sequence of colors """
-        colorlist = [2,3,4,5,6,20,28,41,46]
-        return colorlist[i] if i<len(colorlist) else (1 if i==11 else i)
+      """ choose a reasonable sequence of colors """
+      colorlist = [2,3,4,5,6,20,28,41,46]
+      return colorlist[i] if i<len(colorlist) else (1 if i==11 else i)
 
 class SuCanvas:
   """ Jordan's canvas class for plotting """
@@ -92,12 +94,15 @@ class SuCanvas:
     obj.SetLineStyle( 2 );
     obj.SetLineWidth( 2 );
 
-  def drawRatio(s,ratio):
+  def drawRatio(s,ratio,hash=True,mstyle=2):
     """ Draws a ratio histogram """
     ratio.SetFillColor( ROOT.kBlack );
     ratio.SetFillStyle( 3154 );
-    ratio.SetMarkerStyle( 2 );
-    ratio.Draw("AP E2 same");
+    ratio.SetMarkerStyle( mstyle );
+    if hash:
+      ratio.Draw("AP E2 same");
+    else:
+      ratio.Draw("AP same");
 
   def drawRefLine(s,refLine,xtitle=None):
     """ Draws a reference line """
@@ -352,8 +357,13 @@ class SuCanvas:
       leg = ROOT.TLegend(0.55,0.70,0.88,0.88,'Legend',"brNDC")
     if title!=None: leg.SetHeader(title)
     s.data.append( (hplots,leg) )
-    s.buildDefault(width=1024,height=400)
-    s.cd_canvas();
+    if M and M.any_ratios():
+      s.buildRatio()
+      s.cd_plotPad()
+    else:
+      s.buildDefault(width=1024,height=400)
+      s.cd_canvas();
+    # plot actual histograms
     hs = []
     for i,hplot in enumerate(hplots):
       h0 = hplot.nominal().stack.GetStack().Last() if hplot.nominal().stack else hplot.nominal_h()
@@ -393,6 +403,17 @@ class SuCanvas:
     if xtitle!=None: hs[0].GetXaxis().SetTitle(xtitle)
     if True:
       leg.Draw("same")
+    # draw ratios with respect to the first histogram
+    if M and M.any_ratios():
+      s.cd_ratioPad();
+      for i,h in enumerate(hs):
+        hratio,href = hs[i].Clone("hratio"),hs[i].Clone("href")
+        hratio.Divide(hs[0])
+        if i==0:
+          s.drawRefLine(href)
+        [hratio.SetBinError(ii,0) for ii in xrange(0,hratio.GetNbinsX()+2)]
+        s.drawRatio(hratio,hash=False,mstyle=20)
+        s.data.append( (hratio,href) )
     s.update()
 
   def plotStack(s,hstack,hdata,leg=None,height=1.5,mode=0,pave=True):

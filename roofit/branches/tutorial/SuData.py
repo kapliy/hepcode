@@ -411,15 +411,16 @@ class SuPlot:
             add('mcp_cdown',prep+'mcp_cdown')
             next('MCP_CSCALE')
         # MCP efficiency
-        add2('effstatup','st_w_effstatup',prep+'nominal_effstatup')
-        add2('effstatdown','st_w_effstatdown',prep+'nominal_effstatdown')
-        next('MCP_EFFSTAT')
-        add2('effsysup','st_w_effsysup',prep+'nominal_effsysup')
-        add2('effsysdown','st_w_effsysdown',prep+'nominal_effsysdown')
-        next('MCP_EFFSYS')
-        add2('trigstatup','st_w_trigstatup',prep+'nominal_trigstatup')
-        add2('trigstatdown','st_w_trigstatdown',prep+'nominal_trigstatdown')
-        next('MCP_TRIG')
+        if False:  #FIXME
+            add2('effstatup','st_w_effstatup',prep+'nominal_effstatup')
+            add2('effstatdown','st_w_effstatdown',prep+'nominal_effstatdown')
+            next('MCP_EFFSTAT')
+            add2('effsysup','st_w_effsysup',prep+'nominal_effsysup')
+            add2('effsysdown','st_w_effsysdown',prep+'nominal_effsysdown')
+            next('MCP_EFFSYS')
+            add2('trigstatup','st_w_trigstatup',prep+'nominal_trigstatup')
+            add2('trigstatdown','st_w_trigstatdown',prep+'nominal_trigstatdown')
+            next('MCP_TRIG')
         # JET
         if True:
             #add('jet_jer',prep+'jet_jer',qcdadd=qcdadd)
@@ -447,7 +448,7 @@ class SuPlot:
             add('met_scalesofttermsdown',prep+'met_scalesofttermsdown')
             next('MET_SCALE')
         # QCD normalization
-        if False:
+        if False: #FIXME
             add3('qcdup',1.5,prep+'nominal')
             add3('qcddown',0.5,prep+'nominal')
             next('QCD_FRAC')
@@ -510,7 +511,7 @@ class SuPlot:
         bins = b if b else range(1,nom.GetNbinsX()+1)
         oldsys,f = sys.stdout,None
         if fname:
-            f = open(fname,'w')
+            f = open(fname+'.html','w')
             sys.stdout = f
         print '<HTML><BODY>'
         print '<TABLE border="1">'
@@ -529,6 +530,7 @@ class SuPlot:
             print '<TD>%.2f</TD>'%(err)
         print '</TR>'
         Cc,Hh,Ll = None,[],None
+        s.Hh = Hh
         colorlist = [2,3,4,5,6,20,28,41,46]
         colorlist += colorlist
         colorlist += colorlist
@@ -536,7 +538,7 @@ class SuPlot:
         markerlist+= markerlist
         markerlist+= markerlist
         if MAKE_PLOT:
-            Cc = ROOT.TCanvas('SYSC','SYSC',800,600)
+            s.Cc = Cc = ROOT.TCanvas('SYSC','SYSC',800,600)
             Cc.cd()
             for ig,hss in enumerate(s.sys[1:]):
                 Hh.append( SuSample.make_habseta('hsys%d'%ig) )
@@ -544,7 +546,7 @@ class SuPlot:
                 #Hh[-1].SetFillColor(colorlist[ig])
                 Hh[-1].SetMarkerColor(colorlist[ig])
                 Hh[-1].SetMarkerStyle(markerlist[ig])
-            Ll = ROOT.TLegend(0.75,0.60,0.92,0.88,'Systematics',"brNDC")
+            s.Ll = Ll = ROOT.TLegend(0.75,0.60,0.92,0.88,'Systematics',"brNDC")
             Ll.SetFillColor(0)
             Ll.SetHeader('Systematics:')
         for ig,hss in enumerate(s.sys[1:]):
@@ -569,12 +571,12 @@ class SuPlot:
         if f: f.close()
         if MAKE_PLOT:
             Hh[0].Draw('C P0')
-            Hh[0].GetYaxis().SetRangeUser(0.0,4.0)
+            Hh[0].GetYaxis().SetRangeUser(0.0,3.0)
             Hh[0].GetYaxis().SetTitle('Percentage deviation')
             Hh[0].GetXaxis().SetTitle('|#eta|')
             [ih.Draw('C P0 same') for ih in Hh[1:]]
             Ll.Draw('same')
-            Cc.SaveAs("SYSC.png")
+            Cc.SaveAs("SYST_%s.png"%fname)
     def update_var(s,histo,bin=None):
         """ Updates histogram name and ntuple-expression (aka variable)
         In reality, only one of these applies for a given SuData instance.
