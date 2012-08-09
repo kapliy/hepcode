@@ -340,7 +340,7 @@ q = opts.charge
 
 # Reco-level [histo]
 unfmethod = 'RooUnfoldBinByBin'
-unfmethod = 'RooUnfoldBayes'
+#unfmethod = 'RooUnfoldBayes'
 #tightlvl = ''
 tightlvl = 'tight_'
 #jetlvl = '_caljet'
@@ -349,7 +349,7 @@ spR = SuPlot()
 spR.bootstrap(do_unfold=False,
               unfold={'sysdir':tightlvl+'nominal'+jetlvl,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
               charge=q,var=opts.var,histo=opts.hsource,
-              sysdir=[tightlvl+'nominal'+jetlvl,tightlvl+'nominal'+jetlvl,'isowind'+jetlvl],subdir='st_w_final',basedir='baseline',
+              sysdir=[tightlvl+'nominal'+jetlvl,tightlvl+'nominal'+jetlvl,'isofail'+jetlvl],subdir='st_w_final',basedir='baseline', #isowind
               qcd={'var':'met','nbins':100,'min':0,'max':100,'metfit':'metfit','forcenominal':False})
 SuStack.QCD_SYS_SCALES = opts.metallsys
 SuStack.QCD_TF_FITTER = True
@@ -415,7 +415,7 @@ def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errors
         title='Detector-level asymmetry' if do_unfold==False else 'Born-level asymmetry'
     c.plotAny(h,M=M,height=height,title=title)
     if do_summary:
-        h[-1].summary_bin(fname='index.html')
+        h[-1].summary_bin(fname='index_%s'%name)
         pass
     OMAP.append(c)
     return h[-1]
@@ -584,10 +584,11 @@ def june26_asymmetry_all_slices():
 def july02_summarize_qcd_fits(fitvar,fitrange):
     fitreg = 'metfit' if fitvar=='met' else 'baseline'
     assert len(fitrange)==2
-    n = 'Q3S%dX2Y2Z2_'%opts.bgsig+'isowind__tight_nominal_st_w_final_' + fitreg + '_bin_%d_lpt_%d_%s_' + fitvar + '_' + str(fitrange[0]) + 'to' + str(fitrange[1])
+    #TEST_Q3S2X5Y5Z5_isofail__tight_nominal_st_w_final_metfit_bin_8_lpt_4_NEG_met_0to100.png
+    n = 'Q3S%dX5Y5Z5_'%opts.bgsig+'isofail__tight_nominal_st_w_final_' + fitreg + '_bin_%d_lpt_%d_%s_' + fitvar + '_' + str(fitrange[0]) + 'to' + str(fitrange[1])
     f = open('qcd.html','w')
     etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
-    ptbins = [20,25,30,35,40,45,50,100,200]
+    ptbins = [20,25,30,35,40,45,50,120]
     print >>f,'<HTML><BODY>'
     for iq in ('POS','NEG'):
         print >>f,'<HR>'
@@ -597,27 +598,28 @@ def july02_summarize_qcd_fits(fitvar,fitrange):
         print >>f,'<TABLE border="1" width="900">'
         print >>f,'<TR>'
         print >>f, '<TD width="100">pT/eta</TD>'
-        for ipt in xrange(0,7+1):
+        for ipt in xrange(0,len(ptbins)-1):
             print >>f,'<TD width="50">','%d&lt;pT&lt;%d'%(ptbins[ipt],ptbins[ipt+1]),'</TD>'
         print >>f,'</TR>'
-        for ieta in xrange(0,10+1):
+        for ieta in xrange(0,len(etabins)-1):
             print >>f,'<TR>'
             print >>f, '<TD width="100">','%.2f&lt;|eta|&lt;%.2f'%(etabins[ieta],etabins[ieta+1]),"</TD>"
-            for ipt in xrange(0,7+1):
+            for ipt in xrange(0,len(ptbins)-1):
                 key = n%(ieta,ipt,iq)
                 v = -1.0
                 if key in po.scales:
-                    v = po.scales[key][0]
-                print >>f,'<TD width="50">','%.2f'%(v),'</TD>'
+                    v = po.scales[key][0]  #scale factor
+                    v = po.scales[key][2]*100.0  #fraction
+                print >>f,'<TD width="50">','%.1f%%'%(v),'</TD>'
             print >>f,'</TR>'
         print >>f,'</TABLE>'
         # print images
         print >>f,'<BR>'
         print >>f,'<TABLE border="0" width="2240">'
         NF='http://www.wzone.com/myimages/PageNotFound-Man.jpg'
-        for ieta in xrange(0,10+1):
+        for ieta in xrange(0,len(etabins)-1):
             print >>f,'<TR>'
-            for ipt in xrange(0,7+1):
+            for ipt in xrange(0,len(ptbins)-1):
                 key = n%(ieta,ipt,iq)
                 print >>f,'<TD width="280" align="center"><img src="TEST/%s_%s.png" width="270"/></TD>'%(opts.tag,SuCanvas.cleanse(key))
             print >>f,'</TR>'
@@ -667,20 +669,41 @@ if mode=='ALL' or mode=='all':
     if False:
         plots = ['lepton_absetav','lpt','met','wmt']
         plot_stacks(spR.clone(),plots,m=1,qs=(2,))
-    if True: # inclusive reco-level and truth-level asymmetry
-        plot_any(spR.clone(),spT.clone(),m=20,do_unfold=True,do_errorsDA=True,do_summary=True)
+    if False: # inclusive reco-level and truth-level asymmetry
+        plot_any(spR.clone(q=0),spT.clone(q=0),m=2,do_unfold=True,do_errorsDA=True,do_summary=True,name='POS')
+        plot_any(spR.clone(q=1),spT.clone(q=1),m=2,do_unfold=True,do_errorsDA=True,do_summary=True,name='NEG')
+        plot_any(spR.clone(),spT.clone(),m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='ASY')
         #plot_any(spR.clone(),None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False)
         if False: # validate TH1 vs ntuple MC-only asymmetries. Small difference see in truth tree -not sure why
             plot_any(spRN.clone(path=path_reco),None,m=20,name='reco_ntuple',do_data=False,new_scales=False)
             plot_any(spR.clone(),None,name='reco_histo',m=20,do_data=False,new_scales=False)
             plot_any(spTN.clone(),None,name='truth_ntuple',m=20,do_data=False,new_scales=False)
             plot_any(spT.clone(),None,name='truth_histo',m=20,do_data=False,new_scales=False)
+    if True: # studying differences in generators
+        po.choose_qcd(0)
+        SuCanvas._refLineMin = 0.8
+        SuCanvas._refLineMax = 1.2
+        x= ''
+        ie = 99
+        if opts.extra!=None:
+            etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
+            ie = int(opts.extra)
+            x = ' && fabs(l_eta)>=%.2f && fabs(l_eta)<=%.2f'%(etabins[ie],etabins[ie+1])
+            print 'Limiting eta:',x
+        plots = [ ]
+        plots.append( ('fabs(l_eta)',None,opts.pre+x) )
+        plots.append( ('l_pt','55,20,70',prunesub(opts.pre,'l_pt','l_pt>20 && l_pt<70')+x) )
+        plots.append( ('met','50,0,120',prunesub(opts.pre,'met','met>0 && met<120')+x) )
+        plots.append( ('w_mt','50,30,120',prunesub(opts.pre,'w_mt','w_mt>30 && w_mt<120')+x) )
+        for bla in plots:
+            var=bla[0]
+            bin=bla[1]
+            pre=bla[2]
+            plot_any(spRN.clone(path=path_reco,var=var,pre=pre,bin=bin),None,m=2,var=None,name='reco_'+var,do_data=False,new_scales=False)
     if False: # reconstruction in |eta| slices + QCD fits in |eta| x pT bins
         spR.enable_nominal()
         plot_any(spR.clone(),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='INCLUSIVE_DIRECT')
-        histo = 'bin_%d/lpt:0:8'
-        opts.bgsig = 2
-        po.choose_sig(opts.bgsig)
+        histo = 'bin_%d/lpt:0:7'
         qcdadd={'var':'met','min':0,'max':100}
         plot_any(spR.clone(histo=histo,qcdadd=qcdadd),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='INCLUSIVE_SLICES')
         july02_summarize_qcd_fits(qcdadd['var'],(qcdadd['min'],qcdadd['max']))
@@ -763,13 +786,18 @@ if mode=='ALL' or mode=='all':
         plot_sys = False
         #Note: despite enable_nominal, we are seeing systematic bands is m=1 (must be stat. error on BG - but are we double-counting?)
         spR.enable_nominal()
-        po.choose_ewk(5)
-        for bgsig in (1,2,5):
-            for bgqcd in (3,0):
-                print 'Working on:','SIG:',MAP_BGSIG[bgsig],'QCD:',MAP_BGQCD[bgqcd]
+        qcdadds=[]
+        qcdadds.append( {'var':'met','min':0,'max':100} )
+        qcdadds.append( {'var':'wmt','min':40,'max':100} )
+        for bgewk in (2,5):
+            po.choose_ewk(bgewk)
+            for bgsig in (1,2,4,5):
                 po.choose_sig(bgsig)
-                po.choose_qcd(bgqcd)
-                plot_stacks(spR.clone(),plots,m=1 if plot_sys==True else 0,name='SIG_%s__QCD_%s'%(MAP_BGSIG[bgsig],MAP_BGQCD[bgqcd]))
+                for bgqcd in (3,):
+                    po.choose_qcd(bgqcd)
+                    print 'Working on:','SIG:',MAP_BGSIG[bgsig],'QCD:',MAP_BGQCD[bgqcd],'EWK:',MAP_BGSIG[bgewk]
+                    for iqcdadd,qcdadd in enumerate(qcdadds):
+                        plot_stacks(spR.clone(qcdadd=qcdadd),plots,m=1 if plot_sys==True else 0, name='%s_qcd%d'%(po.get_flagsum(),iqcdadd) )
     if False: # mel test: look at systematic variations in signal only, see if it is one-sided
         spR.update_var( 'lepton_absetav' )
         c = SuCanvas('systematics')
@@ -781,7 +809,7 @@ if mode=='ALL' or mode=='all':
             h = po.mc('asym',spR.clone(q=1),name='sig_pythia')
             c.plotOne(h,mode=2,height=1.5,title='Signal MC asymmetry: systematics')
         OMAP.append(c)
-        h.summary_bin(fname='index.html')
+        h.summary_bin(fname='index')
     if False: # stopped working 06/19/2012. I think before it worked "almost" correctly, but now is substantially off
         test_unfolding(spR.clone(),spT.clone(),asym=False)
     if False: # make sure rebuilding of abseta from bin-by-bin slices is identical to direct histogram

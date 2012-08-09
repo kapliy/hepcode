@@ -1,23 +1,33 @@
-Note: QCD systematic is not currently applied IF we are not re-doing MET fit for every systematic!
-Rerun w_mt fits, but over wider range - see if they still remain super stable!
-Lauren: qcd fits for events that explicitly require njets=0
-Make unfolding TTree a-la max, for all systematics
+Make sure i save the correct eff uncertainty in ntuples!
 
+Check if Max gets a really large trig effuncertainty because he does not use corresponding unfolding matrices!
+Add MCP total efficiency uncertainty (quadrature sum of stat and sys)
+
+Make reco-level plots with multiple ratio plots!!!
+
+Peter: why w mt is best.
+it factors out w pt. Overlay templates for different generators - expect better agreement between them in w_mt (vs other variables).
+
+Peter: make a bunch of plots comparing many shapes 
+
+Note: QCD systematic is not currently applied IF we are not re-doing MET fit for every systematic!
+DOING: Rerun w_mt fits, but over wider range - see if they still remain super stable!
+DOING: Lauren: qcd fits for events that explicitly require njets=0
+DOING:   Z pt reweighting?
+
+Make unfolding TTree a-la max, for all systematics
 Consider EtMissRel instead of etmiss?
 /home/antonk/ElectroweakBosons/AnalysisZmumu/HFrame/src
 
 ME:
 Jan - effect of w polarization. Jan will provide a reweighting class.
 Try to re-plot mu pt with ztautau and zmumu from different monte-carlos.
-   Z pt reweighting?
-   Also see w mass people
+  Also see w mass people
 * Make table of QCD fit chi2s. Powheg+Pythia has best chi2 even though most stats? Try to reduce the statistics.
-
 
 * Add dressed muons for C_W factors!
 * Utilize DgEventInfo extras to add truth quantities to reco ntuples - for cuts
   This is not quite good for response matrices because it's missing inefficiency terms:(
-
 
 Follow up: geometric shift could change efficiency.
 EM -> JES
