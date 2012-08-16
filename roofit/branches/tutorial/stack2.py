@@ -390,7 +390,8 @@ def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errors
     if do_mc:
         M.prefill_mc(err=do_errorsMC if do_unfold==False else False) # if unfolded, only show errors on final data
     if do_data:
-        M.prefill_data(err=do_errorsDA) 
+        M.prefill_data(err=do_errorsDA)
+    M.disable_ratios() # FIXME: this should stay here for distributions studies
     h = []
     for i in range(M.ntot()):
         if do_data and i==M.ntot()-1: #data
@@ -415,7 +416,7 @@ def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errors
         title='Detector-level asymmetry' if do_unfold==False else 'Born-level asymmetry'
     c.plotAny(h,M=M,height=height,title=title)
     if do_summary:
-        h[-1].summary_bin(fname='index_%s'%name)
+        h[-1].summary_bin(fname='index_%s_%s'%(opts.tag,name))
         pass
     OMAP.append(c)
     return h[-1]
@@ -666,7 +667,7 @@ def study_jet_calibration_effects():
 
 # combined plots
 if mode=='ALL' or mode=='all':
-    if False:
+    if True:
         plots = ['lepton_absetav','lpt','met','wmt']
         plot_stacks(spR.clone(),plots,m=1,qs=(2,))
     if False: # inclusive reco-level and truth-level asymmetry
@@ -679,7 +680,7 @@ if mode=='ALL' or mode=='all':
             plot_any(spR.clone(),None,name='reco_histo',m=20,do_data=False,new_scales=False)
             plot_any(spTN.clone(),None,name='truth_ntuple',m=20,do_data=False,new_scales=False)
             plot_any(spT.clone(),None,name='truth_histo',m=20,do_data=False,new_scales=False)
-    if True: # studying differences in generators
+    if False: # studying differences in generators - RECO LEVEL
         po.choose_qcd(0)
         SuCanvas._refLineMin = 0.8
         SuCanvas._refLineMax = 1.2
@@ -700,6 +701,27 @@ if mode=='ALL' or mode=='all':
             bin=bla[1]
             pre=bla[2]
             plot_any(spRN.clone(path=path_reco,var=var,pre=pre,bin=bin),None,m=2,var=None,name='reco_'+var,do_data=False,new_scales=False)
+    if False: # studying differences in generators - TRUTH LEVEL
+        po.choose_qcd(0)
+        SuCanvas._refLineMin = 0.8
+        SuCanvas._refLineMax = 1.2
+        x= ''
+        ie = 99
+        if opts.extra!=None:
+            etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
+            ie = int(opts.extra)
+            x = ' && fabs(l_eta)>=%.2f && fabs(l_eta)<=%.2f'%(etabins[ie],etabins[ie+1])
+            print 'Limiting eta:',x
+        plots = [ ]
+        plots.append( ('fabs(l_eta)',None,fortruth(opts.pre)+x) )
+        plots.append( ('l_pt','55,20,70',prunesub(fortruth(opts.pre),'l_pt','l_pt>20 && l_pt<70')+x) )
+        plots.append( ('met','50,0,120',prunesub(fortruth(opts.pre),'met','met>0 && met<120')+x) )
+        plots.append( ('w_mt','50,30,120',prunesub(fortruth(opts.pre),'w_mt','w_mt>30 && w_mt<120')+x) )
+        for bla in plots:
+            var=bla[0]
+            bin=bla[1]
+            pre=bla[2]
+            plot_any(spTN.clone(var=var,pre=pre,bin=bin),None,m=2,var=None,name='reco_'+var,do_data=False,new_scales=False)
     if False: # reconstruction in |eta| slices + QCD fits in |eta| x pT bins
         spR.enable_nominal()
         plot_any(spR.clone(),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='INCLUSIVE_DIRECT')

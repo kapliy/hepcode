@@ -7,39 +7,18 @@ flabel=NONE
 i=0
 
 # Specify the list of tags
-for flabel in v29D_05222012_MCP2011; do
+for flabel in v29G_08102012_MCP_OLD v29G_08102012_MCP_NEW; do
 antondb=out2011_${flabel}
 if [ "1" -eq "1" ]; then
     data="--root '/share/t3data3/antonk/ana/ana_${flabel}_stacoCB_MCPscale/data*/root_data*.root'"
-    gput tags $i r17_default_staco    " --antondb ${antondb} ${data} --zmin 80 --zmax 100"
+    gput tags $i r17_powheg_pythia_default_staco    " --antondb ${antondb} ${data} --zmin 80 --zmax 100"
     ((i++))
-    gput tags $i r17_m70110_staco     " --antondb ${antondb} ${data} --zmin 70 --zmax 110"
+    gput tags $i r17_powheg_pythia_m70110_staco     " --antondb ${antondb} ${data} --zmin 70 --zmax 110"
     ((i++))
-    gput tags $i r17_klu_staco        " --antondb ${antondb} ${data} --zmin 80 --zmax 100 --kluit"
-    ((i++))
-    data="--root '/share/t3data3/antonk/ana/ana_${flabel}_muidCB_MCPscale/data*/root_data*.root'"
-    gput tags $i r17_default_muid    " --antondb ${antondb} ${data} --zmin 80 --zmax 100"
-    ((i++))
-    gput tags $i r17_m70110_muid     " --antondb ${antondb} ${data} --zmin 70 --zmax 110"
-    ((i++))
-    gput tags $i r17_klu_muid        " --antondb ${antondb} ${data} --zmin 80 --zmax 100 --kluit"
+    gput tags $i r17_powheg_pythia_klu_staco        " --antondb ${antondb} ${data} --zmin 80 --zmax 100 --kluit"
     ((i++))
 fi;
 done
-
-if [ "0" -eq "1" ]; then
-    data="--root '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_default/data_period*/root_data_period*.root'"
-    gput tags $i r17_default_staco    " --antondb ${antondb} ${data} --zmin 80 --zmax 100"
-    ((i++))
-    gput tags $i r17_m70110_staco     " --antondb ${antondb} ${data} --zmin 70 --zmax 110"
-    ((i++))
-    gput tags $i r17_klu_staco        " --antondb ${antondb} ${data} --zmin 80 --zmax 100 --kluit"
-    ((i++))
-    #data="--root '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_scaleDATA_KC/data_period*/root_data_period*.root'"
-    #gput tags $i r17_default_staco_KC    " --antondb ${antondb} ${data} --zmin 80 --zmax 100"
-    #((i++))
-    
-fi;
 
 # [DEPRECATED/BROKEN] - test on Zmumu MC
 if [ "0" -eq "1" ]; then
@@ -66,6 +45,7 @@ regs="`echo T{0..13}T`"
 regs="`echo S{0..7}S`"
 regs="AA BB CC Bcc Baa" #2012
 regs="`echo W{0..9}W`"
+regs="`echo V{0..21}V`"
 xtra="--template --ext eps --shift"
 i=0
 
@@ -94,7 +74,7 @@ for itag in `gkeys tags`; do
 	    cmd="./keysfit.py -b ${opts} --tt ${tt} --region ${reg} --tag ${tag} --ndata $nevt --nscan ${nscan} --scan ${frange} ${xtra}"
 	    echo $cmd
 	    echo $cmd >> $J
-	    qsub -N SHT${i} -o ${LOG} -e ${ERR} ${J}
+	    qsub -l mem=3000mb -N SHT${i} -o ${LOG} -e ${ERR} ${J}
 	    ((i++))
 	done
     done

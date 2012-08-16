@@ -24,6 +24,8 @@ class PlotOptions:
       return s.n
     def any_ratios(s):
       return any(s.ratios)
+    def disable_ratios(s):
+      s.ratios = [False]*len(s.ratios)
     def add(s,name,label,color=None,size=0.7,style=20,cut=None,ratio=None,err=0):
       """ Add one sample """
       s.names.append(name)
