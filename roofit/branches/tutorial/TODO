@@ -1,28 +1,34 @@
+ANTON TODO:
+* Finish comparing Max cutflow
+* Add unfolding tree a-la max
+* Do QCD fits from histograms
+
+
+MAX TODO:
+- QCD fits in 2D bins
+- make ratio plots of truth level and reco level. neutrino pt vs met-truth
+- compare tunes of powheg/herwig and mc@nlo
+
+
+MEL TODO:
+Plot W pT for different generators
+In W rest frame, decay angle (polar angle) of lepton - in slices of W pT
+Check if MC@NLO and Powheg+Herwig use the same tune?
+Look at neutrinos as opposed to MET - to factor out jets
+
 Make sure i save the correct eff uncertainty in ntuples!
-
 Check if Max gets a really large trig effuncertainty because he does not use corresponding unfolding matrices!
-Add MCP total efficiency uncertainty (quadrature sum of stat and sys)
-
-Make reco-level plots with multiple ratio plots!!!
 
 Peter: why w mt is best.
 it factors out w pt. Overlay templates for different generators - expect better agreement between them in w_mt (vs other variables).
 
-Peter: make a bunch of plots comparing many shapes 
-
-Note: QCD systematic is not currently applied IF we are not re-doing MET fit for every systematic!
-DOING: Rerun w_mt fits, but over wider range - see if they still remain super stable!
-DOING: Lauren: qcd fits for events that explicitly require njets=0
-DOING:   Z pt reweighting?
-
 Make unfolding TTree a-la max, for all systematics
+
 Consider EtMissRel instead of etmiss?
 /home/antonk/ElectroweakBosons/AnalysisZmumu/HFrame/src
 
 ME:
 Jan - effect of w polarization. Jan will provide a reweighting class.
-Try to re-plot mu pt with ztautau and zmumu from different monte-carlos.
-  Also see w mass people
 * Make table of QCD fit chi2s. Powheg+Pythia has best chi2 even though most stats? Try to reduce the statistics.
 
 * Add dressed muons for C_W factors!

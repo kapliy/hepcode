@@ -105,13 +105,31 @@ def eranges(name):
         else:
             bnr = cands[0]
         return (bnr,bnr)
-    elif name[0] == 'W': # finer binning for full 2012 dataset
+    elif name[0] == 'W': # finer binning for full 2011 dataset
         bn = int(name[1:-1])
         boundsP = [0.50,1.05,1.70,2.0,2.50]
         boundsA = [-z for z in reversed(boundsP)] + [0.00,] + boundsP
         bounds = ordered_pairs(boundsA)
-        NN = len(bounds);
+        NN = len(bounds); # 10 bins
         print 'Spectrometer-motivated binning with %d bins for full 2011 dataset'%NN
+        assert bn < NN, 'Requested an eta bin beyond limits'
+        return (bounds[bn],bounds[bn])
+        cands = [ran for i,ran in enumerate(bounds) if ran[0] <= eta < ran[1]]
+        bnr = None
+        if len(cands)==0:
+            if eta<0: bnr = bounds[0]
+            if eta>0: bnr = bounds[NN-1]
+        else:
+            bnr = cands[0]
+        return (bnr,bnr)
+    elif name[0] == 'V': # super-fine used in the actual 2011 measurement
+        bn = int(name[1:-1])
+        boundsP = [0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
+        #boundsP = [0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
+        boundsA = [-z for z in reversed(boundsP)] + [0.00,] + boundsP
+        bounds = ordered_pairs(boundsA)
+        NN = len(bounds); # 22 bins
+        print 'Very fine analysis-motivated binning with %d bins for full 2011 dataset'%NN
         assert bn < NN, 'Requested an eta bin beyond limits'
         return (bounds[bn],bounds[bn])
         cands = [ran for i,ran in enumerate(bounds) if ran[0] <= eta < ran[1]]
@@ -214,7 +232,42 @@ def ntuple_to_4vectors(t2,tt,reg,xmin,xmax,maxdata=1000000,pre=None):
     return len(res),res
 
 def ntuple_to_array1(t2,tt,reg,xmin,xmax,maxdata=1000000,pre=None):
-    """ Load TNtuple from a file: only load mZ """
+    """ Load TNtuple from a file: only load mZ.
+    This is an optimized version that applies a cut on eta/phi
+    """
+    ep_name,en_name = repl_dic(['lP_eta','lN_eta'],tt)
+    fp_name,fn_name = repl_dic(['lP_phi','lN_phi'],tt)
+    mz_name = repl_dic('Z_m',tt)
+    rp,rn = get_eranges(reg)
+    ROOT.gROOT.cd()
+    pre2 = 'lP_eta>=%.3f && lP_eta<=%.3f && lN_eta>=%.3f && lN_eta<=%.3f && Z_m>=%.3f && Z_m<=%.3f'%(rp[0],rp[1],rn[0],rn[1],xmin,xmax)
+    pre2 = pre + ' && ' + pre2 if pre else pre2
+    print pre2
+    t = t2.CopyTree(repl_dic(pre2,tt)) if pre else t2
+    rf = get_prange(reg)
+    N = t.GetEntries()
+    print 'Reading tree with',N,'entries'
+    res = []
+    nl=0
+    for i in range(N):
+        t.GetEntry(i)
+        ep = getattr(t,ep_name)
+        en = getattr(t,en_name)
+        fp = getattr(t,fp_name)
+        fn = getattr(t,fn_name)
+        mz = getattr(t,mz_name)
+        good = rp[0] < ep < rp[1] and rn[0] < en < rn[1] and xmin < mz < xmax
+        if not good: continue
+        res.append(mz)
+        nl+=1
+        if nl>=maxdata: break
+    return len(res),array.array('f',res)
+
+def ntuple_to_array1_unoptimized(t2,tt,reg,xmin,xmax,maxdata=1000000,pre=None):
+    """ Load TNtuple from a file: only load mZ
+    This is an old version that does not add the eta/phi cut to the pre variable.
+    Thus it has to clone in memory the entire tree, before applying the eta/phi cut.
+    """
     ep_name,en_name = repl_dic(['lP_eta','lN_eta'],tt)
     fp_name,fn_name = repl_dic(['lP_phi','lN_phi'],tt)
     mz_name = repl_dic('Z_m',tt)
@@ -246,10 +299,13 @@ def ntuple_to_array_etalim(t2,tt,reg,xmin,xmax,maxdata=1000000,nskip=0,pre=''):
     pp_name,pn_name = repl_dic(['lP_pt','lN_pt'],tt)
     fp_name,fn_name = repl_dic(['lP_phi','lN_phi'],tt)
     mz_name = repl_dic('Z_m',tt)
-    ROOT.gROOT.cd()
-    t = t2.CopyTree(repl_dic(pre,tt)) if pre else t2
     rp,rn = get_eranges(reg)
     rf = get_prange(reg)
+    ROOT.gROOT.cd()
+    pre2 = 'lP_eta>=%.3f && lP_eta<=%.3f && lN_eta>=%.3f && lN_eta<=%.3f && Z_m>=%.3f && Z_m<=%.3f'%(rp[0],rp[1],rn[0],rn[1],xmin,xmax)
+    pre2 = pre + ' && ' + pre2 if pre else pre2
+    print pre2
+    t = t2.CopyTree(repl_dic(pre2,tt)) if pre else t2
     N = t.GetEntries()
     print 'Reading tree with',N,'entries'
     resp = []
@@ -289,10 +345,13 @@ def ntuple_to_array_kluit(t2,tt,reg,xmin,xmax,maxdata=1000000,nskip=0,pre=''):
     pp_name,pn_name = repl_dic(['lP_pt','lN_pt'],tt)
     fp_name,fn_name = repl_dic(['lP_phi','lN_phi'],tt)
     mz_name = repl_dic('Z_m',tt)
-    ROOT.gROOT.cd()
-    t = t2.CopyTree(repl_dic(pre,tt)) if pre else t2
     rp,rn = get_eranges(reg)
     rf = get_prange(reg)
+    ROOT.gROOT.cd()
+    pre2 = '( (lP_eta>=%.3f && lP_eta<=%.3f) || (lN_eta>=%.3f && lN_eta<=%.3f) ) && Z_m>=%.3f && Z_m<=%.3f'%(rp[0],rp[1],rn[0],rn[1],xmin,xmax)
+    pre2 = pre + ' && ' + pre2 if pre else pre2
+    print pre2
+    t = t2.CopyTree(repl_dic(pre2,tt)) if pre else t2
     N = t.GetEntries()
     print 'Reading tree with',N,'entries via Kluit method'
     resp = []
@@ -325,7 +384,9 @@ def ntuple_to_array_kluit(t2,tt,reg,xmin,xmax,maxdata=1000000,nskip=0,pre=''):
     return Np,Nn,len(resp),array.array('f',resp),array.array('f',resn)
 
 def ntuple_to_array_akluit(t2,tt,reg,xmin,xmax,maxdata=1000000,nskip=0,pre=''):
-    """ Load TNtuple from a file; require that muons are NOT in the same fiducial eta in the same Z event (exclusive sample) """
+    """ Load TNtuple from a file; require that muons are NOT in the same fiducial eta in the same Z event (exclusive sample)
+    NOTE: this function was not upgraded to include eta/phi bounds in the pre string, and so it uses LOTS of memory!!!
+    """
     ep_name,en_name = repl_dic(['lP_eta','lN_eta'],tt)
     pp_name,pn_name = repl_dic(['lP_pt','lN_pt'],tt)
     fp_name,fn_name = repl_dic(['lP_phi','lN_phi'],tt)
