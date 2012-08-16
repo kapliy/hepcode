@@ -14,10 +14,16 @@ stdout = sys.stdout
 import antondb
 from optparse import OptionParser
 
-dbname = 'out1023L7' # original presentation in MCP mtg on Nov 01 are from here
-dbname = 'out1122v27closure' # closure tests on periods D..K with v27 ntuples
+# SELECT dbname
 dbname = 'out1113mcpupdate' # published constants in MuonMomentumCorrections come from here
 dbname = 'out2011_v29D_05222012_MCP2011' # updated 2011 for full 2011 dataset + extra bin at 2.0 + powheg
+dbname = 'out2011_v29G_08102012_MCP_NEW'
+
+# SELECT eta binning
+boundsP,codeP = [0.30,0.60,0.9,1.30,1.60,2.00,2.50],'T%dT'
+boundsP,codeP = [0.50,1.05,1.70,2.51],'S%dS'
+boundsP,codeP = [0.50,1.05,1.70,2.0,2.5],'W%dW'
+boundsP,codeP = [0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4],'V%dV'
 
 _DISABLE_KLU = False
 _DISABLE_CHI = False
@@ -101,10 +107,6 @@ class Table:
     """ A list of Values across several eta regions
         (CB/MS/ID each gets its own Table level)
     """
-    boundsP = [0.30,0.60,0.9,1.30,1.60,2.00,2.50] #[TxT]
-    boundsP = [0.50,1.05,1.70,2.51] #[SxS]
-    boundsP = [1.05,2.51] #2012
-    boundsP = [0.50,1.05,1.70,2.0,2.5] #[WxW]
     def ordered_pairs(s,lst):
         """ input: [a1,a2,a3]
         output: [a1,a2], [a2,a3]
@@ -119,7 +121,7 @@ class Table:
         s.kp = []
         s.km = []
         # bins
-        s.boundsA = [-z for z in reversed(s.boundsP)] + [0.00,] + s.boundsP
+        s.boundsA = [-z for z in reversed(boundsP)] + [0.00,] + boundsP
         s.bounds = s.ordered_pairs(s.boundsA)
         s.bins = s.regsR = range(0,len(bounds))
     def add_all(s,K,C,kp,km):
@@ -132,7 +134,7 @@ class Table:
             assert(len(s.K)==len(s.C)==len(s.bins))
             for ibin,bin in enumerate(s.bins):
                 print s.K[ibin].string_mcp(),'\t',s.C[ibin].string_mcp()
-        elif type=='kpkm': 
+        elif type=='kpkm':
             assert(len(s.kp)==len(s.km)==len(s.bins))
             for ibin,bin in enumerate(s.bins):
                 print s.kp[ibin].string_mcp(),'\t',s.km[ibin].string_mcp()
@@ -154,7 +156,7 @@ class Value:
         s.stat1 = None
         s.stat2 = None
         # list of systematics groups (correlated/anticorrelated)
-        s.sysgroups = [ (1,) , (2,3,4) ]
+        s.sysgroups = [ (1,) , (2,3,4) ] # only matters for kpkm case
     def string_mcp(s):
         if s.type=='KC':
             return '%.2f\t%.2f\t%.2f'%(s.get_mean(), s.get_tot(), s.get_tot())
@@ -257,16 +259,12 @@ def ordered_pairs(lst):
         output: [a1,a2], [a2,a3]
     """
     return zip(lst,lst[1:])
-boundsP = [0.30,0.60,0.9,1.30,1.60,2.00,2.50] #[TxT]
-boundsP = [0.50,1.05,1.70,2.51] #[SxS]
-boundsP = [1.05,2.51] #2012
-boundsP = [0.50,1.05,1.70,2.0,2.5] #[WxW]
 boundsA = [-z for z in reversed(boundsP)] + [0.00,] + boundsP
 bounds = ordered_pairs(boundsA)
 regsR = range(0,len(bounds))
 for bn in regsR:
     bb = bounds[bn]
-    regs_map['S%dS'%bn] = r'$%.1f < \eta < %.1f$'%(bb[0],bb[1])
+    regs_map[codeP%bn] = r'$%.1f < \eta < %.1f$'%(bb[0],bb[1])
 
 def scales(R,eR,mz,emz,mz0):
     """ Does the math to deduce k+ and k-, along with associated errors """
@@ -768,28 +766,26 @@ def print_syst_scale(regs):
     print r'     Total uncertainty & ' + ' & '.join(['%.2f'%s for s in sumsq([stat1[0],sys4[0]])]) + r'\\'
 
 # load everything into dictionaries
-default,klu,R70,egge = [None]*4  # for k+/k- version
+default,klu,R70,egge = [None]*4  # for k+/k- version [DEPRECATED]
 default_shifts,klu_shifts,R70_shifts,egge_shifts = [None]*4
 default_scales,klu_scales,R70_scales,egge_scales = [None]*4
-regs = ['S%dS'%i for i in regsR]
-regs = ['CC','Bcc','Baa','AA'] #2012
-regs = ['W%dW'%i for i in regsR]
+regs = [codeP%i for i in regsR]
 try:
     if shift:
-        default_scales = load_scale(regs=regs,pattern='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
-        default_shifts = load_shift(regs=regs,pattern='/keysfit/r%d_default_%s'%(rel,alg)+'/%s/%s/SHIFT')
+        default_scales = load_scale(regs=regs,pattern='/zpeak/r%d_powheg_pythia_default_%s'%(rel,alg)+'/%s/%s/gaus0')
+        default_shifts = load_shift(regs=regs,pattern='/keysfit/r%d_powheg_pythia_default_%s'%(rel,alg)+'/%s/%s/SHIFT')
     else:
-        default = load_discales(regs=regs,pattern_R0='/keysfit/r%d_default_%s'%(rel,alg)+'/%s/%s/R0',
-                                pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
+        default = load_discales(regs=regs,pattern_R0='/keysfit/r%d_powheg_pythia_default_%s'%(rel,alg)+'/%s/%s/R0',
+                                pattern_Z='/zpeak/r%d_powheg_pythia_default_%s'%(rel,alg)+'/%s/%s/gaus0')
 except:
     print 'Failed to load default values'
     raise
 try:
     if shift:
-        klu_shifts = load_shift(regs=regs,pattern='/keysfit/r%d_klu_%s'%(rel,alg)+'/%s/%s/SHIFT')
+        klu_shifts = load_shift(regs=regs,pattern='/keysfit/r%d_powheg_pythia_klu_%s'%(rel,alg)+'/%s/%s/SHIFT')
     else:
-        klu = load_discales(regs=regs,pattern_R0='/keysfit/r%d_klu_%s'%(rel,alg)+'/%s/%s/R0',
-                            pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
+        klu = load_discales(regs=regs,pattern_R0='/keysfit/r%d_powheg_pythia_klu_%s'%(rel,alg)+'/%s/%s/R0',
+                            pattern_Z='/zpeak/r%d_powheg_pythia_default_%s'%(rel,alg)+'/%s/%s/gaus0')
     if _DISABLE_KLU:
         klu_shifts = default_shifts
         klu = default
@@ -797,18 +793,18 @@ except:
     print 'Failed to load klu'
 try:
     if shift:
-        R70_shifts = load_shift(regs=regs,pattern='/keysfit/r%d_m70110_%s'%(rel,alg)+'/%s/%s/SHIFT')
+        R70_shifts = load_shift(regs=regs,pattern='/keysfit/r%d_powheg_pythia_m70110_%s'%(rel,alg)+'/%s/%s/SHIFT')
     else:
-        R70 = load_discales(regs=regs,pattern_R0='/keysfit/r%d_m70110_%s'%(rel,alg)+'/%s/%s/R0',
-                            pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/gaus0')
+        R70 = load_discales(regs=regs,pattern_R0='/keysfit/r%d_powheg_pythia_m70110_%s'%(rel,alg)+'/%s/%s/R0',
+                            pattern_Z='/zpeak/r%d_powheg_pythia_default_%s'%(rel,alg)+'/%s/%s/gaus0')
 except:
     print 'Failed to load R70'
 try:
     if shift:
-        egge_scales = load_scale(regs=regs,pattern='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/egge3')
+        egge_scales = load_scale(regs=regs,pattern='/zpeak/r%d_powheg_pythia_default_%s'%(rel,alg)+'/%s/%s/egge3')
     else:
-        egge = load_discales(regs=regs,pattern_R0='/keysfit/r%d_default_%s'%(rel,alg)+'/%s/%s/R0',
-                             pattern_Z='/zpeak/r%d_default_%s'%(rel,alg)+'/%s/%s/egge3')
+        egge = load_discales(regs=regs,pattern_R0='/keysfit/r%d_powheg_pythia_default_%s'%(rel,alg)+'/%s/%s/R0',
+                             pattern_Z='/zpeak/r%d_powheg_pythia_default_%s'%(rel,alg)+'/%s/%s/egge3')
 except:
     print 'Failed to load egge'
     
@@ -888,35 +884,43 @@ dets = ['cmb','exms','id']
 for det in dets:
     node = Table()
     for reg in regs:
-        v_K = Value()
-        v_C = Value()
-        v_kp = Value()
-        v_km = Value()
-        Cdef = a.data['/keysfit/r%d_default_%s/%s/%s/SHIFT'%(rel,alg,det,reg)]
-        Cklu = a.data['/keysfit/r%d_klu_%s/%s/%s/SHIFT'%(rel,alg,det,reg)]
-        CR70 = a.data['/keysfit/r%d_m70110_%s/%s/%s/SHIFT'%(rel,alg,det,reg)]
-        Kdef = a.data['/keysfit/r%d_default_%s/%s/%s/R0'%(rel,alg,det,reg)]
-        Kklu = a.data['/keysfit/r%d_klu_%s/%s/%s/R0'%(rel,alg,det,reg)]
-        KR70 = a.data['/keysfit/r%d_m70110_%s/%s/%s/R0'%(rel,alg,det,reg)]
-        zft0 = a.data['/zpeak/r%d_default_%s/%s/%s/gaus0'%(rel,alg,det,reg)]
-        zft3 = a.data['/zpeak/r%d_default_%s/%s/%s/egge3'%(rel,alg,det,reg)]
-        keys = ['default','chi2','klu','R70','egge']
-        v_C.add_C(Cdef['ksf'], Cdef['chie'],key=keys[0])
-        v_C.add_C(Cdef['chif'],Cdef['chie'],key=keys[1])
-        v_C.add_C(Cklu['ksf'], Cklu['chie'],key=keys[2])
-        v_C.add_C(CR70['ksf'], CR70['chie'],key=keys[3])
-        v_K.add_K(zft0['data_mz'],zft0['data_emz'],zft0['mc_mz'],key=keys[0])
-        v_K.add_K(zft3['data_mz'],zft3['data_emz'],zft3['mc_mz'],key=keys[4])
-        v_kp.add_kp(Kdef['ksf'], Kdef['chie'],zft0['data_mz'],zft0['data_emz'],zft0['mc_mz'],key=keys[0])
-        v_kp.add_kp(Kdef['chif'],Kdef['chie'],zft0['data_mz'],zft0['data_emz'],zft0['mc_mz'],key=keys[1])
-        v_kp.add_kp(Kklu['ksf'], Kklu['chie'],zft0['data_mz'],zft0['data_emz'],zft0['mc_mz'],key=keys[2])
-        v_kp.add_kp(KR70['ksf'], KR70['chie'],zft0['data_mz'],zft0['data_emz'],zft0['mc_mz'],key=keys[3])
-        v_kp.add_kp(Kdef['ksf'], Kdef['chie'],zft3['data_mz'],zft3['data_emz'],zft3['mc_mz'],key=keys[4])
-        v_km.add_km(Kdef['ksf'], Kdef['chie'],zft0['data_mz'],zft0['data_emz'],zft0['mc_mz'],key=keys[0])
-        v_km.add_km(Kdef['chif'],Kdef['chie'],zft0['data_mz'],zft0['data_emz'],zft0['mc_mz'],key=keys[1])
-        v_km.add_km(Kklu['ksf'], Kklu['chie'],zft0['data_mz'],zft0['data_emz'],zft0['mc_mz'],key=keys[2])
-        v_km.add_km(KR70['ksf'], KR70['chie'],zft0['data_mz'],zft0['data_emz'],zft0['mc_mz'],key=keys[3])
-        v_km.add_km(Kdef['ksf'], Kdef['chie'],zft3['data_mz'],zft3['data_emz'],zft3['mc_mz'],key=keys[4])
+        v_kp,v_km = None,None
+        v_K = Value()  # systematic variations on overall   scale K
+        v_C = Value()  # systematic variations on curvature shift C
+        Cdef = a.data['/keysfit/r%d_powheg_pythia_default_%s/%s/%s/SHIFT'%(rel,alg,det,reg)]
+        Cklu = a.data['/keysfit/r%d_powheg_pythia_klu_%s/%s/%s/SHIFT'%(rel,alg,det,reg)]  # deprecated!
+        CR70 = a.data['/keysfit/r%d_powheg_pythia_m70110_%s/%s/%s/SHIFT'%(rel,alg,det,reg)]
+        zft0 = a.data['/zpeak/r%d_powheg_pythia_default_%s/%s/%s/gaus0'%(rel,alg,det,reg)]
+        zft3 = a.data['/zpeak/r%d_powheg_pythia_default_%s/%s/%s/egge3'%(rel,alg,det,reg)]
+        zft0h= a.data['/zpeak/r%d_powheg_herwig_default_%s/%s/%s/gaus0'%(rel,alg,det,reg)]
+        zft3h= a.data['/zpeak/r%d_powheg_herwig_default_%s/%s/%s/egge3'%(rel,alg,det,reg)]
+        zft0p= a.data['/zpeak/r%d_pythia_default_%s/%s/%s/gaus0'%(rel,alg,det,reg)]
+        zft3p= a.data['/zpeak/r%d_pythia_default_%s/%s/%s/egge3'%(rel,alg,det,reg)]
+        v_C.add_C(Cdef['ksf'], Cdef['chie'],key='default')
+        v_C.add_C(Cdef['chif'],Cdef['chie'],key='chi2')
+        #v_C.add_C(Cklu['ksf'], Cklu['chie'],key='klu') #DEPRECATED
+        v_C.add_C(CR70['ksf'], CR70['chie'],key='R70')
+        v_K.add_K(zft0['data_mz'],zft0['data_emz'],zft0['mc_mz'],key='default')
+        v_K.add_K(zft3['data_mz'],zft3['data_emz'],zft3['mc_mz'],key='egge')
+        v_K.add_K(zft3h['data_mz'],zft0h['data_emz'],zft3h['mc_mz'],key='powheg_herwig')
+        #v_K.add_K(zft3p['data_mz'],zft0p['data_emz'],zft3p['mc_mz'],key='powheg_pythia')
+        if False: # DEPRECATED: kpkm version
+            keys = ['default','chi2','klu','R70','egge']
+            Kdef = a.data['/keysfit/r%d_powheg_pythia_default_%s/%s/%s/R0'%(rel,alg,det,reg)]
+            Kklu = a.data['/keysfit/r%d_powheg_pythia_klu_%s/%s/%s/R0'%(rel,alg,det,reg)]
+            KR70 = a.data['/keysfit/r%d_powheg_pythia_m70110_%s/%s/%s/R0'%(rel,alg,det,reg)]
+            v_kp = Value()
+            v_km = Value()
+            v_kp.add_kp(Kdef['ksf'], Kdef['chie'],zft0['data_mz'],zft0['data_emz'],zft0['mc_mz'],key=keys[0])
+            v_kp.add_kp(Kdef['chif'],Kdef['chie'],zft0['data_mz'],zft0['data_emz'],zft0['mc_mz'],key=keys[1])
+            v_kp.add_kp(Kklu['ksf'], Kklu['chie'],zft0['data_mz'],zft0['data_emz'],zft0['mc_mz'],key=keys[2])
+            v_kp.add_kp(KR70['ksf'], KR70['chie'],zft0['data_mz'],zft0['data_emz'],zft0['mc_mz'],key=keys[3])
+            v_kp.add_kp(Kdef['ksf'], Kdef['chie'],zft3['data_mz'],zft3['data_emz'],zft3['mc_mz'],key=keys[4])
+            v_km.add_km(Kdef['ksf'], Kdef['chie'],zft0['data_mz'],zft0['data_emz'],zft0['mc_mz'],key=keys[0])
+            v_km.add_km(Kdef['chif'],Kdef['chie'],zft0['data_mz'],zft0['data_emz'],zft0['mc_mz'],key=keys[1])
+            v_km.add_km(Kklu['ksf'], Kklu['chie'],zft0['data_mz'],zft0['data_emz'],zft0['mc_mz'],key=keys[2])
+            v_km.add_km(KR70['ksf'], KR70['chie'],zft0['data_mz'],zft0['data_emz'],zft0['mc_mz'],key=keys[3])
+            v_km.add_km(Kdef['ksf'], Kdef['chie'],zft3['data_mz'],zft3['data_emz'],zft3['mc_mz'],key=keys[4])
         node.add_all(v_K,v_C,v_kp,v_km)
     t.add_node(node,det)
 
