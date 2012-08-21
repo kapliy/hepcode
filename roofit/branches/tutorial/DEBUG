@@ -3,18 +3,17 @@
 input=/share/t3data3/antonk/ana/ana_v29G_07112012_DtoM_jerjes_wptw_stacoCB_all # histograms use tight iso per Max.
 input=/share/t3data3/antonk/ana/ana_v29G_07202012_newROOT_stacoCB_all
 input=/share/t3data3/antonk/ana/ana_v29G_07252012_newROOT_stacoCB_all
-
 input=/share/t3data3/antonk/ana/ana_v29G_08012012_efffixed_stacoCB_all #eff scales fixed
+input=/share/t3data3/antonk/ana/ana_v29G_08162012_MCP_max_stacoCB_all/ #near-convergence to max cutflow (different efficiency weight: mine more correct)
+
+#input=/share/t3data3/antonk/ana/ana_v29G_08182012_max_wpt_wpol_stacoCB_all  # max cutflow + new boson pt & polarization reweighting
+#input=/share/t3data3/antonk/ana/ana_v29G_08182012_max_wpt_wpol_newMCP_stacoCB_all   # same, plus my new MCP corrections
 
 # RESURRECTING NTUPLE-BASED PLOTTING:
-./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --cut "mcw*puw*effw*trigw*wptw" -m ALL --bgsig 5 --bgewk 5 --bgqcd 3 #--metallsys
+#./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --cut "mcw*puw*effw*isow*trigw*wptw" -m ALL --bgsig 5 --bgewk 5 --bgqcd 3 #--metallsys
 
-#ANTONIO
-#./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso40/l_pt<0.1 && etiso30corr/l_pt<0.1 && met>25.0 && l_pt>20.0 && l_pt<30.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --cut "mcw*puw*effw*trigw" -m ALL --bgsig 2 --bgqcd 0 --refline 0.0,3.0 #--metallsys #d0sig was 10, then was fabs(d0sig)<5.0
-
-# USED FOR MOST MAY STUDIES:
-#./stack2.py --input ${input}/ -o TEST -b --hsource "lepton_absetav" -t TEST -m ALL --bgqcd 2 --bgsig 2 #--metallsys
-
+# MAIN PLOTTER
+./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --cut "mcw*puw*effw*isow*trigw*wptw" -m ALL --bgsig 1 --bgewk 5 --bgqcd 3 #--metallsys
 
 # QCD matrix method
 #./stack2.py --input /share/ftkdata1/antonk/ana_v28HC_02092012_DtoM_cernupd_stacoCB_all -o TEST -b -m matrix_2010inc --var l_eta --bin 20,-2.5,2.5 -t QCD --pre 'ptiso20/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && fabs(d0sig)<10.0 && nmuons==1 && l_trigEF<0.2' --cut mcw*puw --charge 0

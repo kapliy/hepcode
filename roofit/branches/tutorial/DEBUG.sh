@@ -1,7 +1,10 @@
 #!/bin/bash
 
+# This is to make comparisons of different generators in certain key variables
+
 input=/share/t3data3/antonk/ana/ana_v29G_07252012_newROOT_stacoCB_all
 input=/share/t3data3/antonk/ana/ana_v29G_08012012_efffixed_stacoCB_all #eff scales fixed [actually, broken!]
+input=/share/t3data3/antonk/ana/ana_v29G_08162012_MCP_max_stacoCB_all/ #near-convergence to max cutflow (different efficiency weight: mine more correct)
 
 # RESURRECTING NTUPLE-BASED PLOTTING:
 for q in 0 1 2; do

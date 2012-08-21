@@ -222,7 +222,7 @@ class SuCanvas:
       hout.SetBinContent(ieta,val)
       hout.SetBinError(ieta,math.sqrt(err2))
     return hout
-    
+
   def plotAsymmetryFromComponents(s,hdPOS,hdNEG,hmcPOS,hmcNEG,leg=None):
     """ DEPRECATED: wrapper to make a complete plot of charge asymmetry for data vs mc
     from individual charge-dependent histograms """

@@ -4,7 +4,7 @@
 Fitting floating background normalization
 (e.g., QCD)
 """
-import math,sys,re
+import math,sys,re,array
 import ROOT
 from ROOT import RooWorkspace,RooArgSet,RooArgList,RooDataHist,RooDataSet,RooAbsData,RooFormulaVar,RooRealVar
 from ROOT import RooHistPdf,RooAddPdf #RooGlobalFunc
@@ -89,10 +89,39 @@ class SuFit:
   def ArgSet(s):
     return RooArgSet(s.w.var(s.vnames[0]))
 
+  @staticmethod
+  def dump_plot(h,name='SYS'):
+    """ A generic mini-function to plot a collection of TObjects """
+    o = []
+    if isinstance(h,list) or isinstance(h,tuple):
+      o = h
+    else:
+      o = [h,]
+    assert len(o)>0
+    c = ROOT.TCanvas(name,name,1024,768)
+    c.cd()
+    [ oo.SetLineColor(i+1) for i,oo in enumerate(o) ]
+    o[0].Draw()
+    [ oo.Draw('A SAME') for oo in o[1:] ]
+    maxh = max([htmp.GetMaximum() for htmp in o])*1.3
+    o[0].GetYaxis().SetRangeUser(0,maxh)
+    c.SaveAs(name+'.png')
+
+  @staticmethod
+  def first_nonzero_bin(h,bmin=1):
+    """ Returns first bin at which this and next bin have a non-zero value
+    Underflow/overflow bins are explicitly ignored
+    """
+    for i in xrange(bmin+1,h.GetNbinsX()+1):
+      if h.GetBinContent(i-1)>0 and h.GetBinContent(i)>0:
+        return i # i-1   # let's skip the first bin, too!
+    print 'WARNING: failed to find a non-zero bin in first_nonzero_bin. Proceeding starting with first bin...'
+    return bmin
+
   def doFitTF(s):
     """ A version of doFit using TFractionFitter
-    This supposedlt takes into account uncertainties on the model (but doesn't)
-    I also think EWK contribution is allowed to float, too
+    This is supposed to take into account uncertainties on the model (but doesn't)
+    Note: EWK contribution is allowed to float, too
     """
     assert s.data and s.fixed and len(s.free)==1, 'SuFit has not been supplied with all required input histograms'
     # clear results from previous fit
@@ -100,18 +129,42 @@ class SuFit:
     s.scales = []
     s.fractionsE = []
     s.scalesE = []
-    # FractionFitter
+    # set up TFractionFitter and fit range
     data = s.data
     mc = ROOT.TObjArray(2) # MC histograms are put into this array
     mc.Add(s.fixed.Clone())
     [mc.Add(ff.Clone()) for ff in s.free]
     s.fit = fit = ROOT.TFractionFitter(data, mc);  # initialise
-    [ fit.Constrain(i,0.0,1.0) for i in xrange(0, mc.GetSize()) ] # constrain fractions to be between 0 and 1
     var = s.w.var(s.vnames[0])
     s.fitmin,s.fitmax = s.data.FindFixBin(var.getMin()) , s.data.FindFixBin(var.getMax())
+    s.plotmin,s.plotmax = s.fitmin,s.fitmax
+    s.fitmin = SuFit.first_nonzero_bin(data,s.fitmin)
+    print 'INFO: SuFit::doFitTF fit range:',s.vnames[0],s.fitmin,s.fitmax
     fit.SetRangeX(s.fitmin,s.fitmax) # choose MET fit range
-    # extra parameters
-    vFit = fit.GetFitter();
+    if False: # debugging
+      s.dump_plot([data,s.fixed,s.free[0]])
+    # set up extra parameters. frac0 = EWK (fixed), frac1 = QCD (free)
+    assert fit.GetFitter()
+    if False:
+      [ fit.Constrain(i,0.0,1.0) for i in xrange(0, mc.GetSize()) ] # constrain fractions to be between 0 and 1
+    else:
+      ewkfrac = s.fixed.Integral(s.fitmin,s.fitmax)/data.Integral(s.fitmin,s.fitmax)
+      fixpars = False
+      if ewkfrac>1.0:
+        print 'WARNING: SuFit::doFitTF EWK background already exceeds DATA',ewkfrac,s.fixed.Integral(),data.Integral()
+        ewkfrac = 0.95
+        fixpars = False
+      qcdfrac = 1.0-ewkfrac
+      fit.GetFitter().SetParameter(0,"ewkfrac",ewkfrac,0.01,0.0,1.0);
+      fit.GetFitter().SetParameter(1,"qcdfrac",qcdfrac,0.01,0.0,1.0);
+      if fixpars:
+        fit.GetFitter().FixParameter(0);
+      if False:
+        arglist = array.array('d',[1000,0.001])  #ncalls,tolerance
+        fit.GetFitter().ExecuteCommand("MIGRAD",arglist,2);
+      print 'INFO: SuFit::doFitTF parameter defaults:',ewkfrac,qcdfrac
+    # start the fits
+    print 'Starting fits...'
     s.status = fit.Fit()      # perform the fit
     s.nfits = 1
     if s.status!=0:
@@ -137,9 +190,10 @@ class SuFit:
       s.WscalesE.append( 0 )
       s.chi2.append(0)
       s.ndf.append(0)
-      
       print 'ERROR: fit failed to converge'
       return
+    else:
+      print 'INFO: fit converged after',s.nfits,'iterations'
     # save all templates
     s.hfixed = fit.GetMCPrediction(0).Clone()
     s.hfree = fit.GetMCPrediction(1).Clone()
@@ -171,9 +225,10 @@ class SuFit:
     s.WscalesE[-1] *= s.data.Integral()
     s.WscalesE[-1] /= s.fixed.Integral() # original ewk fraction
     # fit quality
-    #s.chi2.append( fit.GetChisquare() )
-    s.chi2.append( data.Chi2Test( s.fit.GetPlot(), "UW CHI2" )  )
+    s.chi2.append( fit.GetChisquare() )
+    #s.chi2.append( data.Chi2Test( s.fit.GetPlot(), "UW CHI2" )  )
     s.ndf.append( fit.GetNDF() )
+    print 'Chi2 =','%8f'%s.chi2[-1],' NDF =',s.ndf[-1]
 
   def doFit(s):
     """ do fit and return weights """
@@ -195,6 +250,7 @@ class SuFit:
 
     var = s.w.var(s.vnames[0])
     s.fitmin,s.fitmax = s.data.FindFixBin(var.getMin()) , s.data.FindFixBin(var.getMax())
+    s.plotmin,s.plotmax = s.fitmin,s.fitmax
 
     # create RooDataHist for data
     s.dataHist = RooDataHist( "dataHist" , "dataHist" , s.ArgList() , s.data )
@@ -379,6 +435,7 @@ class SuFit:
     # main plot area: draw {data,model,fixed,qcd}
     canvas.cd_plotPad()
     fit = s.fit
+    stack = None
     if s.status==0:
       # fixed - must be scaled
       ipattern = 3001
@@ -414,20 +471,22 @@ class SuFit:
     data.SetFillStyle(0)
     #ROOT.gStyle.SetErrorX(0.001)
     data.Draw('X0 A SAME')
-    data.GetXaxis().SetRange(s.fitmin,s.fitmax)
 
     # prettify
-    data.GetXaxis().SetTitleOffset( canvas.getXtitleOffset() )
-    data.GetYaxis().SetTitleOffset( canvas.getYtitleOffset() )
-    data.GetXaxis().SetTitle( s.w.var(s.vnames[ivar]).GetName() )
-    data.GetXaxis().SetTitleColor(ROOT.kBlack)
-    data.GetXaxis().SetLabelSize( canvas.getLabelSize() )
-    data.GetXaxis().SetTitleSize( canvas.getAxisTitleSize() )
-    data.GetXaxis().CenterTitle()
-    data.GetYaxis().SetTitle( "entries / GeV" )
-    data.GetYaxis().SetLabelSize( canvas.getLabelSize() )
-    data.GetYaxis().SetTitleSize( canvas.getAxisTitleSize() )
-    data.GetYaxis().CenterTitle()
+    obj = stack
+    if obj:
+      obj.GetXaxis().SetRange(s.plotmin,s.plotmax)
+      obj.GetXaxis().SetTitleOffset( canvas.getXtitleOffset() )
+      obj.GetYaxis().SetTitleOffset( canvas.getYtitleOffset() )
+      obj.GetXaxis().SetTitle( s.w.var(s.vnames[ivar]).GetName() )
+      obj.GetXaxis().SetTitleColor(ROOT.kBlack)
+      obj.GetXaxis().SetLabelSize( canvas.getLabelSize() )
+      obj.GetXaxis().SetTitleSize( canvas.getAxisTitleSize() )
+      obj.GetXaxis().CenterTitle()
+      obj.GetYaxis().SetTitle( "entries / GeV" )
+      obj.GetYaxis().SetLabelSize( canvas.getLabelSize() )
+      obj.GetYaxis().SetTitleSize( canvas.getAxisTitleSize() )
+      obj.GetYaxis().CenterTitle()
     
     s.key = key = ROOT.TLegend(0.6, canvas.getY2()-(0.03*(3+len(s.free))) , canvas.getX2() , canvas.getY2() )
     key.SetTextSize( canvas.getLegendTextSize() )
@@ -445,11 +504,11 @@ class SuFit:
     fractext.SetMargin( 0 )
     for ift,frac in enumerate(s.fractions):
       if s.fractions[ift]!=0 and s.scales[ift]!=0:
-        fractext.AddText( '%s Frac. = %.3f #pm %.2f%%'%(s.free[ift].getLegendName(),s.fractions[ift],s.fractionsE[ift]/s.fractions[ift]*100.0) )
-        fractext.AddText( '%s Scale = %.3f #pm %.2f%%'%(s.free[ift].getLegendName(),s.scales[ift],s.scalesE[ift]/s.scales[ift]*100.0) )
+        fractext.AddText( '%s Frac. = %.3f #pm %.2f%%'%(s.free[ift].getLegendName(),s.fractions[ift],s.fractionsE[ift]/s.fractions[ift]*100.0 if abs(s.fractions[ift])>1e-6 else 0) )
+        fractext.AddText( '%s Scale = %.3f #pm %.2f%%'%(s.free[ift].getLegendName(),s.scales[ift],s.scalesE[ift]/s.scales[ift]*100.0 if abs(s.scales[ift])>1e-6 else 0) )
       if s.Wfractions[ift]!=0 and s.Wscales[ift]!=0:
-        fractext.AddText( '%s Frac. = %.3f #pm %.2f%%'%('EWK',s.Wfractions[ift],s.WfractionsE[ift]/s.Wfractions[ift]*100.0) )
-        fractext.AddText( '%s Scale = %.3f #pm %.2f%%'%('EWK',s.Wscales[ift],s.WscalesE[ift]/s.Wscales[ift]*100.0) )
+        fractext.AddText( '%s Frac. = %.3f #pm %.2f%%'%('EWK',s.Wfractions[ift],s.WfractionsE[ift]/s.Wfractions[ift]*100.0 if s.Wfractions[ift]!=0 else 0) )
+        fractext.AddText( '%s Scale = %.3f #pm %.2f%%'%('EWK',s.Wscales[ift],s.WscalesE[ift]/s.Wscales[ift]*100.0 if s.Wscales[ift]!=0 else 0) )
       if s.ndf[ift]!=0:
         fractext.AddText( 'CHI2 = %.1f  CHI2/NDF=%.1f'%(s.chi2[ift],s.chi2[ift]/s.ndf[ift]) )
     key.Draw("9");
@@ -468,11 +527,13 @@ class SuFit:
       s.hratio,s.href = data.Clone('hratio'),data.Clone('href')
       s.hratio.Divide(hmodel)
       canvas.drawRefLine(s.href)
+      s.href.GetXaxis().SetRange(s.plotmin,s.plotmax)
       canvas.drawRatio(s.hratio)
       s.hratio.Draw("AP same")
-      s.hratio.GetXaxis().SetRange(s.fitmin,s.fitmax)
     # finalize
     canvas.update()
+    if False: # debugging:
+      canvas.SaveAs('SYS.png')
     return canvas,None
 
 gbg_tmp = []
