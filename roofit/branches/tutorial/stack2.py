@@ -341,15 +341,15 @@ q = opts.charge
 # Reco-level [histo]
 unfmethod = 'RooUnfoldBinByBin'
 #unfmethod = 'RooUnfoldBayes'
-#tightlvl = ''
-tightlvl = 'tight_'
+tightlvl = ''
+#tightlvl = 'loose_'
 #jetlvl = '_caljet'
 jetlvl = ''
 spR = SuPlot()
 spR.bootstrap(do_unfold=False,
               unfold={'sysdir':tightlvl+'nominal'+jetlvl,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
               charge=q,var=opts.var,histo=opts.hsource,
-              sysdir=[tightlvl+'nominal'+jetlvl,tightlvl+'nominal'+jetlvl,'isofail'+jetlvl],subdir='st_w_final',basedir='baseline', #isowind
+              sysdir=[tightlvl+'nominal'+jetlvl,tightlvl+'nominal'+jetlvl,'loose_isofail'+jetlvl],subdir='st_w_final',basedir='baseline', #isowind
               qcd={'var':'met','nbins':100,'min':0,'max':100,'metfit':'metfit','forcenominal':False})
 SuStack.QCD_SYS_SCALES = opts.metallsys
 SuStack.QCD_TF_FITTER = True
@@ -372,7 +372,7 @@ spTN.bootstrap(ntuple=opts.ntuple,histo=opts.hsource,
                weight=opts.cut,pre=fortruth(opts.pre))
 spTN.enable_nominal()
 
-def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errorsMC=False,do_unfold=False,do_data=True,do_mc=True,do_summary=False,new_scales=None,name=''):
+def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errorsMC=False,do_unfold=False,do_data=True,do_mc=True,do_ratios=False,do_summary=False,new_scales=None,name=''):
     """ Plots histograms with multiple Monte-Carlos overlayed
     m = 1   :  data
     m = 2   :  data_sub
@@ -391,7 +391,8 @@ def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errors
         M.prefill_mc(err=do_errorsMC if do_unfold==False else False) # if unfolded, only show errors on final data
     if do_data:
         M.prefill_data(err=do_errorsDA)
-    M.disable_ratios() # FIXME: this should stay here for distributions studies
+    if not do_ratios:
+        M.disable_ratios() #this should be applied for distributions studies
     h = []
     for i in range(M.ntot()):
         if do_data and i==M.ntot()-1: #data
@@ -582,11 +583,63 @@ def june26_asymmetry_all_slices():
             plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='NJETS2')
             histo = 'bin_%d/njets:4:5'
             plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='NJETS3UP')
+
 def july02_summarize_qcd_fits(fitvar,fitrange):
     fitreg = 'metfit' if fitvar=='met' else 'baseline'
     assert len(fitrange)==2
     #TEST_Q3S2X5Y5Z5_isofail__tight_nominal_st_w_final_metfit_bin_8_lpt_4_NEG_met_0to100.png
-    n = 'Q3S%dX5Y5Z5_'%opts.bgsig+'isofail__tight_nominal_st_w_final_' + fitreg + '_bin_%d_lpt_%d_%s_' + fitvar + '_' + str(fitrange[0]) + 'to' + str(fitrange[1])
+    #TEST_Q3S5X5Y5Z5_loose_isofail__nominal_st_w_final_metfit_bin_0_lpt_4_POS_met_0to100.png
+    n = 'Q3S%dX5Y5Z5_'%opts.bgsig+'loose_isofail__nominal_st_w_final_' + fitreg + '_bin_%d_lpt_%d_%s_' + fitvar + '_' + str(fitrange[0]) + 'to' + str(fitrange[1])
+    f = open('qcd.html','w')
+    etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
+    ptbins = [20,25,30,35,40,45,50,120]
+    print >>f,'<HTML><BODY>'
+    for iq in ('POS','NEG'):
+        print >>f,'<HR>'
+        print >>f,iq
+        print >>f,'<HR>'
+        #print table
+        print >>f,'<TABLE border="1" width="900">'
+        print >>f,'<TR>'
+        print >>f, '<TD width="100">pT/eta</TD>'
+        for ipt in xrange(0,len(ptbins)-1):
+            print >>f,'<TD width="50">','%d&lt;pT&lt;%d'%(ptbins[ipt],ptbins[ipt+1]),'</TD>'
+        print >>f,'</TR>'
+        for ieta in xrange(0,len(etabins)-1):
+            print >>f,'<TR>'
+            print >>f, '<TD width="100">','%.2f&lt;|eta|&lt;%.2f'%(etabins[ieta],etabins[ieta+1]),"</TD>"
+            for ipt in xrange(0,len(ptbins)-1):
+                key = n%(ieta,ipt,iq)
+                v = -1.0
+                if key in po.scales:
+                    v = po.scales[key][0]  #scale factor
+                    v = po.scales[key][2]*100.0  #fraction
+                print >>f,'<TD width="50">','%.1f%%'%(v),'</TD>'
+            print >>f,'</TR>'
+        print >>f,'</TABLE>'
+        # print images
+        print >>f,'<BR>'
+        print >>f,'<TABLE border="0" width="2240">'
+        NF='http://www.wzone.com/myimages/PageNotFound-Man.jpg'
+        for ieta in xrange(0,len(etabins)-1):
+            print >>f,'<TR>'
+            for ipt in xrange(0,len(ptbins)-1):
+                key = n%(ieta,ipt,iq)
+                print >>f,'<TD width="280" align="center"><img src="TEST/%s_%s.png" width="270"/></TD>'%(opts.tag,SuCanvas.cleanse(key))
+            print >>f,'</TR>'
+        print >>f,'</TABLE>'
+    print >>f,'</BODY></HTML>'
+    f.close()
+
+def aug20_summarize_qcd_fits():
+    """ A study of QCD systematics in eta x pt bins  """
+    fitvars = ['met','wmt']
+    fitranges = [(0,80),(40,90)]
+    fitreg = 'metfit' if fitvar=='met' else 'baseline'
+    assert len(fitrange)==2
+    #TEST_Q3S2X5Y5Z5_isofail__tight_nominal_st_w_final_metfit_bin_8_lpt_4_NEG_met_0to100.png
+    #TEST_Q3S5X5Y5Z5_loose_isofail__nominal_st_w_final_metfit_bin_0_lpt_4_POS_met_0to100.png
+    n = 'Q3S%dX5Y5Z5_'%opts.bgsig+'loose_isofail__nominal_st_w_final_' + fitreg + '_bin_%d_lpt_%d_%s_' + fitvar + '_' + str(fitrange[0]) + 'to' + str(fitrange[1])
     f = open('qcd.html','w')
     etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
     ptbins = [20,25,30,35,40,45,50,120]
@@ -667,7 +720,7 @@ def study_jet_calibration_effects():
 
 # combined plots
 if mode=='ALL' or mode=='all':
-    if True:
+    if False:
         plots = ['lepton_absetav','lpt','met','wmt']
         plot_stacks(spR.clone(),plots,m=1,qs=(2,))
     if False: # inclusive reco-level and truth-level asymmetry
@@ -692,15 +745,16 @@ if mode=='ALL' or mode=='all':
             x = ' && fabs(l_eta)>=%.2f && fabs(l_eta)<=%.2f'%(etabins[ie],etabins[ie+1])
             print 'Limiting eta:',x
         plots = [ ]
-        plots.append( ('fabs(l_eta)',None,opts.pre+x) )
-        plots.append( ('l_pt','55,20,70',prunesub(opts.pre,'l_pt','l_pt>20 && l_pt<70')+x) )
+        #plots.append( ('fabs(l_eta)',None,opts.pre+x) )
+        #plots.append( ('l_pt','55,20,70',prunesub(opts.pre,'l_pt','l_pt>20 && l_pt<70')+x) )
         plots.append( ('met','50,0,120',prunesub(opts.pre,'met','met>0 && met<120')+x) )
-        plots.append( ('w_mt','50,30,120',prunesub(opts.pre,'w_mt','w_mt>30 && w_mt<120')+x) )
+        #plots.append( ('w_mt','50,30,120',prunesub(opts.pre,'w_mt','w_mt>30 && w_mt<120')+x) )
+        plots.append( ('w_pt','70,0,120',opts.pre+x) )
         for bla in plots:
             var=bla[0]
             bin=bla[1]
             pre=bla[2]
-            plot_any(spRN.clone(path=path_reco,var=var,pre=pre,bin=bin),None,m=2,var=None,name='reco_'+var,do_data=False,new_scales=False)
+            plot_any(spRN.clone(path=path_reco,var=var,pre=pre,bin=bin),None,m=2,var=None,name='reco_'+var,do_data=False,do_ratios=True,new_scales=False)
     if False: # studying differences in generators - TRUTH LEVEL
         po.choose_qcd(0)
         SuCanvas._refLineMin = 0.8
@@ -721,14 +775,31 @@ if mode=='ALL' or mode=='all':
             var=bla[0]
             bin=bla[1]
             pre=bla[2]
-            plot_any(spTN.clone(var=var,pre=pre,bin=bin),None,m=2,var=None,name='reco_'+var,do_data=False,new_scales=False)
+            plot_any(spTN.clone(var=var,pre=pre,bin=bin),None,m=2,var=None,name='reco_'+var,do_data=False,do_ratios=True,new_scales=False)
+    if True: # QCD systematic in 2d study: reconstruction in |eta| slices + QCD fits in |eta| x pT bins
+        spR.enable_nominal()
+        histo = 'bin_%d/lpt:0:7'
+        qcdadds = []
+        qcdadds.append( {'var':'met','min':0,'max':80} )
+        qcdadds.append( {'var':'wmt','min':40,'max':90} )
+        for bgsig in (1,4,5):
+            po.choose_sig(bgsig)
+            for iqcd,qcdadd in enumerate(qcdadds):
+                plot_any(spR.clone(histo=histo,qcdadd=qcdadd),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='SLICES_sig%d_%d'%(bgsig,iqcd))
+        import pickle
+        output = open('data.pkl', 'wb')
+        pickle.dump(po.scales,output)
+        output.close()
+        #aug20_summarize_qcd_fits()
     if False: # reconstruction in |eta| slices + QCD fits in |eta| x pT bins
         spR.enable_nominal()
         plot_any(spR.clone(),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='INCLUSIVE_DIRECT')
         histo = 'bin_%d/lpt:0:7'
-        qcdadd={'var':'met','min':0,'max':100}
-        plot_any(spR.clone(histo=histo,qcdadd=qcdadd),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='INCLUSIVE_SLICES')
-        july02_summarize_qcd_fits(qcdadd['var'],(qcdadd['min'],qcdadd['max']))
+        qcdadd={'var':'met','min':0,'max':80}
+        #qcdadd={'var':'wmt','min':40,'max':90}
+        if True:
+            plot_any(spR.clone(histo=histo,qcdadd=qcdadd),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='INCLUSIVE_SLICES')
+            july02_summarize_qcd_fits(qcdadd['var'],(qcdadd['min'],qcdadd['max']))
     if False: # stack compaison of TH1 and ntuple-based histograms
         spR.enable_nominal()
         po.choose_qcd(3)

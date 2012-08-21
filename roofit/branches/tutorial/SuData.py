@@ -411,15 +411,12 @@ class SuPlot:
             add('mcp_cdown',prep+'mcp_cdown')
             next('MCP_CSCALE')
         # MCP efficiency
-        if False:  #FIXME
-            add2('effstatup','st_w_effstatup',prep+'nominal_effstatup')
-            add2('effstatdown','st_w_effstatdown',prep+'nominal_effstatdown')
-            next('MCP_EFFSTAT')
-            add2('effsysup','st_w_effsysup',prep+'nominal_effsysup')
-            add2('effsysdown','st_w_effsysdown',prep+'nominal_effsysdown')
-            next('MCP_EFFSYS')
-            add2('trigstatup','st_w_trigstatup',prep+'nominal_trigstatup')
-            add2('trigstatdown','st_w_trigstatdown',prep+'nominal_trigstatdown')
+        if True:
+            add2('effup','st_w_efftotup',prep+'nominal_effsysup')
+            add2('effdown','st_w_efftotdown',prep+'nominal_effsysdown')
+            next('MCP_EFF')
+            add2('trigup','st_w_trigstatup',prep+'nominal_trigstatup')
+            add2('trigdown','st_w_trigstatdown',prep+'nominal_trigstatdown')
             next('MCP_TRIG')
         # JET
         if True:
@@ -1123,7 +1120,17 @@ class SuStack:
                 # modify basedir to become metfit/bin_%d/lpt_%d
                 dtmp = d.clone()
                 dtmp.basedir = dtmp.qlist( d.basedir[2] + '/bin_%d'%d.slice + '/' + tname ) # nominal/bin_%(ieta)/lpt_%(ipt)
-                res.append(s.get_scale(dtmp))
+                # FIXME AK: skipping non-convergent fits  (SIGFLAG,Q,QCDVAR,ETA,PT)
+                VETO = [(4,1,'met',0,5),(4,1,'met',5,5)]
+                VETO += [(4,0,'met',6,4),(4,0,'met',6,5),(4,0,'met',8,3)]
+                VETO += [(1,0,'met',1,3),(1,0,'met',3,1),(1,0,'met',3,5),(1,0,'met',4,5),(1,0,'met',5,3),(1,0,'met',6,1),(1,0,'met',6,2),(1,0,'met',8,5),(1,0,'met',9,5),(1,0,'met',10,3)]
+                VETO += [(1,1,'met',0,5),(1,1,'met',1,4),(1,1,'met',2,4),(1,1,'met',3,1),(1,1,'met',3,3),(1,1,'met',3,6)]
+                # vetos for reduced-range fits
+                VETO = [(1,1,'met',7,2),(1,0,'wmt',6,5),(1,1,'wmt',0,5),(1,1,'wmt',2,5),(1,1,'wmt',3,5),(1,1,'wmt',4,3)]
+                if (s.flagsum['S'],d.charge,d.qcd['var'],d.slice,ib) in VETO:
+                    res.append(0.0)
+                else:
+                    res.append(s.get_scale(dtmp))
             # duplicate first/last bin scales for underflow/overflow scale
             return [res[0],] + res + [res[-1],]
         elif d.is_ntuple_etabins():

@@ -1,3 +1,6 @@
+Idea: fit in delta-phi between MET and muon
+TODO: understand the Z MC veto and drell-yan
+
 ANTON TODO:
 * Finish comparing Max cutflow
 * Add unfolding tree a-la max
@@ -5,16 +8,16 @@ ANTON TODO:
 
 
 MAX TODO:
-- QCD fits in 2D bins
-- make ratio plots of truth level and reco level. neutrino pt vs met-truth
+- QCD fits in 2D bins. Add extra histograms to make sure we can fit them!
+- make ratio plots of truth level and reco level.
+- neutrino pt vs met-truth (to factor out jets)
 - compare tunes of powheg/herwig and mc@nlo
 
 
 MEL TODO:
 Plot W pT for different generators
 In W rest frame, decay angle (polar angle) of lepton - in slices of W pT
-Check if MC@NLO and Powheg+Herwig use the same tune?
-Look at neutrinos as opposed to MET - to factor out jets
+MCP corrections: split in phi bins, for the barrel case where there is large C offset?
 
 Make sure i save the correct eff uncertainty in ntuples!
 Check if Max gets a really large trig effuncertainty because he does not use corresponding unfolding matrices!
