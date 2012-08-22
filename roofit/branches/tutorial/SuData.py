@@ -30,7 +30,7 @@ class SuSys:
             return [v]*3
     def __init__(s,name='nominal',charge=2,qcd = {}, unfold={},qcderr='NOM',slice=None,
                  ntuple=None,path=None,var=None,bin=None,pre='',weight="mcw*puw*effw*trigw",
-                 histo=None,sysdir=None,subdir=None,basedir=None ):
+                 histo=None,sliced=False,sysdir=None,subdir=None,basedir=None ):
         # actual histograms
         s.h = None
         s.stack = None
@@ -54,6 +54,7 @@ class SuSys:
         s.weight = weight
         # Histogram-based resources
         s.histo = histo
+        s.sliced = sliced
         # these path elements are organized into lists with: [ /in/data , /in/mc , /in/isofail ]
         s.sysdir = s.qlist(sysdir)
         s.subdir = s.qlist(subdir)
@@ -146,12 +147,15 @@ class SuSys:
         return
     def is_sliced(s):
         """ Returns True if s.histo represents a folder of histograms in eta-slices """
-        return re.search('bin_',s.histo) if s.histo else False
+        if s.sliced:
+            assert (re.search('bin_',s.histo) if s.histo else True)
+        return s.sliced
+        #return re.search('bin_',s.histo) if s.histo else False
     def is_ntuple_etabins(s):
         """ Returns True if we are doing a qcd fit in |eta| bins """
         return s.use_ntuple() and 'etabins' in s.qcd and s.qcd['etabins']==True
     def clone(s,sysdir=None,sysdir_mc=None,subdir=None,subdir_mc=None,basedir=None,
-              qcderr=None,qcdadd=None,name=None,q=None,histo=None,unfold=None,unfdir=None,unfhisto=None,
+              qcderr=None,qcdadd=None,name=None,q=None,histo=None,sliced=None,unfold=None,unfdir=None,unfhisto=None,
               ntuple=None,path=None,var=None,bin=None,pre=None,weight=None,
               slice=None):
         """ deep copy, also allowing to update some members on-the-fly (useful to spawn systematics) """
@@ -173,6 +177,7 @@ class SuSys:
             res.qcd = qcd
         if name!=None: res.name = name
         if histo!=None: res.histo = histo
+        if sliced!=None: res.sliced = sliced
         if q!=None: res.charge = q
         if unfold!=None:
             res.unfold = copy.copy(unfold)
@@ -349,7 +354,7 @@ class SuPlot:
         return res
     def bootstrap(s,charge=2,qcd = {},unfold={},do_unfold=False,qcderr='NOM',
                   ntuple=None,path=None,var=None,bin=None,pre='',weight="mcw*puw*effw*trigw",
-                  histo=None,sysdir=None,subdir=None,basedir=None ):
+                  histo=None,sliced=None,sysdir=None,subdir=None,basedir=None ):
         """ bootstraps a full collection of systematics from the nominal instance of SuSys """
         prep=''
         if sysdir and sysdir[0]=='tight_nominal':
@@ -357,7 +362,7 @@ class SuPlot:
         # nominal first:
         nom = SuSys(charge=charge,qcd=qcd,unfold=unfold,qcderr=qcderr,
                     ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight,
-                    histo=histo,sysdir=sysdir,subdir=subdir,basedir=basedir)
+                    histo=histo,sliced=sliced,sysdir=sysdir,subdir=subdir,basedir=basedir)
         s.sys = [ [nom,] ]
         s.flat = [ nom ]
         s.groups = [ 'nominal' ]
@@ -445,7 +450,7 @@ class SuPlot:
             add('met_scalesofttermsdown',prep+'met_scalesofttermsdown')
             next('MET_SCALE')
         # QCD normalization
-        if False: #FIXME
+        if False:
             add3('qcdup',1.5,prep+'nominal')
             add3('qcddown',0.5,prep+'nominal')
             next('QCD_FRAC')
@@ -709,6 +714,19 @@ class SuSample:
     def nentries(s,path=None):
         """ compute number of entries in TNtuple """
         return s.nt[path].GetEntries() if path else s.nt[s.path].GetEntries()
+    def get_preserving_lumi(s,evcnt='nevts'):
+        """ Special hack: returns fake s.lumi value that results in a lumi scale of 1.0 for this sample """
+        assert re.match('mc',s.name)
+        from MC import mc
+        mrun = mc.match_sample(s.name)
+        assert mrun
+        xsec = mrun.xsec*mrun.filteff
+        nevents = s.nevt[s.path][evcnt]
+        sample = mrun.sample
+        flumi = nevents*1.0 / xsec
+        scale = 1.0/nevents*flumi*xsec
+        assert abs(scale)-1.0 < 1e-5
+        return flumi
     def scale(s,evcnt='nevts'):
         """ normalize MC histograms to luminosity """
         if not re.match('mc',s.name):
@@ -727,10 +745,11 @@ class SuSample:
             # Choose the right evcnt - depending on which scale factors were used (effw/trigw)
             nevents = s.nevt[s.path][evcnt]
             sample = mrun.sample
+            scale = 1.0/nevents*s.lumi*xsec*qcdscale 
             if sample not in s.seen_samples:
-                print 'MC %s: \t xsec=%.1f (%.1f*%.1f) nb \t nevts=%d/%d'%(sample,xsec,mrun.xsec,mrun.filteff,nevents,mrun.nevents)
+                print 'MC %s: \t xsec=%.1f (%.1f*%.1f) nb \t nevts=%d scale=%.3f'%(sample,xsec,mrun.xsec,mrun.filteff,nevents,scale)
                 s.seen_samples.append(sample)
-            return 1.0/nevents*s.lumi*xsec*qcdscale
+            return scale
         print 'WARNING: unable to find scale for MC sample ',s.name
         return 1.0
     def GetHisto(s,hname,hpath):
@@ -898,6 +917,7 @@ class SuStackElm:
             res.SetLineColor(ROOT.kBlack)
             res.SetFillColor(s.color)
             res.SetMarkerSize(0)
+            # special scaling: for QCD
             if unitize:
                 res.Unitize()
             elif SuStackElm.new_scales==True and 'qcd' in s.flags and (isinstance(d,SuPlot) and d.status==0):
@@ -920,12 +940,15 @@ class SuStack:
     """
     QCD_SYS_SCALES = False
     QCD_TF_FITTER = True
+    QCD_STAT_HACK = True
     def __init__(s):
         """ constructor """
         # stack elements
         s.elm = []
-        # garbage collector
+        # QCD normalization fit results
         s.scales = {} # cache of QCD normalization scales
+        s.scalekeys = []
+        # garbage collector
         s.gbg = []
         s.fitnames = {}
         s.fits = {}
@@ -1120,13 +1143,9 @@ class SuStack:
                 # modify basedir to become metfit/bin_%d/lpt_%d
                 dtmp = d.clone()
                 dtmp.basedir = dtmp.qlist( d.basedir[2] + '/bin_%d'%d.slice + '/' + tname ) # nominal/bin_%(ieta)/lpt_%(ipt)
-                # FIXME AK: skipping non-convergent fits  (SIGFLAG,Q,QCDVAR,ETA,PT)
-                VETO = [(4,1,'met',0,5),(4,1,'met',5,5)]
-                VETO += [(4,0,'met',6,4),(4,0,'met',6,5),(4,0,'met',8,3)]
-                VETO += [(1,0,'met',1,3),(1,0,'met',3,1),(1,0,'met',3,5),(1,0,'met',4,5),(1,0,'met',5,3),(1,0,'met',6,1),(1,0,'met',6,2),(1,0,'met',8,5),(1,0,'met',9,5),(1,0,'met',10,3)]
-                VETO += [(1,1,'met',0,5),(1,1,'met',1,4),(1,1,'met',2,4),(1,1,'met',3,1),(1,1,'met',3,3),(1,1,'met',3,6)]
-                # vetos for reduced-range fits
+                # mechanism to manually skip non-convergent fits  (SIGFLAG,Q,QCDVAR,ETA,PT)
                 VETO = [(1,1,'met',7,2),(1,0,'wmt',6,5),(1,1,'wmt',0,5),(1,1,'wmt',2,5),(1,1,'wmt',3,5),(1,1,'wmt',4,3)]
+                VETO = []
                 if (s.flagsum['S'],d.charge,d.qcd['var'],d.slice,ib) in VETO:
                     res.append(0.0)
                 else:
@@ -1199,14 +1218,39 @@ class SuStack:
         f.addFitVar( d2.qcd['var'], d2.qcd['min'] , d2.qcd['max'] , '%s (GeV)'%(d2.qcd['var']) );
         # get histograms
         hdata   = s.data('data',d2).h
-        hfixed = s.ewk('bgfixed',d2).h
         hfree = s.qcd('bgfree',d2).h
+        # use fake lumi to make sure the signal statistics is not scaled before entering TFractionFitter
+        oldlumi = SuSample.lumi
+        if SuStack.QCD_STAT_HACK:
+            loop = [e for e in s.elm if 'sig' in e.flags and 'no' not in e.flags]
+            assert len(loop)==1,'WARNING: QCD fitter assumes that your signal SuStackElm contains exactly one element'
+            samples = loop[0].samples
+            thesig = samples[0]
+            if d2.charge==0:
+                for sample in samples:
+                    if re.search('wplus',sample.name):
+                        thesig = sample
+                        break
+            if d2.charge==1:
+                for sample in samples:
+                    if re.search('wmin',sample.name):
+                        thesig = sample
+                        break
+            SuSample.lumi = thesig.get_preserving_lumi()
+        hfixed = s.ewk('bgfixed',d2).h
+        SuSample.lumi = oldlumi
         if not (hdata and hfree and hfixed):
             print 'WARNING: missing histogram for QCD normalization',hdata,hfree,hfixed
             return 1.0
         assert hdata,'Failed to find data'
         assert hfixed,'Failed to find fixed backgrounds'
         assert hfree,'Failed to find free backgrounds'
+        # rebinning
+        if 'rebin' in d2.qcd and d2.qcd['rebin']!=1:
+            print 'Rebinning QCD fit histograms by a factor:',d2.qcd['rebin']
+            hdata  = hdata.Rebin(d2.qcd['rebin'])
+            hfixed = hfixed.Rebin(d2.qcd['rebin'])
+            hfree  = hfree.Rebin(d2.qcd['rebin'])
         # run SuFit
         hdata.getLegendName = lambda : 'DATA'
         hfixed.getLegendName = lambda : 'EWK backgrounds'
@@ -1228,6 +1272,7 @@ class SuStack:
         s.fits[key] = tmp[0]
         s.gbg.append((f,hdata,hfixed,hfree,tmp))
         s.scales[key] = (f.scales[0],f.scalesE[0], f.fractions[0],f.fractionsE[0], f.Wscales[0],f.WscalesE[0], f.Wfractions[0],f.WfractionsE[0], f.chi2[0],f.ndf[0])
+        s.scalekeys.append(key)
         return s.scale_sys(key,d)
     def histo(s,name,hname,d,norm=None):
         """ generic function to return histogram for a particular subsample """

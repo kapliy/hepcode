@@ -114,7 +114,7 @@ class SuFit:
     """
     for i in xrange(bmin+1,h.GetNbinsX()+1):
       if h.GetBinContent(i-1)>0 and h.GetBinContent(i)>0:
-        return i # i-1   # let's skip the first bin, too!
+        return i-1 # i  # set to i to skip the first bin, too!
     print 'WARNING: failed to find a non-zero bin in first_nonzero_bin. Proceeding starting with first bin...'
     return bmin
 
