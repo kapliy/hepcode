@@ -353,6 +353,7 @@ spR.bootstrap(do_unfold=False,
               qcd={'var':'met','nbins':100,'min':0,'max':100,'metfit':'metfit','forcenominal':False})
 SuStack.QCD_SYS_SCALES = opts.metallsys
 SuStack.QCD_TF_FITTER = True
+SuStack.QCD_STAT_HACK = True
 spR.enable_all()
 # Reco-level [ntuple]
 spRN = SuPlot()
@@ -472,10 +473,10 @@ def test_from_slices(spR2,spT2,mode=0,name='test_slices'):  # test: reconstructi
     h1,h2=None,None
     if mode==0:
         h1 = po.sig('pos',spT.clone(q=0,do_unfold=False))
-        h2 = po.sig('pos',spT.clone(q=0,do_unfold=False,histo='bin_%d/lpt:0:5')) #5 is overflow bin; -1 maps to 4 and show slight disagreement
+        h2 = po.sig('pos',spT.clone(q=0,do_unfold=False,histo='bin_%d/lpt:0:5',sliced=True)) #5 is overflow bin; -1 maps to 4 and show slight disagreement
     elif mode==1:
         h1 = po.data('pos',spR.clone(q=0,do_unfold=False))
-        h2 = po.data('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:0:5')) #5 is overflow bin; -1 maps to 4 and show slight disagreement
+        h2 = po.data('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:0:5',sliced=True)) #5 is overflow bin; -1 maps to 4 and show slight disagreement
     else:
         assert False,'Unsupported test_from_slices mode'
     M = PlotOptions()
@@ -488,7 +489,7 @@ def test_from_slices(spR2,spT2,mode=0,name='test_slices'):  # test: reconstructi
 def test_from_slices_sys(spR):
     c = SuCanvas('test_slices_sys_inbins')
     h1R = po.sig('pos',spR.clone(q=0,do_unfold=False))
-    h2R = po.sig('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:0:5'))
+    h2R = po.sig('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:0:5',sliced=True))
     M = PlotOptions()
     M.add('default','default')
     M.add('inbins','inbins')
@@ -548,93 +549,43 @@ def june26_asymmetry_all_slices():
         plot_any(spR.clone(),spT.clone(),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='INCLUSIVE_DIRECT')
         if opts.extra=='1':
             histo = 'bin_%d/lpt:0:5'
-            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='INCLUSIVE_SLICES')
+            plot_any(spR.clone(histo=histo,sliced=True),spT.clone(histo=histo,sliced=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='INCLUSIVE_SLICES')
             histo = 'bin_%d/lpt:1:1'
-            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='LPT2025')
+            plot_any(spR.clone(histo=histo,sliced=True),spT.clone(histo=histo,sliced=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='LPT2025')
             histo = 'bin_%d/lpt:1:2'
-            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='LPT2040')
+            plot_any(spR.clone(histo=histo,sliced=True),spT.clone(histo=histo,sliced=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='LPT2040')
             histo = 'bin_%d/lpt:3:3'
-            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='LPT4080')
+            plot_any(spR.clone(histo=histo,sliced=True),spT.clone(histo=histo,sliced=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='LPT4080')
         elif opts.extra=='2':
             histo = 'bin_%d/wpt:1:1'
-            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WPT0010')
+            plot_any(spR.clone(histo=histo,sliced=True),spT.clone(histo=histo,sliced=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WPT0010')
             histo = 'bin_%d/wpt:2:2'
-            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WPT1020')
+            plot_any(spR.clone(histo=histo,sliced=True),spT.clone(histo=histo,sliced=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WPT1020')
             histo = 'bin_%d/wpt:3:3'
-            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WPT20200')
+            plot_any(spR.clone(histo=histo,sliced=True),spT.clone(histo=histo,sliced=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WPT20200')
         elif opts.extra=='3':
             histo = 'bin_%d/wmt:1:1'
-            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WMT4060')
+            plot_any(spR.clone(histo=histo,sliced=True),spT.clone(histo=histo,sliced=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WMT4060')
             histo = 'bin_%d/wmt:2:2'
-            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WMT6080')
+            plot_any(spR.clone(histo=histo,sliced=True),spT.clone(histo=histo,sliced=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WMT6080')
             histo = 'bin_%d/wmt:3:3'
-            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WMT80200')
+            plot_any(spR.clone(histo=histo,sliced=True),spT.clone(histo=histo,sliced=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WMT80200')
         elif opts.extra=='4':
             histo = 'bin_%d/met:1:1'
-            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='MET2540')
+            plot_any(spR.clone(histo=histo,sliced=True),spT.clone(histo=histo,sliced=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='MET2540')
             histo = 'bin_%d/met:2:2'
-            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='MET40200')
+            plot_any(spR.clone(histo=histo,sliced=True),spT.clone(histo=histo,sliced=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='MET40200')
         elif opts.extra=='5':
             histo = 'bin_%d/njets:1:1'
-            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='NJETS0')
+            plot_any(spR.clone(histo=histo,sliced=True),spT.clone(histo=histo,sliced=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='NJETS0')
             histo = 'bin_%d/njets:2:2'
-            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='NJETS1')
+            plot_any(spR.clone(histo=histo,sliced=True),spT.clone(histo=histo,sliced=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='NJETS1')
             histo = 'bin_%d/njets:3:3'
-            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='NJETS2')
+            plot_any(spR.clone(histo=histo,sliced=True),spT.clone(histo=histo,sliced=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='NJETS2')
             histo = 'bin_%d/njets:4:5'
-            plot_any(spR.clone(histo=histo),spT.clone(histo=histo),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='NJETS3UP')
+            plot_any(spR.clone(histo=histo,sliced=True),spT.clone(histo=histo,sliced=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='NJETS3UP')
 
 def july02_summarize_qcd_fits(fitvar,fitrange):
-    fitreg = 'metfit' if fitvar=='met' else 'baseline'
-    assert len(fitrange)==2
-    #TEST_Q3S2X5Y5Z5_isofail__tight_nominal_st_w_final_metfit_bin_8_lpt_4_NEG_met_0to100.png
-    #TEST_Q3S5X5Y5Z5_loose_isofail__nominal_st_w_final_metfit_bin_0_lpt_4_POS_met_0to100.png
-    n = 'Q3S%dX5Y5Z5_'%opts.bgsig+'loose_isofail__nominal_st_w_final_' + fitreg + '_bin_%d_lpt_%d_%s_' + fitvar + '_' + str(fitrange[0]) + 'to' + str(fitrange[1])
-    f = open('qcd.html','w')
-    etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
-    ptbins = [20,25,30,35,40,45,50,120]
-    print >>f,'<HTML><BODY>'
-    for iq in ('POS','NEG'):
-        print >>f,'<HR>'
-        print >>f,iq
-        print >>f,'<HR>'
-        #print table
-        print >>f,'<TABLE border="1" width="900">'
-        print >>f,'<TR>'
-        print >>f, '<TD width="100">pT/eta</TD>'
-        for ipt in xrange(0,len(ptbins)-1):
-            print >>f,'<TD width="50">','%d&lt;pT&lt;%d'%(ptbins[ipt],ptbins[ipt+1]),'</TD>'
-        print >>f,'</TR>'
-        for ieta in xrange(0,len(etabins)-1):
-            print >>f,'<TR>'
-            print >>f, '<TD width="100">','%.2f&lt;|eta|&lt;%.2f'%(etabins[ieta],etabins[ieta+1]),"</TD>"
-            for ipt in xrange(0,len(ptbins)-1):
-                key = n%(ieta,ipt,iq)
-                v = -1.0
-                if key in po.scales:
-                    v = po.scales[key][0]  #scale factor
-                    v = po.scales[key][2]*100.0  #fraction
-                print >>f,'<TD width="50">','%.1f%%'%(v),'</TD>'
-            print >>f,'</TR>'
-        print >>f,'</TABLE>'
-        # print images
-        print >>f,'<BR>'
-        print >>f,'<TABLE border="0" width="2240">'
-        NF='http://www.wzone.com/myimages/PageNotFound-Man.jpg'
-        for ieta in xrange(0,len(etabins)-1):
-            print >>f,'<TR>'
-            for ipt in xrange(0,len(ptbins)-1):
-                key = n%(ieta,ipt,iq)
-                print >>f,'<TD width="280" align="center"><img src="TEST/%s_%s.png" width="270"/></TD>'%(opts.tag,SuCanvas.cleanse(key))
-            print >>f,'</TR>'
-        print >>f,'</TABLE>'
-    print >>f,'</BODY></HTML>'
-    f.close()
-
-def aug20_summarize_qcd_fits():
-    """ A study of QCD systematics in eta x pt bins  """
-    fitvars = ['met','wmt']
-    fitranges = [(0,80),(40,90)]
     fitreg = 'metfit' if fitvar=='met' else 'baseline'
     assert len(fitrange)==2
     #TEST_Q3S2X5Y5Z5_isofail__tight_nominal_st_w_final_metfit_bin_8_lpt_4_NEG_met_0to100.png
@@ -723,6 +674,44 @@ if mode=='ALL' or mode=='all':
     if False:
         plots = ['lepton_absetav','lpt','met','wmt']
         plot_stacks(spR.clone(),plots,m=1,qs=(2,))
+    if True:  # performs QCD fits in each |eta| x pT bin
+        etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
+        ptbins = [20,25,30,35,40,45,50,120]
+        spR.enable_nominal()
+        RES = {}
+        VETO = 'nominal/st_w_final/baseline/POS/bin_6/lpt_5/wmt'
+        # FIXME AK: skipping non-convergent fits  (SIGFLAG,Q,QCDVAR,ETA,PT)
+        # nohack,norebin
+        VETO = [(1,1,'met',7,2),(1,0,'wmt',6,5),(1,1,'wmt',0,5),(1,1,'wmt',2,5),(1,1,'wmt',3,5),(1,1,'wmt',4,3)]
+        # hack,norebin
+        VETO = [(1,0,'wmt',8,5),(1,0,'wmt',6,5),(1,1,'wmt',0,0),(1,1,'wmt',0,5),(1,1,'wmt',2,5),(1,1,'wmt',4,3),(1,1,'wmt',7,0),(1,1,'met',7,2)]
+        # hack,rebin
+        VETO = [(1,1,'met',7,2)]
+        pass
+        for iq in (0,1):
+            RES[iq] = {}
+            for ieta in range(0,len(etabins)-1)[:]:
+                RES[iq][ieta] = {}
+                for ipt in range(0,len(ptbins)-1)[:]:
+                    RES[iq][ieta][ipt] = {}
+                    for ivar in ('met','wmt')[:]:
+                        RES[iq][ieta][ipt][ivar] = {}
+                        for bgsig in (1,4,5)[:]:
+                            if (bgsig,iq,ivar,ieta,ipt) in VETO:
+                                print 'Skipping',bgsig,iq,ivar,ieta,ipt
+                                continue
+                            po.choose_sig(bgsig)
+                            var = 'bin_%d/lpt_%d/met'%(ieta,ipt)
+                            imin = 0 if ivar=='met' else 40
+                            imax = 80 if ivar=='met' else 90
+                            qcdadd={'var':'bin_%d/lpt_%d/%s'%(ieta,ipt,ivar),'min':imin,'max':imax,'rebin':2}
+                            hdata,hstack = plot_stack(spR.clone(qcdadd=qcdadd),var=var,q=iq,m=1,new_scales=True,name=po.get_flagsum()+'_F'+ivar)
+                            hfrac=hstack.nominal().stack_bg_frac()
+                            key = po.scalekeys[-1]
+                            scales = po.scales[key]
+                            RES[iq][ieta][ipt][ivar][bgsig] = (hfrac,scales)
+        # pickle result array
+        dump_pickle(RES,'save.pickle')
     if False: # inclusive reco-level and truth-level asymmetry
         plot_any(spR.clone(q=0),spT.clone(q=0),m=2,do_unfold=True,do_errorsDA=True,do_summary=True,name='POS')
         plot_any(spR.clone(q=1),spT.clone(q=1),m=2,do_unfold=True,do_errorsDA=True,do_summary=True,name='NEG')
@@ -776,7 +765,7 @@ if mode=='ALL' or mode=='all':
             bin=bla[1]
             pre=bla[2]
             plot_any(spTN.clone(var=var,pre=pre,bin=bin),None,m=2,var=None,name='reco_'+var,do_data=False,do_ratios=True,new_scales=False)
-    if True: # QCD systematic in 2d study: reconstruction in |eta| slices + QCD fits in |eta| x pT bins
+    if False: # QCD systematic in 2d study: does |eta| slice plot to force QCD fits in |eta| x pT bins. Dumps fit scales to pickle file
         spR.enable_nominal()
         histo = 'bin_%d/lpt:0:7'
         qcdadds = []
@@ -785,12 +774,9 @@ if mode=='ALL' or mode=='all':
         for bgsig in (1,4,5):
             po.choose_sig(bgsig)
             for iqcd,qcdadd in enumerate(qcdadds):
-                plot_any(spR.clone(histo=histo,qcdadd=qcdadd),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='SLICES_sig%d_%d'%(bgsig,iqcd))
-        import pickle
-        output = open('data.pkl', 'wb')
-        pickle.dump(po.scales,output)
-        output.close()
-        #aug20_summarize_qcd_fits()
+                plot_any(spR.clone(histo=histo,qcdadd=qcdadd,sliced=True),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='SLICES_sig%d_%d'%(bgsig,iqcd))
+        # dump all stats into a pickle file
+        dump_pickle(po.scales)
     if False: # reconstruction in |eta| slices + QCD fits in |eta| x pT bins
         spR.enable_nominal()
         plot_any(spR.clone(),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='INCLUSIVE_DIRECT')
@@ -798,7 +784,7 @@ if mode=='ALL' or mode=='all':
         qcdadd={'var':'met','min':0,'max':80}
         #qcdadd={'var':'wmt','min':40,'max':90}
         if True:
-            plot_any(spR.clone(histo=histo,qcdadd=qcdadd),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='INCLUSIVE_SLICES')
+            plot_any(spR.clone(histo=histo,sliced=True,qcdadd=qcdadd),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='INCLUSIVE_SLICES')
             july02_summarize_qcd_fits(qcdadd['var'],(qcdadd['min'],qcdadd['max']))
     if False: # stack compaison of TH1 and ntuple-based histograms
         spR.enable_nominal()
@@ -915,14 +901,10 @@ if mode=='ALL' or mode=='all':
         do_unfold = True
         h1R = po.asym_data_sub('pos',spR.clone(do_unfold=do_unfold))
         print '--------->', 'Making inbins combined'
-        h2R = po.asym_data_sub('pos',spR.clone(do_unfold=do_unfold,histo='bin_%d/lpt:0:5'))
+        h2R = po.asym_data_sub('pos',spR.clone(do_unfold=do_unfold,histo='bin_%d/lpt:0:5',sliced=True))
         hpt = []
         print '--------->', 'Making inbins pt20..25'
-        #hpt.append( po.asym_data_sub('pos',spR.clone(do_unfold=False,histo='bin_%d/lpt:1:1')) )
-        print '--------->', 'Making inbins pt25..40'
-        #hpt.append( po.asym_data_sub('pos',spR.clone(do_unfold=False,histo='bin_%d/lpt:2:2')) )
-        #hpt.append( po.asym_data_sub('pos',spR.clone(do_unfold=False,histo='bin_%d/lpt:3:3')) )
-        #hpt.append( po.asym_data_sub('pos',spR.clone(do_unfold=False,histo='bin_%d/lpt:4:4')) )
+        #hpt.append( po.asym_data_sub('pos',spR.clone(do_unfold=False,histo='bin_%d/lpt:1:1',sliced=True)) )
         M = PlotOptions()
         M.add('default','default')
         M.add('inbins','inbins')
@@ -940,7 +922,7 @@ if mode=='ALL' or mode=='all':
         h1R = po.qcd('pos',spR.clone(q=0,do_unfold=False))
         #SuSample.debug = True
         #spR.enable_nominal()
-        h2R = po.qcd('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:0:5'))
+        h2R = po.qcd('pos',spR.clone(q=0,do_unfold=False,histo='bin_%d/lpt:0:5',sliced=True))
         M = PlotOptions()
         M.add('default','default')
         M.add('inbins','inbins')
