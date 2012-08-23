@@ -37,6 +37,8 @@ if True:
     print >>f,memo,'<BR>'
     #RES[iq][ieta][ipt][ivar][bgsig]
     for iq in (0,1,):
+        if iq!=0:
+            print >>f,'<HR size="20" color="red">'
         # make a separate table for each pT bin
         for ipt in xrange(0 , len(ptbins)-1):
             print 'Working on: ',QMAP[iq],'in pt bin',ipt
