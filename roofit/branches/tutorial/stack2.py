@@ -674,7 +674,11 @@ if mode=='ALL' or mode=='all':
     if False:
         plots = ['lepton_absetav','lpt','met','wmt']
         plot_stacks(spR.clone(),plots,m=1,qs=(2,))
-    if True:  # performs QCD fits in each |eta| x pT bin
+    if True: # studies feasibility of saving 2D histograms, manual scale specification
+        spR.enable_nominal()
+        var = 'd2_abseta_lpt'
+        hdata,hstack = plot_stack(spR.clone(),var=var,q=0,m=1,new_scales=False,name='test2d')
+    if False:  # performs QCD fits in |eta| x pT bins, saves plots and pickle files with chi2 and qcd fraction systematics
         etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
         ptbins = [20,25,30,35,40,45,50,120]
         spR.enable_nominal()

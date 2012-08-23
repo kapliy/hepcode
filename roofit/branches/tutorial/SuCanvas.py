@@ -457,7 +457,10 @@ class SuCanvas:
         fractext.SetFillStyle( 0 ) # hollow
         fractext.SetBorderSize( 0 )
         fractext.SetMargin( 0 )
-        staterr = hstack.nominal().scales[3]/hstack.nominal().scales[2]
+        try:
+          staterr = hstack.nominal().scales[3]/hstack.nominal().scales[2]
+        except:
+          staterr = 0
         fractext.AddText( 'QCD Frac. = %.3f #pm %.2f%%'%(qcdfrac,staterr*100.0) )
         fractext.Draw('same')
     # ratio
