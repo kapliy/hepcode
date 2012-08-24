@@ -880,6 +880,8 @@ class SuSample:
         """ retrieve a particular histogram; path is re-built manually"""
         res = s.GetHisto(hname,d.h_path(flags=s.flags))
         if not res:
+            if len(s.files)==0:
+                print 'WARNING: no files found for sample:',s.name
             fname = os.path.basename(s.files[0].GetName())
             key = hname + fname + d.h_path(flags=s.flags)
             if key not in s.missing:
