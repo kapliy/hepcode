@@ -140,8 +140,15 @@ class SuSys:
         basedir=''
         if len(s.basedir[2].split('/'))>1:  # nominal/lpt2025/tight
             basedir = '/' + '/'.join( s.basedir[2].split('/')[1:]) # lpt2025/tight
-        basedir = s.qcd['metfit']+basedir   # metfit/lpt2025/tight [/POS/absetav_histo]
-        if s.qcd['var'][-3:]=='met': # only disable MET>25 cut if we are actually fitting in MET
+        # disable MET>25 or WMT>40 cut if we are actually fitting in MET/WMT
+        if s.qcd['var'][-3:]=='wmt':
+            basedir = s.qcd['wmtfit']+basedir   # wmtfit/lpt2025/tight [/POS/absetav_histo]
+            s.basedir = [basedir]*3
+        elif s.qcd['var'][-6:]=='on_met': # lepton-met deltaPHI fit should be done BEFORE WMT cut
+            basedir = s.qcd['wmtfit']+basedir   # wmtfit/lpt2025/tight [/POS/absetav_histo]
+            s.basedir = [basedir]*3
+        elif s.qcd['var'][-3:]=='met':
+            basedir = s.qcd['metfit']+basedir   # metfit/lpt2025/tight [/POS/absetav_histo]
             s.basedir = [basedir]*3
         s.histo = s.qcd['var']
         return
@@ -397,42 +404,48 @@ class SuPlot:
             del res[:]
         qcdadd = {'forcenominal':True}
         # MCP smearing UP
-        add('mcp_msup',prep+'mcp_msup')
-        add('mcp_msdown',prep+'mcp_msdown')
+        add('MuonResMSUp',prep+'mcp_msup')
+        add('MuonResMSDown',prep+'mcp_msdown')
         next('MCP_MS_RES')
         # MCP smearing DOWN
-        add('mcp_idup',prep+'mcp_idup')
-        add('mcp_iddown',prep+'mcp_iddown')
+        add('MuonResIDUp',prep+'mcp_idup')
+        add('MuonResIDDown',prep+'mcp_iddown')
         next('MCP_ID_RES')
         # MCP scale
         if False: # old MCP scale recommendation: on/off
-            add('mcp_unscaled',prep+'mcp_unscaled')
+            add('MuonNoScale',prep+'mcp_unscaled')
             next('MCP_SCALE')
         else:  # using my C/K variations
-            add('mcp_kup',prep+'mcp_kup')
-            add('mcp_kdown',prep+'mcp_kdown')
+            add('MuonScaleUp',prep+'mcp_kup')
+            add('MuonScaleDown',prep+'mcp_kdown')
             next('MCP_KSCALE')
-            add('mcp_cup',prep+'mcp_cup')
-            add('mcp_cdown',prep+'mcp_cdown')
+            add('MuonCurvUp',prep+'mcp_cup')
+            add('MuonCurvDown',prep+'mcp_cdown')
             next('MCP_CSCALE')
         # MCP efficiency
         if True:
-            add2('effup','st_w_efftotup',prep+'nominal_effsysup')
-            add2('effdown','st_w_efftotdown',prep+'nominal_effsysdown')
+            add2('MuonRecoSFUp','st_w_efftotup',prep+'nominal_effsysup')
+            add2('MuonRecoSFDown','st_w_efftotdown',prep+'nominal_effsysdown')
             next('MCP_EFF')
-            add2('trigup','st_w_trigstatup',prep+'nominal_trigstatup')
-            add2('trigdown','st_w_trigstatdown',prep+'nominal_trigstatdown')
+            add2('MuonTriggerSFUp','st_w_trigstatup',prep+'nominal_trigstatup')
+            add2('MuonTriggerSFDown','st_w_trigstatdown',prep+'nominal_trigstatdown')
             next('MCP_TRIG')
+        # ISO efficiency
+        if False:
+            add2('MuonIsoSFUp','st_w_isoup',prep+'nominal_isosup')
+            add2('MuonIsoSFDown','st_w_isodown',prep+'nominal_isodown')
+            next('MCP_ISO')
         # JET
         if True:
             #add('jet_jer',prep+'jet_jer',qcdadd=qcdadd)
-            add('jet_jer',prep+'jet_jer')
+            add('JetResolUp',prep+'jet_jer')
+            #add('JetResolDown',prep+'jet_jerdown')
             next('JER')
-            add('jet_jesup',prep+'jet_jesup')
-            add('jet_jesdown',prep+'jet_jesdown')
+            add('JetScaleUp',prep+'jet_jesup')
+            add('JetScaleDown',prep+'jet_jesdown')
             next('JES')
         # MET
-        if True:
+        if False:
             add('met_resosoftup',prep+'met_resosoftup')
             add('met_resosoftdown',prep+'met_resosoftdown')
             next('MET_RESO')
@@ -440,14 +453,14 @@ class SuPlot:
             add('met_scalesoftdown',prep+'met_scalesoftdown')
             next('MET_SCALE')
         else:  # new recommended MET systematic
-            add('met_resosofttermsup',prep+'met_resosofttermsup')
-            add('met_resosofttermsdown',prep+'met_resosofttermsdown')
+            add('ResoSoftTermsUp_ptHard',prep+'met_resosofttermsup')
+            add('ResoSoftTermsDown_ptHard',prep+'met_resosofttermsdown')
             next('MET_RESO_COR')
-            add('met_resosofttermsupdown',prep+'met_resosofttermsupdown')
-            add('met_resosofttermsdownup',prep+'met_resosofttermsdownup')
+            add('ResoSoftTermsUpDown_ptHard',prep+'met_resosofttermsupdown')
+            add('ResoSoftTermsDownUp_ptHard',prep+'met_resosofttermsdownup')
             next('MET_RESO_ACOR')
-            add('met_scalesofttermsup',prep+'met_scalesofttermsup')
-            add('met_scalesofttermsdown',prep+'met_scalesofttermsdown')
+            add('ScaleSoftTermsUp_ptHard',prep+'met_scalesofttermsup')
+            add('ScaleSoftTermsDown_ptHard ',prep+'met_scalesofttermsdown')
             next('MET_SCALE')
         # QCD normalization
         if False:
@@ -1271,7 +1284,7 @@ class SuStack:
         s.fitnames[key] = fitname
         s.fits[key] = tmp[0]
         s.gbg.append((f,hdata,hfixed,hfree,tmp))
-        s.scales[key] = (f.scales[0],f.scalesE[0], f.fractions[0],f.fractionsE[0], f.Wscales[0],f.WscalesE[0], f.Wfractions[0],f.WfractionsE[0], f.chi2[0],f.ndf[0])
+        s.scales[key] = (f.scales[0],f.scalesE[0], f.fractions[0],f.fractionsE[0], f.Wscales[0],f.WscalesE[0], f.Wfractions[0],f.WfractionsE[0], f.chi2[0],f.ndf[0] , f.nfits)
         s.scalekeys.append(key)
         return s.scale_sys(key,d)
     def histo(s,name,hname,d,norm=None):
@@ -1359,6 +1372,55 @@ class SuStack:
         """ QCD background summed histogram """
         loop = [e for e in s.elm if 'qcd' in e.flags and 'no' not in e.flags]
         return s.histosum(loop,hname,d)
+    def SaveROOT(s,fname,d,flags1=['mc'],flags2=['data'],mode='UPDATE',prefix=''):
+        """ Saves a collection of plots (in d) into a ROOT file """
+        ELES = """
+        Attention: need to implement ResolDown. Need to touch bases on MET. Need to implement isolation. Need to decide how to implement bsgub with mc@nlo vs powhegHerwig.
+        MuonResIDUp, MuonResIDDown, MuonResMSUp, MuonResMSDown, MuonScaleUp, MuonScaleDown, MuonTriggerSFUp, MuonTriggerSFDown, MuonRecoSFUp, MuonRecoSFDown, MuonIsoSFUp, MuonIsoSFDown
+        JetResolUp, JetResolDown, JetScaleUp, JetScaleDown, ResoSoftTermsUp_ptHard, ResoSoftTermsDown_ptHard, ScaleSoftTermsUp_ptHard, ScaleSoftTermsDown_ptHard    
+        """
+        NMAP = {}
+        NMAP['t#bar{t}'] = 'ttbar'
+        NMAP['wtaunu_powheg_pythia'] = 'wtaunu'
+        NMAP['wtaunu_powheg_herwig'] = 'wtaunu'
+        NMAP['wtaunu_mcnlo'] = 'wtaunu'
+        NMAP['zmumu_powheg_pythia'] = 'zmumu'
+        NMAP['zmumu_powheg_herwig'] = 'zmumu'
+        NMAP['zmumu_mcnlo'] = 'zmumu'
+        NMAP['dyan_pythia'] = 'dyan'
+        NMAP['dyan_mcnlo'] = 'dyan'
+        NMAP['WW/WZ/ZZ'] = 'diboson'
+        NMAP['qcd_driven'] = 'qcd'
+        NMAP['sig_powheg_pythia'] = 'wmunu'
+        NMAP['sig_powheg_herwig'] = 'wmunu'
+        NMAP['sig_mcnlo'] = 'wmunu'
+        NMAP['2011 data'] = 'data'
+        # populate with data
+        loop =  [e for e in s.elm if set(flags1) == (set(flags1) & set(e.flags)) and 'no' not in e.flags]
+        loop += [e for e in s.elm if set(flags2) == (set(flags2) & set(e.flags)) and 'no' not in e.flags]
+        hs = []
+        for bg in loop:
+            h = bg.histo('histo',d.clone())
+            name = NMAP[bg.name]
+            for sgroups in h.sys:
+                for sinst in sgroups:
+                    # specifically skip unfolding and qcd systematics
+                    if re.match('unf',sinst.name) or re.match('qcd',sinst.name): continue
+                    hs.append( sinst.h )
+                    assert hs[-1],'Failed to find systematic %s in sample %s'%(sinst.name,name)
+                    title = name+'_'+sinst.name
+                    hs[-1].SetName(title)
+                    hs[-1].SetTitle(title)
+        # save stuff
+        fout = ROOT.TFile.Open(fname,mode)
+        assert fout.IsOpen(),'Failed to open file: %s'%fname
+        nom = d.nominal()
+        aname = SuSys.QMAP[nom.charge][1]+'_'+MAP_BGSIG[s.flagsum['S']]
+        adir = fout.Get(aname) if fout.Get(aname) else fout.mkdir(aname)
+        assert adir,'Failed to create subdirectory: %s'%aname
+        adir.cd()
+        [ h.Write(h.GetTitle(),ROOT.TObject.kOverwrite) for h in hs ]
+        fout.Close()
     def stack(s,hname,d,flags=['mc'],leg=None):
         """ MC histogram stack (legacy, ntuple-based)"""
         # prepare containers for results

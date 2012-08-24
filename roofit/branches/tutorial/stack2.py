@@ -220,9 +220,9 @@ if True:
         pw.choose_zmumu(0)
         pw.choose_ztautau(0)
     elif opts.bgewk==1: # mcnlo
-        pw.choose_wtaunu(2) #NA
+        pw.choose_wtaunu(1)
         pw.choose_zmumu(1)
-        pw.choose_ztautau(2) #NA
+        pw.choose_ztautau(1)
     elif opts.bgewk==2: # alpgen/herwig
         pw.choose_wtaunu(2)
         pw.choose_zmumu(2)
@@ -238,7 +238,7 @@ if True:
     elif opts.bgewk==5: # powheg/pythia
         pw.choose_wtaunu(5)
         pw.choose_zmumu(5)
-        pw.choose_ztautau(5) #NA
+        pw.choose_ztautau(5)
     else:
         assert False,'Unknown bgewk option: %s'%opts.bgewk
     #QCD:
@@ -350,7 +350,7 @@ spR.bootstrap(do_unfold=False,
               unfold={'sysdir':tightlvl+'nominal'+jetlvl,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
               charge=q,var=opts.var,histo=opts.hsource,
               sysdir=[tightlvl+'nominal'+jetlvl,tightlvl+'nominal'+jetlvl,'loose_isofail'+jetlvl],subdir='st_w_final',basedir='baseline', #isowind
-              qcd={'var':'met','nbins':100,'min':0,'max':100,'metfit':'metfit','forcenominal':False})
+              qcd={'var':'met','nbins':100,'min':0,'max':100,'metfit':'metfit','wmtfit':'wmtfit','forcenominal':False})
 SuStack.QCD_SYS_SCALES = opts.metallsys
 SuStack.QCD_TF_FITTER = True
 SuStack.QCD_STAT_HACK = True
@@ -675,9 +675,14 @@ if mode=='ALL' or mode=='all':
         plots = ['lepton_absetav','lpt','met','wmt']
         plot_stacks(spR.clone(),plots,m=1,qs=(2,))
     if True: # studies feasibility of saving 2D histograms, manual scale specification
-        spR.enable_nominal()
         var = 'd2_abseta_lpt'
-        hdata,hstack = plot_stack(spR.clone(),var=var,q=0,m=1,new_scales=False,name='test2d')
+        # disable QCD scaling since here we are just dumping histograms
+        SuStackElm.new_scales = False
+        if False:
+            spR.enable_nominal()
+            hdata,hstack = plot_stack(spR.clone(),var=var,q=0,m=1,name='test2d')
+        po.SaveROOT('deleteme.root',spR.clone(q=0,histo=var,var=var),mode='RECREATE')
+        po.SaveROOT('deleteme.root',spR.clone(q=1,histo=var,var=var))
     if False:  # performs QCD fits in |eta| x pT bins, saves plots and pickle files with chi2 and qcd fraction systematics
         etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
         ptbins = [20,25,30,35,40,45,50,120]
@@ -691,8 +696,8 @@ if mode=='ALL' or mode=='all':
         VETO = [(1,0,'wmt',8,5),(1,0,'wmt',6,5),(1,1,'wmt',0,0),(1,1,'wmt',0,5),(1,1,'wmt',2,5),(1,1,'wmt',4,3),(1,1,'wmt',7,0),(1,1,'met',7,2)]
         # hack,rebin
         VETO = [(1,1,'met',7,2)]
-        pass
-        for iq in (0,1):
+        #nominal/st_w_final/wmtfit/NEG/bin_8/lpt_4/wmt
+        for iq in [0,1][:]:
             RES[iq] = {}
             for ieta in range(0,len(etabins)-1)[:]:
                 RES[iq][ieta] = {}

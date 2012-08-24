@@ -42,6 +42,7 @@ class SuFit:
 
     # general fit quality
     s.fit = None
+    s.nfits = 0
     s.chi2 = []
     s.ndf = []
 
@@ -129,6 +130,7 @@ class SuFit:
     s.scales = []
     s.fractionsE = []
     s.scalesE = []
+    s.nfits = 0
     # set up TFractionFitter and fit range
     data = s.data
     mc = ROOT.TObjArray(2) # MC histograms are put into this array
@@ -151,7 +153,7 @@ class SuFit:
       ewkfrac = s.fixed.Integral(s.fitmin,s.fitmax)/data.Integral(s.fitmin,s.fitmax)
       fixpars = False
       if ewkfrac>1.0:
-        print 'WARNING: SuFit::doFitTF EWK background already exceeds DATA',ewkfrac,s.fixed.Integral(),data.Integral()
+        print 'WARNING: SuFit::doFitTF EWK background already exceeds DATA',ewkfrac,s.fixed.Integral(s.fitmin,s.fitmax),data.Integral(s.fitmin,s.fitmax)
         ewkfrac = 0.95
         fixpars = False
       qcdfrac = 1.0-ewkfrac
@@ -166,13 +168,15 @@ class SuFit:
     # start the fits
     print 'Starting fits...'
     s.status = fit.Fit()      # perform the fit
-    s.nfits = 1
+    s.nfits += 1
     if s.status!=0:
       print 'WARNING: repeating (N=2) the QCD normalization fit'
       s.status = fit.Fit()
       s.nfits += 1
       if s.status!=0:
-        print 'WARNING: repeating (N=3) the QCD normalization fit'
+        print 'WARNING: repeating (N=3) the QCD normalization fit; resetting starting point to (0.5,0.5)'
+        fit.GetFitter().SetParameter(0,"ewkfrac",0.5,0.01,0.0,1.0);
+        fit.GetFitter().SetParameter(1,"qcdfrac",0.5,0.01,0.0,1.0);
         s.status = fit.Fit()
         s.nfits += 1
         if s.status!=0:
@@ -207,11 +211,11 @@ class SuFit:
     s.fractionsE.append( float(error) )
     # scales
     s.scales.append( float(value) )
-    s.scales[-1] *= s.data.Integral()
-    s.scales[-1] /= s.free[0].Integral() # original qcd fraction
+    s.scales[-1] *= s.data.Integral(s.fitmin,s.fitmax)
+    s.scales[-1] /= s.free[0].Integral(s.fitmin,s.fitmax) # original qcd fraction
     s.scalesE.append( float(error) )
-    s.scalesE[-1] *= s.data.Integral()
-    s.scalesE[-1] /= s.free[0].Integral() # original qcd fraction
+    s.scalesE[-1] *= s.data.Integral(s.fitmin,s.fitmax)
+    s.scalesE[-1] /= s.free[0].Integral(s.fitmin,s.fitmax) # original qcd fraction
     # EWK FIXED NORMALIZATION VALUES:
     fit.GetResult(0, value, error);
     # fractions
@@ -219,11 +223,11 @@ class SuFit:
     s.WfractionsE.append( float(error) )
     # scales
     s.Wscales.append( float(value) )
-    s.Wscales[-1] *= s.data.Integral()
-    s.Wscales[-1] /= s.fixed.Integral() # original ewk fraction
+    s.Wscales[-1] *= s.data.Integral(s.fitmin,s.fitmax)
+    s.Wscales[-1] /= s.fixed.Integral(s.fitmin,s.fitmax) # original ewk fraction
     s.WscalesE.append( float(error) )
-    s.WscalesE[-1] *= s.data.Integral()
-    s.WscalesE[-1] /= s.fixed.Integral() # original ewk fraction
+    s.WscalesE[-1] *= s.data.Integral(s.fitmin,s.fitmax)
+    s.WscalesE[-1] /= s.fixed.Integral(s.fitmin,s.fitmax) # original ewk fraction
     # fit quality
     s.chi2.append( fit.GetChisquare() )
     #s.chi2.append( data.Chi2Test( s.fit.GetPlot(), "UW CHI2" )  )
@@ -232,6 +236,8 @@ class SuFit:
 
   def doFit(s):
     """ do fit and return weights """
+
+    assert False,'This is a roofit-based fraction fitter, and it has been deprecated'
     
     # clear results from previous fit
     assert s.data and s.fixed and len(s.free)>0, 'SuFit has not been supplied with all required input histograms'
@@ -247,6 +253,7 @@ class SuFit:
     s.Wscales = []
     s.WfractionsE = []
     s.WscalesE = []
+    s.nfits = 0
 
     var = s.w.var(s.vnames[0])
     s.fitmin,s.fitmax = s.data.FindFixBin(var.getMin()) , s.data.FindFixBin(var.getMax())
@@ -287,6 +294,7 @@ class SuFit:
     #s.model = RooAddPdf( "model" , "model" , RooArgList(fixedTemplate,freeTemplates[0]) , s.fArgList() )
     getattr(s.w,'import')(s.model) 
     s.fit = s.model.fitTo( s.dataHist )
+    s.nfits += 1
     s.model.Print( "t" )
 
     # set the _weights variable
@@ -303,15 +311,15 @@ class SuFit:
       s.WscalesE.append( s.fractionsE[-1] )
     for ival in xrange(0,len(s.scales)):
       # scale factor for original qcd
-      s.scales[ival] *= s.data.Integral()
-      s.scales[ival] /= s.free[ival].Integral()
-      s.scalesE[ival] *= s.data.Integral()
-      s.scalesE[ival] /= s.free[ival].Integral()
+      s.scales[ival] *= s.data.Integral(s.fitmin,s.fitmax)
+      s.scales[ival] /= s.free[ival].Integral(s.fitmin,s.fitmax)
+      s.scalesE[ival] *= s.data.Integral(s.fitmin,s.fitmax)
+      s.scalesE[ival] /= s.free[ival].Integral(s.fitmin,s.fitmax)
       # scale factor for original ewk
-      s.Wscales[ival] *= s.data.Integral()
-      s.Wscales[ival] /= s.fixed.Integral()
-      s.WscalesE[ival] *= s.data.Integral()
-      s.WscalesE[ival] /= s.fixed.Integral()
+      s.Wscales[ival] *= s.data.Integral(s.fitmin,s.fitmax)
+      s.Wscales[ival] /= s.fixed.Integral(s.fitmin,s.fitmax)
+      s.WscalesE[ival] *= s.data.Integral(s.fitmin,s.fitmax)
+      s.WscalesE[ival] /= s.fixed.Integral(s.fitmin,s.fitmax)
       if True:
         print "Free Background (fraction & scale):",fname
         print s.fractions[ival],'+/-',s.fractionsE[ival]
@@ -323,7 +331,7 @@ class SuFit:
     # fit model
     if True:
       hmodel = s.model.createHistogram( s.w.var(s.vnames[0]).GetName() , s.data.GetNbinsX() )
-      scalefactor = 1.0*s.data.Integral()/hmodel.Integral()
+      scalefactor = 1.0*s.data.Integral(s.fitmin,s.fitmax)/hmodel.Integral(s.fitmin,s.fitmax)
       hmodel.Scale( scalefactor );
       #s.hmodel = hmodel
       h1,h2 = s.hfixed.Clone(),s.hfree.Clone()
@@ -415,7 +423,7 @@ class SuFit:
     assert hdata
     hmodel = s.model.createHistogram( s.w.var(s.vnames[ivar]).GetName() , hdata.GetNbinsX() )
     assert hmodel
-    scalefactor = 1.0*hdata.Integral()/hmodel.Integral()
+    scalefactor = 1.0*hdata.Integral(s.fitmin,s.fitmax)/hmodel.Integral(s.fitmin,s.fitmax)
     hmodel.Scale( scalefactor );
     s.hratio,s.href = hdata.Clone('hratio'),hdata.Clone('href')
     s.hratio.Divide(hmodel)
@@ -522,7 +530,7 @@ class SuFit:
     canvas.cd_ratioPad()
     if s.status==0:
       hmodel = model.Clone()
-      #scalefactor = 1.0*data.Integral()/model.Integral()
+      #scalefactor = 1.0*data.Integral(s.fitmin,s.fitmax)/model.Integral(s.fitmin,s.fitmax)
       #hmodel.Scale( scalefactor ); # scale model to actual data integral (not needed!)
       s.hratio,s.href = data.Clone('hratio'),data.Clone('href')
       s.hratio.Divide(hmodel)
