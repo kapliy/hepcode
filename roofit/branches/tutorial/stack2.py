@@ -674,7 +674,7 @@ if mode=='ALL' or mode=='all':
     if False:
         plots = ['lepton_absetav','lpt','met','wmt']
         plot_stacks(spR.clone(),plots,m=1,qs=(2,))
-    if True: # studies feasibility of saving 2D histograms, manual scale specification
+    if False: # studies feasibility of saving 2D histograms, manual scale specification
         var = 'd2_abseta_lpt'
         # disable QCD scaling since here we are just dumping histograms
         SuStackElm.new_scales = False
@@ -684,7 +684,7 @@ if mode=='ALL' or mode=='all':
         fname = 'PLOTS_08242012.v1.root'
         po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),mode='RECREATE')
         po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var))
-    if False:  # performs QCD fits in |eta| x pT bins, saves plots and pickle files with chi2 and qcd fraction systematics
+    if True:  # performs QCD fits in |eta| x pT bins, saves plots and pickle files with chi2 and qcd fraction systematics
         etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
         ptbins = [20,25,30,35,40,45,50,120]
         spR.enable_nominal()

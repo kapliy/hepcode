@@ -9,10 +9,12 @@ if not 'libPyRoot' in sys.modules: #hack to get rid of TenvRec warnings
     sys.modules['libPyROOT'].gROOT.GetListOfGlobals().FindObject('gErrorAbortLevel').GetAddress().__setitem__(0,5001)
 
 def dump_pickle(data,name='data.pkl'):
-    import pickle
-    output = open(name, 'wb')
-    pickle.dump(data,output)
-    output.close()
+    import pickle,FileLock
+    # TODO: make sure it can update, rather than overwrite, a file
+    with FileLock.FileLock(name):
+        output = open(name, 'wb')
+        pickle.dump(data,output)
+        output.close()
 
 def xflatten(seq):
     """a generator to flatten a nested list"""
