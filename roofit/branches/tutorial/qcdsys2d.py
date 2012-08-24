@@ -8,9 +8,19 @@ THIS VERSION OPERATES ON 2D GRID: |eta| x pT
 
 memo = """
 <pre>
-In each cell, the first number is the QCD fraction (multiplied by 100%) for the nominal case: Powheg+Pythia, fitting MET
-The subsequent set of numbers gives relative deviations of QCD fraction with respect to the nominal case for five cases: Powheg+Pythia (wmt), Powheg+Herwig (met), Powheg+Herwig (wmt), MC@NLO (met), MC@NLO (wmt).
-The last number is the maximum deviation.
+<U>In each cell</U>:<BR>
+The <B>first number</B> is the <B>CHI2/NDF</B> for a given fit.<BR>
+The <B>second number</B> is either the <B>absolute QCD fraction</B> (for the first, <B>nominal</B>, row), or the <B>relative deviation</B> wrt nominal (all other rows).<BR>
+<U>Order of rows</U>:
+<ul>
+<li>Nom: Powheg+Pythia (MET) </li>
+<li>Sys: Powheg+Herwig (MET) </li>
+<li>Sys: MC@NLO (MET) </li>
+<li>Sys: Powheg+Pythia (WMT) </li>
+<li>Sys: Powheg+Herwig (WMT) </li>
+<li>Sys: MC@NLO (WMT) </li>
+<li></B>Maximum deviation (total QCD uncertainty)<B> </li>
+</ul>
 </pre>
 """
 
@@ -34,7 +44,7 @@ if True:
     if os.path.exists(fupd_name):
         fupd = ROOT.TFile.Open(fupd_name,"UPDATE")
     print >>f,'<HTML><BODY>'
-    print >>f,memo,'<BR>'
+    print >>f,memo
     #RES[iq][ieta][ipt][ivar][bgsig]
     for iq in (0,1,):
         if iq!=0:
@@ -47,7 +57,6 @@ if True:
             print >>f,'<HR>'
             print >>f,'<TABLE border="1" CELLPADDING="0" CELLSPACING="1" width="1200">'
             print >>f,'<TR>'
-            #print >>f, '<TD width="120">|&eta;| bin</TD>'
             for ieta in xrange(0,len(etabins)-1):
                 print >>f, '<TD width="80">','%.2f&lt;|&eta;|&lt;%.2f'%(etabins[ieta],etabins[ieta+1]),"</TD>"
             print >>f,'</TR>'
@@ -56,9 +65,10 @@ if True:
             for ieta in xrange(0,len(etabins)-1):
                 nom = R[iq][ieta][ipt]['met'][5][0]
                 scales = R[iq][ieta][ipt]['met'][5][1]
-                sys = [('wmt',5), ('met',4),('wmt',4), ('met',1),('wmt',1)]
+                #sys = [('wmt',5), ('met',4),('wmt',4), ('met',1),('wmt',1)]
+                sys = [('met',4),('met',1),('wmt',5),('wmt',4),('wmt',1)]
                 fname = 'TEST/TEST_Q3S%dX5Y5Z5_loose_isofail__nominal_st_w_final_metfit_%s_bin_%d_lpt_%d_met_0to80.png'%(5,QMAPN[iq],ieta,ipt)
-                print >>f,'<TD>','<B><a href="%s">%.2f%%</a></B> | %.1f'%(fname,nom*100.0,scales[-2]/scales[-1]),'<BR>'
+                print >>f,'<TD>','%.1f | <B><a href="%s">%.2f%%</a></B>'%(scales[-2]/scales[-1],fname,nom*100.0),'<BR>'
                 pers = []
                 for isys in sys:
                     ivar,bgsig = isys
@@ -78,7 +88,7 @@ if True:
                     else:
                         per = (v - nom)/nom*100.0
                         pers.append(per)
-                        print >>f,'<a href="%s">%s%.1f%%</a> | %.1f'%(fname,'' if per<0 else '+',per,scales[-2]/scales[-1]),'<BR>'
+                        print >>f,'%.1f | <a href="%s">%s%.1f%%</a>'%(scales[-2]/scales[-1],fname,'' if per<0 else '+',per),'<BR>'
                 pers.sort(key = lambda x: abs(x))
                 print >>f,'<B>%s%.1f%% (%.1f%%)</B>'%('' if pers[-1]<0 else '+',pers[-1],abs(pers[-1])*nom)
                 print >>f,'</TD>'

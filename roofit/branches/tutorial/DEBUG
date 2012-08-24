@@ -11,6 +11,7 @@ input=/share/t3data3/antonk/ana/ana_v29G_08162012_MCP_max_stacoCB_all/ #near-con
 
 input=/share/t3data3/antonk/ana/ana_v29G_08212012_max_wpt_wpol_2d_ls_stacoCB_all  # add wpt and pol. weight to ntuple
 input=/share/t3data3/antonk/ana/ana_v29G_08222012_max_wpt_wpol_2d_ls_hist_stacoCB_all   # all weights except lineshape applied
+input=/share/t3data3/antonk/ana/ana_v29G_08222012_max_wpt_wpol_2d_ls_hist_transpose_stacoCB_all  #includes the other version of 2d histo
 
 # RESURRECTING NTUPLE-BASED PLOTTING:
 #./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --cut "mcw*puw*effw*isow*trigw*wptw" -m ALL --bgsig 5 --bgewk 5 --bgqcd 3 #--metallsys
