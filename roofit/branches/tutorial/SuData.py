@@ -1402,13 +1402,21 @@ class SuStack:
         for bg in loop:
             h = bg.histo('histo',d.clone())
             name = NMAP[bg.name]
+            isys = 0
             for sgroups in h.sys:
                 for sinst in sgroups:
-                    # specifically skip unfolding and qcd systematics
+                    isys += 1
+                    title = name+'_'+sinst.name
+                    # skip rules
+                    if name=='data':
+                        if isys==1: title = name
+                        else: continue
+                    if name=='qcd':
+                        if isys==1: title = name
+                        else: continue
                     if re.match('unf',sinst.name) or re.match('qcd',sinst.name): continue
                     hs.append( sinst.h )
                     assert hs[-1],'Failed to find systematic %s in sample %s'%(sinst.name,name)
-                    title = name+'_'+sinst.name
                     hs[-1].SetName(title)
                     hs[-1].SetTitle(title)
         # save stuff

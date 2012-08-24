@@ -681,8 +681,9 @@ if mode=='ALL' or mode=='all':
         if False:
             spR.enable_nominal()
             hdata,hstack = plot_stack(spR.clone(),var=var,q=0,m=1,name='test2d')
-        po.SaveROOT('deleteme.root',spR.clone(q=0,histo=var,var=var),mode='RECREATE')
-        po.SaveROOT('deleteme.root',spR.clone(q=1,histo=var,var=var))
+        fname = 'PLOTS_08242012.v1.root'
+        po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),mode='RECREATE')
+        po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var))
     if False:  # performs QCD fits in |eta| x pT bins, saves plots and pickle files with chi2 and qcd fraction systematics
         etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
         ptbins = [20,25,30,35,40,45,50,120]
