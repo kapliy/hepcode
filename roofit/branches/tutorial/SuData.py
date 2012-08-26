@@ -438,8 +438,8 @@ class SuPlot:
         # JET
         if True:
             #add('jet_jer',prep+'jet_jer',qcdadd=qcdadd)
-            add('JetResolUp',prep+'jet_jer')
-            #add('JetResolDown',prep+'jet_jerdown')
+            add('JetResolUp',prep+'jet_jerup')
+            add('JetResolDown',prep+'jet_jerdown')
             next('JER')
             add('JetScaleUp',prep+'jet_jesup')
             add('JetScaleDown',prep+'jet_jesdown')
@@ -1377,7 +1377,7 @@ class SuStack:
     def SaveROOT(s,fname,d,flags1=['mc'],flags2=['data'],mode='UPDATE',prefix=''):
         """ Saves a collection of plots (in d) into a ROOT file """
         ELES = """
-        Attention: need to implement ResolDown. Need to touch bases on MET. Need to implement isolation. Need to decide how to implement bsgub with mc@nlo vs powhegHerwig.
+        Attention: need to implement ResolDown. To think: decide how to implement bsgub with mc@nlo vs powhegHerwig.
         MuonResIDUp, MuonResIDDown, MuonResMSUp, MuonResMSDown, MuonScaleUp, MuonScaleDown, MuonTriggerSFUp, MuonTriggerSFDown, MuonRecoSFUp, MuonRecoSFDown, MuonIsoSFUp, MuonIsoSFDown
         JetResolUp, JetResolDown, JetScaleUp, JetScaleDown, ResoSoftTermsUp_ptHard, ResoSoftTermsDown_ptHard, ScaleSoftTermsUp_ptHard, ScaleSoftTermsDown_ptHard    
         """
