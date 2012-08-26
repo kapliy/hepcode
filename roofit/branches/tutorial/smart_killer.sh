@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Smart job runner to catch pnfs crashes
+# Smart job runner to kill hung jobs
 # Instead of running:
 #> PROGRAM ARGS
 # you can run
 #> ./smart_runner.sh PROGRAM ARGS
 # It will automatically monitor your program and will restart it
-# if it detects an infinite pnfs loop.
+# if it detects an infinite loop.
 
 PROGRAM=$@
 if [ -z "${PROGRAM}" ]; then 
@@ -15,12 +15,9 @@ if [ -z "${PROGRAM}" ]; then
 fi;
 pattern='Last IO operation timeout'
 patternh='HOME directory not set'
-patternm='std::bad_alloc'
-patternseg='\*\*\* Break \*\*\* segmentation violation'
-patternboost='boost::filesystem::create_directory: Permission denied'
+ntry=1 # how many times should we try?
 slp=10 # how often to check for process status?
-ntry=7 # how many times should we try?
-maxsleepcycles=150 # (in a row)
+maxsleepcycles=60 # (in a row)
 
 function monitor () {
     _pid=$1
@@ -43,7 +40,7 @@ function monitor () {
 	    return 1
 	}
         # job was in suspend for X cycles of sleep. something is wrong. retry.
-	if [ "${ncycles}" -gt "${maxsleepcycles}" ]; then
+	if [ "${z}" -gt "${maxsleepcycles}" ]; then
 	    echo "FAILED PROCESS: ${_pid} attempt=${_try} - is asleep"
 	    # try to kill it gently first (to give time to flush stdout)
 	    kill -SIGTERM ${_pid}
@@ -74,27 +71,6 @@ function monitor () {
 	sleep 0.5
 	echo "HOME directory error"
 	return 1
-    }
-    # check if the job failed with std::bad_alloc
-    tail -n1000 ${_log} | grep -q "${patternm}" && {
-	echo "FAILED PROCESS: ${_pid} attempt=${_try}"
-	sleep 0.5
-	echo "${patternm} error"
-	return 3
-    }
-    # check if the job failed with a segmentation violation
-    tail -n2000 ${_log} | grep -q "${patternseg}" && {
-	echo "FAILED PROCESS: ${_pid} attempt=${_try}"
-	sleep 0.5
-	echo "${patternseg} error"
-	return 4
-    }
-    # check if the job failed with a segmentation violation
-    tail -n2000 ${_log} | grep -q "${patternboost}" && {
-	echo "FAILED PROCESS: ${_pid} attempt=${_try}"
-	sleep 0.5
-	echo "${patternboost} error"
-	return 4
     }
     return 0
 }
