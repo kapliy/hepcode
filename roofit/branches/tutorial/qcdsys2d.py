@@ -21,7 +21,7 @@ import antondb
 msys = []
 for xsecerr in [ (0,) ]:
     for bgewk in [ (5,),(2,) ]:
-        for isofail in [ ('loose_isofail',) ,('isowind',) ]: #TODO: think how to incorporate isowind, which has same frac but different scale
+        for isofail in [ ('loose_isofail',),('isowind',) ]:
             for ivar in [ ('met','50,0,80'),('met','50,0,90'),('wmt','50,40,90'),('wmt','50,35,100') ]:
                 msys.append( xsecerr+bgewk+isofail+ivar )
 msys_nom = (0,5,'loose_isofail','met','50,0,80')                
@@ -40,8 +40,8 @@ S = '&nbsp;'
 PM = '&plusmn;'
 
 db_name = 'CRAP'
-fin_name = 'PLOTS_08242012.v1.root'
-fout_name = 'OUT_PLOTS_08242012.v1.root'
+fin_name = 'PLOTS_08242012.v2.root'
+fout_name = 'OUT_PLOTS_08242012.v2.root'
 if os.path.exists(fin_name):
     import common
     import ROOT
@@ -54,7 +54,7 @@ def rms(y):
     x = y
     if len(x)==0: return 0
     m = mean(x)*1.0
-    return math.sqrt( sum([ (xx-m)**2 for xx in x]) )
+    return math.sqrt( sum([ (xx-m)**2 for xx in x])/len(x) )
 def get(iq,bgsig,ieta,ipt):
     idxs = []
     fracs = []
@@ -65,6 +65,8 @@ def get(iq,bgsig,ieta,ipt):
     scalesL = []
     scalesLE = []
     idx = 0
+    bla2=[]
+    bla5=[]
     for xsecerr,bgewk,isofail,ivar,ibin in msys:
         key = '/iq%d/X%d/bgewk%d/bgsig%d/iso%s/ivar%s/ibin%s/ieta%d/ipt%s'%(iq,xsecerr,bgewk,bgsig,isofail,ivar,ibin,ieta,ipt)
         if key in R:
@@ -76,6 +78,8 @@ def get(iq,bgsig,ieta,ipt):
                 scalesL.append(sc[0])
                 scalesLE.append(sc[1])
             chindfs.append( 1.0*sc[-3]/sc[-2] )
+            if bgewk==2: bla2.append(fracs[-1])
+            if bgewk==5: bla5.append(fracs[-1])
         idxs.append(idx)
         idx += 1
     return idxs,fracs,scales,scalesE,chindfs,scalesL,scalesLE
@@ -165,8 +169,10 @@ if __name__=='__main__':
                 relS = [] # relative error on scale - using a subset of variations (loose_isofail). This is not actually used
                 for ieta in xrange(0,len(etabins)-1):
                     relS.append( rms(scalesL[ieta])/mean(scalesL[ieta]) )
-                    print >>f,'<TD>','%.3f %s %.1f %%'%(mean(scalesL[ieta]),PM,relS[-1]*100.0),'</TD>'
+                    print >>f,'<TD>','%.3f'%(mean(scalesL[ieta])),'</TD>'
+                    #print >>f,'<TD>','%.3f %s %.1f %%'%(mean(scalesL[ieta]),PM,relS[-1]*100.0),'</TD>'
                 print >>f,'</TR>'
+                # absolute uncertainty on QCD prediction
                 print >>f,'<TR>'
                 print >>f,'<TD>','Total QCD uncert.','</TD>'
                 for ieta in xrange(0,len(etabins)-1):
