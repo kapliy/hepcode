@@ -176,38 +176,62 @@ if __name__=='__main__':
                             scale_bin(QCD[3],ieta,ipt,mean(scalesL[ieta]))
                         if bgsig==1:
                             scale_bin(QCD[4],ieta,ipt,mean(scalesL[ieta]))
-                    # generate total histograms for detector systematics
-                    fout_D[iq].cd()
-                    if bgsig==5:
-                        adir.Get('data').Write('data',ROOT.TObject.kOverwrite)
-                        for system in systems:
-                            allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
-                            htot = make_total(system,allsamples)
-                            htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
-                            adir.Get('wmunu_'+system).Write('wmunu_PowhegPythia_'+system,ROOT.TObject.kOverwrite)
-                        # manually generate nominal histograms with qcd Up/Down variations
-                        system='nominal'
-                        allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[1],]
-                        htot = make_total(system,allsamples)
-                        htot.SetTitle('totalbg_QCDUp')
-                        htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
-                        allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[2],]
-                        htot = make_total(system,allsamples)
-                        htot.SetTitle('totalbg_QCDDown')
-                        htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
-                    elif bgsig==4:
-                        system='nominal'
-                        allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[3],]
-                        htot = make_total(system,allsamples)
-                        htot.SetTitle('totalbg_nominal_unfoldPowhegJimmy')
-                        htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
-                    elif bgsig==1:
-                        system='nominal'
-                        allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[4],]
-                        htot = make_total(system,allsamples)
-                        htot.SetTitle('totalbg_nominal_unfoldMCNLO')
-                        htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
             print >>f,'</TABLE>'
+        if fin:
+            # generate total histograms for detector systematics
+            fout_D[iq].cd()
+            if True:
+                bgsig=5
+                adir.Get('data').Write('data',ROOT.TObject.kOverwrite)
+                for system in systems:
+                    allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
+                    htot = make_total(system,allsamples)
+                    htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
+                    adir.Get('wmunu_'+system).Write('wmunu_PowhegPythia_'+system,ROOT.TObject.kOverwrite)
+                # manually generate nominal histograms with qcd Up/Down variations
+                system='nominal'
+                allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[1],]
+                htot = make_total(system,allsamples)
+                htot.SetTitle('totalbg_nominal_qcd_up')
+                htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
+                allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[2],]
+                htot = make_total(system,allsamples)
+                htot.SetTitle('totalbg_nominal_qcd_down')
+                htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
+                # generate histograms for alpgen bg subtraction
+                if True:
+                    bdir = fin.Get('%s_ewk2'%QMAPN[iq])
+                    assert bdir
+                    allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
+                    htot = make_total(system,allsamples)
+                    htot.Write('totalbg_nominal_ewk_alpgen',ROOT.TObject.kOverwrite)
+                # generate histograms for ewkbg xsec variations
+                if True:
+                    bdir = fin.Get('%s_ewk5_xsecup'%QMAPN[iq])
+                    assert bdir
+                    allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
+                    htot = make_total(system,allsamples)
+                    htot.Write('totalbg_nominal_ewk_xsecup',ROOT.TObject.kOverwrite)
+                    bdir = fin.Get('%s_ewk5_xsecdown'%QMAPN[iq])
+                    assert bdir
+                    allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
+                    htot = make_total(system,allsamples)
+                    htot.Write('totalbg_nominal_ewk_xsecdown',ROOT.TObject.kOverwrite)
+            if True:
+                bgsig=4
+                system='nominal'
+                allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[3],]
+                htot = make_total(system,allsamples)
+                htot.SetTitle('totalbg_nominal_unfoldPowhegJimmy')
+                htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
+            if True:
+                bgsig=1
+                system='nominal'
+                allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[4],]
+                htot = make_total(system,allsamples)
+                htot.SetTitle('totalbg_nominal_unfoldMCNLO')
+                htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
+            
     if fin and fin.IsOpen():
         fin.Close()
     if fout and fout.IsOpen():
