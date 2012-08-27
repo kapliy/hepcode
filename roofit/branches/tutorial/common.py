@@ -10,7 +10,6 @@ if not 'libPyRoot' in sys.modules: #hack to get rid of TenvRec warnings
 
 def dump_pickle(data,name='data.pkl'):
     import pickle,FileLock
-    # TODO: make sure it can update, rather than overwrite, a file
     with FileLock.FileLock(name):
         output = open(name, 'wb')
         pickle.dump(data,output)

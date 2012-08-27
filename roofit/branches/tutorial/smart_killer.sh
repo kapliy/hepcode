@@ -17,7 +17,7 @@ pattern='Last IO operation timeout'
 patternh='HOME directory not set'
 ntry=1 # how many times should we try?
 slp=10 # how often to check for process status?
-maxsleepcycles=60 # (in a row)
+maxsleepcycles=15 # 10x15 = 150 seconds
 
 function monitor () {
     _pid=$1

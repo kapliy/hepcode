@@ -3,7 +3,8 @@
 #PBS -l cput=7:00:00
 #PBS -l walltime=7:00:00
 #PBS -m e
-#qsub -v id=$i -N QCD${i} -o /home/antonk/roofit/logs/log.${i}.stdout -e /home/antonk/roofit/logs/log.${i}.stderr QCD.sh
+#qsub -v id=$i -N QCD2D${i} -o /home/antonk/roofit/logs/log.${i}.stdout -e /home/antonk/roofit/logs/log.${i}.stderr QCD_2D.sh
+
 mkdir -p /home/antonk/roofit/logs/
 if [ -z "$SITEROOT" ]; then
     echo "Sourcing environment..."
@@ -24,46 +25,43 @@ else
 fi
 echo "Processing job id = $id"
 source bashmap.sh
+SMART_KILLER="./smart_killer.sh"
+#SMART_KILLER=""
 
-input=/share/t3data3/antonk/ana/ana_v29G_07112012_DtoM_jerjes_wptw_stacoCB_all
+antondb='HISTO_08262012'
+mkdir -p ${antondb}
 input=/share/t3data3/antonk/ana/ana_v29G_07252012_newROOT_stacoCB_all
+input=/share/t3data3/antonk/ana/ana_v29G_08242012_allwts_V29I_stacoCB_all  # ALL weights + v29i ntuple + jerup/down
+
 bgqcd=3
-
 i=0
-preNN='ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2'
-preNQ='ptiso40/l_pt>0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2 && l_trigEF<0.2'
-#preNQ='ptiso20/l_pt>0.1 && ptiso20/l_pt<0.2 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2 && l_trigEF<0.2'
-gput tagz ${i} aiso_met0to120 "--lvar met --lbin 50,0,120 --preNN \"${preNN}\" --preNQ \"${preNQ}\" " ; ((i++))
-gput tagz ${i} aiso_wmt40to120 "--lvar w_mt --lbin 50,40,120 --preNN \"${preNN}\" --preNQ \"${preNQ}\" "  ; ((i++))
-gput tagz ${i} aiso_wmt30to120 "--lvar w_mt --lbin 55,30,120 --preNN \"${preNN}\" --preNQ \"${preNQ}\" "  ; ((i++))
-gput tagz ${i} aiso_lpt20to70 "--lvar l_pt --lbin 50,20,70 --preNN \"${preNN}\" --preNQ \"${preNQ}\" "  ; ((i++))
-#gput tagz ${i} aiso_lpt15to70 "--lvar l_pt --lbin 50,15,70 --preNN \"${preNN}\" --preNQ \"${preNQ}\" "  ; ((i++))
-#gput tagz ${i} lomet_isor0to1 "--llog --lvar ptiso40/l_pt --lbin 100,0,1 --preNN \"${preNN}\" --preNQ \"${preNQ}\" "  ; ((i++))
-
-ivar=0
-gput tagv ${ivar} met "--var met --bin 200,0,200" ; ((ivar++))
-gput tagv ${ivar} w_mt "--var w_mt --bin 200,0,200" ; ((ivar++))
-gput tagv ${ivar} l_pt "--var l_pt --bin 200,0,200" ; ((ivar++))
-gput tagv ${ivar} l_abseta "--var fabs\(l_eta\) --bin 10,0,2.5 --hsource lepton_absetav" ; ((ivar++))
-
 irun=0
-for itag in `gkeys tagz`; do
-    tag=`ggeta tagz $itag`
-    opts=`ggetb tagz $itag`
-    for iq in 0 1; do
-	for bgsig in 1 4 5; do
-	    for ivar in `gkeys tagv`; do
-		optsv=`ggetb tagv $ivar`
-		if [ "$id" == "$irun" -o "$id" == "ALL" ]; then
-		    eval ./stack2.py --input ${input} -b --charge $iq ${opts} ${optsv} -o TEST_Q${iq} -t ${tag} --cut "mcw*puw*effw*trigw*wptw*isow" -m qcdfit --bgsig ${bgsig} --bgewk 5 --bgqcd ${bgqcd}
-		fi
-		((irun++))
-		for ieta in {9..10}; do
-		    #continue #disable
-		    if [ "$id" == "$irun" -o "$id" == "ALL" ]; then
-			eval ./stack2.py --input ${input} -b --charge $iq ${opts} ${optsv} -o TEST_Q${iq}/ETA${ieta} -t ${tag} --cut "mcw*puw*effw*trigw*wptw*isow" -m qcdfit --bgsig ${bgsig} --bgewk 5 --bgqcd ${bgqcd} --extra ${ieta}
-		    fi
-		    ((irun++))
+
+gput tagis ${i} isofail "--isofail loose_isofail " ; ((i++))
+gput tagis ${i} isowind "--isofail isowind " ; ((i++))
+
+gput tagzs ${i} met0to80 "--lvar met --lbin 50,0,80 " ; ((i++))
+gput tagzs ${i} wmt40to90 "--lvar wmt --lbin 50,40,90 "  ; ((i++))
+gput tagzs ${i} met0to90 "--lvar met --lbin 50,0,90 " ; ((i++))
+gput tagzs ${i} wmt35to100 "--lvar wmt --lbin 50,35,100 "  ; ((i++))
+
+for iq in 0 1; do
+    for bgsig in 1 4 5; do
+	for itagi in `gkeys tagis`; do
+	    tagi=`ggeta tagis $itagi`
+	    optsi=`ggetb tagis $itagi`
+	    for itagz in `gkeys tagzs`; do
+		tagz=`ggeta tagzs $itagz`
+		optsz=`ggetb tagzs $itagz`
+		for bgewk in 5 2; do
+		    for ieta in {0..10}; do
+			for ipt in {0..6} ALL; do
+			    if [ "$id" == "$irun" -o "$id" == "ALL" ]; then
+				eval ${SMART_KILLER} ./stack2.py --input ${input} -b --charge $iq ${optsz} ${optsi} -o TEST_Q${iq}/ETA${ieta}/PT${ipt} -t ${tagi}_${tagz} -m qcdfit_2d --bgsig ${bgsig} --bgewk ${bgewk} --bgqcd ${bgqcd} --preNN ${ieta} --preNQ ${ipt} --extra ${antondb}/${antondb}.PART.${iq}.${bgsig}.${bgewk}.${ieta}.${ipt} --xsecerr 0
+			    fi
+			    ((irun++))
+			done
+		    done
 		done
 	    done
 	done

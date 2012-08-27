@@ -20,6 +20,14 @@ class antondb:
         s.fname = fbase + '.db'   # antondb
         s.rname = fbase + '.root' # ROOT TFile
         s.data = {}
+    def merge(s,fs,name=None):
+        dbs = [antondb(f) for f in fs]
+        [f.load() for f in dbs]
+        [s.data.update(f.data) for f in dbs]
+        # save via pickle
+        f = open(name if name else s.fname,'w')
+        pickle.dump(s.data,f)
+        f.close()
     def load(s):
         """ non-locking """
         f = open(s.fname,'r')
