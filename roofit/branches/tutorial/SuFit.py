@@ -99,7 +99,7 @@ class SuFit:
     else:
       o = [h,]
     assert len(o)>0
-    c = ROOT.TCanvas(name,name,1024,768)
+    c = ROOT.TCanvas(name,name,800,600)
     c.cd()
     [ oo.SetLineColor(i+1) for i,oo in enumerate(o) ]
     o[0].Draw()
@@ -162,7 +162,7 @@ class SuFit:
       if fixpars:
         fit.GetFitter().FixParameter(0);
       if False:
-        arglist = array.array('d',[1000,0.001])  #ncalls,tolerance
+        arglist = array.array('d',[1000,0.001])  #ncalls(1000),tolerance(0.001)
         fit.GetFitter().ExecuteCommand("MIGRAD",arglist,2);
       print 'INFO: SuFit::doFitTF parameter defaults:',ewkfrac,qcdfrac
     # start the fits
@@ -366,7 +366,7 @@ class SuFit:
     """ Draw the fit for ivar's variable """
     import SuCanvas
     s.canvas = canvas = SuCanvas.SuCanvas()
-    canvas.buildRatio(1024,768)
+    canvas.buildRatio(800,600)
     # main plot area
     canvas.cd_plotPad()
     s.frame = frame = s.w.var(s.vnames[ivar]).frame()
@@ -438,8 +438,7 @@ class SuFit:
 
     import SuCanvas
     s.canvas = canvas = SuCanvas.SuCanvas()
-    canvas.buildRatio(1024,768)
-
+    canvas.buildRatio(800,600)
     # main plot area: draw {data,model,fixed,qcd}
     canvas.cd_plotPad()
     fit = s.fit

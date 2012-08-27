@@ -1,25 +1,25 @@
 #!/bin/bash
 
-input=/share/t3data3/antonk/ana/ana_v29G_07112012_DtoM_jerjes_wptw_stacoCB_all # histograms use tight iso per Max.
-input=/share/t3data3/antonk/ana/ana_v29G_07202012_newROOT_stacoCB_all
-input=/share/t3data3/antonk/ana/ana_v29G_07252012_newROOT_stacoCB_all
-input=/share/t3data3/antonk/ana/ana_v29G_08012012_efffixed_stacoCB_all #eff scales fixed
-input=/share/t3data3/antonk/ana/ana_v29G_08162012_MCP_max_stacoCB_all/ #near-convergence to max cutflow (different efficiency weight: mine more correct)
+#input=/share/t3data3/antonk/ana/ana_v29G_07112012_DtoM_jerjes_wptw_stacoCB_all # histograms use tight iso per Max.
+#input=/share/t3data3/antonk/ana/ana_v29G_07202012_newROOT_stacoCB_all
+#input=/share/t3data3/antonk/ana/ana_v29G_07252012_newROOT_stacoCB_all
+#input=/share/t3data3/antonk/ana/ana_v29G_08012012_efffixed_stacoCB_all #eff scales fixed
+#input=/share/t3data3/antonk/ana/ana_v29G_08162012_MCP_max_stacoCB_all/ #near-convergence to max cutflow (different efficiency weight: mine more correct)
 
 #input=/share/t3data3/antonk/ana/ana_v29G_08182012_max_wpt_wpol_stacoCB_all  # max cutflow + new boson pt & polarization reweighting
 #input=/share/t3data3/antonk/ana/ana_v29G_08182012_max_wpt_wpol_newMCP_stacoCB_all   # same, plus my new MCP corrections
 
-input=/share/t3data3/antonk/ana/ana_v29G_08212012_max_wpt_wpol_2d_ls_stacoCB_all  # add wpt and pol. weight to ntuple
-input=/share/t3data3/antonk/ana/ana_v29G_08222012_max_wpt_wpol_2d_ls_hist_stacoCB_all   # all weights except lineshape applied
-input=/share/t3data3/antonk/ana/ana_v29G_08222012_max_wpt_wpol_2d_ls_hist_transpose_stacoCB_all  #includes the other version of 2d histo
-#input=/share/t3data3/antonk/ana/ana_v29G_08222012_max_wpt_wpol_2d_ls_hist_transpose_zweight_stacoCB_all  #includes z0 reweighting + v29i ntuple [low stat]
-input=/share/t3data3/antonk/ana/ana_v29G_08242012_allwts_V29I_stacoCB_all  # ALL weights + v29i ntuple + jerup/down
+#input=/share/t3data3/antonk/ana/ana_v29G_08212012_max_wpt_wpol_2d_ls_stacoCB_all  # add wpt and pol. weight to ntuple
+#input=/share/t3data3/antonk/ana/ana_v29G_08222012_max_wpt_wpol_2d_ls_hist_stacoCB_all   # all weights except lineshape applied
+#input=/share/t3data3/antonk/ana/ana_v29G_08222012_max_wpt_wpol_2d_ls_hist_transpose_stacoCB_all  #includes the other version of 2d histo
+#input=/share/t3data3/antonk/ana/ana_v29G_08242012_allwts_V29G_stacoCB_all  # ALL weights but vxz+ v29g ntuple + jerup/down
+input=/share/t3data3/antonk/ana/ana_v29G_08242012_allwts_V29I_stacoCB_all  # ALL weights + v29i ntuple + jerup/down 
 
 # RESURRECTING NTUPLE-BASED PLOTTING:
 #./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --cut "mcw*puw*effw*isow*trigw*wptw" -m ALL --bgsig 5 --bgewk 5 --bgqcd 3 #--metallsys
 
 # MAIN PLOTTER
-./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --cut "mcw*puw*effw*isow*trigw*wptw" -m ALL --bgsig 5 --bgewk 5 --bgqcd 3 #--metallsys
+./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --cut "mcw*puw*wptw*effw*isow*trigw" -m ALL --bgsig 5 --bgewk 5 --bgqcd 3 #--metallsys
 
 # QCD matrix method
 #./stack2.py --input /share/ftkdata1/antonk/ana_v28HC_02092012_DtoM_cernupd_stacoCB_all -o TEST -b -m matrix_2010inc --var l_eta --bin 20,-2.5,2.5 -t QCD --pre 'ptiso20/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && fabs(d0sig)<10.0 && nmuons==1 && l_trigEF<0.2' --cut mcw*puw --charge 0

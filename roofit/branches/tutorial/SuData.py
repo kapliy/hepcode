@@ -630,6 +630,7 @@ class SuSample:
     cache = None
     rootpath = None
     lumi = None
+    xsecerr = 0
     debug = False
     def __init__(s,name):
         """ constructor """
@@ -733,7 +734,7 @@ class SuSample:
         from MC import mc
         mrun = mc.match_sample(s.name)
         assert mrun
-        xsec = mrun.xsec*mrun.filteff
+        xsec = mrun.xsec*mrun.filteff*(1.0 + SuSample.xsecerr*mrun.err)
         nevents = s.nevt[s.path][evcnt]
         sample = mrun.sample
         flumi = nevents*1.0 / xsec
@@ -754,7 +755,7 @@ class SuSample:
             if qcdscale!=1.0:
                 print 'MC QCD: extra scaling by %.3f'%qcdscale
         if mrun:
-            xsec = mrun.xsec*mrun.filteff
+            xsec = mrun.xsec*mrun.filteff*(1.0 + SuSample.xsecerr*mrun.err)
             # Choose the right evcnt - depending on which scale factors were used (effw/trigw)
             nevents = s.nevt[s.path][evcnt]
             sample = mrun.sample
@@ -1374,7 +1375,7 @@ class SuStack:
         """ QCD background summed histogram """
         loop = [e for e in s.elm if 'qcd' in e.flags and 'no' not in e.flags]
         return s.histosum(loop,hname,d)
-    def SaveROOT(s,fname,d,flags1=['mc'],flags2=['data'],mode='UPDATE',prefix=''):
+    def SaveROOT(s,fname,d,flags1=['mc'],flags2=['data'],mode='UPDATE',dname=None):
         """ Saves a collection of plots (in d) into a ROOT file """
         ELES = """
         Attention: need to implement ResolDown. To think: decide how to implement bsgub with mc@nlo vs powhegHerwig.
@@ -1383,12 +1384,19 @@ class SuStack:
         """
         NMAP = {}
         NMAP['t#bar{t}'] = 'ttbar'
+        NMAP['single_top'] = 'stop'
         NMAP['wtaunu_powheg_pythia'] = 'wtaunu'
         NMAP['wtaunu_powheg_herwig'] = 'wtaunu'
         NMAP['wtaunu_mcnlo'] = 'wtaunu'
+        NMAP['wtaunu_alpgen_herwig'] = 'wtaunu'
         NMAP['zmumu_powheg_pythia'] = 'zmumu'
         NMAP['zmumu_powheg_herwig'] = 'zmumu'
         NMAP['zmumu_mcnlo'] = 'zmumu'
+        NMAP['zmumu_alpgen_herwig'] = 'zmumu'
+        NMAP['ztautau_powheg_pythia'] = 'ztautau'
+        NMAP['ztautau_powheg_herwig'] = 'ztautau'
+        NMAP['ztautau_mcnlo'] = 'ztautau'
+        NMAP['ztautau_alpgen_herwig'] = 'ztautau'
         NMAP['dyan_pythia'] = 'dyan'
         NMAP['dyan_mcnlo'] = 'dyan'
         NMAP['WW/WZ/ZZ'] = 'diboson'
@@ -1425,7 +1433,7 @@ class SuStack:
         fout = ROOT.TFile.Open(fname,mode)
         assert fout.IsOpen(),'Failed to open file: %s'%fname
         nom = d.nominal()
-        aname = SuSys.QMAP[nom.charge][1]+'_'+MAP_BGSIG[s.flagsum['S']]
+        aname = dname if dname else SuSys.QMAP[nom.charge][1]+'_'+MAP_BGSIG[s.flagsum['S']]
         adir = fout.Get(aname) if fout.Get(aname) else fout.mkdir(aname)
         assert adir,'Failed to create subdirectory: %s'%aname
         adir.cd()

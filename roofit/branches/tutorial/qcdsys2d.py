@@ -4,150 +4,212 @@
 A small script that summarizes QCD systematic deviations
 due to different signal MC or different fit variables.
 THIS VERSION OPERATES ON 2D GRID: |eta| x pT
-IT ALSO REPACKAGES A FILE
+IT ALSO REPACKAGES A ROOT FILE
 """
 
 memo = """
 <pre>
-<U>In each cell</U>:<BR>
-The <B>first number</B> is the <B>CHI2/NDF</B> for a given fit.<BR>
-The <B>second number</B> is either the <B>absolute QCD fraction</B> (for the first, <B>nominal</B>, row), or the <B>relative deviation</B> wrt nominal (all other rows).<BR>
-<U>Order of rows</U>:
-<ul>
-<li>Nom: Powheg+Pythia (MET) </li>
-<li>Sys: Powheg+Herwig (MET) </li>
-<li>Sys: MC@NLO (MET) </li>
-<li>Sys: Powheg+Pythia (WMT) </li>
-<li>Sys: Powheg+Herwig (WMT) </li>
-<li>Sys: MC@NLO (WMT) </li>
-<li></B>Maximum deviation (total QCD uncertainty)<B> </li>
-</ul>
+<U>Summary of QCD systematics in 2D bins</U>:
 </pre>
 """
 
-import sys,pickle,os,re
+import sys,os,re,math
+import antondb
 
-etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
-ptbins = [20,25,30,35,40,45,50,120]
+# Define all systematics. Note that bgsig is NOT present here, since we save separate histograms for each bgsig
+#'/iq%d/X%d/bgewk%d/bgsig%d/iso%s/ivar%s/ibin%s/ieta%d/ipt%s'%(iq,xsecerr,bgewk,bgsig,isofail,ivar,ibin,ieta,ipt)
+msys = []
+for xsecerr in [ (0,) ]:
+    for bgewk in [ (5,),(2,) ]:
+        for isofail in [ ('loose_isofail',) ,('isowind',) ]: #TODO: think how to incorporate isowind, which has same frac but different scale
+            for ivar in [ ('met','50,0,80'),('met','50,0,90'),('wmt','50,40,90'),('wmt','50,35,100') ]:
+                msys.append( xsecerr+bgewk+isofail+ivar )
+msys_nom = (0,5,'loose_isofail','met','50,0,80')                
+
+etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4] # N=12
+ptbins = [20,25,30,35,40,45,50,120] # N=8
 QMAP = {0:'mu+',1:'mu-',2:'both charges'}
 QMAPN = {0:'POS',1:'NEG',2:'ALL'}
-SIGMAP = { 1 : "MC@NLO", 4 : "PowHeg+Her", 5 : "PowHeg+Pyt" }
+SIGMAP = { 1 : "MC@NLO", 2 : 'Alpgen+Her', 4 : "PowHeg+Herwig", 5 : "PowHeg+Pythia" }
+FQNAMES = { 0 : 'POS_ewk5', 1 : 'NEG_ewk5' }
 S = '&nbsp;'
+PM = '&plusmn;'
 
-import ROOT
-pick_name = 'save.pickle'
-fupd_name = 'PLOTS_08242012.v1.root'
+db_name = 'CRAP'
+fin_name = 'PLOTS_08242012.v1.root'
+fout_name = 'OUT_PLOTS_08242012.v1.root'
+if os.path.exists(fin_name):
+    import ROOT
+    
+def mean(y):
+    x = y
+    if len(x)==0: return 0
+    return sum(x)/len(x)
+def rms(y):
+    x = y
+    if len(x)==0: return 0
+    m = mean(x)*1.0
+    return math.sqrt( sum([ (xx-m)**2 for xx in x]) )
+def get(iq,bgsig,ieta,ipt):
+    idxs = []
+    fracs = []
+    scales = []
+    scalesE = []
+    chindfs = []
+    # these two are scales for isoloose only!
+    scalesL = []
+    scalesLE = []
+    idx = 0
+    for xsecerr,bgewk,isofail,ivar,ibin in msys:
+        key = '/iq%d/X%d/bgewk%d/bgsig%d/iso%s/ivar%s/ibin%s/ieta%d/ipt%s'%(iq,xsecerr,bgewk,bgsig,isofail,ivar,ibin,ieta,ipt)
+        if key in R:
+            fracs.append(R[key]['frac'])
+            sc = R[key]['scales']
+            scales.append(sc[0])
+            scalesE.append(sc[1])
+            if isofail=='loose_isofail':
+                scalesL.append(sc[0])
+                scalesLE.append(sc[1])
+            chindfs.append( 1.0*sc[-3]/sc[-2] )
+        idxs.append(idx)
+        idx += 1
+    return idxs,fracs,scales,scalesE,chindfs,scalesL,scalesLE
 
 def scale_bin(h,ietabin,iptbin,v):
     etabin = etabins[ietabin]
-    ptbin = ptbins[iptbin]
-    ibin = h.FindFixBin(etabin+1e-5,ptbin+1e-5)
+    if iptbin=='ALL': # in eta only
+        ibin = h.FindFixBin(etabin+1e-6)
+    else:
+        ptbin = ptbins[iptbin]
+        ibin = h.FindFixBin(etabin+1e-6,ptbin+1e-6)
     h.SetBinContent(ibin, h.GetBinContent(ibin)*v)
     h.SetBinError(ibin, h.GetBinError(ibin)*v)
     return h
 
-def make_total(adir,sys,samples):
-    h = adir.Get(samples[0]).Clone('totalbg_'+sys)
-    print 'Adding:',[ sample for sample in samples[1:] ]
-    [ h.Add( adir.Get(sample) ) for sample in samples[1:] ]
+def make_total(csys,samples):
+    h = samples[0].Clone('totalbg_'+csys)
+    #print 'Adding:',[ sample.GetName() for sample in samples[:] ]
+    [ h.Add( sample ) for sample in samples[1:] ]
     h.SetTitle(h.GetName())
     return h
 
 if __name__=='__main__':
-    fin = open(pick_name,'rb')
-    R = pickle.load(fin)
+    a = antondb.antondb(db_name)
+    a.load()
+    R = a.data
     f = open('index2.html','w')
-    fupd = None
-    if os.path.exists(fupd_name):
-        fupd = ROOT.TFile.Open(fupd_name,"UPDATE")
+    fin,fout = None,None
+    fout_D = []
+    if os.path.exists(fin_name):
+        fin = ROOT.TFile.Open(fin_name,"UPDATE")
+        fout = ROOT.TFile.Open(fout_name,"RECREATE")
+        fout_D.append(fout.mkdir('POS'))
+        fout_D.append(fout.mkdir('NEG'))
     print >>f,'<HTML><BODY>'
     print >>f,memo
-    #RES[iq][ieta][ipt][ivar][bgsig]
     for iq in (0,1,):
         if iq!=0:
             print >>f,'<HR size="20" color="red">'
+        samples,systems,qcd = None,None,None
+        QCD = []
+        if fin and fin.IsOpen():
+            adir = fin.Get(FQNAMES[iq])
+            adir.cd()
+            assert adir,'Cannot access directory: %s'%(FQNAMES[iq])
+            samples = [re.sub('_nominal','',key.GetName()) for key in adir.GetListOfKeys() if re.search('nominal',key.GetName())]
+            systems = [re.sub('wmunu_','',key.GetName()) for key in adir.GetListOfKeys() if re.match('wmunu_',key.GetName())]
+            qcd = adir.Get('qcd').Clone()
+            # nominal, qcdup, qcddown                          PowhegHerwig  MC@NLO
+            QCD = [ qcd.Clone(), qcd.Clone(), qcd.Clone() ,   qcd.Clone() , qcd.Clone() ]
         # make a separate table for each pT bin
         for ipt in xrange(0 , len(ptbins)-1):
             print 'Working on: ',QMAP[iq],'in pt bin',ipt
             print >>f,'<HR>'
             print >>f,QMAP[iq],'%d&lt;pT&lt;%d'%(ptbins[ipt],ptbins[ipt+1])
             print >>f,'<HR>'
-            print >>f,'<TABLE border="1" CELLPADDING="0" CELLSPACING="1" width="1200">'
+            print >>f,'<TABLE border="1" CELLPADDING="0" CELLSPACING="1" width="1400">'
+            # header first
             print >>f,'<TR>'
+            print >>f,'<TD width="100">Info</TD>'
             for ieta in xrange(0,len(etabins)-1):
                 print >>f, '<TD width="80">','%.2f&lt;|&eta;|&lt;%.2f'%(etabins[ieta],etabins[ieta+1]),"</TD>"
             print >>f,'</TR>'
             # actual table contents
-            print >>f,'<TR>'
-            for ieta in xrange(0,len(etabins)-1):
-                nom = R[iq][ieta][ipt]['met'][5][0]
-                scales = R[iq][ieta][ipt]['met'][5][1]
-                #sys = [('wmt',5), ('met',4),('wmt',4), ('met',1),('wmt',1)]
-                sys = [('met',4),('met',1),('wmt',5),('wmt',4),('wmt',1)]
-                fname = 'TEST/TEST_Q3S%dX5Y5Z5_loose_isofail__nominal_st_w_final_metfit_%s_bin_%d_lpt_%d_met_0to80.png'%(5,QMAPN[iq],ieta,ipt)
-                print >>f,'<TD>','%.1f | <B><a href="%s">%.2f%%</a></B>'%(scales[-3]/scales[-2],fname,nom*100.0),'<BR>'
-                pers = []
-                for isys in sys:
-                    ivar,bgsig = isys
-                    fname = 'TEST/TEST_Q3S%dX5Y5Z5_loose_isofail__nominal_st_w_final_metfit_%s_bin_%d_lpt_%d_met_0to80.png'%(bgsig,QMAPN[iq],ieta,ipt)
-                    if ivar=='wmt':
-                        fname = 'TEST/TEST_Q3S%dX5Y5Z5_loose_isofail__nominal_st_w_final_wmtfit_%s_bin_%d_lpt_%d_wmt_40to90.png'%(bgsig,QMAPN[iq],ieta,ipt)
-                    v=-1
-                    try:
-                        v = R[iq][ieta][ipt][ivar][bgsig][0]
-                        scales = R[iq][ieta][ipt][ivar][bgsig][1]
-                    except:
-                        v=-1
-                        scales = None
-                    if v<0 or nom<0:
-                        print >>f,'NA','<BR>'
-                        pers.append(0)
-                    else:
-                        per = (v - nom)/nom*100.0
-                        pers.append(per)
-                        print >>f,'%.1f | <a href="%s">%s%.1f%%</a>'%(scales[-3]/scales[-2],fname,'' if per<0 else '+',per),'<BR>'
-                pers.sort(key = lambda x: abs(x))
-                print >>f,'<B>%s%.1f%% (%.1f%%)</B>'%('' if pers[-1]<0 else '+',pers[-1],abs(pers[-1])*nom)
-                print >>f,'</TD>'
-            print >>f,'</TR>'
-            print >>f,'</TABLE>'
-        if fupd and fupd.IsOpen():
-            FQNAMES = { 0 : 'POS_powheg_pythia', 1 : 'NEG_powheg_pythia' }
-            adir = fupd.Get(FQNAMES[iq])
-            adir.cd()
-            assert adir,'Cannot access directory: %s'%(FQNAMES[iq])
-            samples = [re.sub('_nominal','',key.GetName()) for key in adir.GetListOfKeys() if re.search('nominal',key.GetName())]
-            systems = [re.sub('wmunu_','',key.GetName()) for key in adir.GetListOfKeys() if re.match('wmunu_',key.GetName())]
-            qcd = adir.Get('qcd').Clone()
-            assert qcd,'Unable to find the QCD histogram'
-            qcds = []
-            qcds.append (qcd.Clone('qcd_up'))
-            qcds.append (qcd.Clone('qcd_down'))
-            def R_array(ieta,ipt):
-                res = []
-                for bgsig in (5,4,1):
-                    for ivar in ('met','wmt'):
-                        try:
-                            r = R[iq][ieta][ipt][ivar][bgsig][1][0]
-                            res.append(r)
-                        except:
-                            continue
-                return res
-            def max_up(ieta,ipt):
-                for bgsig in (5,4,1):
-                    for ivar in ('met','wmt'):
-                        R[iq][ieta][ipt]['met'][5][1][0]
-                        pass
-            for ipt in xrange(0 , len(ptbins)-1):
+            for bgsig in (5,4,1):
+                print >>f,'<TR>'
+                print >>f,'<TD colspan="%d" align="center">'%(len(etabins)+1),SIGMAP[bgsig],'</TD>'
+                print >>f,'</TR>'
+                idxs,fracs,scales,scalesE,chindfs,scalesL,scalesLE = [],[],[],[],[],[],[]
                 for ieta in xrange(0,len(etabins)-1):
-                    R_array(ieta,ipt)
-                    scale_bin(qcd,ieta,ipt,R[iq][ieta][ipt]['met'][5][1][0])
-            qcd.Write(qcd.GetTitle(),ROOT.TObject.kOverwrite)
-            # create total-background histogram for Max for each systematic variation
-            for system in systems:
-                allsamples = [sample+'_'+system for sample in samples if sample!='wmunu']+ ['qcd']
-                htot = make_total(adir,system,allsamples)
-                htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
-    if fupd and fupd.IsOpen():
-        fupd.Close()
+                    idx,frac,scale,scaleE,chindf,scaleL,scaleLE = get(iq,bgsig,ieta,ipt)
+                    idxs.append(idx); fracs.append(frac); scales.append(scale); scalesE.append(scaleE); chindfs.append(chindf)
+                    scalesL.append(scaleL),scalesLE.append(scaleLE)
+                print >>f,'<TR>'
+                print >>f,'<TD>','QCD frac & error','</TD>'
+                relF = [] # relative error on qcd fraction. Use it also as an uncertainty on scale!!!
+                for ieta in xrange(0,len(etabins)-1):
+                    relF.append( rms(fracs[ieta])/mean(fracs[ieta]) )
+                    print >>f,'<TD>','%.1f %s %.1f %%'%(mean(fracs[ieta])*100.0,PM,relF[-1]*100.0),'</TD>'
+                print >>f,'</TR>'
+                print >>f,'<TR>'
+                print >>f,'<TD>','Scale & error','</TD>'
+                relS = [] # relative error on scale - using a subset of variations (loose_isofail). This is not actually used
+                for ieta in xrange(0,len(etabins)-1):
+                    relS.append( rms(scalesL[ieta])/mean(scalesL[ieta]) )
+                    print >>f,'<TD>','%.3f %s %.1f %%'%(mean(scalesL[ieta]),PM,relS[-1]*100.0),'</TD>'
+                print >>f,'</TR>'
+                print >>f,'<TR>'
+                print >>f,'<TD>','Total QCD uncert.','</TD>'
+                for ieta in xrange(0,len(etabins)-1):
+                    print >>f,'<TD>','%.1f %%'%(relF[ieta]*mean(fracs[ieta])*100.0),'</TD>'
+                print >>f,'</TR>'
+                # NOW handle ROOT histograms
+                if fin:
+                    for ieta in xrange(0,len(etabins)-1):
+                        if bgsig==5:
+                            scale_bin(QCD[0],ieta,ipt,mean(scalesL[ieta]))
+                            scale_bin(QCD[1],ieta,ipt,mean(scalesL[ieta])*(1.0+relF[ieta]))
+                            msc = mean(scalesL[ieta])*(1.0-relF[ieta]) if relF[ieta]<1.0 else 0.0
+                            scale_bin(QCD[2],ieta,ipt,msc)
+                            #print 'DEBUG:',ipt,ieta,mean(scalesL[ieta]),mean(scalesL[ieta])*(1.0+relF[ieta]),msc,relF[ieta]
+                        if bgsig==4:
+                            scale_bin(QCD[3],ieta,ipt,mean(scalesL[ieta]))
+                        if bgsig==1:
+                            scale_bin(QCD[4],ieta,ipt,mean(scalesL[ieta]))
+                    # generate total histograms for detector systematics
+                    fout_D[iq].cd()
+                    if bgsig==5:
+                        adir.Get('data').Write('data',ROOT.TObject.kOverwrite)
+                        for system in systems:
+                            allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
+                            htot = make_total(system,allsamples)
+                            htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
+                            adir.Get('wmunu_'+system).Write('wmunu_PowhegPythia_'+system,ROOT.TObject.kOverwrite)
+                        # manually generate nominal histograms with qcd Up/Down variations
+                        system='nominal'
+                        allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[1],]
+                        htot = make_total(system,allsamples)
+                        htot.SetTitle('totalbg_QCDUp')
+                        htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
+                        allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[2],]
+                        htot = make_total(system,allsamples)
+                        htot.SetTitle('totalbg_QCDDown')
+                        htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
+                    elif bgsig==4:
+                        system='nominal'
+                        allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[3],]
+                        htot = make_total(system,allsamples)
+                        htot.SetTitle('totalbg_nominal_unfoldPowhegJimmy')
+                        htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
+                    elif bgsig==1:
+                        system='nominal'
+                        allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[4],]
+                        htot = make_total(system,allsamples)
+                        htot.SetTitle('totalbg_nominal_unfoldMCNLO')
+                        htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
+            print >>f,'</TABLE>'
+    if fin and fin.IsOpen():
+        fin.Close()
+    if fout and fout.IsOpen():
+        fout.Close()
     print >>f,'</BODY></HTML>'
