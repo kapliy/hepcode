@@ -32,6 +32,10 @@ QMAP = {0:'mu+',1:'mu-',2:'both charges'}
 QMAPN = {0:'POS',1:'NEG',2:'ALL'}
 SIGMAP = { 1 : "MC@NLO", 2 : 'Alpgen+Her', 4 : "PowHeg+Herwig", 5 : "PowHeg+Pythia" }
 FQNAMES = { 0 : 'POS_ewk5', 1 : 'NEG_ewk5' }
+
+MODE = 2
+if len(sys.argv)>=2 and sys.argv[1]=='1':
+    MODE = 1
 S = '&nbsp;'
 PM = '&plusmn;'
 
@@ -39,6 +43,7 @@ db_name = 'CRAP'
 fin_name = 'PLOTS_08242012.v1.root'
 fout_name = 'OUT_PLOTS_08242012.v1.root'
 if os.path.exists(fin_name):
+    import common
     import ROOT
     
 def mean(y):
@@ -101,7 +106,7 @@ if __name__=='__main__':
     fin,fout = None,None
     fout_D = []
     if os.path.exists(fin_name):
-        fin = ROOT.TFile.Open(fin_name,"UPDATE")
+        fin = ROOT.TFile.Open(fin_name,"READ")
         fout = ROOT.TFile.Open(fout_name,"RECREATE")
         fout_D.append(fout.mkdir('POS'))
         fout_D.append(fout.mkdir('NEG'))
@@ -122,10 +127,14 @@ if __name__=='__main__':
             # nominal, qcdup, qcddown                          PowhegHerwig  MC@NLO
             QCD = [ qcd.Clone(), qcd.Clone(), qcd.Clone() ,   qcd.Clone() , qcd.Clone() ]
         # make a separate table for each pT bin
-        for ipt in xrange(0 , len(ptbins)-1):
+        ptrange = range(0 , len(ptbins)-1) if MODE==2 else ['ALL',]
+        for ipt in ptrange:
             print 'Working on: ',QMAP[iq],'in pt bin',ipt
             print >>f,'<HR>'
-            print >>f,QMAP[iq],'%d&lt;pT&lt;%d'%(ptbins[ipt],ptbins[ipt+1])
+            if MODE==2:
+                print >>f,QMAP[iq],'%d&lt;pT&lt;%d'%(ptbins[ipt],ptbins[ipt+1])
+            else:
+                print >>f,QMAP[iq],'%d&lt;pT&lt;%d'%(ptbins[0],ptbins[-1])
             print >>f,'<HR>'
             print >>f,'<TABLE border="1" CELLPADDING="0" CELLSPACING="1" width="1400">'
             # header first
