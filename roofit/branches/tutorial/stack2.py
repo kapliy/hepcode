@@ -141,6 +141,7 @@ gbg = []; COUT = [];
 # antondb containers
 VMAP = {}; OMAP = []
 VMAP['cmd']=' '.join(sys.argv)
+print VMAP['cmd']
 
 #import ROOT and disable warning messages
 from common import *
@@ -688,7 +689,7 @@ if mode=='ALL' or mode=='all':
         if False:
             spR.enable_nominal()
             hdata,hstack = plot_stack(spR.clone(),var=var,q=0,m=1,name='test2d')
-        fname = 'PLOTS_08242012.v1.root'
+        fname = 'PLOTS_08242012.v2.root'
         po.choose_sig(5)
         itot = 0
         for ewksig in (5,2):
@@ -846,6 +847,7 @@ if mode=='ALL' or mode=='all':
         if opts.extra==0:
             plot_stack(spR.clone(),var,q=2,m=0,name='histo')
         var='l_pt'
+        var='w_pt'
         bin = '200,0,200'
         assert opts.extra,'EXITING - please set --extra to 0'
         extra = int(opts.extra)
@@ -876,10 +878,10 @@ if mode=='ALL' or mode=='all':
     if False: # simple histogram comparison of TH1 and ntuple-based histograms: one MC and Data only
         c = SuCanvas('TEST')
         M = PlotOptions()
-        M.add('h','histo',ratio=1)
-        M.add('nt','ntuple',ratio=1)
+        M.add('h','histo',ratio=1,size=1.0)
+        M.add('nt','ntuple',ratio=1,size=0.5)
         h = []
-        pre = 'ptiso20/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2'
+        pre = 'ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
         SuSample.debug = True
         #SuSample.GLOBAL_CACHE = None
         spR.enable_nominal()
