@@ -39,9 +39,9 @@ if len(sys.argv)>=2 and sys.argv[1]=='1':
 S = '&nbsp;'
 PM = '&plusmn;'
 
-db_name = 'CRAP'
-fin_name = 'PLOTS_08242012.v2.root'
-fout_name = 'OUT_PLOTS_08242012.v2.root'
+db_name = 'DB_08272012_MC10'
+fin_name = 'IN_08272012.v1.root'
+fout_name = 'OUT_'+fin_name
 if os.path.exists(fin_name):
     import common
     import ROOT
@@ -109,7 +109,7 @@ if __name__=='__main__':
     f = open('index2.html','w')
     fin,fout = None,None
     fout_D = []
-    if os.path.exists(fin_name):
+    if os.path.exists(fin_name) and MODE==2:
         fin = ROOT.TFile.Open(fin_name,"READ")
         fout = ROOT.TFile.Open(fout_name,"RECREATE")
         fout_D.append(fout.mkdir('POS'))
@@ -140,7 +140,8 @@ if __name__=='__main__':
             else:
                 print >>f,QMAP[iq],'%d&lt;pT&lt;%d'%(ptbins[0],ptbins[-1])
             print >>f,'<HR>'
-            print >>f,'<TABLE border="1" CELLPADDING="0" CELLSPACING="1" width="1400">'
+            print >>f,'<TABLE border="1" CELLPADDING="0" CELLSPACING="1">'
+            #print >>f,'<TABLE border="1" CELLPADDING="0" CELLSPACING="1" width="1100">'
             # header first
             print >>f,'<TR>'
             print >>f,'<TD width="100">Info</TD>'
@@ -165,7 +166,7 @@ if __name__=='__main__':
                     print >>f,'<TD>','%.1f %s %.1f %%'%(mean(fracs[ieta])*100.0,PM,relF[-1]*100.0),'</TD>'
                 print >>f,'</TR>'
                 print >>f,'<TR>'
-                print >>f,'<TD>','Scale & error','</TD>'
+                print >>f,'<TD>','Scale factor','</TD>'
                 relS = [] # relative error on scale - using a subset of variations (loose_isofail). This is not actually used
                 for ieta in xrange(0,len(etabins)-1):
                     relS.append( rms(scalesL[ieta])/mean(scalesL[ieta]) )

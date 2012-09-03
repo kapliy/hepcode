@@ -28,10 +28,11 @@ source bashmap.sh
 SMART_KILLER="./smart_killer.sh"
 #SMART_KILLER=""
 
-antondb='HISTO_08262012'
+antondb='HISTO_08272012_MC10'
 mkdir -p ${antondb}
 input=/share/t3data3/antonk/ana/ana_v29G_07252012_newROOT_stacoCB_all
 input=/share/t3data3/antonk/ana/ana_v29G_08242012_allwts_V29I_stacoCB_all  # ALL weights + v29i ntuple + jerup/down
+input=/share/t3data3/antonk/ana/ana_v29I_08242012_allwts_wptMC10_stacoCB_all # same, but using MC10 reweighting
 
 bgqcd=3
 i=0

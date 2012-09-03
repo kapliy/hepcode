@@ -679,31 +679,9 @@ def study_jet_calibration_effects():
 
 # combined plots
 if mode=='ALL' or mode=='all':
-    if False:
+    if True:
         plots = ['lepton_absetav','lpt','met','wmt']
-        plot_stacks(spR.clone(),plots,m=1,qs=(0,1,2))
-    if True: # studies feasibility of saving 2D histograms, manual scale specification
-        var = 'd2_abseta_lpt'
-        # disable QCD scaling since here we are just dumping histograms
-        SuStackElm.new_scales = False
-        if False:
-            spR.enable_nominal()
-            hdata,hstack = plot_stack(spR.clone(),var=var,q=0,m=1,name='test2d')
-        fname = 'PLOTS_08242012.v2.root'
-        po.choose_sig(5)
-        itot = 0
-        for ewksig in (5,2):
-            po.choose_ewk(ewksig)
-            po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),mode='RECREATE' if itot==0 else 'UPDATE',dname='POS_ewk%d'%ewksig); itot+=1
-            po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_ewk%d'%ewksig);  itot+=1
-        if True:
-            po.choose_ewk(5)
-            SuSample.xsecerr = 1
-            po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),mode='RECREATE' if itot==0 else 'UPDATE',dname='POS_ewk5_xsecup'); itot+=1
-            po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_ewk5_xsecup');  itot+=1
-            SuSample.xsecerr = -1
-            po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),mode='RECREATE' if itot==0 else 'UPDATE',dname='POS_ewk5_xsecdown'); itot+=1
-            po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_ewk5_xsecdown');  itot+=1
+        plot_stacks(spR.clone(),plots,m=1,qs=(0,))
     if False:  # [DEPRECATED] performs QCD fits in |eta| x pT bins, saves plots and pickle files with chi2 and qcd fraction systematics
         etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
         ptbins = [20,25,30,35,40,45,50,120]
@@ -1011,6 +989,29 @@ if mode=='ALL' or mode=='all':
         """
         june17_asymmetry()
 
+
+if mode=='prepare_2d': # saves a collection of 2D histograms as input into Max's unfolding
+    var = 'd2_abseta_lpt'
+    # disable QCD scaling since here we are just dumping histograms
+    SuStackElm.new_scales = False
+    if False:
+        spR.enable_nominal()
+        hdata,hstack = plot_stack(spR.clone(),var=var,q=0,m=1,name='test2d')
+    fname = 'IN_08272012.v1.root'
+    po.choose_sig(5)
+    itot = 0
+    for ewksig in (5,2):
+        po.choose_ewk(ewksig)
+        po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),mode='RECREATE' if itot==0 else 'UPDATE',dname='POS_ewk%d'%ewksig); itot+=1
+        po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_ewk%d'%ewksig);  itot+=1
+    if True:
+        po.choose_ewk(5)
+        SuSample.xsecerr = 1
+        po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),mode='RECREATE' if itot==0 else 'UPDATE',dname='POS_ewk5_xsecup'); itot+=1
+        po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_ewk5_xsecup');  itot+=1
+        SuSample.xsecerr = -1
+        po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),mode='RECREATE' if itot==0 else 'UPDATE',dname='POS_ewk5_xsecdown'); itot+=1
+        po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_ewk5_xsecdown');  itot+=1
 # comprehensive study of qcd fits in 2d: pt x eta bins, using histograms
 if mode=='qcdfit_2d':
     etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
