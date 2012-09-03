@@ -147,7 +147,7 @@ class SuFit:
       s.dump_plot([data,s.fixed,s.free[0]])
     # set up extra parameters. frac0 = EWK (fixed), frac1 = QCD (free)
     assert fit.GetFitter()
-    if False:
+    if True:
       [ fit.Constrain(i,0.0,1.0) for i in xrange(0, mc.GetSize()) ] # constrain fractions to be between 0 and 1
     else:
       ewkfrac = s.fixed.Integral(s.fitmin,s.fitmax)/data.Integral(s.fitmin,s.fitmax)
