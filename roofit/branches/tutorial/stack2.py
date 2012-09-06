@@ -2,8 +2,7 @@
 
 _QUALITY = ' && fabs(l_eta)<2.4 && idhits==1 && fabs(z0)<10. && fabs(d0sig)<10. && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'
 _PRE_PETER  = 'l_pt>20.0 && ptiso40<2.0 && etiso40<2.0 && met>25.0 && w_mt>40.0'+_QUALITY
-_PRE_JORDAN = 'l_pt>25.0 && ptiso20/l_pt<0.1 && met>25.0 && w_mt>40.0'+_QUALITY
-_PRE_JORDANALT = 'l_pt>25.0 && ptiso20/l_pt<0.1 && ptiso30/l_pt<0.15 && met>25.0 && w_mt>40.0'+_QUALITY
+_PRE_MAX = "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1"
 
 # X - tag muon (doesn't change), Y - probe muon used to measure efficiency ( = Y after/before specific cut)
 _BEF = 'lX_idhits==1 && fabs(lP_z0)<10. && fabs(lX_eta)<2.4 && lX_pt>10.0 && lY_idhits==1 && fabs(lN_z0)<10. && fabs(lY_eta)<2.4 && lY_pt>10.0 && Z_m>81.0 && Z_m<101.0 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0 && lX_ptiso40<2.0 && lX_etiso40<2.0'
@@ -42,7 +41,7 @@ parser.add_option("--extra",dest="extra",
                   type="string", default=None,
                   help="General-purpose extra parameter")
 parser.add_option("--pre",dest="pre",
-                  type="string", default=_PRE_PETER,
+                  type="string", default=_PRE_MAX,
                   help="Preliminary cuts to select final W candidates")
 parser.add_option("--prebef",dest="prebef",
                   type="string", default=_BEF,
@@ -679,7 +678,7 @@ def study_jet_calibration_effects():
 
 # combined plots
 if mode=='ALL' or mode=='all':
-    if True:
+    if False:
         plots = ['lepton_absetav','lpt','met','wmt']
         plot_stacks(spR.clone(),plots,m=1,qs=(0,))
     if False:  # [DEPRECATED] performs QCD fits in |eta| x pT bins, saves plots and pickle files with chi2 and qcd fraction systematics
@@ -990,14 +989,12 @@ if mode=='ALL' or mode=='all':
         june17_asymmetry()
 
 
-if mode=='prepare_2d': # saves a collection of 2D histograms as input into Max's unfolding
-    var = 'd2_abseta_lpt'
+if mode=='prepare_qcd_1d' or mode=='prepare_qcd_2d': # saves a collection of 2D or 1D histograms to be used as input into Max's unfolding
+    var = 'd2_abseta_lpt' if mode=='prepare_qcd_2d' else 'lepton_absetav'
     # disable QCD scaling since here we are just dumping histograms
     SuStackElm.new_scales = False
-    if False:
-        spR.enable_nominal()
-        hdata,hstack = plot_stack(spR.clone(),var=var,q=0,m=1,name='test2d')
-    fname = 'IN_08272012.v1.root'
+    assert opts.extra
+    fname = opts.extra
     po.choose_sig(5)
     itot = 0
     for ewksig in (5,2):
@@ -1048,7 +1045,8 @@ if mode=='qcdfit_2d':
         a.add_root(skey,ROOTOUT)
     if False:
         sys.exit(0)
-    
+
+# DEPRECATED: ntuple version of QCD fits in one dimension
 if mode=='qcdfit_1d_nt' or mode=='qcdfit_1d_nt_summary': # to study QCD fits
     cmd="""
     ./stack2.py --input /share/t3data3/antonk/ana/ana_v29G_07102012_DtoM_jerjes_wptw_stacoCB_all -b --charge 0 --lvar met --lbin 50,0,120 --preNN "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --preNQ "ptiso40/l_pt>0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2 && l_trigEF<0.2" --var 'fabs(l_eta)' --bin 10,0,2.5 --hsource lepton_absetav -o TEST -t aiso_met0to120 --cut mcw*puw*effw*trigw*wptw -m qcdfit --bgsig 5 --bgewk 5 --bgqcd 3
@@ -1151,7 +1149,7 @@ if mode=='qcdfit_1d_nt' or mode=='qcdfit_1d_nt_summary': # to study QCD fits
             val._canvas.Write('QCD_FIT_bin'+etabin[0],ROOT.TObject.kOverwrite)
         ff.Close()
         pass
-
+# DEPRECATED: NTUPLE VERSION AGAIN - TO POST-PROCESS RESULTS
 # to study QCD fit systematic due to fitting in different variables, in eta bins
 # this assumes that all ntuples have already been cached by running qcdfit action
 if mode=='qcdsys_1d_nt':
@@ -1216,33 +1214,57 @@ if mode=='qcdsys_1d_nt':
     import pickle
     pickle.dump( RES, open( "save.pickle", "w" ) )
 
-if mode=='2': # signal - directly from MC, or bg-subtracted data - allow application of efficiency histogram
-    assert opts.ntuple=='w','Only w ntuple supported for now'
-    renormalize()
-    c = SuCanvas()
-    c.buildDefault(width=1024,height=400)
-    cc = c.cd_canvas()
-    cc.Divide(2,1)
-    cc.cd(1)
-    pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,fortruth(opts.pre))
-    htruth = po.sig('part_truth',opts.var,opts.bin,pre,path=path_truth)
-    htruth.SetLineColor(ROOT.kBlack)
-    hsig  = po.sig('signal',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre))
-    hsig.SetLineColor(ROOT.kRed)
-    hsig_eff = particle(hsig.Clone('signal_eff'))
-    htruth.Draw('')
-    hsig.Draw('A same')
-    if False:
-        hd_sig = po.data_sub('bgsub_data',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre))
-        hd_sig.SetLineColor(ROOT.kBlue)
-        hd_sig_eff = particle(hd_sig.Clone('bgsub_data_eff'))
-        hd_sig.Draw('A same')
-    if opts.effroot:
-        cc.cd(2)
-        htruth.Draw('')
-        hsig_eff.Draw('A same')
-        #hd_sig_eff.Draw('A same')
-
+# studying ABCD method (closure) on BB/CC monte-carlo
+if mode=='abcd_mc':
+    SuStackElm.new_scales = False
+    etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
+    ptbins = [20,25,30,35,40,45,50,120]
+    iq = opts.charge
+    ieta = int(opts.preNN)
+    ipt  = opts.preNQ if opts.preNQ=='ALL' else int(opts.preNQ)
+    bgsig = opts.bgsig
+    po.choose_sig(bgsig)
+    bgewk = opts.bgewk
+    po.choose_ewk(bgewk)
+    pre = opts.pre
+    def make_A(a):
+        v = prunesub(a,['w_mt','met','ptiso40/l_pt'],'w_mt>40.0 && met>25.0 && ptiso40/l_pt<0.1')
+        print 'A:',v
+        return v
+    def make_B(a):
+        v = prunesub(a,['w_mt','met','ptiso40/l_pt'],'w_mt>40.0 && met>25.0 && ptiso40/l_pt>=0.1')
+        print 'B:',v
+        return v
+    def make_C(a):
+        v = prunesub(a,['w_mt','met','ptiso40/l_pt'],'w_mt<=40 && met<=25.0 && ptiso40/l_pt<0.1')
+        print 'C:',v
+        return v
+    def make_D(a):
+        v = prunesub(a,['w_mt','met','ptiso40/l_pt'],'w_mt<=40 && met<=25.0 && ptiso40/l_pt>=0.1')
+        print 'D:',v
+        return v
+    x =  ' && fabs(l_eta)>=%.2f && fabs(l_eta)<=%.2f'%(etabins[ieta],etabins[ieta+1])
+    x += ' && l_pt>=%.2f && l_pt<=%.2f'%(ptbins[ipt],ptbins[ipt+1])
+    x=' '
+    def I(a):
+        return a.nominal().h.Integral()
+    hA = po.qcd('A',spRN.clone(pre = make_A(pre)+x))
+    hB = po.qcd('B',spRN.clone(pre = make_B(pre)+x))
+    hC = po.qcd('C',spRN.clone(pre = make_C(pre)+x))
+    hD = po.qcd('D',spRN.clone(pre = make_D(pre)+x))
+    print 'Integrals:',I(hA),I(hB),I(hC),I(hD)
+    R = I(hB)*I(hC)/I(hD) if I(hD)>0 else 0
+    print 'Results:',I(hA),R,'%.1f%%'%((R-I(hA))/I(hA)*100.0)
+    c = SuCanvas('ABCD_mc')
+    M = PlotOptions()
+    M.add('A','Region A',color=1)
+    M.add('B','Region B',color=2)
+    M.add('C','Region C',color=3)
+    M.add('D','Region D',color=4)
+    hs = [hA,hB,hC,hD]
+    c.plotAny(hs,M=M)
+    OMAP.append(c)
+    
 if mode=='100': # creates efficiency histogram (corrects back to particle level)
     renormalize()
     c = SuCanvas()
@@ -1274,6 +1296,34 @@ if mode=='100': # creates efficiency histogram (corrects back to particle level)
             key_str = re.sub(r'[^\w]', '_', 'eff_%s_%s_%s_%d'%(opts.input,opts.var,opts.bin,opts.charge))
             heff.Write(key_str,ROOT.TObject.kOverwrite)
             f.Close()
+
+
+if mode=='2': # signal - directly from MC, or bg-subtracted data - allow application of efficiency histogram
+    assert opts.ntuple=='w','Only w ntuple supported for now'
+    renormalize()
+    c = SuCanvas()
+    c.buildDefault(width=1024,height=400)
+    cc = c.cd_canvas()
+    cc.Divide(2,1)
+    cc.cd(1)
+    pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,fortruth(opts.pre))
+    htruth = po.sig('part_truth',opts.var,opts.bin,pre,path=path_truth)
+    htruth.SetLineColor(ROOT.kBlack)
+    hsig  = po.sig('signal',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre))
+    hsig.SetLineColor(ROOT.kRed)
+    hsig_eff = particle(hsig.Clone('signal_eff'))
+    htruth.Draw('')
+    hsig.Draw('A same')
+    if False:
+        hd_sig = po.data_sub('bgsub_data',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre))
+        hd_sig.SetLineColor(ROOT.kBlue)
+        hd_sig_eff = particle(hd_sig.Clone('bgsub_data_eff'))
+        hd_sig.Draw('A same')
+    if opts.effroot:
+        cc.cd(2)
+        htruth.Draw('')
+        hsig_eff.Draw('A same')
+        #hd_sig_eff.Draw('A same')
 
 def asymmetry_old():
     assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
