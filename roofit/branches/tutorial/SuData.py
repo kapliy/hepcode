@@ -1434,7 +1434,10 @@ class SuStack:
         assert fout.IsOpen(),'Failed to open file: %s'%fname
         nom = d.nominal()
         aname = dname if dname else SuSys.QMAP[nom.charge][1]+'_'+MAP_BGSIG[s.flagsum['S']]
-        adir = fout.Get(aname) if fout.Get(aname) else fout.mkdir(aname)
+        adir = fout.Get(aname)
+        if not adir:
+            fout.mkdir(aname) # automatically recursive
+            adir = fout.Get(aname)
         assert adir,'Failed to create subdirectory: %s'%aname
         adir.cd()
         [ h.Write(h.GetTitle(),ROOT.TObject.kOverwrite) for h in hs ]

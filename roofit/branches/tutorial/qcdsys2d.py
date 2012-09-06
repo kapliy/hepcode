@@ -5,6 +5,7 @@ A small script that summarizes QCD systematic deviations
 due to different signal MC or different fit variables.
 THIS VERSION OPERATES ON 2D GRID: |eta| x pT
 IT ALSO REPACKAGES A ROOT FILE
+UPDATE SEP 6: it can alternatively handle 1D histograms now!
 """
 
 memo = """
@@ -13,7 +14,7 @@ memo = """
 </pre>
 """
 
-import sys,os,re,math
+import sys,os,re,math,copy
 import antondb
 
 # Define all systematics. Note that bgsig is NOT present here, since we save separate histograms for each bgsig
@@ -24,7 +25,7 @@ for xsecerr in [ (0,) ]:
         for isofail in [ ('loose_isofail',),('isowind',) ]:
             for ivar in [ ('met','50,0,80'),('met','50,0,90'),('wmt','50,40,90'),('wmt','50,35,100') ]:
                 msys.append( xsecerr+bgewk+isofail+ivar )
-msys_nom = (0,5,'loose_isofail','met','50,0,80')                
+msys_nom = (0,5,'loose_isofail','met','50,0,80')
 
 etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4] # N=12
 ptbins = [20,25,30,35,40,45,50,120] # N=8
@@ -40,9 +41,10 @@ S = '&nbsp;'
 PM = '&plusmn;'
 
 db_name = 'DB_08272012_MC10'
-fin_name = 'IN_08272012.v1.root'
-fout_name = 'OUT_'+fin_name
+fin_name = 'IN_08272012.v2.%dD.root'%MODE
+fout_name = re.sub('IN_','OUT_',fin_name)
 if os.path.exists(fin_name):
+    print 'ROOT repackaging: %s -> %s'%(fin_name,fout_name)
     import common
     import ROOT
     
@@ -106,10 +108,10 @@ if __name__=='__main__':
     a = antondb.antondb(db_name)
     a.load()
     R = a.data
-    f = open('index2.html','w')
+    f = open('index_%dd.html'%MODE,'w')
     fin,fout = None,None
     fout_D = []
-    if os.path.exists(fin_name) and MODE==2:
+    if os.path.exists(fin_name):
         fin = ROOT.TFile.Open(fin_name,"READ")
         fout = ROOT.TFile.Open(fout_name,"RECREATE")
         fout_D.append(fout.mkdir('POS'))
@@ -149,6 +151,8 @@ if __name__=='__main__':
                 print >>f, '<TD width="80">','%.2f&lt;|&eta;|&lt;%.2f'%(etabins[ieta],etabins[ieta+1]),"</TD>"
             print >>f,'</TR>'
             # actual table contents
+            Aidxs,Afracs,Ascales,AscalesE,Achindfs,AscalesL,AscalesLE,ArelF = [],[],[],[],[],[],[] ,[]
+            Afirst = True
             for bgsig in (5,4,1):
                 print >>f,'<TR>'
                 print >>f,'<TD colspan="%d" align="center">'%(len(etabins)+1),SIGMAP[bgsig],'</TD>'
@@ -158,6 +162,24 @@ if __name__=='__main__':
                     idx,frac,scale,scaleE,chindf,scaleL,scaleLE = get(iq,bgsig,ieta,ipt)
                     idxs.append(idx); fracs.append(frac); scales.append(scale); scalesE.append(scaleE); chindfs.append(chindf)
                     scalesL.append(scaleL),scalesLE.append(scaleLE)
+                if Afirst:
+                    Afirst = False
+                    Aidxs = copy.copy(idxs)
+                    Afracs = copy.copy(fracs)
+                    Ascales = copy.copy(scales)
+                    AscalesE = copy.copy(scalesE)
+                    Achindfs = copy.copy(chindfs)
+                    AscalesL = copy.copy(scalesL)
+                    AscalesLE = copy.copy(scalesLE)
+                else:
+                    for ieta in xrange(0,len(etabins)-1):
+                        Aidxs[ieta] += idxs[ieta]
+                        Afracs[ieta] += fracs[ieta]
+                        Ascales[ieta] += scales[ieta]
+                        AscalesE[ieta] += scalesE[ieta]
+                        Achindfs[ieta] += chindfs[ieta]
+                        AscalesL[ieta] += scalesL[ieta]
+                        AscalesLE[ieta] += scalesLE[ieta]
                 print >>f,'<TR>'
                 print >>f,'<TD>','QCD frac & error','</TD>'
                 relF = [] # relative error on qcd fraction. Use it also as an uncertainty on scale!!!
@@ -192,6 +214,32 @@ if __name__=='__main__':
                             scale_bin(QCD[3],ieta,ipt,mean(scalesL[ieta]))
                         if bgsig==1:
                             scale_bin(QCD[4],ieta,ipt,mean(scalesL[ieta]))
+            # absolute uncertainty on QCD prediction (including effect of different generators)
+            # in other words, this is averaging across the three generators
+            print >>f,'<TR>'
+            print >>f,'<TD colspan="%d" align="center">'%(len(etabins)+1),'Averaged across three generators','</TD>'
+            print >>f,'</TR>'
+            # Absolute QCD value
+            print >>f,'<TR>'
+            print >>f,'<TD>','QCD frac & error','</TD>'
+            relF = [] # relative error on qcd fraction. Use it also as an uncertainty on scale!!!
+            for ieta in xrange(0,len(etabins)-1):
+                relF.append( rms(Afracs[ieta])/mean(Afracs[ieta]) )
+                print >>f,'<TD>','%.1f %s %.1f %%'%(mean(Afracs[ieta])*100.0,PM,relF[-1]*100.0),'</TD>'
+            print >>f,'</TR>'
+            # relative error on scale - using a subset of variations (loose_isofail)
+            print >>f,'<TR>'
+            print >>f,'<TD>','Scale factor','</TD>'
+            for ieta in xrange(0,len(etabins)-1):
+                print >>f,'<TD>','%.3f'%(mean(AscalesL[ieta])),'</TD>'
+            print >>f,'</TR>'
+            # total qcd uncertainty (absolute)
+            print >>f,'<TR>'
+            print >>f,'<TD>','Total QCD uncert.','</TD>'
+            for ieta in xrange(0,len(etabins)-1):
+                relF = rms(Afracs[ieta])/mean(Afracs[ieta])
+                print >>f,'<TD>','%.1f %%'%(relF*mean(Afracs[ieta])*100.0),'</TD>'
+            print >>f,'</TR>'
             print >>f,'</TABLE>'
         if fin:
             # generate total histograms for detector systematics
