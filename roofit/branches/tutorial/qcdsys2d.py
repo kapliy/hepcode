@@ -22,7 +22,7 @@ import antondb
 msys = []
 for xsecerr in [ (0,) ]:
     for bgewk in [ (5,),(2,) ]:
-        for isofail in [ ('loose_isofail',),('isowind',) ]:
+        for isofail in [ ('loose_isofail',),('isowind',) ] [:] :
             for ivar in [ ('met','50,0,80'),('met','50,0,90'),('wmt','50,40,90'),('wmt','50,35,100') ]:
                 msys.append( xsecerr+bgewk+isofail+ivar )
 msys_nom = (0,5,'loose_isofail','met','50,0,80')
@@ -63,14 +63,14 @@ def get(iq,bgsig,ieta,ipt):
     scales = []
     scalesE = []
     chindfs = []
-    # these two are scales for isoloose only!
+    # these are for isoloose only!
     scalesL = []
     scalesLE = []
     idx = 0
     bla2=[]
     bla5=[]
     for xsecerr,bgewk,isofail,ivar,ibin in msys:
-        key = '/iq%d/X%d/bgewk%d/bgsig%d/iso%s/ivar%s/ibin%s/ieta%d/ipt%s'%(iq,xsecerr,bgewk,bgsig,isofail,ivar,ibin,ieta,ipt)
+        key = '/iq%d/X%d/bgewk%d/bgsig%d/iso%s/ivar%s/ibin%s/ieta%s/ipt%s'%(iq,xsecerr,bgewk,bgsig,isofail,ivar,ibin,ieta,ipt)
         if key in R:
             fracs.append(R[key]['frac'])
             sc = R[key]['scales']
@@ -97,11 +97,28 @@ def scale_bin(h,ietabin,iptbin,v):
     h.SetBinError(ibin, h.GetBinError(ibin)*v)
     return h
 
-def make_total(csys,samples):
-    h = samples[0].Clone('totalbg_'+csys)
-    #print 'Adding:',[ sample.GetName() for sample in samples[:] ]
-    [ h.Add( sample ) for sample in samples[1:] ]
-    h.SetTitle(h.GetName())
+def make_total(csys,samples,cdir,title=None):
+    """ Makes and saves total-bg histograms.
+    Additionally, saved all components AND ewk-only AND qcd-only.
+    Assumes QCD is always the last one under samples[] """
+    # save subsamples
+    if True:
+        sdir = cdir.Get("all") if cdir.Get("all") else cdir.mkdir("all")
+        sdir.cd()
+        [ h.Write( h.GetTitle() , ROOT.TObject.kOverwrite ) for h in samples ]
+        sdir.Write()
+        cdir.cd()
+    # save ewk (all minus QCD)
+    if True:
+        g = samples[0].Clone('ewk_'+csys)
+        [ g.Add( sample ) for sample in samples[1:-1] ]
+        g.SetTitle(g.GetName())
+    # save totals
+    if True:
+        h = samples[0].Clone('totalbg_'+csys)
+        #print 'Adding:',[ sample.GetName() for sample in samples[:] ]
+        [ h.Add( sample ) for sample in samples[1:] ]
+        h.SetTitle(title if title else h.GetName())
     return h
 
 if __name__=='__main__':
@@ -130,8 +147,23 @@ if __name__=='__main__':
             samples = [re.sub('_nominal','',key.GetName()) for key in adir.GetListOfKeys() if re.search('nominal',key.GetName())]
             systems = [re.sub('wmunu_','',key.GetName()) for key in adir.GetListOfKeys() if re.match('wmunu_',key.GetName())]
             qcd = adir.Get('qcd').Clone()
-            # nominal, qcdup, qcddown                          PowhegHerwig  MC@NLO
-            QCD = [ qcd.Clone(), qcd.Clone(), qcd.Clone() ,   qcd.Clone() , qcd.Clone() ]
+            # nominal, qcdup, qcddown[2]                    PowhegHerwig  MC@NLO[4]    MC-averaged    global-scale[6]  scale-factor[7]
+            QCD = [ qcd.Clone(), qcd.Clone(), qcd.Clone() ,   qcd.Clone() , qcd.Clone() , qcd.Clone()  , qcd.Clone() ,   qcd.Clone() ]
+            QCD[0].SetTitle('qcd_PowhegPythia')
+            QCD[1].SetTitle('qcd_PowhegPythiaUp')
+            QCD[2].SetTitle('qcd_PowhegPythiaDown')
+            QCD[3].SetTitle('qcd_PowhegHerwig')
+            QCD[4].SetTitle('qcd_McAtNlo')
+            QCD[5].SetTitle('qcd_MCAverage')
+            QCD[6].SetTitle('qcd_GlobalNorm')
+            QCD[7].SetTitle('qcd_ScaleFactor')
+            QCD[7].Reset()
+        # first handle inclusive (in both pt and eta) bins
+        scalesL = []
+        for bgsig in (1,4,5):
+            idx,frac,scale,scaleE,chindf,scaleL,scaleLE = get(iq,bgsig,'ALL','ALL')
+            scalesL += scaleL
+        QCD[6].Scale(mean(scalesL))
         # make a separate table for each pT bin
         ptrange = range(0 , len(ptbins)-1) if MODE==2 else ['ALL',]
         for ipt in ptrange:
@@ -205,17 +237,22 @@ if __name__=='__main__':
                 if fin:
                     for ieta in xrange(0,len(etabins)-1):
                         if bgsig==5:
+                            ibin = QCD[7].FindFixBin(ieta+1e-6,ipt+1e-6) if ipt!='ALL' else QCD[7].FindFixBin(ieta+1e-6)
+                            QCD[7].SetBinContent(ibin,mean(scalesL[ieta]))
                             scale_bin(QCD[0],ieta,ipt,mean(scalesL[ieta]))
-                            scale_bin(QCD[1],ieta,ipt,mean(scalesL[ieta])*(1.0+relF[ieta]))
-                            msc = mean(scalesL[ieta])*(1.0-relF[ieta]) if relF[ieta]<1.0 else 0.0
+                            scale_bin(QCD[1],ieta,ipt,mean(scalesL[ieta])*(1.0+relS[ieta]))
+                            msc = mean(scalesL[ieta])*(1.0-relS[ieta]) if relS[ieta]<1.0 else 0.0
                             scale_bin(QCD[2],ieta,ipt,msc)
-                            #print 'DEBUG:',ipt,ieta,mean(scalesL[ieta]),mean(scalesL[ieta])*(1.0+relF[ieta]),msc,relF[ieta]
                         if bgsig==4:
                             scale_bin(QCD[3],ieta,ipt,mean(scalesL[ieta]))
                         if bgsig==1:
                             scale_bin(QCD[4],ieta,ipt,mean(scalesL[ieta]))
             # absolute uncertainty on QCD prediction (including effect of different generators)
             # in other words, this is averaging across the three generators
+            # first, handle ROOT histograms
+            if fin:
+                for ieta in xrange(0,len(etabins)-1):
+                    scale_bin(QCD[5],ieta,ipt,mean(AscalesL[ieta]))
             print >>f,'<TR>'
             print >>f,'<TD colspan="%d" align="center">'%(len(etabins)+1),'Averaged across three generators','</TD>'
             print >>f,'</TR>'
@@ -249,51 +286,61 @@ if __name__=='__main__':
                 adir.Get('data').Write('data',ROOT.TObject.kOverwrite)
                 for system in systems:
                     allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
-                    htot = make_total(system,allsamples)
+                    htot = make_total(system,allsamples,fout_D[iq])
                     htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
                     adir.Get('wmunu_'+system).Write('wmunu_PowhegPythia_'+system,ROOT.TObject.kOverwrite)
                 # manually generate nominal histograms with qcd Up/Down variations
                 system='nominal'
                 allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[1],]
-                htot = make_total(system,allsamples)
+                htot = make_total(system,allsamples,fout_D[iq])
                 htot.SetTitle('totalbg_nominal_qcd_up')
                 htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
                 allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[2],]
-                htot = make_total(system,allsamples)
+                htot = make_total(system,allsamples,fout_D[iq])
                 htot.SetTitle('totalbg_nominal_qcd_down')
                 htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
+                # save QCD scale factor histogram
+                QCD[7].SetTitle('qcd_scale_factor')
+                QCD[7].Write(QCD[7].GetTitle(),ROOT.TObject.kOverwrite)
                 # generate histograms for alpgen bg subtraction
                 if True:
                     bdir = fin.Get('%s_ewk2'%QMAPN[iq])
                     assert bdir
                     allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
-                    htot = make_total(system,allsamples)
+                    htot = make_total(system,allsamples,fout_D[iq])
                     htot.Write('totalbg_nominal_ewk_alpgen',ROOT.TObject.kOverwrite)
                 # generate histograms for ewkbg xsec variations
                 if True:
                     bdir = fin.Get('%s_ewk5_xsecup'%QMAPN[iq])
                     assert bdir
                     allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
-                    htot = make_total(system,allsamples)
+                    htot = make_total(system,allsamples,fout_D[iq])
                     htot.Write('totalbg_nominal_ewk_xsecup',ROOT.TObject.kOverwrite)
                     bdir = fin.Get('%s_ewk5_xsecdown'%QMAPN[iq])
                     assert bdir
                     allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
-                    htot = make_total(system,allsamples)
+                    htot = make_total(system,allsamples,fout_D[iq])
                     htot.Write('totalbg_nominal_ewk_xsecdown',ROOT.TObject.kOverwrite)
             if True:
                 bgsig=4
                 system='nominal'
                 allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[3],]
-                htot = make_total(system,allsamples)
+                htot = make_total(system,allsamples,fout_D[iq])
                 htot.SetTitle('totalbg_nominal_unfoldPowhegJimmy')
                 htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
             if True:
                 bgsig=1
                 system='nominal'
                 allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[4],]
-                htot = make_total(system,allsamples)
+                htot = make_total(system,allsamples,fout_D[iq])
                 htot.SetTitle('totalbg_nominal_unfoldMCNLO')
+                htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
+            if True:
+                bgsig=5
+                system='nominal'
+                allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[6],]
+                htot = make_total(system,allsamples,fout_D[iq])
+                htot.SetTitle('totalbg_nominal_qcdaverage')
                 htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
             
     if fin and fin.IsOpen():
