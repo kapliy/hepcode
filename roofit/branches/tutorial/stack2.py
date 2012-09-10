@@ -805,7 +805,7 @@ if mode=='ALL' or mode=='all':
         if True:
             plot_any(spR.clone(histo=histo,sliced=True,qcdadd=qcdadd),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='INCLUSIVE_SLICES')
             july02_summarize_qcd_fits(qcdadd['var'],(qcdadd['min'],qcdadd['max']))
-    if False: # stack comparison of TH1 and ntuple-based histograms
+    if True: # stack comparison of TH1 and ntuple-based histograms
         spR.enable_nominal()
         po.choose_qcd(3)
         SuStackElm.new_scales = True
@@ -814,44 +814,40 @@ if mode=='ALL' or mode=='all':
         x = ' && fabs(l_eta)>=%f && fabs(l_eta)<=%f'%(etabins[0],etabins[0+1])
         x = '' # disable eta cut!
         preNN = 'ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1'+x
-        preNQ = 'ptiso40/l_pt>0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2'+x
+        preNQ = 'ptiso20/l_pt>0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2'+x
         preFN = 'ptiso40/l_pt<0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1'+x
-        preFQ = 'ptiso40/l_pt>0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2'+x
+        preFQ = 'ptiso20/l_pt>0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2'+x
         presN = (preNN,preNN,preNQ) # pre strings for normal plots   (e.g., nominal or anti-isolation)
         presF = (preFN,preFN,preFQ) # pre strings for QCD fit region (e.g., lowering MET cut to zero)
         qcdadd={'var':'met','min':0,'max':100,'descr':'antiso40_0p1','pre':presF}
-        var='lpt'
-        if opts.extra==0:
+        if False: # histo-based plotting
+            var='lpt'
             plot_stack(spR.clone(),var,q=2,m=0,name='histo')
         var='l_pt'
         var='w_pt'
         bin = '200,0,200'
-        assert opts.extra,'EXITING - please set --extra to 0'
+        assert opts.extra!=None,'EXITING - please set --extra to 0'
         extra = int(opts.extra)
         if extra==0:
-            weight = "mcw*puw*effw*trigw*isow*wptw*wzptw*wpolw*vxw*ls1w*ls2w"
+            weight = "mcw*puw*effw*trigw*isow*wzptw*wpolw*vxw*ls1w*ls2w"
             qcdadd['descr'] = 'WALL'
-            plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=2,m=0,name='ntuple_WALL')
+            plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=2,m=0,name='ntuple_'+qcdadd['descr'])
         if extra==1:
             weight = "mcw*puw*effw*trigw*isow"
             qcdadd['descr'] = 'WNON'
-            plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=2,m=0,name='ntuple_WNON')
+            plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=2,m=0,name='ntuple_'+qcdadd['descr'])
         if extra==2:
-            weight = "mcw*puw*effw*trigw*isow*wptw*wzptw"
-            qcdadd['descr'] = 'WWZPT'
-            plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=2,m=0,name='ntuple_WWZPT')
+            weight = "mcw*puw*effw*trigw*isow*wzptw*vxw*ls1w*ls2w"
+            qcdadd['descr'] = 'WALL_NOPOL'
+            plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=2,m=0,name='ntuple_'+qcdadd['descr'])
         if extra==3:
-            weight = "mcw*puw*effw*trigw*isow*wpolw"
-            qcdadd['descr'] = 'WPOL'
-            plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=2,m=0,name='ntuple_WPOL')
+            weight = "mcw*puw*effw*trigw*isow*wzptw2*wpolw*vxw*ls1w*ls2w"
+            qcdadd['descr'] = 'WALL_SHERPA'
+            plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=2,m=0,name='ntuple_'+qcdadd['descr'])
         if extra==4:
-            weight = "mcw*puw*effw*trigw*isow*wptw*wzptw*wpolw*ls1w*ls2w"
-            qcdadd['descr'] = 'WNOZ'
-            plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=2,m=0,name='ntuple_WNOZ')
-        if extra==5:
-            weight = "mcw*puw*effw*trigw*isow*wptw"
-            qcdadd['descr'] = 'WWPT'
-            plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=2,m=0,name='ntuple_WWPT')
+            weight = "mcw*puw*effw*trigw*isow*wzptw3*wpolw*vxw*ls1w*ls2w"
+            qcdadd['descr'] = 'WALL_POWHEG8'
+            plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=2,m=0,name='ntuple_'+qcdadd['descr'])
     if False: # simple histogram comparison of TH1 and ntuple-based histograms: one MC and Data only
         c = SuCanvas('TEST')
         M = PlotOptions()
@@ -988,8 +984,8 @@ if mode=='ALL' or mode=='all':
         """
         june17_asymmetry()
 
-
-if mode=='prepare_qcd_1d' or mode=='prepare_qcd_2d': # saves a collection of 2D or 1D histograms to be used as input into Max's unfolding
+# saves a collection of 2D or 1D histograms to be used as input into Max's unfolding
+if mode=='prepare_qcd_1d' or mode=='prepare_qcd_2d':
     var = 'd2_abseta_lpt' if mode=='prepare_qcd_2d' else 'lepton_absetav'
     # disable QCD scaling since here we are just dumping histograms
     SuStackElm.new_scales = False
@@ -1001,6 +997,7 @@ if mode=='prepare_qcd_1d' or mode=='prepare_qcd_2d': # saves a collection of 2D 
         po.choose_ewk(ewksig)
         po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),mode='RECREATE' if itot==0 else 'UPDATE',dname='POS_ewk%d'%ewksig); itot+=1
         po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_ewk%d'%ewksig);  itot+=1
+    # variation of electroweak normalization
     if True:
         po.choose_ewk(5)
         SuSample.xsecerr = 1
@@ -1009,15 +1006,15 @@ if mode=='prepare_qcd_1d' or mode=='prepare_qcd_2d': # saves a collection of 2D 
         SuSample.xsecerr = -1
         po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),mode='RECREATE' if itot==0 else 'UPDATE',dname='POS_ewk5_xsecdown'); itot+=1
         po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_ewk5_xsecdown');  itot+=1
-# comprehensive study of qcd fits in 2d: pt x eta bins, using histograms
+# comprehensive study of qcd fits in 2d: pt x eta bins, using histograms.
+# UPD: now also supports 1D and 0D (all-inclusive) fits
 if mode=='qcdfit_2d':
     etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
     ptbins = [20,25,30,35,40,45,50,120]
     spR.enable_nominal()
     #nominal/st_w_final/wmtfit/NEG/bin_8/lpt_4/wmt
     iq = opts.charge
-    ieta = int(opts.preNN)
-    #opts.preNQ='None'
+    ieta = opts.preNN if opts.preNN=='ALL' else int(opts.preNN)
     ipt  = opts.preNQ if opts.preNQ=='ALL' else int(opts.preNQ)
     bgsig = opts.bgsig
     po.choose_sig(bgsig)
@@ -1027,16 +1024,22 @@ if mode=='qcdfit_2d':
     ibin = opts.lbin
     imin = int(ibin.split(',')[1])
     imax = int(ibin.split(',')[2])
-    var = 'bin_%d/%s'%(ieta,ivar)
-    if ipt!='ALL':
+    var = None
+    if ieta=='ALL' and ipt=='ALL':
+        var = '%s'%(ivar)
+    elif (ieta!='ALL') and (ipt=='ALL'):
+        var = 'bin_%d/%s'%(ieta,ivar)
+    elif (ipt!='ALL') and (ieta!='ALL'):
         var = 'bin_%d/lpt_%d/%s'%(ieta,ipt,ivar)
+    else:
+        assert False,'Unsupported ieta/ipt choice for mode qcdfit_2d.'
     qcdadd={'var':var,'min':imin,'max':imax,'rebin':2}
     hdata,hstack = plot_stack(spR.clone(qcdadd=qcdadd),var=var,q=iq,m=1,new_scales=True,name=po.get_flagsum()+'_F'+ivar)
     hfrac=hstack.nominal().stack_bg_frac()
     key = po.scalekeys[-1]
     scales = po.scales[key]
     # save the results
-    skey = '/iq%d/X%d/bgewk%d/bgsig%d/iso%s/ivar%s/ibin%s/ieta%d/ipt%s'%(iq,opts.xsecerr,bgewk,bgsig,opts.isofail,ivar,ibin,ieta,ipt)
+    skey = '/iq%d/X%d/bgewk%d/bgsig%d/iso%s/ivar%s/ibin%s/ieta%s/ipt%s'%(iq,opts.xsecerr,bgewk,bgsig,opts.isofail,ivar,ibin,ieta,ipt)
     DATAOUT = { 'frac' : hfrac, 'scales' : scales }
     ROOTOUT = [ OMAP[-1]._canvas , po.fits[key]._canvas ]
     a = antondb.antondb(opts.extra)
