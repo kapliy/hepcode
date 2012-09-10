@@ -57,7 +57,7 @@ for iq in 0 1; do
 		tagz=`ggeta tagzs $itagz`
 		optsz=`ggetb tagzs $itagz`
 		for bgewk in 5 2; do
-		    for ieta in {0..10}; do
+		    for ieta in {0..10} ALL; do
 			for ipt in {0..6} ALL; do
 			    if [ "$id" == "$irun" -o "$id" == "ALL" ]; then
 				eval ${SMART_KILLER} ./stack2.py --input ${input} -b --charge $iq ${optsz} ${optsi} -o TEST_Q${iq}/ETA${ieta}/PT${ipt} -t ${tagi}_${tagz} -m qcdfit_2d --bgsig ${bgsig} --bgewk ${bgewk} --bgqcd ${bgqcd} --preNN ${ieta} --preNQ ${ipt} --extra ${antondb}/${antondb}.PART.${iq}.${bgsig}.${bgewk}.${ieta}.${ipt} --xsecerr 0
