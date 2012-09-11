@@ -1052,11 +1052,11 @@ if mode=='study_weights':
         plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=opts.charge,m=0,name='ntuple_'+qcdadd['descr'])
     if extra==3:
         weight = "mcw*puw*effw*trigw*isow*wzptw2*wpolw*vxw*ls1w*ls2w"
-        qcdadd['descr'] = 'WALL_SHERPA'
+        qcdadd['descr'] = 'WALL_PYTHIA10'
         plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=opts.charge,m=0,name='ntuple_'+qcdadd['descr'])
     if extra==4:
         weight = "mcw*puw*effw*trigw*isow*wzptw3*wpolw*vxw*ls1w*ls2w"
-        qcdadd['descr'] = 'WALL_POWHEG8'
+        qcdadd['descr'] = 'WALL_SHERPA'
         plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=opts.charge,m=0,name='ntuple_'+qcdadd['descr'])
 
 
