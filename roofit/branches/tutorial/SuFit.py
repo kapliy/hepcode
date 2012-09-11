@@ -57,6 +57,7 @@ class SuFit:
 
   def addFitVar(s,name,lowerbound,upperbound,units):
     print name,lowerbound,upperbound,units
+    sys.stdout.flush()
     s.vnames.append(name)
     s.w.factory('%s[%f,%f]'%(name,lowerbound,upperbound))
 
@@ -142,18 +143,20 @@ class SuFit:
     s.plotmin,s.plotmax = s.fitmin,s.fitmax
     s.fitmin = SuFit.first_nonzero_bin(data,s.fitmin)
     print 'INFO: SuFit::doFitTF fit range:',s.vnames[0],s.fitmin,s.fitmax
+    sys.stdout.flush()
     fit.SetRangeX(s.fitmin,s.fitmax) # choose MET fit range
     if False: # debugging
       s.dump_plot([data,s.fixed,s.free[0]])
     # set up extra parameters. frac0 = EWK (fixed), frac1 = QCD (free)
     assert fit.GetFitter()
-    if True:
+    if False:
       [ fit.Constrain(i,0.0,1.0) for i in xrange(0, mc.GetSize()) ] # constrain fractions to be between 0 and 1
     else:
       ewkfrac = s.fixed.Integral(s.fitmin,s.fitmax)/data.Integral(s.fitmin,s.fitmax)
       fixpars = False
       if ewkfrac>1.0:
         print 'WARNING: SuFit::doFitTF EWK background already exceeds DATA',ewkfrac,s.fixed.Integral(s.fitmin,s.fitmax),data.Integral(s.fitmin,s.fitmax)
+        sys.stdout.flush()
         ewkfrac = 0.95
         fixpars = False
       qcdfrac = 1.0-ewkfrac
@@ -165,22 +168,27 @@ class SuFit:
         arglist = array.array('d',[1000,0.001])  #ncalls(1000),tolerance(0.001)
         fit.GetFitter().ExecuteCommand("MIGRAD",arglist,2);
       print 'INFO: SuFit::doFitTF parameter defaults:',ewkfrac,qcdfrac
+      sys.stdout.flush()
     # start the fits
     print 'Starting fits...'
+    sys.stdout.flush()
     s.status = fit.Fit()      # perform the fit
     s.nfits += 1
     if s.status!=0:
       print 'WARNING: repeating (N=2) the QCD normalization fit'
+      sys.stdout.flush()
       s.status = fit.Fit()
       s.nfits += 1
       if s.status!=0:
         print 'WARNING: repeating (N=3) the QCD normalization fit; resetting starting point to (0.5,0.5)'
+        sys.stdout.flush()
         fit.GetFitter().SetParameter(0,"ewkfrac",0.5,0.01,0.0,1.0);
         fit.GetFitter().SetParameter(1,"qcdfrac",0.5,0.01,0.0,1.0);
         s.status = fit.Fit()
         s.nfits += 1
         if s.status!=0:
           print 'WARNING: repeating (N=4) the QCD normalization fit'
+          sys.stdout.flush()
           s.status = fit.Fit()
           s.nfits += 1
     if s.status!=0:
@@ -195,9 +203,11 @@ class SuFit:
       s.chi2.append(0)
       s.ndf.append(0)
       print 'ERROR: fit failed to converge'
+      sys.stdout.flush()
       return
     else:
       print 'INFO: fit converged after',s.nfits,'iterations'
+      sys.stdout.flush()
     # save all templates
     s.hfixed = fit.GetMCPrediction(0).Clone()
     s.hfree = fit.GetMCPrediction(1).Clone()
@@ -233,6 +243,7 @@ class SuFit:
     #s.chi2.append( data.Chi2Test( s.fit.GetPlot(), "UW CHI2" )  )
     s.ndf.append( fit.GetNDF() )
     print 'Chi2 =','%8f'%s.chi2[-1],' NDF =',s.ndf[-1]
+    sys.stdout.flush()
 
   def doFit(s):
     """ do fit and return weights """

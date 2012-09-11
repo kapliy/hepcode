@@ -1,3 +1,9 @@
+prepare* script updates:
+- DONE get a matrix of QCD scale factors
+- DONE get ewk and qcd backgrounds
+- DONE get a version of qcd that's scaled using the common scale
+- ADD: signed pseudorapidity histograms
+
 Anton: check w PT reweighting with different targets. Include powheg+pythia 8.
 Compare w pT and lepton pT
 Compare w polarization reweighting for qcd fits.

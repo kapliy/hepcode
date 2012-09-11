@@ -28,7 +28,7 @@ class SuSys:
             return v
         else:
             return [v]*3
-    def __init__(s,name='nominal',charge=2,qcd = {}, unfold={},qcderr='NOM',slice=None,
+    def __init__(s,name='Nominal',charge=2,qcd = {}, unfold={},qcderr='NOM',slice=None,
                  ntuple=None,path=None,var=None,bin=None,pre='',weight="mcw*puw*effw*trigw",
                  histo=None,sliced=False,sysdir=None,subdir=None,basedir=None ):
         # actual histograms
@@ -102,7 +102,7 @@ class SuSys:
                 i=1
         #isowind/st_w_final/metfit/bin_0/lpt_0/POS => #isowind/st_w_final/metfit/POS/bin_0/lpt_0
         hpath = os.path.join(s.sysdir[i],s.subdir[i],s.basedir[i]) + SuSys.QMAP[s.charge][0]
-        if re.search('/bin_',hpath):
+        if re.search('/bin_',hpath) or re.search('/bine_',hpath):
             helms = hpath.split('/')
             helms2 = helms[:-3] + helms[-1:] + helms[-3:-1]
             hpath = '/'.join(helms2)
@@ -159,8 +159,19 @@ class SuSys:
         return s.sliced
         #return re.search('bin_',s.histo) if s.histo else False
     def is_ntuple_etabins(s):
-        """ Returns True if we are doing a qcd fit in |eta| bins """
-        return s.use_ntuple() and 'etabins' in s.qcd and s.qcd['etabins']==True
+        """ Returns 2 if we are doing a qcd fit in |eta| bins , 1 if in eta bins, and False otherwise """
+        if s.use_ntuple() and 'etabins' in s.qcd and s.qcd['etabins']==True:
+            return 1
+        if s.use_ntuple() and 'absetabins' in s.qcd and s.qcd['absetabins']==True:
+            return 2
+        return False
+    def is_histo_etabins(s):
+        """ Returns 2 if we are doing a qcd fit in |eta| bins , 1 if in eta bins, and False otherwise """
+        if (not s.use_ntuple()) and 'etabins' in s.qcd and s.qcd['etabins']==True:
+            return 1
+        if (not s.use_ntuple()) and 'absetabins' in s.qcd and s.qcd['absetabins']==True:
+            return 2
+        return False
     def clone(s,sysdir=None,sysdir_mc=None,subdir=None,subdir_mc=None,basedir=None,
               qcderr=None,qcdadd=None,name=None,q=None,histo=None,sliced=None,unfold=None,unfdir=None,unfhisto=None,
               ntuple=None,path=None,var=None,bin=None,pre=None,weight=None,
@@ -313,6 +324,7 @@ class SuPlot:
         heta is a dummy abseta histogram that's used to determine binning for the final histogram
         """
         print '--------->', 'update_from_slices: started working on',s.flat[0].histo
+        sys.stdout.flush()
         import SuCanvas
         # create final eta histogram for each systematic
         for i,dsys in enumerate(s.flat):
@@ -372,7 +384,7 @@ class SuPlot:
                     histo=histo,sliced=sliced,sysdir=sysdir,subdir=subdir,basedir=basedir)
         s.sys = [ [nom,] ]
         s.flat = [ nom ]
-        s.groups = [ 'nominal' ]
+        s.groups = [ 'Nominal' ]
         s.do_unfold = do_unfold
         # if this is using the ntuple, we don't have all systematics
         if nom.use_ntuple():
@@ -404,48 +416,49 @@ class SuPlot:
             del res[:]
         qcdadd = {'forcenominal':True}
         # MCP smearing UP
-        add('MuonResMSUp',prep+'mcp_msup')
-        add('MuonResMSDown',prep+'mcp_msdown')
+        add('MuonResMSUp','MuonResMSUp')
+        add('MuonResMSDown','MuonResMSDown')
         next('MCP_MS_RES')
         # MCP smearing DOWN
-        add('MuonResIDUp',prep+'mcp_idup')
-        add('MuonResIDDown',prep+'mcp_iddown')
+        add('MuonResIDUp','MuonResIDUp')
+        add('MuonResIDDown','MuonResIDDown')
         next('MCP_ID_RES')
         # MCP scale
         if False: # old MCP scale recommendation: on/off
-            add('MuonNoScale',prep+'mcp_unscaled')
+            add('MuonNoScale','MuonNoScale')
             next('MCP_SCALE')
         else:  # using my C/K variations
-            add('MuonScaleUp',prep+'mcp_kup')
-            add('MuonScaleDown',prep+'mcp_kdown')
+            add('MuonScaleKUp','MuonScaleKUp')
+            add('MuonScaleKDown','MuonScaleKDown')
             next('MCP_KSCALE')
-            add('MuonCurvUp',prep+'mcp_cup')
-            add('MuonCurvDown',prep+'mcp_cdown')
+            add('MuonScaleCUp','MuonScaleCUp')
+            add('MuonScaleCDown','MuonScaleCDown')
             next('MCP_CSCALE')
         # MCP efficiency
         if True:
-            add2('MuonRecoSFUp','st_w_efftotup',prep+'nominal_effsysup')
-            add2('MuonRecoSFDown','st_w_efftotdown',prep+'nominal_effsysdown')
+            add2('MuonRecoSFUp','st_w_efftotup','MuonRecoSFUp')
+            add2('MuonRecoSFDown','st_w_efftotdown','MuonRecoSFDown')
             next('MCP_EFF')
-            add2('MuonTriggerSFUp','st_w_trigstatup',prep+'nominal_trigstatup')
-            add2('MuonTriggerSFDown','st_w_trigstatdown',prep+'nominal_trigstatdown')
+            add2('MuonTriggerSFUp','st_w_trigstatup','MuonTriggerSFUp')
+            add2('MuonTriggerSFDown','st_w_trigstatdown','MuonTriggerSFDown')
             next('MCP_TRIG')
         # ISO efficiency
         if False:
-            add2('MuonIsoSFUp','st_w_isoup',prep+'nominal_isosup')
-            add2('MuonIsoSFDown','st_w_isodown',prep+'nominal_isodown')
+            add2('MuonIsoSFUp','st_w_isoup','MuonIsoSFUp')
+            add2('MuonIsoSFDown','st_w_isodown','MuonIsoSFDown')
             next('MCP_ISO')
         # JET
         if True:
             #add('jet_jer',prep+'jet_jer',qcdadd=qcdadd)
-            add('JetResolUp',prep+'jet_jerup')
-            add('JetResolDown',prep+'jet_jerdown')
+            add('JetResolUp','JetResolUp')
+            add('JetResolDown','JetResolDown')
             next('JER')
-            add('JetScaleUp',prep+'jet_jesup')
-            add('JetScaleDown',prep+'jet_jesdown')
+            add('JetScaleUp','JetScaleUp')
+            add('JetScaleDown','JetScaleDown')
             next('JES')
         # MET
         if False:
+            assert False
             add('met_resosoftup',prep+'met_resosoftup')
             add('met_resosoftdown',prep+'met_resosoftdown')
             next('MET_RESO')
@@ -453,27 +466,27 @@ class SuPlot:
             add('met_scalesoftdown',prep+'met_scalesoftdown')
             next('MET_SCALE')
         else:  # new recommended MET systematic
-            add('ResoSoftTermsUp_ptHard',prep+'met_resosofttermsup')
-            add('ResoSoftTermsDown_ptHard',prep+'met_resosofttermsdown')
+            add('ResoSoftTermsUp_ptHard','ResoSoftTermsUp_ptHard')
+            add('ResoSoftTermsDown_ptHard','ResoSoftTermsDown_ptHard')
             next('MET_RESO_COR')
-            add('ResoSoftTermsUpDown_ptHard',prep+'met_resosofttermsupdown')
-            add('ResoSoftTermsDownUp_ptHard',prep+'met_resosofttermsdownup')
+            add('ResoSoftTermsUpDown_ptHard','ResoSoftTermsUpDown_ptHard')
+            add('ResoSoftTermsDownUp_ptHard','ResoSoftTermsDownUp_ptHard')
             next('MET_RESO_ACOR')
-            add('ScaleSoftTermsUp_ptHard',prep+'met_scalesofttermsup')
-            add('ScaleSoftTermsDown_ptHard ',prep+'met_scalesofttermsdown')
+            add('ScaleSoftTermsUp_ptHard','ScaleSoftTermsUp_ptHard')
+            add('ScaleSoftTermsDown_ptHard ','ScaleSoftTermsDown_ptHard')
             next('MET_SCALE')
         # QCD normalization
         if False:
-            add3('qcdup',1.5,prep+'nominal')
-            add3('qcddown',0.5,prep+'nominal')
+            add3('qcdup',1.5,'Nominal')
+            add3('qcddown',0.5,'Nominal')
             next('QCD_FRAC')
         # unfolding systematic
         if 'mc' in nom.unfold:
-            #add4('unfold_pythia','pythia',prep+'nominal')
-            add4('unfold_mcnlo','mcnlo',prep+'nominal')
-            #add4('unfold_alpgen_herwig','alpgen_herwig',prep+'nominal')
-            add4('unfold_powheg_pythia','powheg_pythia',prep+'nominal')
-            add4('unfold_powheg_herwig','powheg_herwig',prep+'nominal')
+            #add4('unfold_pythia','pythia','Nominal')
+            #add4('unfold_alpgen_herwig','alpgen_herwig','Nominal')
+            add4('unfold_mcnlo','mcnlo','Nominal')
+            add4('unfold_powheg_pythia','powheg_pythia','Nominal')
+            add4('unfold_powheg_herwig','powheg_herwig','Nominal')
             next('UNFOLDING')
         assert len(s.sys)==len(s.groups)
         print 'Created systematic variations: N =',len(s.sys)
@@ -847,6 +860,7 @@ class SuSample:
                 usebin = False
                 xtra = ' with special abseta binning'
             print '--> creating %s%s'%(hname,xtra)
+            sys.stdout.flush()
             # build from TNtuple
             drawstring = '%s>>%s'%(var,hname)
             if usebin:
@@ -938,13 +952,16 @@ class SuStackElm:
                 res.Unitize()
             elif SuStackElm.new_scales==True and 'qcd' in s.flags and (isinstance(d,SuPlot) and d.status==0):
                 print '--------->', 'qcd scaling start:',hname
+                sys.stdout.flush()
                 scales = s.po.get_scales(d)
                 print '--------->', 'qcd scaling applying (QCD_SYS_SCALES=%d):'%SuStack.QCD_SYS_SCALES,hname
+                sys.stdout.flush()
                 if SuStack.QCD_SYS_SCALES:
                     res.Scale(scales)
                 else:
                     res.ScaleOne(scales)
                 print '--------->', 'qcd scaling end:',hname
+                sys.stdout.flush()
         assert res,'Failed to create: ' + hname
         return res
 
@@ -1048,6 +1065,7 @@ class SuStack:
             print '==',elm.name,elm.label,'=='
             for sam in elm.samples:
                 print '--->',sam.name,sam.nentries()
+                sys.stdout.flush()
                 tot += sam.nentries()
         print 'Total:',tot
     def add(s,name,samples,color,flags=[],table={},label=None):
@@ -1169,15 +1187,21 @@ class SuStack:
             # duplicate first/last bin scales for underflow/overflow scale
             return [res[0],] + res + [res[-1],]
         elif d.is_ntuple_etabins():
-            print 'INFO: creating QCD scales in eta bins'
-            etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
+            print 'INFO: creating QCD scales in eta bins using ntuple fits'
+            import binning
+            echoice = d.is_ntuple_etabins()
+            assert echoice in (1,2),'Unknown ntuple_etabins choice'
+            etabins = binning.absetabins if echoice==2 else binning.setabins
             res = []
             oldpre = [zz for zz in d.pre]
             oldpreqcd = [zz for zz in d.qcd['pre']]
             for ib in xrange(0,len(etabins)-1):
                 ibb = ib
-                #ibb = 0
-                x = ' && fabs(l_eta)>=%.2f && fabs(l_eta)<=%.2f'%(etabins[ibb],etabins[ibb+1])
+                x = ''
+                if echoice==2:
+                    x = ' && fabs(l_eta)>=%.2f && fabs(l_eta)<=%.2f'%(etabins[ibb],etabins[ibb+1])
+                elif echoice==1:
+                    x = ' && l_eta>=%.2f && l_eta<=%.2f'%(etabins[ibb],etabins[ibb+1])
                 # modify pre string - but via s.qcd['pre'] because that's what will be used!
                 assert len(d.pre)==3
                 assert len(d.qcd['pre'])==3
@@ -1186,6 +1210,23 @@ class SuStack:
                 newpre = [zz+x for zz in oldpreqcd]
                 d.qcd['pre'] = newpre
                 res.append(s.get_scale(dtmp,fitsfx='_eta%d'%ib))
+            # duplicate first/last bin scales for underflow/overflow scale
+            return [res[0],] + res + [res[-1],]
+        elif d.is_histo_etabins():
+            print 'INFO: creating QCD scales in eta bins using histo fits'
+            import binning
+            echoice = d.is_histo_etabins()
+            assert echoice in (1,2),'Unknown ntuple_etabins choice'
+            etabins = binning.absetabins if echoice==2 else binning.setabins
+            res = []
+            oldvar = d.qcd['var']
+            for ib in xrange(0,len(etabins)-1):
+                ibb = ib
+                var = 'bin%s_%d/%s'%('' if echoice==2 else 'e',ibb,oldvar)
+                # modify qcd fit var via s.qcd['var'] because that's what will be used!
+                qcdadd = {'var':var}
+                dtmp = d.clone(qcdadd=qcdadd)
+                res.append(s.get_scale(dtmp))
             # duplicate first/last bin scales for underflow/overflow scale
             return [res[0],] + res + [res[-1],]
         return s.get_scale(d)  #same scale factor for all bins
@@ -1298,8 +1339,10 @@ class SuStack:
         """ Generic function that builds asymmetry for a given method """
         import SuCanvas
         print '--------->', 'asym_generic: preparing hPOS'
+        sys.stdout.flush()
         hPOSs = method(hname+'_POS',d.clone(q=0),*args,**kwargs)
         print '--------->', 'asym_generic: preparing hNEG'
+        sys.stdout.flush()
         hNEGs = method(hname+'_NEG',d.clone(q=1),*args,**kwargs)
         assert len(hPOSs.flat) == len(hNEGs.flat)
         for i,(hPOS,hNEG) in enumerate( zip(hPOSs.flat,hNEGs.flat) ):
@@ -1311,8 +1354,10 @@ class SuStack:
         """ Generic function that builds W+/W- ratio for a given method """
         import SuCanvas
         print '--------->', 'ratio_generic: preparing hPOS'
+        sys.stdout.flush()
         hPOSs = method(hname+'_POS',d.clone(q=0),*args,**kwargs)
         print '--------->', 'ratio_generic: preparing hNEG'
+        sys.stdout.flush()
         hNEGs = method(hname+'_NEG',d.clone(q=1),*args,**kwargs)
         assert len(hPOSs.flat) == len(hNEGs.flat)
         for i,(hPOS,hNEG) in enumerate( zip(hPOSs.flat,hNEGs.flat) ):
