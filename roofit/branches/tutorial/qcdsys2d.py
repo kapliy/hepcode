@@ -27,21 +27,29 @@ for xsecerr in [ (0,) ]:
                 msys.append( xsecerr+bgewk+isofail+ivar )
 msys_nom = (0,5,'loose_isofail','met','50,0,80')
 
-etabins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4] # N=12
-ptbins = [20,25,30,35,40,45,50,120] # N=8
 QMAP = {0:'mu+',1:'mu-',2:'both charges'}
 QMAPN = {0:'POS',1:'NEG',2:'ALL'}
 SIGMAP = { 1 : "MC@NLO", 2 : 'Alpgen+Her', 4 : "PowHeg+Herwig", 5 : "PowHeg+Pythia" }
 FQNAMES = { 0 : 'POS_ewk5', 1 : 'NEG_ewk5' }
 
-MODE = 2
+DIM = 2  # 2d fits in pt x eta
 if len(sys.argv)>=2 and sys.argv[1]=='1':
-    MODE = 1
+    DIM = 1  # 1d fits in eta only
+print 'DIMENSION:',DIM
+ETAMODE = 2 # use |eta|
+if len(sys.argv)>=3 and sys.argv[2]=='1':
+    ETAMODE = 1 # use eta
+print 'ETAMODE:',ETAMODE
+
+import binning
+etabins = binning.setabins if ETAMODE==1 else binning.absetabins # N=12
+ptbins = binning.ptbins # N=8
+
 S = '&nbsp;'
 PM = '&plusmn;'
 
 db_name = 'DB_08272012_MC10'
-fin_name = 'IN_08272012.v2.%dD.root'%MODE
+fin_name = 'IN_08272012.v2.%dD.root'%DIM
 fout_name = re.sub('IN_','OUT_',fin_name)
 if os.path.exists(fin_name):
     print 'ROOT repackaging: %s -> %s'%(fin_name,fout_name)
@@ -70,7 +78,7 @@ def get(iq,bgsig,ieta,ipt):
     bla2=[]
     bla5=[]
     for xsecerr,bgewk,isofail,ivar,ibin in msys:
-        key = '/iq%d/X%d/bgewk%d/bgsig%d/iso%s/ivar%s/ibin%s/ieta%s/ipt%s'%(iq,xsecerr,bgewk,bgsig,isofail,ivar,ibin,ieta,ipt)
+        key = '/iq%d/X%d/bgewk%d/bgsig%d/iso%s/ivar%s/ibin%s/%s%s/ipt%s'%(iq,xsecerr,bgewk,bgsig,isofail,ivar,ibin,'ieta' if ETAMODE==2 else 'iseta',ieta,ipt)
         if key in R:
             fracs.append(R[key]['frac'])
             sc = R[key]['scales']
@@ -125,7 +133,7 @@ if __name__=='__main__':
     a = antondb.antondb(db_name)
     a.load()
     R = a.data
-    f = open('index_%dd.html'%MODE,'w')
+    f = open('index_%dd.html'%DIM,'w')
     fin,fout = None,None
     fout_D = []
     if os.path.exists(fin_name):
@@ -147,8 +155,10 @@ if __name__=='__main__':
             samples = [re.sub('_nominal','',key.GetName()) for key in adir.GetListOfKeys() if re.search('nominal',key.GetName())]
             systems = [re.sub('wmunu_','',key.GetName()) for key in adir.GetListOfKeys() if re.match('wmunu_',key.GetName())]
             qcd = adir.Get('qcd').Clone()
-            # nominal, qcdup, qcddown[2]                    PowhegHerwig  MC@NLO[4]    MC-averaged    global-scale[6]  scale-factor[7]
-            QCD = [ qcd.Clone(), qcd.Clone(), qcd.Clone() ,   qcd.Clone() , qcd.Clone() , qcd.Clone()  , qcd.Clone() ,   qcd.Clone() ]
+            # nominal, qcdup, qcddown[2]                    PowhegHerwig  MC@NLO[4]    MC-averaged    global-scale[6]  scale-factor[7] scale-factor-global[8]
+            QCD = [ qcd.Clone(), qcd.Clone(), qcd.Clone() ,   qcd.Clone() , qcd.Clone() , qcd.Clone()  , qcd.Clone() ,   qcd.Clone() ,  qcd.Clone()]
+            #       frac[9]        frac[10]-glo    absfrac[11]    absfrac-glob[12]
+            QCD += [ qcd.Clone(), qcd.Clone()     , qcd.Clone() , qcd.Clone() ]
             QCD[0].SetTitle('qcd_PowhegPythia')
             QCD[1].SetTitle('qcd_PowhegPythiaUp')
             QCD[2].SetTitle('qcd_PowhegPythiaDown')
@@ -158,18 +168,30 @@ if __name__=='__main__':
             QCD[6].SetTitle('qcd_GlobalNorm')
             QCD[7].SetTitle('qcd_ScaleFactor')
             QCD[7].Reset()
+            QCD[8].SetTitle('qcd_ScaleFactorGlobalNorm')
+            QCD[8].Reset()
+            QCD[9].SetTitle('qcd_Fraction')
+            QCD[9].Reset()
+            QCD[10].SetTitle('qcd_FractionGlobalNorm')
+            QCD[10].Reset()
+            QCD[11].SetTitle('qcd_FractionStackError')
+            QCD[11].Reset()
         # first handle inclusive (in both pt and eta) bins
         scalesL = []
+        fracs   = []
         for bgsig in (1,4,5):
             idx,frac,scale,scaleE,chindf,scaleL,scaleLE = get(iq,bgsig,'ALL','ALL')
             scalesL += scaleL
+            fracs += frac
         QCD[6].Scale(mean(scalesL))
+        [ QCD[8].SetBinContent(bb,mean(scalesL)) for bb in range(0,(QCD[8].GetNbinsX()+2)*(QCD[8].GetNbinsY()+2)+2) ]
+        [ QCD[10].SetBinContent(bb,mean(fracs)) for bb in range(0,(QCD[10].GetNbinsX()+2)*(QCD[10].GetNbinsY()+2)+2) ]
         # make a separate table for each pT bin
-        ptrange = range(0 , len(ptbins)-1) if MODE==2 else ['ALL',]
+        ptrange = range(0 , len(ptbins)-1) if DIM==2 else ['ALL',]
         for ipt in ptrange:
             print 'Working on: ',QMAP[iq],'in pt bin',ipt
             print >>f,'<HR>'
-            if MODE==2:
+            if DIM==2:
                 print >>f,QMAP[iq],'%d&lt;pT&lt;%d'%(ptbins[ipt],ptbins[ipt+1])
             else:
                 print >>f,QMAP[iq],'%d&lt;pT&lt;%d'%(ptbins[0],ptbins[-1])
@@ -237,8 +259,10 @@ if __name__=='__main__':
                 if fin:
                     for ieta in xrange(0,len(etabins)-1):
                         if bgsig==5:
-                            ibin = QCD[7].FindFixBin(ieta+1e-6,ipt+1e-6) if ipt!='ALL' else QCD[7].FindFixBin(ieta+1e-6)
+                            ibin = QCD[7].FindFixBin(etabins[ieta]+1e-6,ptbins[ipt]+1e-6) if ipt!='ALL' else QCD[7].FindFixBin(etabins[ieta]+1e-6)
                             QCD[7].SetBinContent(ibin,mean(scalesL[ieta]))
+                            QCD[9].SetBinContent(ibin,mean(fracs[ieta]))
+                            QCD[11].SetBinContent(ibin,relF[ieta]*mean(fracs[ieta])*100.0)
                             scale_bin(QCD[0],ieta,ipt,mean(scalesL[ieta]))
                             scale_bin(QCD[1],ieta,ipt,mean(scalesL[ieta])*(1.0+relS[ieta]))
                             msc = mean(scalesL[ieta])*(1.0-relS[ieta]) if relS[ieta]<1.0 else 0.0
@@ -302,6 +326,16 @@ if __name__=='__main__':
                 # save QCD scale factor histogram
                 QCD[7].SetTitle('qcd_scale_factor')
                 QCD[7].Write(QCD[7].GetTitle(),ROOT.TObject.kOverwrite)
+                # ... and its global version
+                QCD[8].SetTitle('qcd_scale_factor_global')
+                QCD[8].Write(QCD[8].GetTitle(),ROOT.TObject.kOverwrite)
+                # and fractions
+                QCD[9].SetTitle('qcd_fraction')
+                QCD[9].Write(QCD[9].GetTitle(),ROOT.TObject.kOverwrite)
+                QCD[10].SetTitle('qcd_fraction_global')
+                QCD[10].Write(QCD[10].GetTitle(),ROOT.TObject.kOverwrite)
+                QCD[11].SetTitle('qcd_fraction_stack_error')
+                QCD[11].Write(QCD[11].GetTitle(),ROOT.TObject.kOverwrite)
                 # generate histograms for alpgen bg subtraction
                 if True:
                     bdir = fin.Get('%s_ewk2'%QMAPN[iq])
