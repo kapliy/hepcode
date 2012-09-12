@@ -23,9 +23,9 @@ for bgsig in 5; do
 	    ./smart_killer2.sh ./stack2.py --input ${input} -q ${q} -b --var "met" --bin 200,0,200 --hsource "lepton_absetav" -o TEST -t Q${q}S${bgsig} --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --cut "mcw*puw*wzptw*effw*isow*trigw" -m study_weights --bgsig ${bgsig} --bgewk 5 --bgqcd 3 --extra $i &> LOG.met.${itot}.s${bgsig}i${i}q${q} &
 	    ((itot++))
 	done
+	echo "Waiting for variation: ${bgsig} $i"
+	wait
     done
-    echo "Waiting for variation: ${bgsig}"
-    wait
 done
 
 # In borderline eta bin
@@ -37,9 +37,9 @@ for bgsig in 5; do
 	    ./smart_killer2.sh ./stack2.py --input ${input} -q ${q} -b --var "met" --bin 200,0,200 --hsource "lepton_absetav" -o TEST2 -t Q${q}S${bgsig} --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --cut "mcw*puw*wzptw*effw*isow*trigw" -m study_weights --bgsig ${bgsig} --bgewk 5 --bgqcd 3 --extra $i --func ZEBRA &> LOG2.met.${itot}.s${bgsig}i${i}q${q} &
 	    ((itot++))
 	done
+	echo "Waiting for variation: ${bgsig} $i"
+	wait
     done
-    echo "Waiting (x2) for variation: ${bgsig}"
-    wait
 done
 
 
