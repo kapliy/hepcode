@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 """
+./qcdsys2d.py 1 1; ./qcdsys2d.py 1 2 ; ./qcdsys2d.py 2 1 ; ./qcdsys2d.py 2 2
+
 A small script that summarizes QCD systematic deviations
 due to different signal MC or different fit variables.
 THIS VERSION OPERATES ON 2D GRID: |eta| x pT
@@ -22,10 +24,12 @@ import antondb
 msys = []
 for xsecerr in [ (0,) ]:
     for bgewk in [ (5,),(2,) ]:
-        for isofail in [ ('loose_isofail',),('isowind',) ] [:] :
+        #for isofail in [ ('loose_isofail',),('isowind',) ] [:] :
+        for isofail in [ ('IsoFail20',) ]:
             for ivar in [ ('met','50,0,80'),('met','50,0,90'),('wmt','50,40,90'),('wmt','50,35,100') ]:
                 msys.append( xsecerr+bgewk+isofail+ivar )
-msys_nom = (0,5,'loose_isofail','met','50,0,80')
+msys_nom = (0,5,'IsoFail20','met','50,0,80')
+bgsigs = [5,4,1][:]
 
 QMAP = {0:'mu+',1:'mu-',2:'both charges'}
 QMAPN = {0:'POS',1:'NEG',2:'ALL'}
@@ -40,6 +44,7 @@ ETAMODE = 2 # use |eta|
 if len(sys.argv)>=3 and sys.argv[2]=='1':
     ETAMODE = 1 # use eta
 print 'ETAMODE:',ETAMODE
+eword = 'eta' if ETAMODE==1 else 'abseta'
 
 import binning
 etabins = binning.setabins if ETAMODE==1 else binning.absetabins # N=12
@@ -47,9 +52,15 @@ ptbins = binning.ptbins # N=8
 
 S = '&nbsp;'
 PM = '&plusmn;'
+COLH = 150
+COLW = 95
 
 db_name = 'DB_08272012_MC10'
 fin_name = 'IN_08272012.v2.%dD.root'%DIM
+
+db_name = 'DB_09082012_POW8_ETA'
+fin_name = 'IN_09082012.v1.%s.%dD.root'%(eword,DIM)
+
 fout_name = re.sub('IN_','OUT_',fin_name)
 if os.path.exists(fin_name):
     print 'ROOT repackaging: %s -> %s'%(fin_name,fout_name)
@@ -84,7 +95,7 @@ def get(iq,bgsig,ieta,ipt):
             sc = R[key]['scales']
             scales.append(sc[0])
             scalesE.append(sc[1])
-            if isofail=='loose_isofail':
+            if isofail=='IsoFail20':
                 scalesL.append(sc[0])
                 scalesLE.append(sc[1])
             chindfs.append( 1.0*sc[-3]/sc[-2] )
@@ -133,7 +144,7 @@ if __name__=='__main__':
     a = antondb.antondb(db_name)
     a.load()
     R = a.data
-    f = open('index_%dd.html'%DIM,'w')
+    f = open('index_%s_%dd.html'%(eword,DIM),'w')
     fin,fout = None,None
     fout_D = []
     if os.path.exists(fin_name):
@@ -145,7 +156,7 @@ if __name__=='__main__':
     print >>f,memo
     for iq in (0,1,):
         if iq!=0:
-            print >>f,'<HR size="20" color="red">'
+            print >>f,'<HR size="20">'
         samples,systems,qcd = None,None,None
         QCD = []
         if fin and fin.IsOpen():
@@ -183,9 +194,10 @@ if __name__=='__main__':
             idx,frac,scale,scaleE,chindf,scaleL,scaleLE = get(iq,bgsig,'ALL','ALL')
             scalesL += scaleL
             fracs += frac
-        QCD[6].Scale(mean(scalesL))
-        [ QCD[8].SetBinContent(bb,mean(scalesL)) for bb in range(0,(QCD[8].GetNbinsX()+2)*(QCD[8].GetNbinsY()+2)+2) ]
-        [ QCD[10].SetBinContent(bb,mean(fracs)) for bb in range(0,(QCD[10].GetNbinsX()+2)*(QCD[10].GetNbinsY()+2)+2) ]
+        if fin:
+            QCD[6].Scale(mean(scalesL))
+            [ QCD[8].SetBinContent(bb,mean(scalesL)) for bb in range(0,(QCD[8].GetNbinsX()+2)*(QCD[8].GetNbinsY()+2)+2) ]
+            [ QCD[10].SetBinContent(bb,mean(fracs)) for bb in range(0,(QCD[10].GetNbinsX()+2)*(QCD[10].GetNbinsY()+2)+2) ]
         # make a separate table for each pT bin
         ptrange = range(0 , len(ptbins)-1) if DIM==2 else ['ALL',]
         for ipt in ptrange:
@@ -196,20 +208,24 @@ if __name__=='__main__':
             else:
                 print >>f,QMAP[iq],'%d&lt;pT&lt;%d'%(ptbins[0],ptbins[-1])
             print >>f,'<HR>'
-            print >>f,'<TABLE border="1" CELLPADDING="0" CELLSPACING="1">'
-            #print >>f,'<TABLE border="1" CELLPADDING="0" CELLSPACING="1" width="1100">'
+            twidth = COLH + (1+COLW)*len(range(0,len(etabins)-1))
+            print >>f,'<TABLE border="1" CELLPADDING="0" CELLSPACING="0" style="width:%dpx;">'%twidth
+            #print >>f,'<TABLE border="1" CELLPADDING="0" CELLSPACING="1" width="%d">'%(1200 if ETAMODE==2 else 2400)
             # header first
             print >>f,'<TR>'
-            print >>f,'<TD width="100">Info</TD>'
+            print >>f,'<TD style="width:%dpx;">Info</TD>'%COLH
             for ieta in xrange(0,len(etabins)-1):
-                print >>f, '<TD width="80">','%.2f&lt;|&eta;|&lt;%.2f'%(etabins[ieta],etabins[ieta+1]),"</TD>"
+                if ETAMODE==2:
+                    print >>f, '<TD style="width:%dpx;">'%COLW,'%.2f&lt;|&eta;|&lt;%.2f'%(etabins[ieta],etabins[ieta+1]),"</TD>"
+                elif ETAMODE==1:
+                    print >>f, '<TD style="width:%dpx;">'%COLW,'%.2f&lt;&eta;&lt;%.2f'%(etabins[ieta],etabins[ieta+1]),"</TD>"
             print >>f,'</TR>'
             # actual table contents
             Aidxs,Afracs,Ascales,AscalesE,Achindfs,AscalesL,AscalesLE,ArelF = [],[],[],[],[],[],[] ,[]
             Afirst = True
-            for bgsig in (5,4,1):
+            for bgsig in bgsigs:
                 print >>f,'<TR>'
-                print >>f,'<TD colspan="%d" align="center">'%(len(etabins)+1),SIGMAP[bgsig],'</TD>'
+                print >>f,'<TD colspan="%d" align="center" width="100%%">'%(len(etabins)+1),SIGMAP[bgsig],'</TD>'
                 print >>f,'</TR>'
                 idxs,fracs,scales,scalesE,chindfs,scalesL,scalesLE = [],[],[],[],[],[],[]
                 for ieta in xrange(0,len(etabins)-1):
@@ -235,25 +251,24 @@ if __name__=='__main__':
                         AscalesL[ieta] += scalesL[ieta]
                         AscalesLE[ieta] += scalesLE[ieta]
                 print >>f,'<TR>'
-                print >>f,'<TD>','QCD frac & error','</TD>'
+                print >>f,'<TD style="width:%dpx;">'%COLH,'QCD frac & error','</TD>'
                 relF = [] # relative error on qcd fraction. Use it also as an uncertainty on scale!!!
                 for ieta in xrange(0,len(etabins)-1):
                     relF.append( rms(fracs[ieta])/mean(fracs[ieta]) )
-                    print >>f,'<TD>','%.1f %s %.1f %%'%(mean(fracs[ieta])*100.0,PM,relF[-1]*100.0),'</TD>'
+                    print >>f,'<TD style="width:%dpx;">'%COLW,'%.1f %s %.1f %%'%(mean(fracs[ieta])*100.0,PM,relF[-1]*100.0),'</TD>'
                 print >>f,'</TR>'
                 print >>f,'<TR>'
-                print >>f,'<TD>','Scale factor','</TD>'
+                print >>f,'<TD style="width:%dpx;">'%COLH,'Scale factor','</TD>'
                 relS = [] # relative error on scale - using a subset of variations (loose_isofail). This is not actually used
                 for ieta in xrange(0,len(etabins)-1):
                     relS.append( rms(scalesL[ieta])/mean(scalesL[ieta]) )
-                    print >>f,'<TD>','%.3f'%(mean(scalesL[ieta])),'</TD>'
-                    #print >>f,'<TD>','%.3f %s %.1f %%'%(mean(scalesL[ieta]),PM,relS[-1]*100.0),'</TD>'
+                    print >>f,'<TD style="width:%dpx;">'%COLW,'%.3f'%(mean(scalesL[ieta])),'</TD>'
                 print >>f,'</TR>'
                 # absolute uncertainty on QCD prediction
                 print >>f,'<TR>'
-                print >>f,'<TD>','Total QCD uncert.','</TD>'
+                print >>f,'<TD style="width:%dpx;">'%COLH,'Total QCD uncert.','</TD>'
                 for ieta in xrange(0,len(etabins)-1):
-                    print >>f,'<TD>','%.1f %%'%(relF[ieta]*mean(fracs[ieta])*100.0),'</TD>'
+                    print >>f,'<TD style="width:%dpx;">'%COLW,'%.1f %%'%(relF[ieta]*mean(fracs[ieta])*100.0),'</TD>'
                 print >>f,'</TR>'
                 # NOW handle ROOT histograms
                 if fin:
@@ -278,28 +293,28 @@ if __name__=='__main__':
                 for ieta in xrange(0,len(etabins)-1):
                     scale_bin(QCD[5],ieta,ipt,mean(AscalesL[ieta]))
             print >>f,'<TR>'
-            print >>f,'<TD colspan="%d" align="center">'%(len(etabins)+1),'Averaged across three generators','</TD>'
+            print >>f,'<TD colspan="%d" align="center" width="100%%">'%(len(etabins)+1),'Averaged across three generators','</TD>'
             print >>f,'</TR>'
             # Absolute QCD value
             print >>f,'<TR>'
-            print >>f,'<TD>','QCD frac & error','</TD>'
+            print >>f,'<TD style="width:%dpx;">'%COLH,'QCD frac & error','</TD>'
             relF = [] # relative error on qcd fraction. Use it also as an uncertainty on scale!!!
             for ieta in xrange(0,len(etabins)-1):
                 relF.append( rms(Afracs[ieta])/mean(Afracs[ieta]) )
-                print >>f,'<TD>','%.1f %s %.1f %%'%(mean(Afracs[ieta])*100.0,PM,relF[-1]*100.0),'</TD>'
+                print >>f,'<TD style="width:%dpx;">'%COLW,'%.1f %s %.1f %%'%(mean(Afracs[ieta])*100.0,PM,relF[-1]*100.0),'</TD>'
             print >>f,'</TR>'
             # relative error on scale - using a subset of variations (loose_isofail)
             print >>f,'<TR>'
-            print >>f,'<TD>','Scale factor','</TD>'
+            print >>f,'<TD style="width:%dpx;">'%COLH,'Scale factor','</TD>'
             for ieta in xrange(0,len(etabins)-1):
-                print >>f,'<TD>','%.3f'%(mean(AscalesL[ieta])),'</TD>'
+                print >>f,'<TD style="width:%dpx;">'%COLW,'%.3f'%(mean(AscalesL[ieta])),'</TD>'
             print >>f,'</TR>'
             # total qcd uncertainty (absolute)
             print >>f,'<TR>'
-            print >>f,'<TD>','Total QCD uncert.','</TD>'
+            print >>f,'<TD style="width:%dpx;">'%COLH,'Total QCD uncert.','</TD>'
             for ieta in xrange(0,len(etabins)-1):
                 relF = rms(Afracs[ieta])/mean(Afracs[ieta])
-                print >>f,'<TD>','%.1f %%'%(relF*mean(Afracs[ieta])*100.0),'</TD>'
+                print >>f,'<TD style="width:%dpx;">'%COLW,'%.1f %%'%(relF*mean(Afracs[ieta])*100.0),'</TD>'
             print >>f,'</TR>'
             print >>f,'</TABLE>'
         if fin:

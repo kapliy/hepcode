@@ -147,6 +147,7 @@ print VMAP['cmd']
 
 #import ROOT and disable warning messages
 from common import *
+from binning import *
 #ROOT.TH1.AddDirectory(ROOT.kFALSE)    # ensure that we own all the histograms
 ROOT.SetSignalPolicy(ROOT.kSignalFast)
 ROOT.gROOT.SetBatch(opts.batch)

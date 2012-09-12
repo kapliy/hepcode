@@ -40,7 +40,6 @@ input=/share/t3data3/antonk/ana/ana_v29I_09082012_allwts_wptPow8_eta_stacoCB_all
 ETAMODES="1 2" # 2=|eta| bins, 1=eta bins
 bgqcd=3
 bgsigs="1 4 5"
-bgsigs="5"
 var='met'
 ipts=`echo {0..6} ALL`
 
