@@ -1,3 +1,11 @@
+Anton:
+* Finish bg-subtraction in QCD template.
+* Make a plot using MC-based background!
+* Repeat x-vs-eta plots in Z events. Worry: require two trigger matches? Not really, but applying two trigger scale factors
+
+Peter:
+do eta/phi plot. Or eta/phi but divide by large/small muon module.
+
 prepare* script updates:
 - DONE get a matrix of QCD scale factors
 - DONE get ewk and qcd backgrounds

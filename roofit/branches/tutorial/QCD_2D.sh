@@ -30,13 +30,13 @@ source bashmap.sh
 SMART_KILLER="./smart_killer.sh"
 #SMART_KILLER=""
 
-antondb='HISTO_09082012_POW8_ETA'
+antondb='HISTO_09212012_POW8_ETA_NEWSF'
 mkdir -p ${antondb}
 #input=/share/t3data3/antonk/ana/ana_v29G_07252012_newROOT_stacoCB_all
 #input=/share/t3data3/antonk/ana/ana_v29G_08242012_allwts_V29I_stacoCB_all  # ALL weights + v29i ntuple + jerup/down
 #input=/share/t3data3/antonk/ana/ana_v29I_08242012_allwts_wptMC10_stacoCB_all # same, but using MC10 reweighting
 input=/share/t3data3/antonk/ana/ana_v29I_09082012_allwts_wptPow8_eta_stacoCB_all #changed to powheg8 wpt reweighting. Fixed alpgen. Added eta (vs |eta|) histograms.
-
+input=/share/t3data3/antonk/ana/ana_v29I_09082012_allwts_wptPow8_eta_newSF_stacoCB_all # added new reco-level scale factors in measurement bins
 ETAMODES="1 2" # 2=|eta| bins, 1=eta bins
 bgqcd=3
 bgsigs="1 4 5"

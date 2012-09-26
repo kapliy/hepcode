@@ -12,7 +12,7 @@ from FileLock import FileLock
 # this is used to select default unfolding matrix
 MAP_BGSIG = {0:'pythia',1:'mcnlo',2:'alpgen_herwig',3:'alpgen_pythia',4:'powheg_herwig',5:'powheg_pythia'}
 # this is used to select specific monte-carlos for signal/qcd/etc
-MAP_BGQCD = {0:'mc',1:'bb',2:'JX',3:'driven'}
+MAP_BGQCD = {0:'mc',1:'bb',2:'JX',3:'driven',4:'driven_sub'}
 
 class SuSys:
     """ Generic class that describes where to get the data for one histogram (systematic).
@@ -74,7 +74,7 @@ class SuSys:
         if flags:
             if 'data' in flags:
                 i=0
-            elif 'driven' in flags:
+            elif 'driven' in flags or 'driven_sub' in flags:
                 i=2
             else:
                 i=1
@@ -96,7 +96,7 @@ class SuSys:
         if flags:
             if 'data' in flags:
                 i=0
-            elif 'driven' in flags:
+            elif 'driven' in flags or 'driven_sub' in flags:                
                 i=2
             else:
                 i=1
@@ -1456,6 +1456,7 @@ class SuStack:
         hs = []
         for bg in loop:
             h = bg.histo('histo',d.clone())
+            assert bg.name in NMAP, 'Cannog find %s in NMAP in SuData::SaveROOT'%(bg.name,)
             name = NMAP[bg.name]
             isys = 0
             for sgroups in h.sys:

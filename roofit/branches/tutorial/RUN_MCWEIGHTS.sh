@@ -15,7 +15,7 @@
 input=/share/t3data3/antonk/ana/ana_v29I_09082012_allwts_wptPow8_eta_stacoCB_all #changed to powheg8 wpt reweighting. Fixed alpgen. Added eta (vs |eta|) histograms.
 
 itot=0
-for bgsig in 5; do
+for bgsig in 4 1; do
     for i in {0..4}; do
 	for q in {0,1,2}; do 
 	    ./smart_killer2.sh ./stack2.py --input ${input} -q ${q} -b --var "w_pt" --bin 200,0,200 --hsource "lepton_absetav" -o TEST -t Q${q}S${bgsig} --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --cut "mcw*puw*wzptw*effw*isow*trigw" -m study_weights --bgsig ${bgsig} --bgewk 5 --bgqcd 3 --extra $i &> LOG.wpt.${itot}.s${bgsig}i${i}q${q} &
@@ -32,6 +32,7 @@ done
 for bgsig in 5; do
     for i in {0..4}; do
 	for q in {0,1,2}; do 
+	    continue
 	    ./smart_killer2.sh ./stack2.py --input ${input} -q ${q} -b --var "w_pt" --bin 200,0,200 --hsource "lepton_absetav" -o TEST2 -t Q${q}S${bgsig} --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --cut "mcw*puw*wzptw*effw*isow*trigw" -m study_weights --bgsig ${bgsig} --bgewk 5 --bgqcd 3 --extra $i --func ZEBRA &> LOG2.wpt.${itot}.s${bgsig}i${i}q${q} &
 	    ./smart_killer2.sh ./stack2.py --input ${input} -q ${q} -b --var "l_pt" --bin 200,0,200 --hsource "lepton_absetav" -o TEST2 -t Q${q}S${bgsig} --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --cut "mcw*puw*wzptw*effw*isow*trigw" -m study_weights --bgsig ${bgsig} --bgewk 5 --bgqcd 3 --extra $i --func ZEBRA &> LOG2.lpt.${itot}.s${bgsig}i${i}q${q} &
 	    ./smart_killer2.sh ./stack2.py --input ${input} -q ${q} -b --var "met" --bin 200,0,200 --hsource "lepton_absetav" -o TEST2 -t Q${q}S${bgsig} --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --cut "mcw*puw*wzptw*effw*isow*trigw" -m study_weights --bgsig ${bgsig} --bgewk 5 --bgqcd 3 --extra $i --func ZEBRA &> LOG2.met.${itot}.s${bgsig}i${i}q${q} &
