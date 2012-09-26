@@ -122,7 +122,7 @@ parser.add_option("-q", "--charge",dest="charge",
                   help="Which charge to plot: 0=POS, 1=NEG, 2=ALL")
 parser.add_option("--bgqcd",dest="bgqcd",
                   type="int", default=0,
-                  help="QCD: 0=Pythia bb/cc mu15X, 1=Pythia bbmu15X, 2=Pythia J0..J5, 3=data-driven")
+                  help="QCD: 0=Pythia bb/cc mu15X, 1=Pythia bbmu15X, 2=Pythia J0..J5, 3=data-driven, 4=data-driven with bgsub")
 parser.add_option("--bgsig",dest="bgsig",
                   type="int", default=2,
                   help="Signal: 0=Pythia, 1=MC@NLO, 2=Alpgen/Herwig, 3=Alpgen/Pythia, 4=PowHeg/Herwig, 5=PowHeg/Pythia")
@@ -256,6 +256,7 @@ if True:
     pw.adn(name='qcd_bb',label='bbmu15X',samples=['mc_pythia_bbmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     pw.adn(name='qcd_JX',label='QCD J0..J5',samples=['mc_pythia_J%d'%v for v in xrange(5)],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     pw.adn(name='qcd_driven',label='QCD data-driven',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kCyan,flags=['bg','mc','qcd','driven'])
+    pw.adn(name='qcd_driven_sub',label='QCD data-driven',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kCyan,flags=['bg','mc','qcd','driven'])
     if opts.bgqcd in MAP_BGQCD.keys():
         pw.choose_qcd(opts.bgqcd)
     else:
@@ -682,45 +683,10 @@ def study_jet_calibration_effects():
 
 # combined plots
 if mode=='ALL' or mode=='all':
-    if False:
+    if True:
         plots = ['lepton_absetav','lpt','met','wmt']
+        plots = ['lepton_absetav']
         plot_stacks(spR.clone(),plots,m=1,qs=(0,))
-    if False:  # [DEPRECATED] performs QCD fits in |eta| x pT bins, saves plots and pickle files with chi2 and qcd fraction systematics
-        spR.enable_nominal()
-        RES = {}
-        VETO = 'Nominal/st_w_final/baseline/POS/bin_6/lpt_5/wmt'
-        # FIXME AK: skipping non-convergent fits  (SIGFLAG,Q,QCDVAR,ETA,PT)
-        # nohack,norebin
-        VETO = [(1,1,'met',7,2),(1,0,'wmt',6,5),(1,1,'wmt',0,5),(1,1,'wmt',2,5),(1,1,'wmt',3,5),(1,1,'wmt',4,3)]
-        # hack,norebin
-        VETO = [(1,0,'wmt',8,5),(1,0,'wmt',6,5),(1,1,'wmt',0,0),(1,1,'wmt',0,5),(1,1,'wmt',2,5),(1,1,'wmt',4,3),(1,1,'wmt',7,0),(1,1,'met',7,2)]
-        # hack,rebin
-        VETO = [(1,1,'met',7,2)]
-        #Nominal/st_w_final/wmtfit/NEG/bin_8/lpt_4/wmt
-        for iq in [0,1][:]:
-            RES[iq] = {}
-            for ieta in range(0,len(absetabins)-1)[:]:
-                RES[iq][ieta] = {}
-                for ipt in range(0,len(ptbins)-1)[:]:
-                    RES[iq][ieta][ipt] = {}
-                    for ivar in ('met','wmt')[:]:
-                        RES[iq][ieta][ipt][ivar] = {}
-                        for bgsig in (1,4,5)[:]:
-                            if (bgsig,iq,ivar,ieta,ipt) in VETO:
-                                print 'Skipping',bgsig,iq,ivar,ieta,ipt
-                                continue
-                            po.choose_sig(bgsig)
-                            var = 'bin_%d/lpt_%d/met'%(ieta,ipt)
-                            imin = 0 if ivar=='met' else 40
-                            imax = 80 if ivar=='met' else 90
-                            qcdadd={'var':'bin_%d/lpt_%d/%s'%(ieta,ipt,ivar),'min':imin,'max':imax,'rebin':2}
-                            hdata,hstack = plot_stack(spR.clone(qcdadd=qcdadd),var=var,q=iq,m=1,new_scales=True,name=po.get_flagsum()+'_F'+ivar)
-                            hfrac=hstack.nominal().stack_bg_frac()
-                            key = po.scalekeys[-1]
-                            scales = po.scales[key]
-                            RES[iq][ieta][ipt][ivar][bgsig] = (hfrac,scales)
-        # pickle result array
-        dump_pickle(RES,'save.pickle')
     if False: # inclusive reco-level and truth-level asymmetry
         plot_any(spR.clone(q=0),spT.clone(q=0),m=2,do_unfold=True,do_errorsDA=True,do_summary=True,name='POS')
         plot_any(spR.clone(q=1),spT.clone(q=1),m=2,do_unfold=True,do_errorsDA=True,do_summary=True,name='NEG')

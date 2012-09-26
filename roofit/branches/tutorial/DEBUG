@@ -13,6 +13,7 @@
 #input=/share/t3data3/antonk/ana/ana_v29I_08242012_allwts_wptMC10_stacoCB_all   # ALL weights but using wptMC10 reweighting
 #input=/share/t3data3/antonk/ana/ana_v29I_09082012_allwts_wptMC10_rensys_stacoCB_all # Renamed all systs. fixed isolation weight cutoff at 150 gev. added several new wpt weight systematic variations. 
 input=/share/t3data3/antonk/ana/ana_v29I_09082012_allwts_wptPow8_eta_stacoCB_all #changed to powheg8 wpt reweighting. Fixed alpgen. Added eta (vs |eta|) histograms.
+#input=/share/t3data3/antonk/ana/ana_v29I_09082012_allwts_wptPow8_eta_newSF_stacoCB_all # added new reco-level scale factors in measurement bins
 
 # RESURRECTING NTUPLE-BASED PLOTTING:
 #./stack2.py --input ${input} --qcd 1.0 -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --cut "mcw*puw*effw*isow*trigw*wptw" -m ALL --bgsig 5 --bgewk 5 --bgqcd 3 #--metallsys

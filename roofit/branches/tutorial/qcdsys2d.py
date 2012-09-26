@@ -61,6 +61,9 @@ fin_name = 'IN_08272012.v2.%dD.root'%DIM
 db_name = 'DB_09082012_POW8_ETA'
 fin_name = 'IN_09082012.v1.%s.%dD.root'%(eword,DIM)
 
+db_name = 'DB_09212012_POW8_ETA_NEWSF'
+fin_name = 'IN_09212012.v1.%s.%dD.root'%(eword,DIM)
+
 fout_name = re.sub('IN_','OUT_',fin_name)
 if os.path.exists(fin_name):
     print 'ROOT repackaging: %s -> %s'%(fin_name,fout_name)
@@ -163,7 +166,7 @@ if __name__=='__main__':
             adir = fin.Get(FQNAMES[iq])
             adir.cd()
             assert adir,'Cannot access directory: %s'%(FQNAMES[iq])
-            samples = [re.sub('_nominal','',key.GetName()) for key in adir.GetListOfKeys() if re.search('nominal',key.GetName())]
+            samples = [re.sub('_Nominal','',key.GetName()) for key in adir.GetListOfKeys() if re.search('Nominal',key.GetName())]
             systems = [re.sub('wmunu_','',key.GetName()) for key in adir.GetListOfKeys() if re.match('wmunu_',key.GetName())]
             qcd = adir.Get('qcd').Clone()
             # nominal, qcdup, qcddown[2]                    PowhegHerwig  MC@NLO[4]    MC-averaged    global-scale[6]  scale-factor[7] scale-factor-global[8]
@@ -329,14 +332,14 @@ if __name__=='__main__':
                     htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
                     adir.Get('wmunu_'+system).Write('wmunu_PowhegPythia_'+system,ROOT.TObject.kOverwrite)
                 # manually generate nominal histograms with qcd Up/Down variations
-                system='nominal'
+                system='Nominal'
                 allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[1],]
                 htot = make_total(system,allsamples,fout_D[iq])
-                htot.SetTitle('totalbg_nominal_qcd_up')
+                htot.SetTitle('totalbg_Nominal_qcd_up')
                 htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
                 allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[2],]
                 htot = make_total(system,allsamples,fout_D[iq])
-                htot.SetTitle('totalbg_nominal_qcd_down')
+                htot.SetTitle('totalbg_Nominal_qcd_down')
                 htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
                 # save QCD scale factor histogram
                 QCD[7].SetTitle('qcd_scale_factor')
@@ -357,39 +360,39 @@ if __name__=='__main__':
                     assert bdir
                     allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
                     htot = make_total(system,allsamples,fout_D[iq])
-                    htot.Write('totalbg_nominal_ewk_alpgen',ROOT.TObject.kOverwrite)
+                    htot.Write('totalbg_Nominal_ewk_alpgen',ROOT.TObject.kOverwrite)
                 # generate histograms for ewkbg xsec variations
                 if True:
                     bdir = fin.Get('%s_ewk5_xsecup'%QMAPN[iq])
                     assert bdir
                     allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
                     htot = make_total(system,allsamples,fout_D[iq])
-                    htot.Write('totalbg_nominal_ewk_xsecup',ROOT.TObject.kOverwrite)
+                    htot.Write('totalbg_Nominal_ewk_xsecup',ROOT.TObject.kOverwrite)
                     bdir = fin.Get('%s_ewk5_xsecdown'%QMAPN[iq])
                     assert bdir
                     allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
                     htot = make_total(system,allsamples,fout_D[iq])
-                    htot.Write('totalbg_nominal_ewk_xsecdown',ROOT.TObject.kOverwrite)
+                    htot.Write('totalbg_Nominal_ewk_xsecdown',ROOT.TObject.kOverwrite)
             if True:
                 bgsig=4
-                system='nominal'
+                system='Nominal'
                 allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[3],]
                 htot = make_total(system,allsamples,fout_D[iq])
-                htot.SetTitle('totalbg_nominal_unfoldPowhegJimmy')
+                htot.SetTitle('totalbg_Nominal_unfoldPowhegJimmy')
                 htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
             if True:
                 bgsig=1
-                system='nominal'
+                system='Nominal'
                 allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[4],]
                 htot = make_total(system,allsamples,fout_D[iq])
-                htot.SetTitle('totalbg_nominal_unfoldMCNLO')
+                htot.SetTitle('totalbg_Nominal_unfoldMCNLO')
                 htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
             if True:
                 bgsig=5
-                system='nominal'
+                system='Nominal'
                 allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[6],]
                 htot = make_total(system,allsamples,fout_D[iq])
-                htot.SetTitle('totalbg_nominal_qcdaverage')
+                htot.SetTitle('totalbg_Nominal_qcdaverage')
                 htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
             
     if fin and fin.IsOpen():
