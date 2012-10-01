@@ -11,5 +11,7 @@ setabins.reverse()
 setabins += (absetabins)
 
 if __name__ == '__main__':
+    print len(absetabins)
     print absetabins
+    print len(setabins)
     print setabins

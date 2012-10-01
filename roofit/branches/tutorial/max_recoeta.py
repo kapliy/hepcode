@@ -6,7 +6,7 @@ This script makes reco-level plots, comparing background-subtracted data with Po
 
 import sys,re
 import ROOT
-ROOT.gROOT.SetBatch(True)
+#ROOT.gROOT.SetBatch(True)
 
 q = 'POS'
 if len(sys.argv)>=2:
@@ -15,10 +15,11 @@ if len(sys.argv)>=2:
 print 'Charge =',q
 
 fname = 'OUT_09082012.v1.eta.1D.root'
-#fname = 'OUT_09212012.v1.eta.1D.root'
+#fname = 'OUT_09212012.v1.eta.1D.root' # new reco SF
+fname = 'OUT_09282012.newSF.v1.eta.1D.root' # new reco SF + Max trigger SF
 
 nominal='totalbg_Nominal'
-#nominal='totalbg_Nominal_qcdaverage'
+nominal='totalbg_Nominal_qcdaverage'
 
 if len(sys.argv)>=3:
     fname = sys.argv[2]

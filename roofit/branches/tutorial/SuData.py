@@ -12,7 +12,7 @@ from FileLock import FileLock
 # this is used to select default unfolding matrix
 MAP_BGSIG = {0:'pythia',1:'mcnlo',2:'alpgen_herwig',3:'alpgen_pythia',4:'powheg_herwig',5:'powheg_pythia'}
 # this is used to select specific monte-carlos for signal/qcd/etc
-MAP_BGQCD = {0:'mc',1:'bb',2:'JX',3:'driven',4:'driven_sub'}
+MAP_BGQCD = {0:'mc',1:'bb',2:'JX',3:'driven',4:'driven_sub',10:'mc_driven'}
 
 class SuSys:
     """ Generic class that describes where to get the data for one histogram (systematic).
@@ -760,10 +760,10 @@ class SuSample:
             return 1.0
         from MC import mc
         mrun = mc.match_sample(s.name)
-        # This is legacy QCD scaling ( for ntuple-based analysis via renormalize() )
+        # This is legacy QCD scaling ( for ntuple-based analysis via renormalize() ) - thus fully DISABLED
         # New histogram-based scaling is applied to the stack element (i.e., after summing SuSample's)
         qcdscale = 1.0
-        if re.search('mu15x',s.name):
+        if False and re.search('mu15x',s.name):
             qcdscale=s.qcdscale
             if qcdscale!=1.0:
                 print 'MC QCD: extra scaling by %.3f'%qcdscale
