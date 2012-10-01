@@ -61,8 +61,13 @@ fin_name = 'IN_08272012.v2.%dD.root'%DIM
 db_name = 'DB_09082012_POW8_ETA'
 fin_name = 'IN_09082012.v1.%s.%dD.root'%(eword,DIM)
 
+# new reco SF
 db_name = 'DB_09212012_POW8_ETA_NEWSF'
 fin_name = 'IN_09212012.v1.%s.%dD.root'%(eword,DIM)
+
+# new reco SF plus Max's update to trigger SF
+db_name = 'DB_09212012_POW8_ETA_NEWSF'
+fin_name = 'IN_09282012.newSF.v1.%s.%dD.root'%(eword,DIM)
 
 fout_name = re.sub('IN_','OUT_',fin_name)
 if os.path.exists(fin_name):

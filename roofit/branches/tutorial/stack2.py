@@ -121,7 +121,7 @@ parser.add_option("-q", "--charge",dest="charge",
                   type="int", default=2,
                   help="Which charge to plot: 0=POS, 1=NEG, 2=ALL")
 parser.add_option("--bgqcd",dest="bgqcd",
-                  type="int", default=0,
+                  type="int", default=3,
                   help="QCD: 0=Pythia bb/cc mu15X, 1=Pythia bbmu15X, 2=Pythia J0..J5, 3=data-driven, 4=data-driven with bgsub")
 parser.add_option("--bgsig",dest="bgsig",
                   type="int", default=2,
@@ -253,10 +253,11 @@ if True:
         assert False,'Unknown bgewk option: %s'%opts.bgewk
     #QCD:
     pw.adn(name='qcd_mc',label='bbmu15X/ccmu15X',samples=['mc_pythia_bbmu15x','mc_pythia_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
+    pw.adn(name='qcd_mc_driven',label='bbmu15X/ccmu15X',samples=['mc_pythia_bbmu15x','mc_pythia_ccmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd','driven'])
     pw.adn(name='qcd_bb',label='bbmu15X',samples=['mc_pythia_bbmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     pw.adn(name='qcd_JX',label='QCD J0..J5',samples=['mc_pythia_J%d'%v for v in xrange(5)],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     pw.adn(name='qcd_driven',label='QCD data-driven',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kCyan,flags=['bg','mc','qcd','driven'])
-    pw.adn(name='qcd_driven_sub',label='QCD data-driven',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kCyan,flags=['bg','mc','qcd','driven'])
+    pw.adn(name='qcd_driven_sub',label='QCD data-driven',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kCyan,flags=['bg','mc','qcd','driven_sub'])
     if opts.bgqcd in MAP_BGQCD.keys():
         pw.choose_qcd(opts.bgqcd)
     else:
@@ -683,10 +684,10 @@ def study_jet_calibration_effects():
 
 # combined plots
 if mode=='ALL' or mode=='all':
-    if True:
+    if False:
         plots = ['lepton_absetav','lpt','met','wmt']
-        plots = ['lepton_absetav']
-        plot_stacks(spR.clone(),plots,m=1,qs=(0,))
+        plots = [opts.hsource,]
+        plot_stacks(spR.clone(),plots,m=1,qs=(0,1,2))
     if False: # inclusive reco-level and truth-level asymmetry
         plot_any(spR.clone(q=0),spT.clone(q=0),m=2,do_unfold=True,do_errorsDA=True,do_summary=True,name='POS')
         plot_any(spR.clone(q=1),spT.clone(q=1),m=2,do_unfold=True,do_errorsDA=True,do_summary=True,name='NEG')
@@ -983,19 +984,21 @@ if mode=='qcdfit_2d':
 # Also can be used to perform stack comparison of TH1 and ntuple-based histograms
 if mode=='study_weights':
     spR.enable_nominal()
-    po.choose_qcd(3)
+    po.choose_qcd(opts.bgqcd)
     SuStackElm.new_scales = True
-    SuSample.debug = False
+    SuSample.debug = True
     x = '' # disable eta cut!
-    if opts.func == 'ZEBRA': # HACK: enable an eta cut
-        x = ' && fabs(l_eta)>=%f && fabs(l_eta)<=%f'%(absetabins[-2],absetabins[-1])
-    preNN = 'ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1'+x
-    preNQ = 'ptiso20/l_pt>0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2'+x
-    preFN = 'ptiso40/l_pt<0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1'+x
-    preFQ = 'ptiso20/l_pt>0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2'+x
+    if opts.func != 'gaus': # HACK: enable an eta cut
+        func = int(opts.func)
+        assert func>=0 and func<len(absetabins)-1,'Out of range func: %d'%func  #12
+        x = ' && fabs(l_eta)>=%f && fabs(l_eta)<=%f'%(absetabins[func],absetabins[func+1])
+    preNN = opts.preNN + x
+    preNQ = opts.preNQ + x
+    preFN = opts.preFN + x
+    preFQ = opts.preFQ + x
     presN = (preNN,preNN,preNQ) # pre strings for normal plots   (e.g., nominal or anti-isolation)
     presF = (preFN,preFN,preFQ) # pre strings for QCD fit region (e.g., lowering MET cut to zero)
-    qcdadd={'var':'w_mt','min':35,'max':100,'nbins':50,'descr':'antiso20_0p1_wmt','pre':presF}
+    #qcdadd={'var':'w_mt','min':35,'max':100,'nbins':50,'descr':'antiso20_0p1_wmt','pre':presF}
     qcdadd={'var':'met','min':0,'max':100,'nbins':50,'descr':'antiso20_0p1_met','pre':presF}
     if False: # histo-based plotting
         var='l_pt'
@@ -1208,19 +1211,19 @@ if mode=='abcd_mc':
     po.choose_ewk(bgewk)
     pre = opts.pre
     def make_A(a):
-        v = prunesub(a,['w_mt','met','ptiso40/l_pt'],'w_mt>40.0 && met>25.0 && ptiso40/l_pt<0.1')
+        v = prunesub(a,['nmuons','w_mt','met','ptiso40/l_pt'],'w_mt>40.0 && met>25.0 && ptiso40/l_pt<0.1 && nmuons<2')
         print 'A:',v
         return v
     def make_B(a):
-        v = prunesub(a,['w_mt','met','ptiso40/l_pt'],'w_mt>40.0 && met>25.0 && ptiso40/l_pt>=0.1')
+        v = prunesub(a,['nmuons','w_mt','met','ptiso40/l_pt'],'w_mt>40.0 && met>25.0 && ptiso40/l_pt>=0.1 && nmuons<2')
         print 'B:',v
         return v
     def make_C(a):
-        v = prunesub(a,['w_mt','met','ptiso40/l_pt'],'w_mt<=40 && met<=25.0 && ptiso40/l_pt<0.1')
+        v = prunesub(a,['nmuons','w_mt','met','ptiso40/l_pt'],'w_mt<=40 && met<=25.0 && ptiso40/l_pt<0.1 && nmuons<2')
         print 'C:',v
         return v
     def make_D(a):
-        v = prunesub(a,['w_mt','met','ptiso40/l_pt'],'w_mt<=40 && met<=25.0 && ptiso40/l_pt>=0.1')
+        v = prunesub(a,['nmuons','w_mt','met','ptiso40/l_pt'],'w_mt<=40 && met<=25.0 && ptiso40/l_pt>=0.1 && nmuons<2')
         print 'D:',v
         return v
     x =  ' && fabs(l_eta)>=%.2f && fabs(l_eta)<=%.2f'%(absetabins[ieta],absetabins[ieta+1])
@@ -1244,7 +1247,40 @@ if mode=='abcd_mc':
     hs = [hA,hB,hC,hD]
     c.plotAny(hs,M=M)
     OMAP.append(c)
-    
+
+if mode=='qcd_isolation':
+    SuStackElm.new_scales = False
+    iq = opts.charge
+    ieta = opts.preNN
+    ipt  = opts.preNQ
+    bgsig = opts.bgsig
+    po.choose_sig(bgsig)
+    bgewk = opts.bgewk
+    po.choose_ewk(bgewk)
+    pre = opts.pre
+    def make_H(a):
+        v = prunesub(a,['met','ptiso40/l_pt'],'ptiso40/l_pt<0.1')
+        print 'H:',v
+        return v
+    def make_A(a):
+        v = prunesub(a,['nmuons','met','ptiso40/l_pt'],'ptiso20/l_pt>0.1 && nmuons<2')
+        print 'A:',v
+        return v
+    #x =  ' && fabs(l_eta)>=%.2f && fabs(l_eta)<=%.2f'%(absetabins[ieta],absetabins[ieta+1])
+    #x += ' && l_pt>=%.2f && l_pt<=%.2f'%(ptbins[ipt],ptbins[ipt+1])
+    x=' '
+    hH = po.qcd('default',spRN.clone(pre = make_H(pre)+x))
+    hA = po.qcd('inverted',spRN.clone(pre = make_A(pre)+x))
+    hH.Unitize()
+    hA.Unitize()
+    c = SuCanvas('MET_SHAPE')
+    M = PlotOptions()
+    M.add('h','Signal-region MET',color=1,ratio=True)
+    M.add('hA','Anti-isolated region MET',color=2)
+    hs = [hH,hA]
+    c.plotAny(hs,M=M)
+    OMAP.append(c)
+
 if mode=='100': # creates efficiency histogram (corrects back to particle level)
     renormalize()
     c = SuCanvas()
