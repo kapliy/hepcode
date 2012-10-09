@@ -105,7 +105,7 @@ def eranges(name):
         else:
             bnr = cands[0]
         return (bnr,bnr)
-    elif name[0] == 'W': # finer binning for full 2011 dataset
+    elif name[0] == 'W': # finer binning for full 2011 dataset [never committed!]
         bn = int(name[1:-1])
         boundsP = [0.50,1.05,1.70,2.0,2.50]
         boundsA = [-z for z in reversed(boundsP)] + [0.00,] + boundsP
@@ -125,7 +125,25 @@ def eranges(name):
     elif name[0] == 'V': # super-fine used in the actual 2011 measurement
         bn = int(name[1:-1])
         boundsP = [0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
+        boundsA = [-z for z in reversed(boundsP)] + [0.00,] + boundsP
+        bounds = ordered_pairs(boundsA)
+        NN = len(bounds); # 22 bins
+        print 'Very fine analysis-motivated binning with %d bins for full 2011 dataset'%NN
+        assert bn < NN, 'Requested an eta bin beyond limits'
+        return (bounds[bn],bounds[bn])
+        cands = [ran for i,ran in enumerate(bounds) if ran[0] <= eta < ran[1]]
+        bnr = None
+        if len(cands)==0:
+            if eta<0: bnr = bounds[0]
+            if eta>0: bnr = bounds[NN-1]
+        else:
+            bnr = cands[0]
+        return (bnr,bnr)
+    elif name[0] == 'U': # super-fine used in the actual 2011 measurement, but slightly tuned to account for Muon geometry
+        bn = int(name[1:-1])
+        # 1.37 -> 1.30 (that's CALO and it also makes the 1.37..1.52 bin too small)
         #boundsP = [0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
+        boundsP  = [0.21,0.42,0.63,0.84,1.05,1.30,1.52,1.74,1.95,2.18,2.4]
         boundsA = [-z for z in reversed(boundsP)] + [0.00,] + boundsP
         bounds = ordered_pairs(boundsA)
         NN = len(bounds); # 22 bins
