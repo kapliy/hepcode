@@ -800,7 +800,16 @@ class SuSample:
     def make_habseta(name='habseta_template'):
         """ makes an instance of abseta histogram with detector-motivated binning """
         import array
-        bins = [0.0,0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4]
+        import binning
+        bins = binning.absetabins
+        a = array.array('f',bins)
+        return ROOT.TH1F(name,name,len(a)-1,a)
+    @staticmethod
+    def make_heta(name='heta_template'):
+        """ makes an instance of abseta histogram with detector-motivated binning """
+        import array
+        import binning
+        bins = binning.setabins
         a = array.array('f',bins)
         return ROOT.TH1F(name,name,len(a)-1,a)
     def histo(s,hname,dall,rebin=1.0,unitize=False):
@@ -825,9 +834,11 @@ class SuSample:
         """ retrieve a particular histogram from ntuple (with cache) """
         _HSPECIAL =  []   # special values of var and hsource
         _HSPECIAL += [('fabs(l_eta)','lepton_absetav')]
+        _HSPECIAL += [('l_eta','lepton_etav')]
         path = path if path else s.path
         key = None
-        if hsource=='lepton_absetav' and var=='fabs(l_eta)':
+        spair = (var,hsource)
+        if spair in _HSPECIAL:
             key = (s.rootpath,s.name,path,var,bin,cut,hsource)
         else:
             key = (s.rootpath,s.name,path,var,bin,cut)
@@ -855,10 +866,14 @@ class SuSample:
             hname = hname + '_' + s.name
             usebin,xtra = True,''
             # special handling to create variable-bin eta histograms:
-            if hsource=='lepton_absetav' and var=='fabs(l_eta)':
+            if spair == _HSPECIAL[0]:
                 s.habseta = s.make_habseta(hname)
                 usebin = False
                 xtra = ' with special abseta binning'
+            elif spair == _HSPECIAL[1]:
+                s.heta = s.make_heta(hname)
+                usebin = False
+                xtra = ' with special eta binning'
             print '--> creating %s%s'%(hname,xtra)
             sys.stdout.flush()
             # build from TNtuple
@@ -1446,6 +1461,7 @@ class SuStack:
         NMAP['dyan_mcnlo'] = 'dyan'
         NMAP['WW/WZ/ZZ'] = 'diboson'
         NMAP['qcd_driven'] = 'qcd'
+        NMAP['qcd_mc'] = 'qcd'
         NMAP['sig_powheg_pythia'] = 'wmunu'
         NMAP['sig_powheg_herwig'] = 'wmunu'
         NMAP['sig_mcnlo'] = 'wmunu'

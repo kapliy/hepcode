@@ -38,7 +38,9 @@ mkdir -p ${antondb}
 input=/share/t3data3/antonk/ana/ana_v29I_09082012_allwts_wptPow8_eta_stacoCB_all #changed to powheg8 wpt reweighting. Fixed alpgen. Added eta (vs |eta|) histograms.
 input=/share/t3data3/antonk/ana/ana_v29I_09082012_allwts_wptPow8_eta_newSF_stacoCB_all # added new reco-level scale factors in measurement bins
 input=/share/t3data3/antonk/ana/ana_v29I_09272012_allwts_wptPow8_eta_newSFTF_stacoCB_all # added trigger SF, too (from Max)
-input=/share/t3data3/antonk/ana/ana_v29I_09282012_allwts_wptPow8_eta_newSFTFQ_stacoCB_all  # added charge-dependent trigger SF from Max
+input=/share/t3data3/antonk/ana/ana_v29I_09282012_allwts_wptPow8_eta_newSFTFQ_stacoCB_all  # added charge-dependent trigger SF from Max. BUGGY
+input=/share/t3data3/antonk/ana/ana_v29I_1002012_allwts_wptPow8_eta_newSFTFQ_stacoCB_all #fixed
+
 
 ETAMODES="1 2" # 2=|eta| bins, 1=eta bins
 bgqcd=3
@@ -50,7 +52,7 @@ i=0
 irun=0
 
 gput tagis ${i} isofail "--isofail IsoFail20 " ; ((i++))
-gput tagis ${i} isowind "--isofail IsoWind20 " ; ((i++))
+#gput tagis ${i} isowind "--isofail IsoWind20 " ; ((i++))
 
 gput tagzs ${i} met0to80 "--lvar met --lbin 50,0,80 " ; ((i++))
 gput tagzs ${i} wmt40to90 "--lvar wmt --lbin 50,40,90 "  ; ((i++))

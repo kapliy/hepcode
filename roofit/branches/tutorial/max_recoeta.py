@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-This script makes reco-level plots, comparing background-subtracted data with PowhegPythia MC
+This script makes reco-level plots, comparing background-subtracted data with PowhegPythia (or some other) MC
 """
 
 import sys,re
@@ -17,9 +17,13 @@ print 'Charge =',q
 fname = 'OUT_09082012.v1.eta.1D.root'
 #fname = 'OUT_09212012.v1.eta.1D.root' # new reco SF
 fname = 'OUT_09282012.newSF.v1.eta.1D.root' # new reco SF + Max trigger SF
+fname = 'OUT_09282012.newSFTFQ.v1.eta.1D.root' # new reco SF + Max trigger SF (charge-dependent)
 
 nominal='totalbg_Nominal'
+nominal='totalbg_Nominal_qcdmc'
 nominal='totalbg_Nominal_qcdaverage'
+
+MC = 'PowhegPythia'
 
 if len(sys.argv)>=3:
     fname = sys.argv[2]
@@ -33,18 +37,18 @@ data,bg,sig = None,None,None
 if q in ('POS','NEG'): # grab mu+ or mu- histograms directly
     zdata = f.Get("%s/data"%q); assert zdata
     zbg   = f.Get("%s/%s"%(q,nominal)); assert zbg
-    zsig =  f.Get("%s/wmunu_PowhegPythia_Nominal"%q); assert zsig
+    zsig =  f.Get("%s/wmunu_%s_Nominal"%(q,MC)); assert zsig
     data,bg,sig = zdata,zbg,zsig
 else: # OR: add up mu+ and mu- histograms to get combined charge histograms
     qorig = q
     q = 'POS'
     data = f.Get("%s/data"%q); assert data
     bg   = f.Get("%s/%s"%(q,nominal)); assert bg
-    sig =  f.Get("%s/wmunu_PowhegPythia_Nominal"%q); assert sig
+    sig =  f.Get("%s/wmunu_%s_Nominal"%(q,MC)); assert sig
     q = 'NEG'
     zdata = f.Get("%s/data"%q); assert zdata
     zbg   = f.Get("%s/%s"%(q,nominal)); assert zbg
-    zsig =  f.Get("%s/wmunu_PowhegPythia_Nominal"%q); assert zsig
+    zsig =  f.Get("%s/wmunu_%s_Nominal"%(q,MC)); assert zsig
     data.Add(zdata)
     bg.Add(zbg)
     sig.Add(zsig)

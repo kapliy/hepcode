@@ -65,7 +65,7 @@ parser.add_option("--isofail",dest="isofail",
                   type="string", default='IsoFail20', #IsoWind20
                   help="QCD fits: QCD template anti-isolation")
 parser.add_option("--cut",dest="cut",
-                  type="string", default='mcw*puw', # *effw*trigw
+                  type="string", default='mcw*puw*wzptw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw',
                   help="Additional cut to select events")
 parser.add_option("--hsource",dest="hsource",
                   type="string", default='%s/st_%s_final/%s',
@@ -684,7 +684,7 @@ def study_jet_calibration_effects():
 
 # combined plots
 if mode=='ALL' or mode=='all':
-    if False:
+    if True:
         plots = ['lepton_absetav','lpt','met','wmt']
         plots = [opts.hsource,]
         plot_stacks(spR.clone(),plots,m=1,qs=(0,1,2))
@@ -920,21 +920,65 @@ if mode=='prepare_qcd_1d' or mode=='prepare_qcd_2d':
     SuStackElm.new_scales = False
     assert opts.extra
     fname = opts.extra
-    po.choose_sig(5)
     itot = 0
-    for ewksig in (5,2):
-        po.choose_ewk(ewksig)
-        po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),mode='RECREATE' if itot==0 else 'UPDATE',dname='POS_ewk%d'%ewksig); itot+=1
-        po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_ewk%d'%ewksig);  itot+=1
+    # prepare for nominal
+    sig=5
+    ewk=5
+    po.choose_sig(sig)
+    po.choose_ewk(ewk)
+    po.choose_qcd(3)
+    DONE = []
+    # variation of ewk subtraction
+    sig=5
+    for ewk in (5,2,1):
+        po.choose_sig(sig)
+        po.choose_ewk(ewk)
+        if (sig,ewk) not in DONE:
+            po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),mode='RECREATE' if itot==0 else 'UPDATE',dname='POS_sig%d_ewk%d'%(sig,ewk)); itot+=1
+            po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_sig%d_ewk%d'%(sig,ewk));  itot+=1
+        DONE.append( (sig,ewk) )
+    # variation of signal
+    ewk=5
+    for sig in (5,4,1):
+        po.choose_sig(sig)
+        po.choose_ewk(ewk)
+        if (sig,ewk) not in DONE:
+            po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),dname='POS_sig%d_ewk%d'%(sig,ewk)); itot+=1
+            po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_sig%d_ewk%d'%(sig,ewk));  itot+=1
+        DONE.append( (sig,ewk) )
+    # variation of qcd template shape (iso-window instead of iso-reversion)
+    if True:
+        sig=5
+        ewk=5
+        po.choose_sig(sig)
+        po.choose_ewk(ewk)
+        sysdir_wind=[tightlvl+'Nominal'+jetlvl,tightlvl+'Nominal'+jetlvl,'IsoWind20'+jetlvl]
+        po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var,sysdir=sysdir_wind),dname='POS_sig%d_ewk%d_qcdwind'%(sig,ewk)); itot+=1
+        po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var,sysdir=sysdir_wind),dname='NEG_sig%d_ewk%d_qcdwind'%(sig,ewk)); itot+=1
+    # variation of qcd template shape: monte-carlo-driven template. This is automatically pre-normalized!
+    if True:
+        SuStackElm.new_scales = True
+        sig=5
+        ewk=5
+        po.choose_sig(sig)
+        po.choose_ewk(ewk)
+        po.choose_qcd(0)
+        po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),dname='POS_sig%d_ewk%d_qcdmc'%(sig,ewk)); itot+=1
+        po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_sig%d_ewk%d_qcdmc'%(sig,ewk)); itot+=1
+        SuStackElm.new_scales = False
+        po.choose_qcd(3)
     # variation of electroweak normalization
     if True:
-        po.choose_ewk(5)
+        ewk=5
+        sig=5
+        po.choose_sig(sig)
+        po.choose_ewk(ewk)
         SuSample.xsecerr = 1
-        po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),mode='RECREATE' if itot==0 else 'UPDATE',dname='POS_ewk5_xsecup'); itot+=1
-        po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_ewk5_xsecup');  itot+=1
+        po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),dname='POS_sig%d_ewk%d_xsecup'%(sig,ewk)); itot+=1
+        po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_sig%d_ewk%d_xsecup'%(sig,ewk));  itot+=1
         SuSample.xsecerr = -1
-        po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),mode='RECREATE' if itot==0 else 'UPDATE',dname='POS_ewk5_xsecdown'); itot+=1
-        po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_ewk5_xsecdown');  itot+=1
+        po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),dname='POS_sig%d_ewk%d_xsecdown'%(sig,ewk)); itot+=1
+        po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_sig%d_ewk%d_xsecdown'%(sig,ewk));  itot+=1
 # comprehensive study of qcd fits in 2d: pt x eta bins, using histograms.
 # UPD: now also supports 1D and 0D (all-inclusive) fits
 if mode=='qcdfit_2d':
@@ -1280,6 +1324,18 @@ if mode=='qcd_isolation':
     hs = [hH,hA]
     c.plotAny(hs,M=M)
     OMAP.append(c)
+
+if mode=='one_plot':
+    if True:
+        SuStackElm.new_scales = False
+        spR.enable_nominal()
+    plots = [opts.hsource,]
+    plot_stacks(spR.clone(),plots,m=1,qs=(0,1,2))
+
+if mode=='one_plot_nt':
+    SuStackElm.new_scales = False
+    plots = [opts.hsource,]
+    plot_stacks(spRN.clone(),plots,m=1,qs=(0,1,2))
 
 if mode=='100': # creates efficiency histogram (corrects back to particle level)
     renormalize()

@@ -1,10 +1,32 @@
+OCTOBER:
+* Finish coding wmunu truth navigator in w asym
+  Reconstruct truth BEFORE any kinematic cuts. Only apply cuts in the study or 
+  Create unfolding ntuple.
+* Check that reco efficiency is applied correctly for zmumu events. What about iso/trig efficiency?
+* Re-run October 4 version in TrigFTKAna_trunk with new MCP-curvature offsets.
+  Perhaps this will/can fix the ugly hole?
+* Re-generate MCP scripts with coarser binning that follows detector geometry
+* Finish QCD bg-subtraction estimate.
+* Study QCD: saw funny business between MC template vs data-driven.
 
+UNFOLDING AND WEIGHTS:
+Consider this simplified example.
+Suppose there are no bin-by-bin migrations.
+Suppose there are no backgrounds, so the data histogram is already the reco-level signal histogram.
+Suppose trigger efficiency scale factor in 0.5 for |eta|<1 and 1.0 otherwise.
+I.e., triggered events in data exhibit a ~50% dip in central region, which is not modeled by MC.
+Input into unfolding: a data (=signal) histogram that exhibits the dip.
+Output from unfolding: a truth-level histogram without a dip.
+
+
+
+Peter:
+Make a stack plot of W reconstruction vs phi in the specific bin that gives trouble.
 
 Anton:
 * Finish bg-subtraction in QCD template.
-* Make a plot using MC-based background!
 * Repeat x-vs-eta plots in Z events. Worry: require two trigger matches? Not really, but applying two trigger scale factors
-
+* Check: correctly applying event scale factors for events with multiple particles (muons)?
 Peter:
 do eta/phi plot. Or eta/phi but divide by large/small muon module.
 

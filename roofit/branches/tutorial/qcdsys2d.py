@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-./qcdsys2d.py 1 1; ./qcdsys2d.py 1 2 ; ./qcdsys2d.py 2 1 ; ./qcdsys2d.py 2 2
+./qcdsys2d.py 1 1 && ./qcdsys2d.py 1 2 && ./qcdsys2d.py 2 1 && ./qcdsys2d.py 2 2 && echo OK
 
 A small script that summarizes QCD systematic deviations
 due to different signal MC or different fit variables.
@@ -24,7 +24,7 @@ import antondb
 msys = []
 for xsecerr in [ (0,) ]:
     for bgewk in [ (5,),(2,) ]:
-        #for isofail in [ ('loose_isofail',),('isowind',) ] [:] :
+        #for isofail in [ ('IsoFail20',),('IsoWind20',) ] [:] :
         for isofail in [ ('IsoFail20',) ]:
             for ivar in [ ('met','50,0,80'),('met','50,0,90'),('wmt','50,40,90'),('wmt','50,35,100') ]:
                 msys.append( xsecerr+bgewk+isofail+ivar )
@@ -34,7 +34,7 @@ bgsigs = [5,4,1][:]
 QMAP = {0:'mu+',1:'mu-',2:'both charges'}
 QMAPN = {0:'POS',1:'NEG',2:'ALL'}
 SIGMAP = { 1 : "MC@NLO", 2 : 'Alpgen+Her', 4 : "PowHeg+Herwig", 5 : "PowHeg+Pythia" }
-FQNAMES = { 0 : 'POS_ewk5', 1 : 'NEG_ewk5' }
+FQNAMES = { 0 : 'POS_sig5_ewk5', 1 : 'NEG_sig5_ewk5' }
 
 DIM = 2  # 2d fits in pt x eta
 if len(sys.argv)>=2 and sys.argv[1]=='1':
@@ -65,9 +65,9 @@ fin_name = 'IN_09082012.v1.%s.%dD.root'%(eword,DIM)
 db_name = 'DB_09212012_POW8_ETA_NEWSF'
 fin_name = 'IN_09212012.v1.%s.%dD.root'%(eword,DIM)
 
-# new reco SF plus Max's update to trigger SF
-db_name = 'DB_09212012_POW8_ETA_NEWSF'
-fin_name = 'IN_09282012.newSF.v1.%s.%dD.root'%(eword,DIM)
+# new reco SF plus Max's update to trigger SF (per charge)
+db_name = 'DB_09282012_POW8_ETA_NEWSFTFQ'
+fin_name = 'IN_09282012.newSFTFQ.v1.%s.%dD.root'%(eword,DIM)
 
 fout_name = re.sub('IN_','OUT_',fin_name)
 if os.path.exists(fin_name):
@@ -176,8 +176,8 @@ if __name__=='__main__':
             qcd = adir.Get('qcd').Clone()
             # nominal, qcdup, qcddown[2]                    PowhegHerwig  MC@NLO[4]    MC-averaged    global-scale[6]  scale-factor[7] scale-factor-global[8]
             QCD = [ qcd.Clone(), qcd.Clone(), qcd.Clone() ,   qcd.Clone() , qcd.Clone() , qcd.Clone()  , qcd.Clone() ,   qcd.Clone() ,  qcd.Clone()]
-            #       frac[9]        frac[10]-glo    absfrac[11]    absfrac-glob[12]
-            QCD += [ qcd.Clone(), qcd.Clone()     , qcd.Clone() , qcd.Clone() ]
+            #       frac[9]        frac[10]-glo    absfrac[11]    absfrac-glob[12]  Spare[13]
+            QCD += [ qcd.Clone(), qcd.Clone()     , qcd.Clone() , qcd.Clone() ,    qcd.Clone() ]
             QCD[0].SetTitle('qcd_PowhegPythia')
             QCD[1].SetTitle('qcd_PowhegPythiaUp')
             QCD[2].SetTitle('qcd_PowhegPythiaDown')
@@ -331,11 +331,15 @@ if __name__=='__main__':
             if True:
                 bgsig=5
                 adir.Get('data').Write('data',ROOT.TObject.kOverwrite)
+                adir4 = fin.Get('%s_sig4_ewk5'%QMAPN[iq]); assert adir4
+                adir1 = fin.Get('%s_sig1_ewk5'%QMAPN[iq]); assert adir1
                 for system in systems:
                     allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
                     htot = make_total(system,allsamples,fout_D[iq])
                     htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
                     adir.Get('wmunu_'+system).Write('wmunu_PowhegPythia_'+system,ROOT.TObject.kOverwrite)
+                    adir4.Get('wmunu_'+system).Write('wmunu_PowhegHerwig_'+system,ROOT.TObject.kOverwrite)
+                    adir1.Get('wmunu_'+system).Write('wmunu_McAtNlo_'+system,ROOT.TObject.kOverwrite)
                 # manually generate nominal histograms with qcd Up/Down variations
                 system='Nominal'
                 allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[1],]
@@ -361,23 +365,32 @@ if __name__=='__main__':
                 QCD[11].Write(QCD[11].GetTitle(),ROOT.TObject.kOverwrite)
                 # generate histograms for alpgen bg subtraction
                 if True:
-                    bdir = fin.Get('%s_ewk2'%QMAPN[iq])
+                    bdir = fin.Get('%s_sig5_ewk2'%QMAPN[iq])
                     assert bdir
                     allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
                     htot = make_total(system,allsamples,fout_D[iq])
                     htot.Write('totalbg_Nominal_ewk_alpgen',ROOT.TObject.kOverwrite)
                 # generate histograms for ewkbg xsec variations
                 if True:
-                    bdir = fin.Get('%s_ewk5_xsecup'%QMAPN[iq])
+                    bdir = fin.Get('%s_sig5_ewk5_xsecup'%QMAPN[iq])
                     assert bdir
                     allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
                     htot = make_total(system,allsamples,fout_D[iq])
                     htot.Write('totalbg_Nominal_ewk_xsecup',ROOT.TObject.kOverwrite)
-                    bdir = fin.Get('%s_ewk5_xsecdown'%QMAPN[iq])
+                    bdir = fin.Get('%s_sig5_ewk5_xsecdown'%QMAPN[iq])
                     assert bdir
                     allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
                     htot = make_total(system,allsamples,fout_D[iq])
                     htot.Write('totalbg_Nominal_ewk_xsecdown',ROOT.TObject.kOverwrite)
+                # generate histograms for MC-based BG subtraction & global normalization
+                if True:
+                    bdir = fin.Get('%s_sig5_ewk5_qcdmc'%QMAPN[iq])
+                    assert bdir
+                    allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [bdir.Get('qcd').Clone(),]
+                    htot = make_total(system,allsamples,fout_D[iq])
+                    htot.SetTitle('totalbg_Nominal_qcdmc')
+                    htot.Write(htot.GetTitle(),ROOT.TObject.kOverwrite)
+            # totalbg where QCD has been fit using only a particular EWK MC (to correlate QCD with unfolding)
             if True:
                 bgsig=4
                 system='Nominal'
