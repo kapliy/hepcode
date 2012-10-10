@@ -257,7 +257,7 @@ if True:
     pw.adn(name='qcd_bb',label='bbmu15X',samples=['mc_pythia_bbmu15x'],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     pw.adn(name='qcd_JX',label='QCD J0..J5',samples=['mc_pythia_J%d'%v for v in xrange(5)],color=ROOT.kCyan,flags=['bg','mc','qcd'])
     pw.adn(name='qcd_driven',label='QCD data-driven',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kCyan,flags=['bg','mc','qcd','driven'])
-    pw.adn(name='qcd_driven_sub',label='QCD data-driven',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kCyan,flags=['bg','mc','qcd','driven_sub'])
+    pw.adn(name='qcd_driven_sub',label='QCD data-driven',samples=['data_period%s'%s for s in _DATA_PERIODS]+['mc_powheg_pythia_wminmunu','mc_powheg_pythia_wplusmunu'  ,  'mc_mcnlo_ttbar','mc_acer_schan_munu','mc_acer_schan_taunu','mc_acer_tchan_munu','mc_acer_tchan_taunu','mc_acer_wt'  ,  'mc_powheg_pythia_ztautau','mc_powheg_pythia_zmumu','mc_powheg_pythia_wplustaunu','mc_powheg_pythia_wmintaunu','mc_pythia_dyan'   ,   'mc_herwig_ww','mc_herwig_wz','mc_herwig_zz'],color=ROOT.kCyan,flags=['bg','mc','qcd','driven_sub'],sample_weights_bgsub=True)
     if opts.bgqcd in MAP_BGQCD.keys():
         pw.choose_qcd(opts.bgqcd)
     else:
@@ -684,7 +684,7 @@ def study_jet_calibration_effects():
 
 # combined plots
 if mode=='ALL' or mode=='all':
-    if True:
+    if False:
         plots = ['lepton_absetav','lpt','met','wmt']
         plots = [opts.hsource,]
         plot_stacks(spR.clone(),plots,m=1,qs=(0,1,2))
@@ -1336,6 +1336,15 @@ if mode=='one_plot_nt':
     SuStackElm.new_scales = False
     plots = [opts.hsource,]
     plot_stacks(spRN.clone(),plots,m=1,qs=(0,1,2))
+
+if mode=='qcd_bgsub':
+    # studying background subtraction in data-driven qcd template
+    spR.enable_nominal()
+    plots = [opts.hsource,]
+    po.choose_qcd(3)
+    plot_stacks(spR.clone(),plots,m=1,qs=(opts.charge,),name='QCD3')
+    po.choose_qcd(4)
+    plot_stacks(spR.clone(),plots,m=1,qs=(opts.charge,),name='QCD4')
 
 if mode=='100': # creates efficiency histogram (corrects back to particle level)
     renormalize()
