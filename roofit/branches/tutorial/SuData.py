@@ -931,9 +931,11 @@ class SuStackElm:
     For example: jimmy_wmunu_np{0..5}
     """
     new_scales = True
-    def __init__(s,name,label,samples,color=ROOT.kBlack,flags=[],table={},po=None):
+    def __init__(s,name,label,samples,color=ROOT.kBlack,flags=[],table={},po=None,sample_weights=None):
         """ constructor """
         s.samples = [SuSample(a) for a in samples]
+        assert sample_weights!=None,'Programming bug: sample_weights should be set to 1.0 if not used'
+        s.sample_weights = sample_weights  # additional weight for each sample. E.g., -1.0 for qcd template bg subtraction
         s.name = name     # internal name to refer to this set of SuSamples
         s.label = label   # label used in printouts and on the legend
         s.color = color
@@ -954,10 +956,11 @@ class SuStackElm:
         """ sum histogram of all subsamples """
         if len(s.samples)==0:
             return None
+        assert len(s.samples) == len(s.sample_weights),'Unequal number of samples (%d) and sample weights (%d)'%(len(s.samples),len(s.sample_weights))
         res = s.samples[0].histo(hname,d,rebin=rebin)
-        for h in s.samples[1:]:
+        for ih,h in enumerate(s.samples[1:]):
             htmp = h.histo(hname,d.clone(),rebin=rebin)
-            res.Add(htmp)
+            res.Add(htmp,s.sample_weights[ih+1])
         if res:
             res.SetLineColor(ROOT.kBlack)
             res.SetFillColor(s.color)
@@ -1083,17 +1086,24 @@ class SuStack:
                 sys.stdout.flush()
                 tot += sam.nentries()
         print 'Total:',tot
-    def add(s,name,samples,color,flags=[],table={},label=None):
+    def add(s,name,samples,color,flags=[],table={},label=None,sample_weights=None,sample_weights_bgsub=False):
         """ backward-compatible interface:
             po.add(label='t#bar{t}',samples='mc_jimmy_ttbar',color=ROOT.kGreen)
+            if sample_weights_bgsub is set to True, all samples that start with mc_ automatically get a weight of -1.0
         """
         if not isinstance(samples,list):
             samples = [samples,]
         if label==None: label = name
-        s.elm.append( SuStackElm(name,label,samples,color,flags,table,po=s) )
-    def adn(s,name,samples,color,flags=[],table={},label=None):
+        if sample_weights==None:
+            if sample_weights_bgsub==True:
+                sample_weights = [-1.0 if re.match('mc_',sam) else 1.0 for sam in samples]
+            else:
+                sample_weights = [1.0]*len(samples)
+        assert sample_weights[0]==1.0,'Attention: first weight HAS to be 1.0'
+        s.elm.append( SuStackElm(name,label,samples,color,flags,table,po=s,sample_weights=sample_weights) )
+    def adn(s,name,samples,color,flags=[],table={},label=None,sample_weights=None,sample_weights_bgsub=False):
         """ add with flags=['no',...] """
-        return s.add(name,samples,color,flags+['no'],table,label)
+        return s.add(name,samples,color,flags+['no'],table,label,sample_weights,sample_weights_bgsub)
     def load_unfolding(s):
         """ Loads unfolding migration matrices """
         # make sure RooUnfold.so is loadable:
@@ -1461,6 +1471,7 @@ class SuStack:
         NMAP['dyan_mcnlo'] = 'dyan'
         NMAP['WW/WZ/ZZ'] = 'diboson'
         NMAP['qcd_driven'] = 'qcd'
+        NMAP['qcd_driven_sub'] = 'qcd'
         NMAP['qcd_mc'] = 'qcd'
         NMAP['sig_powheg_pythia'] = 'wmunu'
         NMAP['sig_powheg_herwig'] = 'wmunu'

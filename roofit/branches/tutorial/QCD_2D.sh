@@ -1,7 +1,7 @@
 #!/bin/bash
 #PBS -q uct3
-#PBS -l cput=23:00:00
-#PBS -l walltime=23:00:00
+#PBS -l cput=3:00:00
+#PBS -l walltime=3:00:00
 #PBS -m e
 #qsub -v id=$i -N QCD2D${i} -o /home/antonk/roofit/logs/log.${i}.stdout -e /home/antonk/roofit/logs/log.${i}.stderr QCD_2D.sh
 
@@ -30,7 +30,7 @@ source bashmap.sh
 SMART_KILLER="./smart_killer.sh"
 #SMART_KILLER=""
 
-antondb='HISTO_09282012_POW8_ETA_NEWSFTFQ'
+antondb='HISTO_09282012_POW8_ETA_NEWSFTFQ_QCD4'
 mkdir -p ${antondb}
 #input=/share/t3data3/antonk/ana/ana_v29G_07252012_newROOT_stacoCB_all
 #input=/share/t3data3/antonk/ana/ana_v29G_08242012_allwts_V29I_stacoCB_all  # ALL weights + v29i ntuple + jerup/down
@@ -43,7 +43,7 @@ input=/share/t3data3/antonk/ana/ana_v29I_1002012_allwts_wptPow8_eta_newSFTFQ_sta
 
 
 ETAMODES="1 2" # 2=|eta| bins, 1=eta bins
-bgqcd=3
+bgqcd=4   # FIXME 3 = without bg subtraction
 bgsigs="1 4 5"
 var='met'
 ipts=`echo {0..6} ALL`

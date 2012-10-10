@@ -66,8 +66,13 @@ db_name = 'DB_09212012_POW8_ETA_NEWSF'
 fin_name = 'IN_09212012.v1.%s.%dD.root'%(eword,DIM)
 
 # new reco SF plus Max's update to trigger SF (per charge)
+db_name = 'DB_09282012_POW8_ETA_NEWSFTFQ_QCD4'  # bg-subtracted qcd
+fin_name = 'IN_09282012.newSFTFQ_QCD4.v1.%s.%dD.root'%(eword,DIM)
+
+# new reco SF plus Max's update to trigger SF (per charge)
 db_name = 'DB_09282012_POW8_ETA_NEWSFTFQ'
 fin_name = 'IN_09282012.newSFTFQ.v1.%s.%dD.root'%(eword,DIM)
+
 
 fout_name = re.sub('IN_','OUT_',fin_name)
 if os.path.exists(fin_name):
