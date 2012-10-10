@@ -179,10 +179,10 @@ if __name__=='__main__':
             samples = [re.sub('_Nominal','',key.GetName()) for key in adir.GetListOfKeys() if re.search('Nominal',key.GetName())]
             systems = [re.sub('wmunu_','',key.GetName()) for key in adir.GetListOfKeys() if re.match('wmunu_',key.GetName())]
             qcd = adir.Get('qcd').Clone()
-            # nominal, qcdup, qcddown[2]                    PowhegHerwig  MC@NLO[4]    MC-averaged    global-scale[6]  scale-factor[7] scale-factor-global[8]
-            QCD = [ qcd.Clone(), qcd.Clone(), qcd.Clone() ,   qcd.Clone() , qcd.Clone() , qcd.Clone()  , qcd.Clone() ,   qcd.Clone() ,  qcd.Clone()]
-            #       frac[9]        frac[10]-glo    absfrac[11]    absfrac-glob[12]  Spare[13]
-            QCD += [ qcd.Clone(), qcd.Clone()     , qcd.Clone() , qcd.Clone() ,    qcd.Clone() ]
+            #        nominal[0] qcdup[1]   qcddown[2]      PowhegHerwig[3]   MC@NLO[4]    MC-avg[5]    glob[6]         SF[7]         SF-glob[8]
+            QCD = [ qcd.Clone(), qcd.Clone(), qcd.Clone() ,   qcd.Clone() , qcd.Clone() , qcd.Clone() , qcd.Clone() , qcd.Clone() , qcd.Clone()]
+            #       frac[9]      frac-glob[10]    absfrac[11]    absfrac-glob[12]  frac-avg[13]   absfrac-avg[14]
+            QCD += [ qcd.Clone(), qcd.Clone()     , qcd.Clone() , qcd.Clone() ,    qcd.Clone()  , qcd.Clone() ]
             QCD[0].SetTitle('qcd_PowhegPythia')
             QCD[1].SetTitle('qcd_PowhegPythiaUp')
             QCD[2].SetTitle('qcd_PowhegPythiaDown')
@@ -200,10 +200,16 @@ if __name__=='__main__':
             QCD[10].Reset()
             QCD[11].SetTitle('qcd_FractionStackError')
             QCD[11].Reset()
+            QCD[12].SetTitle('qcd_FractionGlobalStackError')
+            QCD[12].Reset()
+            QCD[13].SetTitle('qcd_Fraction_MCAverage')
+            QCD[13].Reset()
+            QCD[14].SetTitle('qcd_FractionStackError_MCAverage')
+            QCD[14].Reset()
         # first handle inclusive (in both pt and eta) bins
         scalesL = []
         fracs   = []
-        for bgsig in (1,4,5):
+        for bgsig in (1,4,5): # bgsigs
             idx,frac,scale,scaleE,chindf,scaleL,scaleLE = get(iq,bgsig,'ALL','ALL')
             scalesL += scaleL
             fracs += frac
@@ -281,7 +287,7 @@ if __name__=='__main__':
                 print >>f,'<TR>'
                 print >>f,'<TD style="width:%dpx;">'%COLH,'Total QCD uncert.','</TD>'
                 for ieta in xrange(0,len(etabins)-1):
-                    print >>f,'<TD style="width:%dpx;">'%COLW,'%.1f %%'%(relF[ieta]*mean(fracs[ieta])*100.0),'</TD>'
+                    print >>f,'<TD style="width:%dpx;">'%COLW,'%.1f %%'%(rms(fracs[ieta])*100.0),'</TD>'
                 print >>f,'</TR>'
                 # NOW handle ROOT histograms
                 if fin:
@@ -326,10 +332,16 @@ if __name__=='__main__':
             print >>f,'<TR>'
             print >>f,'<TD style="width:%dpx;">'%COLH,'Total QCD uncert.','</TD>'
             for ieta in xrange(0,len(etabins)-1):
-                relF = rms(Afracs[ieta])/mean(Afracs[ieta])
-                print >>f,'<TD style="width:%dpx;">'%COLW,'%.1f %%'%(relF*mean(Afracs[ieta])*100.0),'</TD>'
+                print >>f,'<TD style="width:%dpx;">'%COLW,'%.1f %%'%(rms(Afracs[ieta])*100.0),'</TD>'
             print >>f,'</TR>'
             print >>f,'</TABLE>'
+            # NOW handle ROOT histograms
+            if fin:
+                for ieta in xrange(0,len(etabins)-1):
+                    ibin = QCD[7].FindFixBin(etabins[ieta]+1e-6,ptbins[ipt]+1e-6) if ipt!='ALL' else QCD[7].FindFixBin(etabins[ieta]+1e-6)
+                    QCD[13].SetBinContent(ibin,mean(Afracs[ieta]))
+                    QCD[13].SetBinError(ibin,rms(Afracs[ieta]))
+                    QCD[14].SetBinContent(ibin,rms(Afracs[ieta])*100.0)
         if fin:
             # generate total histograms for detector systematics
             fout_D[iq].cd()
@@ -368,6 +380,9 @@ if __name__=='__main__':
                 QCD[10].Write(QCD[10].GetTitle(),ROOT.TObject.kOverwrite)
                 QCD[11].SetTitle('qcd_fraction_stack_error')
                 QCD[11].Write(QCD[11].GetTitle(),ROOT.TObject.kOverwrite)
+                # new fractions
+                QCD[13].Write(QCD[13].GetTitle(),ROOT.TObject.kOverwrite)
+                QCD[14].Write(QCD[14].GetTitle(),ROOT.TObject.kOverwrite)
                 # generate histograms for alpgen bg subtraction
                 if True:
                     bdir = fin.Get('%s_sig5_ewk2'%QMAPN[iq])

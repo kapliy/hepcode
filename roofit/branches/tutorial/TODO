@@ -1,12 +1,9 @@
 OCTOBER:
-* Finish coding wmunu truth navigator in w asym
-  Reconstruct truth BEFORE any kinematic cuts. Only apply cuts in the study or 
-  Create unfolding ntuple.
-* Check that reco efficiency is applied correctly for zmumu events. What about iso/trig efficiency?
-* Re-run October 4 version in TrigFTKAna_trunk with new MCP-curvature offsets.
-  Perhaps this will/can fix the ugly hole?
+* simplify qcdsys2d.py script. rms(qcdfrac) = final figure of merit?
+* DONE: Re-run October 4 version in TrigFTKAna_trunk with new MCP-curvature offsets.
+  Perhaps this will/can fix the ugly hole? - NOPE
 * Re-generate MCP scripts with coarser binning that follows detector geometry
-* Finish QCD bg-subtraction estimate.
+* DONE: Finish QCD bg-subtraction estimate. Needs more study.
 * Study QCD: saw funny business between MC template vs data-driven.
 
 UNFOLDING AND WEIGHTS:
