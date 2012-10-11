@@ -1,10 +1,16 @@
 OCTOBER:
-* simplify qcdsys2d.py script. rms(qcdfrac) = final figure of merit?
+* Study QCD bg subtraction: overlay templates with and without subtraction on each other with ratio!
+* DONE: Finish QCD bg-subtraction estimate. Needs more study: QCD is generally down with bg-subtracted templates. But why??
+* Study QCD: saw funny business between MC template vs data-driven.
+
+* LOOKING Study why powheg pythia->herwig reweighting does not improve C_W (IDEA: found bug in ana_wasym reweighting)
+  DOING: See if it improves the spectra at least
+  IF FAILS: Can check for improvement in 1D spectra in the toy MC script, too. Can apply fiducial cuts here, too.
+* TODO: simplify qcdsys2d.py script. rms(qcdfrac) = final figure of merit?
 * DONE: Re-run October 4 version in TrigFTKAna_trunk with new MCP-curvature offsets.
   Perhaps this will/can fix the ugly hole? - NOPE
 * Re-generate MCP scripts with coarser binning that follows detector geometry
-* DONE: Finish QCD bg-subtraction estimate. Needs more study.
-* Study QCD: saw funny business between MC template vs data-driven.
+  WHY is Max seeing funny MCP numbers?
 
 UNFOLDING AND WEIGHTS:
 Consider this simplified example.
