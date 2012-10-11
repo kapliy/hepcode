@@ -926,7 +926,8 @@ if mode=='prepare_qcd_1d' or mode=='prepare_qcd_2d':
     ewk=5
     po.choose_sig(sig)
     po.choose_ewk(ewk)
-    po.choose_qcd(3)
+    assert opts.bgqcd in (3,4), 'Possible error: prepare_qcd should operate on bgqcd = 3 (anti-iso) or 4 (anti-iso + bg subtraction)'
+    po.choose_qcd(opts.bgqcd)
     DONE = []
     # variation of ewk subtraction
     sig=5
@@ -966,7 +967,7 @@ if mode=='prepare_qcd_1d' or mode=='prepare_qcd_2d':
         po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),dname='POS_sig%d_ewk%d_qcdmc'%(sig,ewk)); itot+=1
         po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_sig%d_ewk%d_qcdmc'%(sig,ewk)); itot+=1
         SuStackElm.new_scales = False
-        po.choose_qcd(3)
+        po.choose_qcd(opts.bgqcd)
     # variation of electroweak normalization
     if True:
         ewk=5
@@ -987,6 +988,8 @@ if mode=='qcdfit_2d':
     iq = opts.charge
     ieta = opts.preNN if opts.preNN=='ALL' else int(opts.preNN)
     ipt  = opts.preNQ if opts.preNQ=='ALL' else int(opts.preNQ)
+    bgqcd = opts.bgqcd
+    po.choose_qcd(bgqcd)
     bgsig = opts.bgsig
     po.choose_sig(bgsig)
     bgewk = opts.bgewk
@@ -1343,6 +1346,8 @@ if mode=='qcd_bgsub':
     plots = [opts.hsource,]
     po.choose_qcd(3)
     plot_stacks(spR.clone(),plots,m=1,qs=(opts.charge,),name='QCD3')
+    #FIXME TODO: work in progress
+    qcd3 = po.qcd('qcd3',opts.var,opts.bin,pre_isol,path=path_reco)
     po.choose_qcd(4)
     plot_stacks(spR.clone(),plots,m=1,qs=(opts.charge,),name='QCD4')
 
