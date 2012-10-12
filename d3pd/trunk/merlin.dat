@@ -1,0 +1,66 @@
+Original   MET_RefFinal, from ntuple :      Et = 13545.6, Etx = -6480.95, Ety = 11894.6
+Original      MuonTotal, from ntuple :      Et = 70833.2, Etx = -22991.9, Ety = 66997.9
+Original         RefEle, from ntuple :      Et = 0, Etx = 0, Ety = 0
+Original         RefJet, from ntuple :      Et = 78747.8, Etx = 30218.4, Ety = -72719.1
+Reconstructed MET_RefFinal, from METutils : Et = 14319, Etx = -6875.04, Ety = 12560.6
+Reconstructed    MuonTotal, from METutils : Et = 72196.1, Etx = -23474.8, Ety = 68273.1
+Reconstructed      RefEle, from METutils :  Et = 0, Etx = 0, Ety = 0
+Reconstructed      RefJet, from METutils :  Et = 78747.8, Etx = 30218.4, Ety = -72719.1
+Number of muons : 1
+Event Number : 20021
+---------------------------------------------------------------------
+Original   MET_RefFinal, from ntuple :      Et = 26354.2, Etx = -20487.3, Ety = -16577.5
+Original      MuonTotal, from ntuple :      Et = 30971.9, Etx = -26726.4, Ety = -15651
+Original         RefEle, from ntuple :      Et = 0, Etx = 0, Ety = 0
+Original         RefJet, from ntuple :      Et = 33026.8, Etx = 27936.9, Ety = -17615.3
+Reconstructed MET_RefFinal, from METutils : Et = 27544.4, Etx = -21689.6, Ety = -16978.1
+Reconstructed    MuonTotal, from METutils : Et = 32212.9, Etx = -27928.8, Ety = -16051.6
+Reconstructed      RefEle, from METutils :  Et = 0, Etx = 0, Ety = 0
+Reconstructed      RefJet, from METutils :  Et = 33026.8, Etx = 27936.9, Ety = -17615.3
+Number of muons : 1
+Event Number : 20036
+---------------------------------------------------------------------
+Original   MET_RefFinal, from ntuple :      Et = 11396.7, Etx = 7668.95, Ety = -8430.47
+Original      MuonTotal, from ntuple :      Et = 64236, Etx = 50852.9, Ety = -39246.1
+Original         RefEle, from ntuple :      Et = 0, Etx = 0, Ety = 0
+Original         RefJet, from ntuple :      Et = 60987.7, Etx = -45591.4, Ety = 40508.3
+Reconstructed MET_RefFinal, from METutils : Et = 11876, Etx = 9366, Ety = -7301.85
+Reconstructed    MuonTotal, from METutils : Et = 64918.7, Etx = 52549.9, Ety = -38117.5
+Reconstructed      RefEle, from METutils :  Et = 0, Etx = 0, Ety = 0
+Reconstructed      RefJet, from METutils :  Et = 60987.7, Etx = -45591.4, Ety = 40508.3
+Number of muons : 1
+Event Number : 20049
+---------------------------------------------------------------------
+Original   MET_RefFinal, from ntuple :      Et = 15810.3, Etx = -15327.3, Ety = 3877.99
+Original      MuonTotal, from ntuple :      Et = 23443.3, Etx = 19561.8, Ety = 12920
+Original         RefEle, from ntuple :      Et = 0, Etx = 0, Ety = 0
+Original         RefJet, from ntuple :      Et = 16133.9, Etx = -16103.4, Ety = 992.173
+Reconstructed MET_RefFinal, from METutils : Et = 15810.3, Etx = -15327.3, Ety = 3877.99
+Reconstructed    MuonTotal, from METutils : Et = 23443.3, Etx = 19561.8, Ety = 12920
+Reconstructed      RefEle, from METutils :  Et = 0, Etx = 0, Ety = 0
+Reconstructed      RefJet, from METutils :  Et = 16134, Etx = -16103.4, Ety = 992.172
+Number of muons : 2
+Event Number : 20073
+---------------------------------------------------------------------
+Original   MET_RefFinal, from ntuple :      Et = 32346.3, Etx = -32194.6, Ety = -3128.48
+Original      MuonTotal, from ntuple :      Et = 152657, Etx = -123048, Ety = -90351
+Original         RefEle, from ntuple :      Et = 0, Etx = 0, Ety = 0
+Original         RefJet, from ntuple :      Et = 47787.7, Etx = -2755.09, Ety = 47708.2
+Reconstructed MET_RefFinal, from METutils : Et = 32879.1, Etx = -32828.7, Ety = -1819.38
+Reconstructed    MuonTotal, from METutils : Et = 154623, Etx = -125558, Ety = -90240.6
+Reconstructed      RefEle, from METutils :  Et = 0, Etx = 0, Ety = 0
+Reconstructed      RefJet, from METutils :  Et = 47787.7, Etx = -2755.09, Ety = 47708.2
+Number of muons : 2
+Event Number : 20078
+---------------------------------------------------------------------
+Original   MET_RefFinal, from ntuple :      Et = 14917.4, Etx = -12801.5, Ety = -7658.23
+Original      MuonTotal, from ntuple :      Et = 59962.9, Etx = -59463, Ety = -7727
+Original         RefEle, from ntuple :      Et = 0, Etx = 0, Ety = 0
+Original         RefJet, from ntuple :      Et = 71355.4, Etx = 64901.5, Ety = 29654.5
+Reconstructed MET_RefFinal, from METutils : Et = 14283.1, Etx = -12775.3, Ety = -6387.39
+Reconstructed    MuonTotal, from METutils : Et = 59786.4, Etx = -59436.8, Ety = -6456.18
+Reconstructed      RefEle, from METutils :  Et = 0, Etx = 0, Ety = 0
+Reconstructed      RefJet, from METutils :  Et = 71355.4, Etx = 64901.5, Ety = 29654.5
+Number of muons : 1
+Event Number : 20093
+---------------------------------------------------------------------

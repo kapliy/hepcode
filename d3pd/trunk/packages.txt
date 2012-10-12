@@ -1,0 +1,11 @@
+MissingETUtility-01-00-06 OK
+PileupReweighting-00-02-03 PileupReweighting-00-02-05
+GoodRunsLists-00-00-98 GoodRunsLists-00-00-98-01
+JetResolution-01-00-00 OK
+JetUncertainties-00-05-10 JetUncertainties-00-06-00-01
+ApplyJetCalibration-00-01-07 OK
+ApplyJetResolutionSmearing-00-00-03 OK
+MuonEfficiencyCorrections-02-01-00 MuonEfficiencyCorrections-02-01-01  (2012 updates)
+MuonMomentumCorrections-00-05-03 MuonMomentumCorrections-00-06-08  (!!!)
+MuonIsolationCorrection-01-01 OK
+TrigMuonEfficiency-00-02-04 OK
