@@ -27,76 +27,66 @@ def FixEdgeBins(hist,v=1.0):
     return True
 
 dbase = '/share/t3data3/antonk/ana/ana_v29I_1011012_PYtoHW_nowzptw_stacoCB_all'
-fnameH = dbase +'/'+'mc_powheg_herwig_wminmunu/root_mc_powheg_herwig_wminmunu.root'
-fnameP = dbase+'/'+'mc_powheg_pythia_wminmunu_toherwig/root_mc_powheg_pythia_wminmunu_toherwig.root'
+fns = []
+fns.append( dbase +'/'+'mc_powheg_herwig_wminmunu/root_mc_powheg_herwig_wminmunu.root' )
+fns.append( dbase+'/'+'mc_powheg_pythia_wminmunu_toherwig2dfine/root_mc_powheg_pythia_wminmunu_toherwig2dfine.root' )
+fns.append( dbase+'/'+'mc_powheg_pythia_wminmunu_toherwig1dfine/root_mc_powheg_pythia_wminmunu_toherwig1dfine.root' )
+
+b='mcw*puw*wzptw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw'
+b='1.0'
+b='mask*mcw*puw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw'
+var='l_pt'
+var='met'
+
 
 MAXENTRIES = 10000
 MAXENTRIES = 100000000
+COLORS = [ 1,2,3,4,6,8]
+STYLES = [ 20,21,22,23,29,33,34 ]
+SIZES = [1.5,1.4,1.3,1.2,1.1,1.0]
 
-fH = ROOT.TFile.Open(fnameH); assert fH.IsOpen()
-fP = ROOT.TFile.Open(fnameP); assert fP.IsOpen()
-
-TH = fH.Get('dg/truth/st_w_final/ntuple'); assert TH
-TP = fP.Get('dg/truth/st_w_final/ntuple'); assert TP
-RH = fH.Get('dg/Nominal/st_w_final/ntuple'); assert RH
-RP = fP.Get('dg/Nominal/st_w_final/ntuple'); assert RP
+fs = [ROOT.TFile.Open(fn,'READ') for fn in fns]
+Ts = [] # truth trees
+Rs = [] # reco  trees
+hT = [] # histos
+for f in fs:
+    assert f.IsOpen()
+    Ts.append( f.Get('dg/truth/st_w_final/ntuple') ); assert Ts[-1]
+    Rs.append( f.Get('dg/Nominal/st_w_final/ntuple') ); assert Rs[-1]
 
 # truth histos: PowhegPythia, PowhegPythia_rw, PowhegHerwig
 cT = ROOT.TCanvas('cT','cT',800,800)
 cT.Divide(1,2)
 cT.cd(1)
-hT = [None,None,None]
 leg = ROOT.TLegend(0.55,0.70,0.88,0.88,'Muon pT',"brNDC")
 
-COLORS = [ 1,2,3,4,6,8]
-STYLES = [ 20,21,22,23,29,33,34 ]
-SIZES = [1.5,1.4,1.3,1.2,1.1,1.0]
-
-def cr(name,T,cut = '(mcw*puw*wzptw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw)*(mask)',idx = 0):
+def cr(name,T,cut = '(mcw*puw*wzptw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw)*(mask)',idx=0):
     h = ROOT.TH1D('h'+name,'h'+name,len(ptbins)-1,ptbins)
     print 'Making ',name
-    T.Draw('l_pt>>h%s'%name,cut,'goff',MAXENTRIES)
-    leg.AddEntry(h,'PowhegHerwig','LP')
+    T.Draw('%s>>h%s'%(var,name),cut,'goff',MAXENTRIES)
+    leg.AddEntry(h,name,'LP')
     FixEdgeBins(h,0.0)
     h.SetLineColor(COLORS[idx])
     h.SetMarkerColor(COLORS[idx])
     h.SetMarkerStyle(STYLES[idx])
     h.SetMarkerSize(SIZES[idx])
-    h.Scale(1.0/h.Integral())
+    if True:
+        INT_HERWIG = 2955907.0
+        INT_PYTHIA = 16744582.0
+        x = INT_HERWIG if re.search('Herwig',name) else INT_PYTHIA
+        print 'STORED  :',name,x
+        h.Scale(1.0/x)
+    else:
+        print 'INTEGRAL:',name,h.Integral()
+        h.Scale(1.0/h.Integral())
+    h.Draw() if idx==0 else h.Draw('A SAME')
     return h
-    
-hT[0] = ROOT.TH1D('hTH','hTH',len(ptbins)-1,ptbins)
-print 'Making PowhegHerwig...'
-TH.Draw('l_pt>>hTH','(mcw*puw*wzptw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw)','goff',MAXENTRIES)
-leg.AddEntry(hT[0],'PowhegHerwig','LP')
-FixEdgeBins(hT[0],0.0)
-hT[0].SetLineColor(ROOT.kBlack)
-hT[0].SetFillColor(ROOT.kBlack)
-hT[0].Scale(1.0/hT[0].Integral())
 
-hT[1] = ROOT.TH1D('hTP','hTP',len(ptbins)-1,ptbins)
-print 'Making PowhegPythia...'
-TP.Draw('l_pt>>hTP','(mcw*puw*wzptw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw)','goff',MAXENTRIES)
-leg.AddEntry(hT[1],'PowhegPythia','LP')
-FixEdgeBins(hT[1],0.0)
-hT[1].SetLineColor(ROOT.kBlue)
-hT[1].SetFillColor(ROOT.kBlue)
-hT[1].Scale(1.0/hT[1].Integral())
-
-hT[2] = ROOT.TH1D('hTPrw','hTPrw',len(ptbins)-1,ptbins)
-print 'Making PowhegPythia(rw)...'
-TP.Draw('l_pt>>hTPrw','(mcw*puw*wzptw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw*phw)','goff',MAXENTRIES)
-leg.AddEntry(hT[2],'PowhegPythia(RW)','LP')
-FixEdgeBins(hT[2],0.0)
-hT[2].SetLineColor(ROOT.kRed)
-hT[2].SetFillColor(ROOT.kRed)
-hT[2].Scale(1.0/hT[2].Integral())
-
-hT[0].Draw()
-hT[1].Draw('A SAME')
-hT[2].Draw('A SAME')
-
-hT[0].GetYaxis().SetRangeUser(0.0,1.3*max(o.GetMaximum() for o in hT))
+hT.append( cr('PowhegHerwig',   Ts[0],b+'',0) )
+hT.append( cr('PowhegPythia',   Ts[1],b+'',1) )
+hT.append( cr('PowhegPythia_rw2d',Ts[1],b+'*phw',2) )
+hT[0].GetYaxis().SetRangeUser(0.0,1.5*max(o.GetMaximum() for o in hT))
+leg.Draw('SAME')
 
 # RATIOS
 cT.cd(2)
@@ -114,14 +104,14 @@ def refline(h):
     refLine.SetLineWidth( 3 );
     refLine.SetLineStyle( ROOT.kDashed );
     return refLine
-ratio1 = hT[1].Clone()
-ratio1.Divide(hT[0])
-ratio2 = hT[2].Clone()
-ratio2.Divide(hT[0])
-refLine = refline(ratio1)
-refLine.Draw( "HIST" );
-ratio1.Draw('A SAME')
-ratio2.Draw('A SAME')
+ratios = []
+ref = refline(hT[0])
+ref.Draw( "HIST" );
+for h in hT[1:]:
+    ratio = h.Clone()
+    ratio.Divide(hT[0])
+    ratio.Draw('A SAME')
+    ratios.append(ratio)
 
 cT.Modified()
 cT.Update()
