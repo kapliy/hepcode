@@ -640,11 +640,11 @@ class SuCanvas:
     s.lq.SetLineStyle(2)
     s.lq.Draw('l')
                    
-  def buildDefault(s,width=800,height=600,title=None):
+  def buildDefault(s,width=600,height=600,title=None):
     s._ratioDrawn = False;
     if not title:
       title = rand_name()
-    s._canvas = ROOT.TCanvas( "canvas"+title , "canvas"+title , 200 , 10 , 800 , 800 );
+    s._canvas = ROOT.TCanvas( "canvas"+title , "canvas"+title , width , height )
     s._canvas.SetFillColor( ROOT.kWhite );
     s._canvas.GetFrame().SetBorderMode( 0 );
     s._canvas.GetFrame().SetBorderSize( 0 );
@@ -670,7 +670,7 @@ class SuCanvas:
       c.Modified()
       c.Update()
 
-  def buildRatio(s,width=800,height=800,title=None):
+  def buildRatio(s,width=600,height=600,title=None):
     if not title:
       title = rand_name()
     s._canvas = ROOT.TCanvas( 'canvasm'+title , 'canvasm'+title , width , height );

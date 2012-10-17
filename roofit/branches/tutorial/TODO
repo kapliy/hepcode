@@ -1,11 +1,13 @@
 OCTOBER:
+MAX: try reweighting met-truth instead of neutrino pT!
+MAX: repeat unfolded distribution errors
+TODO: add vertex reweighting distribution (before / after)
+TODO: C_W calculation: try dropping individual cuts, especially MET.
+
 * Study QCD bg subtraction: overlay templates with and without subtraction on each other with ratio!
 * DONE: Finish QCD bg-subtraction estimate. Needs more study: QCD is generally down with bg-subtracted templates. But why??
 * Study QCD: saw funny business between MC template vs data-driven.
 
-* LOOKING Study why powheg pythia->herwig reweighting does not improve C_W (IDEA: found bug in ana_wasym reweighting)
-  DOING: See if it improves the spectra at least
-  IF FAILS: Can check for improvement in 1D spectra in the toy MC script, too. Can apply fiducial cuts here, too.
 * TODO: simplify qcdsys2d.py script. rms(qcdfrac) = final figure of merit?
 * DONE: Re-run October 4 version in TrigFTKAna_trunk with new MCP-curvature offsets.
   Perhaps this will/can fix the ugly hole? - NOPE
@@ -21,31 +23,8 @@ I.e., triggered events in data exhibit a ~50% dip in central region, which is no
 Input into unfolding: a data (=signal) histogram that exhibits the dip.
 Output from unfolding: a truth-level histogram without a dip.
 
-
-
 Peter:
 Make a stack plot of W reconstruction vs phi in the specific bin that gives trouble.
-
-Anton:
-* Finish bg-subtraction in QCD template.
-* Repeat x-vs-eta plots in Z events. Worry: require two trigger matches? Not really, but applying two trigger scale factors
-* Check: correctly applying event scale factors for events with multiple particles (muons)?
-Peter:
-do eta/phi plot. Or eta/phi but divide by large/small muon module.
-
-prepare* script updates:
-- DONE get a matrix of QCD scale factors
-- DONE get ewk and qcd backgrounds
-- DONE get a version of qcd that's scaled using the common scale
-- ADD: signed pseudorapidity histograms
-
-Anton: check w PT reweighting with different targets. Include powheg+pythia 8.
-Compare w pT and lepton pT
-Compare w polarization reweighting for qcd fits.
-Add subfolder of all histograms
-
-ABCD: Missing-ET vs Isolation.
-In MC, check correlation and correct for it.
 
 Max:
 [11:03:46 AM] Massimiliano Bellomo: PowhegPythia for W,Z to muons
@@ -61,49 +40,25 @@ W/Gamma alpgen: 117410-15
 Idea: fit in delta-phi between MET and muon
 TODO: understand the Z MC veto and drell-yan
 
-ANTON TODO:
-* Finish comparing Max cutflow
-* Add unfolding tree a-la max
-* Do QCD fits from histograms
-
-
 MAX TODO:
-- QCD fits in 2D bins. Add extra histograms to make sure we can fit them!
-- make ratio plots of truth level and reco level.
 - neutrino pt vs met-truth (to factor out jets)
 - compare tunes of powheg/herwig and mc@nlo
 
-
 MEL TODO:
-Plot W pT for different generators
-In W rest frame, decay angle (polar angle) of lepton - in slices of W pT
+MCP corrections: is most of uncertainty statistical? Then no point messing with the systematics!
 MCP corrections: split in phi bins, for the barrel case where there is large C offset?
 
-Make sure i save the correct eff uncertainty in ntuples!
+Make sure I save the correct eff uncertainty in ntuples!
 Check if Max gets a really large trig effuncertainty because he does not use corresponding unfolding matrices!
 
 Peter: why w mt is best.
 it factors out w pt. Overlay templates for different generators - expect better agreement between them in w_mt (vs other variables).
 
-Make unfolding TTree a-la max, for all systematics
-
 Consider EtMissRel instead of etmiss?
 /home/antonk/ElectroweakBosons/AnalysisZmumu/HFrame/src
 
 ME:
-Jan - effect of w polarization. Jan will provide a reweighting class.
-* Make table of QCD fit chi2s. Powheg+Pythia has best chi2 even though most stats? Try to reduce the statistics.
-
 * Add dressed muons for C_W factors!
-* Utilize DgEventInfo extras to add truth quantities to reco ntuples - for cuts
-  This is not quite good for response matrices because it's missing inefficiency terms:(
-
-Follow up: geometric shift could change efficiency.
-EM -> JES
-LC -> JES
-
-
-MAX: make fits as a function of eta. 2010 standard.
 
 MAX: MET disagreement in PowHeg - understand
      ABCD: iso - MET

@@ -27,17 +27,19 @@ def FixEdgeBins(hist,v=1.0):
     return True
 
 dbase = '/share/t3data3/antonk/ana/ana_v29I_1011012_PYtoHW_nowzptw_stacoCB_all'
+#dbase='/share/t3data3/antonk/ana/ana_v29I_1011012_PYtoHW_nowzptw_nometutil_stacoCB_all'
 fns = []
 fns.append( dbase +'/'+'mc_powheg_herwig_wminmunu/root_mc_powheg_herwig_wminmunu.root' )
 fns.append( dbase+'/'+'mc_powheg_pythia_wminmunu_toherwig2dfine/root_mc_powheg_pythia_wminmunu_toherwig2dfine.root' )
 fns.append( dbase+'/'+'mc_powheg_pythia_wminmunu_toherwig1dfine/root_mc_powheg_pythia_wminmunu_toherwig1dfine.root' )
 
+USE_TRUTH=True
 b='mcw*puw*wzptw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw'
 b='1.0'
 b='mask*mcw*puw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw'
-var='l_pt'
+b='mask*mcw*puw*wzptw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw'
 var='met'
-
+var='l_pt'
 
 MAXENTRIES = 10000
 MAXENTRIES = 100000000
@@ -82,9 +84,10 @@ def cr(name,T,cut = '(mcw*puw*wzptw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw)*(mask)'
     h.Draw() if idx==0 else h.Draw('A SAME')
     return h
 
-hT.append( cr('PowhegHerwig',   Ts[0],b+'',0) )
-hT.append( cr('PowhegPythia',   Ts[1],b+'',1) )
-hT.append( cr('PowhegPythia_rw2d',Ts[1],b+'*phw',2) )
+Zs = Ts if USE_TRUTH else Rs
+hT.append( cr('PowhegHerwig',   Zs[0],b+'',0) )
+hT.append( cr('PowhegPythia',   Zs[1],b+'',1) )
+hT.append( cr('PowhegPythia_rw2d',Zs[1],b+'*phw',2) )
 hT[0].GetYaxis().SetRangeUser(0.0,1.5*max(o.GetMaximum() for o in hT))
 leg.Draw('SAME')
 
