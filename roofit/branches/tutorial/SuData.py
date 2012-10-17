@@ -566,7 +566,7 @@ class SuPlot:
         markerlist+= markerlist
         markerlist+= markerlist
         if MAKE_PLOT:
-            s.Cc = Cc = ROOT.TCanvas('SYSC','SYSC',800,600)
+            s.Cc = Cc = ROOT.TCanvas('SYSC','SYSC',600,600)
             Cc.cd()
             for ig,hss in enumerate(s.sys[1:]):
                 Hh.append( SuSample.make_habseta('hsys%d'%ig) )
@@ -614,7 +614,7 @@ class SuPlot:
                 o.update_var(histo,bin)
     def clone(s,q=None,enable=None,histo=None,do_unfold=None,unfhisto=None,qcdadd=None,
               sysdir=None,
-              slice=None,
+              sliced=None,slice=None,
               ntuple=None,path=None,var=None,bin=None,pre=None,weight=None):
         """ Clones an entire SuPlot.
         Each SuSys is cloned individually to avoid soft pointer links
@@ -629,7 +629,7 @@ class SuPlot:
         for sgroups in s.sys:
             bla = []
             for sinst in sgroups:
-                bla.append(sinst.clone(q=q,histo=histo,unfhisto=unfhisto,qcdadd=qcdadd,sysdir=sysdir,ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight,slice=slice))
+                bla.append(sinst.clone(q=q,histo=histo,unfhisto=unfhisto,qcdadd=qcdadd,sysdir=sysdir,ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight,sliced=sliced,slice=slice))
                 res.flat.append(bla[-1])
             res.sys.append( bla )
         return res
@@ -1065,6 +1065,10 @@ class SuStack:
         """ Select signal sample, turning all others off """
         s.flagsum['Y']=i
         return s.choose_flag('zmumu_'+MAP_BGSIG[i],'zmumu')
+    def choose_wmunu(s,i):
+        """ Select signal sample, turning all others off """
+        s.flagsum['V']=i
+        return s.choose_flag('wmunu_'+MAP_BGSIG[i],'wmunu')
     def choose_ztautau(s,i):
         """ Select signal sample, turning all others off """
         s.flagsum['Z']=i
@@ -1544,9 +1548,12 @@ class SuStack:
         horig = hspec.split(':')[0]  # bin_%d/lpt
         hname = horig.split('/')[1]  # lpt
         imin,imax = [int(cc) for cc in hspec.split(':')[1:1+2]]
-        assert hname in ('lpt','met','njets','wmt','wpt')
+        assert hname in ('lepton_pt',)
         # locate list of eta bins
-        idxs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]  # temp. hack: just put it by hand!
+        import binning
+        bins = binning.absetabins
+        idxs = list(range(0,len(binning.absetabins)-1))
+        assert( idxs == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] ) # temp. hack: just put it by hand!
         if False: #TODO: loop over multiple samples
             hdir = loop[0].samples[0].get_from_file( d.nominal().h_path_folder() )
             assert hdir
