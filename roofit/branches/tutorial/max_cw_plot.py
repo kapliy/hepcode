@@ -5,17 +5,52 @@ Checking that the powheg_pythia -> powheg_herwig reweighting works.
 IDEA: C_W did not improve. Let's check if normalized distributions got better?
 A quick script to plot truth and/or reco-level spectra for:
 Powheg+Pythia , Powheg+Pythia (reweighted) , Powheg+Herwig.
+./max_cw_plot.py -v l_pt && ./max_cw_plot.py -v l_pt --truth && ./max_cw_plot.py -v met && ./max_cw_plot.py -v met --truth && echo OK
+
+for tag in nu nonint flat; do
+   ./max_cw_plot.py -v l_pt -t $tag &
+   ./max_cw_plot.py -v l_pt --truth -t $tag &
+   ./max_cw_plot.py -v met -t $tag &
+   ./max_cw_plot.py -v met --truth -t $tag &
+done
+wait
+
 """
 
 import os,sys,glob,re
-import common
-import ROOT
-ROOT.gROOT.SetBatch(True)
-ROOT.TH1.SetDefaultSumw2(ROOT.kTRUE)
 import array
 ptbins_l = [0,5,10,15,20,25,30,35,40,45,50,70,90,120,200]
-ptbins_l = range(0,70)
+ptbins_l = range(0,70,2)
+ptbins_l = range(0,150,2)
 ptbins = array.array('f',ptbins_l)
+
+from optparse import OptionParser
+parser = OptionParser()
+INPUTS = []
+INPUTS.append( '/share/t3data3/antonk/ana/ana_v29I_1011012_PYtoHW_nowzptw_nometutil_stacoCB_all' )
+INPUTS.append( '/share/t3data3/antonk/ana/ana_v29I_1011012_PYtoHW_nowzptw_nometutil_trumet_stacoCB_all' )
+parser.add_option("-i", "--input",dest="input",
+                  type="string", default=INPUTS[1],
+                  help="Core input directory containing output from TrigFTKAna_trunk")
+parser.add_option("-v", "--var",dest="var",
+                  type="string", default='met',
+                  help="Variable to plot: met or l_pt")
+parser.add_option("-c", "--cut",dest="cut",
+                  type="string", default='mask*mcw*puw*vxw*ls1w*ls2w*effw*isow*trigw',
+                  help="Ntuple cut, usually a subset of: mask*mcw*puw*wzptw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw")
+parser.add_option("--truth", default=False,
+                  action="store_true",dest="truth",
+                  help="If set to true, plot at truth (Born) level")
+parser.add_option("--rawmet", default=False,
+                  action="store_true",dest="rawmet",
+                  help="At reco-level, use Rawmet category - i.e., without met recalculation")
+parser.add_option("--integral", default=False,
+                  action="store_true",dest="integral",
+                  help="Normalize samples to their integral?")
+parser.add_option('-t',"--tag",dest="tag",
+                  type="string", default='nu',
+                  help="A tag to append to all output plots")
+(opts, args) = parser.parse_args()
 
 def FixEdgeBins(hist,v=1.0):
     for binX in xrange(0,hist.GetNbinsX()+2):
@@ -26,26 +61,31 @@ def FixEdgeBins(hist,v=1.0):
                     hist.SetBinContent(globalBin,v)
     return True
 
-dbase = '/share/t3data3/antonk/ana/ana_v29I_1011012_PYtoHW_nowzptw_stacoCB_all'
-#dbase='/share/t3data3/antonk/ana/ana_v29I_1011012_PYtoHW_nowzptw_nometutil_stacoCB_all'
+dbase=opts.input
 fns = []
-fns.append( dbase +'/'+'mc_powheg_herwig_wminmunu/root_mc_powheg_herwig_wminmunu.root' )
-fns.append( dbase+'/'+'mc_powheg_pythia_wminmunu_toherwig2dfine/root_mc_powheg_pythia_wminmunu_toherwig2dfine.root' )
-fns.append( dbase+'/'+'mc_powheg_pythia_wminmunu_toherwig1dfine/root_mc_powheg_pythia_wminmunu_toherwig1dfine.root' )
+if opts.input == INPUTS[0]:
+    fns.append( dbase +'/'+'mc_powheg_herwig_wminmunu/root_mc_powheg_herwig_wminmunu.root' )
+    fns.append( dbase+'/'+'mc_powheg_pythia_wminmunu_toherwig2dfine/root_mc_powheg_pythia_wminmunu_toherwig2dfine.root' )
+else:
+    assert opts.tag in ('nu','nonint','flat')
+    fns.append( dbase +'/'+'mc_powheg_herwig_wminmunu/root_mc_powheg_herwig_wminmunu.root' )
+    fns.append( dbase+'/'+'mc_powheg_pythia_wminmunu_toherwig2d%s/root_mc_powheg_pythia_wminmunu_toherwig2d%s.root'%(opts.tag,opts.tag) )
+    
 
-USE_TRUTH=True
-b='mcw*puw*wzptw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw'
-b='1.0'
-b='mask*mcw*puw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw'
-b='mask*mcw*puw*vxw*ls1w*ls2w*effw*isow*trigw'
-var='met'
-var='l_pt'
+USE_TRUTH=opts.truth
+b=opts.cut
+var=opts.var
 
 MAXENTRIES = 10000
 MAXENTRIES = 100000000
 COLORS = [ 1,2,3,4,6,8]
 STYLES = [ 20,21,22,23,29,33,34 ]
 SIZES = [1.5,1.4,1.3,1.2,1.1,1.0]
+
+import common
+import ROOT
+ROOT.gROOT.SetBatch(True)
+ROOT.TH1.SetDefaultSumw2(ROOT.kTRUE)
 
 fs = [ROOT.TFile.Open(fn,'READ') for fn in fns]
 Ts = [] # truth trees
@@ -54,7 +94,10 @@ hT = [] # histos
 for f in fs:
     assert f.IsOpen()
     Ts.append( f.Get('dg/truth/st_w_final/ntuple') ); assert Ts[-1]
-    Rs.append( f.Get('dg/Nominal/st_w_final/ntuple') ); assert Rs[-1]
+    if opts.rawmet:
+        Rs.append( f.Get('dg/Rawmet/st_w_final/ntuple') ); assert Rs[-1]
+    else:
+        Rs.append( f.Get('dg/Nominal/st_w_final/ntuple') ); assert Rs[-1]
 
 # truth histos: PowhegPythia, PowhegPythia_rw, PowhegHerwig
 cT = ROOT.TCanvas('cT','cT',800,800)
@@ -72,9 +115,12 @@ def cr(name,T,cut = '(mcw*puw*wzptw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw)*(mask)'
     h.SetMarkerColor(COLORS[idx])
     h.SetMarkerStyle(STYLES[idx])
     h.SetMarkerSize(SIZES[idx])
-    if True:
+    if not opts.integral:
         INT_HERWIG = 2955907.0
         INT_PYTHIA = 16744582.0
+        if opts.input == INPUTS[1]: # hack: federated access problems in INPUTS[1]
+            INT_HERWIG = 2998607.0
+            INT_PYTHIA = 11990723.0
         x = INT_HERWIG if re.search('Herwig',name) else INT_PYTHIA
         print 'STORED  :',name,x
         h.Scale(1.0/x)
@@ -87,7 +133,7 @@ def cr(name,T,cut = '(mcw*puw*wzptw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw)*(mask)'
 Zs = Ts if USE_TRUTH else Rs
 hT.append( cr('PowhegHerwig',   Zs[0],b+'',0) )
 hT.append( cr('PowhegPythia',   Zs[1],b+'',1) )
-hT.append( cr('PowhegPythia_rw2d',Zs[1],b+'*phw',2) )
+hT.append( cr('PowhegPythia_rw',Zs[1],b+'*phw',2) )
 hT[0].GetYaxis().SetRangeUser(0.0,1.5*max(o.GetMaximum() for o in hT))
 leg.Draw('SAME')
 
@@ -118,4 +164,6 @@ for h in hT[1:]:
 
 cT.Modified()
 cT.Update()
-cT.SaveAs('plot.png')
+save_mask = '_mask' if re.search('mask',b) else ''
+save_reco = '_true' if opts.truth else '_reco'
+cT.SaveAs('CW_plot_%s%s%s_%s.png'%(opts.var,save_reco,save_mask,opts.tag))
