@@ -37,7 +37,7 @@ USE_TRUTH=True
 b='mcw*puw*wzptw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw'
 b='1.0'
 b='mask*mcw*puw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw'
-b='mask*mcw*puw*wzptw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw'
+b='mask*mcw*puw*vxw*ls1w*ls2w*effw*isow*trigw'
 var='met'
 var='l_pt'
 
