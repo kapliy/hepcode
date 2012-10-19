@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-""" Computes a C_W scale factor for a given cut, using the unfolding TTree
+"""
+Computes a C_W scale factor using the unfolding TTree
 """
 
 import os,sys,re,math,glob
