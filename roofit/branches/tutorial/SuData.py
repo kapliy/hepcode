@@ -116,7 +116,15 @@ class SuSys:
         """
         hpath = s.h_path_folder(i,flags)+ '/' + s.histo
         return hpath
-    def h_path_fname(s,i=1):
+    def h_path_fname(s,i=1,flags=None):
+        # determine "i" from MC sample flags
+        if flags:
+            if 'data' in flags:
+                i=0
+            elif 'driven' in flags or 'driven_sub' in flags:                
+                i=2
+            else:
+                i=1
         out = s.sysdir[2]+'__'+s.sysdir[i] + '_' + s.subdir[i] + '_' + s.basedir[i] + '_' + SuSys.QMAP[s.charge][1] + '_' + s.histo
         return re.sub(r'[^\w]', '_', out)
     def unfold_get_path(s,ibin=None,ivar=None):
@@ -369,6 +377,9 @@ class SuPlot:
         print 'WARNING: could not enable systematic:',name
     def enable_nominal(s):
         s.enable = [0,]
+    def enable_some(s,v):
+        s.enable = list(v)[:]
+        assert max(s.enable) < len(s.flat)
     def enable_all(s):
         s.enable = []
         idx = 0
@@ -793,6 +804,7 @@ class SuSample:
         return 1.0
     def GetHisto(s,hname,hpath):
         """ Retrieves a sum of histograms from a given file """
+        import common
         h = None
         for i,f in enumerate(s.files):
             assert f.IsOpen()
@@ -801,7 +813,9 @@ class SuSample:
                     print 'GetHisto:: %s \t\t %s/%s'%(os.path.basename(f.GetName()),s.topdir(f),hpath)
                 if not  f.Get('%s/%s'%(s.topdir(f),hpath)):
                     return None
-                h = f.Get('%s/%s'%(s.topdir(f),hpath)).Clone(s.name+'_'+hname)
+                fpath = '%s/%s'%(s.topdir(f),hpath)
+                fname = re.sub(r'[^\w]', '_',s.name+'_'+hname+'_'+fpath+'_'+common.rand_name())
+                h = f.Get(fpath).Clone(fname)
                 h.Sumw2()
             else:
                 h.Add( f.Get('%s/%s'%(s.topdir(f),hpath)) )
@@ -941,6 +955,8 @@ class SuSample:
                 s.missing[key] = True
             d.histo = hbase
             return None   # be careful, returning None is a recipe for not noticing problems
+        import SuCanvas
+        #print 'DEBUG: ',res2d.GetName(),hbase
         res = getattr(res2d,'Projection'+haxis.upper())(res2d.GetName()+'_%s%d%d'%(haxis,imin,imax),imin,imax,'e')
         assert res,'Failed to perform 2d projection'
         if s.lumi:
