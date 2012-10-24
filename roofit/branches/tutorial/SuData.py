@@ -1233,7 +1233,7 @@ class SuStack:
             elif method=='RooUnfoldSvd':
                 unfold = ROOT.RooUnfoldSvd(response, h, par);
             assert unfold
-            unfold.SetVerbose(0)
+            unfold.SetVerbose(1)
             # replace original histo
             d.h = unfold.Hreco()
         return out
