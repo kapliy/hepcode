@@ -363,7 +363,7 @@ class SuCanvas:
       s.buildRatio()
       s.cd_plotPad()
     else:
-      s.buildDefault(width=1024,height=400)
+      s.buildDefault(width=1024,height=800)
       s.cd_canvas();
     # plot actual histograms
     hs = []

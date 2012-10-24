@@ -1,9 +1,9 @@
-OCTOBER:
-MAX: try reweighting met-truth instead of neutrino pT!
-MAX: repeat unfolded distribution errors
-TODO: add vertex reweighting distribution (before / after)
-TODO: C_W calculation: try dropping individual cuts, especially MET.
+STYLE:
+Sort stack histograms from smallest to largest contributions.
 
+OCTOBER:
+MAX: repeat unfolded distribution errors
+* C_W calculation: try dropping individual cuts, especially MET.
 * Study QCD bg subtraction: overlay templates with and without subtraction on each other with ratio!
 * DONE: Finish QCD bg-subtraction estimate. Needs more study: QCD is generally down with bg-subtracted templates. But why??
 * Study QCD: saw funny business between MC template vs data-driven.

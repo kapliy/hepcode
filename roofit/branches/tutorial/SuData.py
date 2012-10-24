@@ -30,7 +30,7 @@ class SuSys:
             return [v]*3
     def __init__(s,name='Nominal',charge=2,qcd = {}, unfold={},qcderr='NOM',slice=None,
                  ntuple=None,path=None,var=None,bin=None,pre='',weight="mcw*puw*effw*trigw",
-                 histo=None,sliced=False,sysdir=None,subdir=None,basedir=None ):
+                 histo=None,sliced_1d=False,sliced_2d=False,sysdir=None,subdir=None,basedir=None ):
         # actual histograms
         s.h = None
         s.stack = None
@@ -54,7 +54,8 @@ class SuSys:
         s.weight = weight
         # Histogram-based resources
         s.histo = histo
-        s.sliced = sliced
+        s.sliced_1d = sliced_1d  # from 1D histograms in eta (|eta|) slices
+        s.sliced_2d = sliced_2d  # from 2D eta-pt histograms
         # these path elements are organized into lists with: [ /in/data , /in/mc , /in/isofail ]
         s.sysdir = s.qlist(sysdir)
         s.subdir = s.qlist(subdir)
@@ -153,10 +154,19 @@ class SuSys:
         s.histo = s.qcd['var']
         return
     def is_sliced(s):
+        """ True if it is sliced - either 1d or 2d """
+        return s.is_sliced_1d() or s.is_sliced_2d()
+    def is_sliced_1d(s):
         """ Returns True if s.histo represents a folder of histograms in eta-slices """
-        if s.sliced:
+        if s.sliced_1d:
             assert (re.search('bin_',s.histo) if s.histo else True)
-        return s.sliced
+        return s.sliced_1d
+        #return re.search('bin_',s.histo) if s.histo else False
+    def is_sliced_2d(s):
+        """ Returns True if s.histo represents a 2d histogram in eta-pt """
+        if s.sliced_2d:
+            assert (re.search(':x:',s.histo) or re.search(':y:',s.histo) if s.histo else True)
+        return s.sliced_2d
         #return re.search('bin_',s.histo) if s.histo else False
     def is_ntuple_etabins(s):
         """ Returns 2 if we are doing a qcd fit in |eta| bins , 1 if in eta bins, and False otherwise """
@@ -173,7 +183,8 @@ class SuSys:
             return 2
         return False
     def clone(s,sysdir=None,sysdir_mc=None,subdir=None,subdir_mc=None,basedir=None,
-              qcderr=None,qcdadd=None,name=None,q=None,histo=None,sliced=None,unfold=None,unfdir=None,unfhisto=None,
+              qcderr=None,qcdadd=None,name=None,q=None,histo=None,sliced_1d=None,sliced_2d=None,
+              unfold=None,unfdir=None,unfhisto=None,
               ntuple=None,path=None,var=None,bin=None,pre=None,weight=None,
               slice=None):
         """ deep copy, also allowing to update some members on-the-fly (useful to spawn systematics) """
@@ -195,7 +206,8 @@ class SuSys:
             res.qcd = qcd
         if name!=None: res.name = name
         if histo!=None: res.histo = histo
-        if sliced!=None: res.sliced = sliced
+        if sliced_1d!=None: res.sliced_1d = sliced_1d
+        if sliced_2d!=None: res.sliced_2d = sliced_2d
         if q!=None: res.charge = q
         if unfold!=None:
             res.unfold = copy.copy(unfold)
@@ -373,7 +385,7 @@ class SuPlot:
         return res
     def bootstrap(s,charge=2,qcd = {},unfold={},do_unfold=False,qcderr='NOM',
                   ntuple=None,path=None,var=None,bin=None,pre='',weight="mcw*puw*effw*trigw",
-                  histo=None,sliced=None,sysdir=None,subdir=None,basedir=None ):
+                  histo=None,sliced_1d=None,sliced_2d=None,sysdir=None,subdir=None,basedir=None ):
         """ bootstraps a full collection of systematics from the nominal instance of SuSys """
         prep=''
         if sysdir and sysdir[0]=='tight_nominal':
@@ -381,7 +393,7 @@ class SuPlot:
         # nominal first:
         nom = SuSys(charge=charge,qcd=qcd,unfold=unfold,qcderr=qcderr,
                     ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight,
-                    histo=histo,sliced=sliced,sysdir=sysdir,subdir=subdir,basedir=basedir)
+                    histo=histo,sliced_1d=sliced_1d,sliced_2d=sliced_2d,sysdir=sysdir,subdir=subdir,basedir=basedir)
         s.sys = [ [nom,] ]
         s.flat = [ nom ]
         s.groups = [ 'Nominal' ]
@@ -614,7 +626,7 @@ class SuPlot:
                 o.update_var(histo,bin)
     def clone(s,q=None,enable=None,histo=None,do_unfold=None,unfhisto=None,qcdadd=None,
               sysdir=None,
-              sliced=None,slice=None,
+              sliced_1d=None,sliced_2d=None,slice=None,
               ntuple=None,path=None,var=None,bin=None,pre=None,weight=None):
         """ Clones an entire SuPlot.
         Each SuSys is cloned individually to avoid soft pointer links
@@ -629,7 +641,7 @@ class SuPlot:
         for sgroups in s.sys:
             bla = []
             for sinst in sgroups:
-                bla.append(sinst.clone(q=q,histo=histo,unfhisto=unfhisto,qcdadd=qcdadd,sysdir=sysdir,ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight,sliced=sliced,slice=slice))
+                bla.append(sinst.clone(q=q,histo=histo,unfhisto=unfhisto,qcdadd=qcdadd,sysdir=sysdir,ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight,sliced_1d=sliced_1d,sliced_2d=sliced_2d,slice=slice))
                 res.flat.append(bla[-1])
             res.sys.append( bla )
         return res
@@ -789,7 +801,7 @@ class SuSample:
                     print 'GetHisto:: %s \t\t %s/%s'%(os.path.basename(f.GetName()),s.topdir(f),hpath)
                 if not  f.Get('%s/%s'%(s.topdir(f),hpath)):
                     return None
-                h = f.Get('%s/%s'%(s.topdir(f),hpath)).Clone(hname)
+                h = f.Get('%s/%s'%(s.topdir(f),hpath)).Clone(s.name+'_'+hname)
                 h.Sumw2()
             else:
                 h.Add( f.Get('%s/%s'%(s.topdir(f),hpath)) )
@@ -906,8 +918,44 @@ class SuSample:
         if True:
             res.Sumw2()
         return res
+    def histo_h_2dproj(s,hname,d,rebin=1.0):
+        """ retrieves a particular 2d histogram and performs a 1d projection
+        based on instructions encoded in hname.
+        hname format :  d2_abseta_lpt:y:0:8
+        """
+        hbase = d.histo
+        assert len(hbase.split(':'))==4
+        horig = hbase.split(':')[0]  # d2_abseta_lpt
+        haxis = hbase.split(':')[1]  # y
+        assert haxis in ('x','y')
+        imin,imax = [int(cc) for cc in hbase.split(':')[2:2+2]]
+        d.histo = horig
+        res2d = s.GetHisto(hname,d.h_path(flags=s.flags))
+        if not res2d:
+            if len(s.files)==0:
+                print 'WARNING: no files found for sample:',s.name
+            fname = os.path.basename(s.files[0].GetName())
+            key = horig + fname + d.h_path(flags=s.flags)
+            if key not in s.missing:
+                print 'WARNING: -> Missing 2d-proj histo:',horig, fname, d.h_path(flags=s.flags)
+                s.missing[key] = True
+            d.histo = hbase
+            return None   # be careful, returning None is a recipe for not noticing problems
+        res = getattr(res2d,'Projection'+haxis.upper())(res2d.GetName()+'_%s%d%d'%(haxis,imin,imax),imin,imax,'e')
+        assert res,'Failed to perform 2d projection'
+        if s.lumi:
+            res.Scale(s.scale(evcnt = s.choose_evcount('')))
+        if rebin!=1:
+            res.Rebin(rebin)
+        res.Sumw2()
+        d.histo = hbase
+        return res
     def histo_h(s,hname,d,rebin=1.0):
         """ retrieve a particular histogram; path is re-built manually"""
+        # in case we're asking for a projection from a 2d histogram
+        if len(d.histo.split(':'))==4:
+            return s.histo_h_2dproj(hname,d,rebin)
+        # or else, it's a regular 1d or 2d histogram
         res = s.GetHisto(hname,d.h_path(flags=s.flags))
         if not res:
             if len(s.files)==0:
@@ -1187,11 +1235,11 @@ class SuStack:
                 res.append(s.get_scale_wrap(o))
         return res
     def get_scale_wrap(s,d):
-        """ A wrapper around get_scale() that knows how to deal with bin_%d/lpt sliced histograms
+        """ A wrapper around get_scale() that knows how to deal with bin_%d/lpt sliced_1d histograms
         Note: d is an instance of SuSys, not SuPlot
         """
-        if d.is_sliced():
-            # retrieve an instance of the sliced histogram (vs lpt) to bootstrap the binning
+        if d.is_sliced_1d():
+            # retrieve an instance of the sliced_1d histogram (vs lpt) to bootstrap the binning
             hpt = s.sig('tmp',d.clone(q=0)).h
             if not hpt:
                 hpt = s.sig('tmp',d.clone(q=1)).h
@@ -1215,6 +1263,8 @@ class SuStack:
                     res.append(s.get_scale(dtmp))
             # duplicate first/last bin scales for underflow/overflow scale
             return [res[0],] + res + [res[-1],]
+        elif d.is_sliced_2d():
+            assert False,'Not implemented yet'
         elif d.is_ntuple_etabins():
             print 'INFO: creating QCD scales in eta bins using ntuple fits'
             import binning
@@ -1543,46 +1593,76 @@ class SuStack:
         if isinstance(d,SuSys) or not d.nominal().is_sliced():
             return s.histosum_apply(loop,hname,d,norm,weights)
         # histogram specified in several eta slices: we need to reconstruct & unfold in each eta slice, then re-build:
-        hspec = d.nominal().histo    # bin_%d/lpt:imin:imax
-        assert len(hspec.split(':'))==3
-        horig = hspec.split(':')[0]  # bin_%d/lpt
-        hname = horig.split('/')[1]  # lpt
-        imin,imax = [int(cc) for cc in hspec.split(':')[1:1+2]]
-        assert hname in ('lepton_pt',)
-        # locate list of eta bins
-        import binning
-        bins = binning.absetabins
-        idxs = list(range(0,len(binning.absetabins)-1))
-        assert( idxs == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] ) # temp. hack: just put it by hand!
-        if False: #TODO: loop over multiple samples
-            hdir = loop[0].samples[0].get_from_file( d.nominal().h_path_folder() )
-            assert hdir
-            allkeys = [z.GetName() for z in hdir.GetListOfKeys() if re.match('bin_',z.GetName())]
-            idxs = sorted([ int(z.replace('bin_','')) for z in allkeys ])
-            print idxs, d.nominal().h_path_folder()
-        assert idxs[-1]==len(idxs)-1
-        # locate heta [should always be able to find it]
-        heta = None
-        for ilp in loop:
-            if heta: break
-            for ismpl in ilp.samples:
+        if d.nominal().is_sliced_1d():
+            hspec = d.nominal().histo    # bin_%d/lpt:imin:imax
+            assert len(hspec.split(':'))==3
+            horig = hspec.split(':')[0]  # bin_%d/lpt
+            hname = horig.split('/')[1]  # lpt
+            imin,imax = [int(cc) for cc in hspec.split(':')[1:1+2]]
+            assert hname in ('lepton_pt',)
+            # locate list of eta bins
+            import binning
+            bins = binning.setabins if re.search('bine_',horig) else binning.absetabins
+            idxs = list(range(0,len(bins)-1))
+            assert idxs[-1]==len(idxs)-1
+            # locate heta [should always be able to find it]
+            heta = None
+            for ilp in loop:
                 if heta: break
-                heta = ismpl.get_from_file( d.nominal().h_path_folder() + '/' + 'lepton_absetav' )
+                for ismpl in ilp.samples:
+                    if heta: break
+                    hetaname = 'lepton_etav' if re.search('bine_',horig) else 'lepton_absetav'
+                    heta = ismpl.get_from_file( d.nominal().h_path_folder() + '/' + hetaname )
+                    if heta: break
+            assert heta,'Cannot locate %s in any sample'%d.nominal().h_path_folder()
+            heta = heta.Clone()
+            heta.SetLineColor(ROOT.kBlack)
+            heta.SetFillColor(ROOT.kBlack)
+            heta.SetMarkerSize(0)
+            # loop over each eta bin
+            ds = []
+            for idx in idxs:
+                # update histo and unfhisto to bin_7/lpt
+                hnew = horig%idx
+                ds.append( s.histosum_apply(loop,hname,d.clone(histo=hnew,unfhisto=hnew,slice=idx),norm,weights) )
+            # now we have final unfolded histograms (vs lpt) in each eta bin. Go back into eta space:
+            d.update_from_slices(ds,heta,imin,imax)
+            return d
+        elif d.nominal().is_sliced_2d():
+            hspec = d.nominal().histo    # d2_abseta_lpt:y:0:8
+            assert len(hspec.split(':'))==4
+            horig = hspec.split(':')[0]  # d2_abseta_lpt
+            haxis = hspec.split(':')[1]  # y
+            assert haxis in ('x','y')
+            imin,imax = [int(cc) for cc in hspec.split(':')[2:2+2]]
+            # locate list of eta bins
+            import binning
+            bins = binning.absetabins if re.search('abseta',horig) else binning.setabins
+            idxs = list(range(0,len(bins)-1))
+            # locate heta [should always be able to find it]
+            heta = None
+            for ilp in loop:
                 if heta: break
-        assert heta,'Cannot locate %s in any sample'%d.nominal().h_path_folder()
-        heta = heta.Clone()
-        heta.SetLineColor(ROOT.kBlack)
-        heta.SetFillColor(ROOT.kBlack)
-        heta.SetMarkerSize(0)
-        # loop over each eta bin
-        ds = []
-        for idx in idxs:
-            # update histo and unfhisto to bin_7/lpt
-            hnew = horig%idx
-            ds.append( s.histosum_apply(loop,hname,d.clone(histo=hnew,unfhisto=hnew,slice=idx),norm,weights) )
-        # now we have final unfolded histograms (vs lpt) in each eta bin. Go back into eta space:
-        d.update_from_slices(ds,heta,imin,imax)
-        return d
+                for ismpl in ilp.samples:
+                    if heta: break
+                    hetaname = 'lepton_absetav' if re.search('abseta',horig) else 'lepton_etav'
+                    heta = ismpl.get_from_file( d.nominal().h_path_folder() + '/' + hetaname )
+                    if heta: break
+            assert heta,'Cannot locate %s in any sample'%d.nominal().h_path_folder()
+            heta = heta.Clone()
+            heta.SetLineColor(ROOT.kBlack)
+            heta.SetFillColor(ROOT.kBlack)
+            heta.SetMarkerSize(0)
+            # loop over each eta bin
+            ds = []
+            for idx in idxs:
+                # update histo and unfhisto to bin_7/lpt
+                hnew = '%s:%s:%d:%d'%(horig,haxis,idx+1,idx+1)
+                unfhisto = 'bin%s_%d/lepton_pt'%('' if re.search('abseta',horig) else 'e',idx)
+                ds.append( s.histosum_apply(loop,hname,d.clone(histo=hnew,unfhisto=unfhisto,slice=idx),norm,weights) )
+            # now we have final unfolded histograms (vs lpt) in each eta bin. Go back into eta space:
+            d.update_from_slices(ds,heta,imin,imax)
+            return d
     def histosum_apply(s,loop,hname,d,norm=None,weights=None):
         """ generic function to add up a subset of samples """
         if len(loop)==0:
