@@ -24,6 +24,10 @@ def xflatten(seq):
         else:
             yield x
 
+def rand_name(ln=10):
+  import random,string
+  return ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(ln))
+
 def SetStyle(styleMacro=''):
     """ Global style settings for ROOT """
     if styleMacro=='':

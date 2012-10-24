@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 import re,math
+from common import rand_name
 import ROOT
-
-def rand_name(ln=10):
-  import random,string
-  return ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(ln))
 
 class PlotOptions:
     """ Handles colors and marker styles for various MC generators """
