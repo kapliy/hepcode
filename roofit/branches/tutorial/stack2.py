@@ -510,10 +510,10 @@ def test_unfolding(spR2,spT2,asym=True,name='test_unfolding'):
 def test_from_slices(spR2,spT2,mode=1,name='test_slices'):  # test: reconstruction in eta slices
     c = SuCanvas(name)
     h1,h2,h3=None,None,None
-    mode=10
+    mode=100
     if mode==0:
         h1 = po.sig('pos',spT2.clone(q=0,do_unfold=False))
-        h2 = po.sig('pos',spR2.clone(q=0,do_unfold=False,histo='d2_abseta_lpt:y:0:8',sliced_2d=True))
+        h2 = po.sig('pos',spT2.clone(q=0,do_unfold=False,histo='d2_abseta_lpt:y:0:8',sliced_2d=True))
         h = [h1,h2]
     elif mode==1:
         h1 = po.data('pos',spR2.clone(q=0,do_unfold=False))
@@ -529,11 +529,18 @@ def test_from_slices(spR2,spT2,mode=1,name='test_slices'):  # test: reconstructi
         h1 = po.data_sub('pos',spR2.clone(q=0,do_unfold=False))
         h2 = po.data_sub('pos',spR2.clone(q=0,do_unfold=False,histo='d2_abseta_lpt:y:0:8',sliced_2d=True))
         h = [h1,h2]
+    elif mode==100:
+        SuStackElm.new_scales = False
+        spR2.enable_nominal()
+        #h1 = po.data_sub('pos',spR2.clone(q=0,do_unfold=True))
+        h2 = po.data_sub('pos',spR2.clone(q=0,do_unfold=True,histo='d2_abseta_lpt:y:0:8',sliced_2d=True))
+        h = [h2,]
     else:
         assert False,'Unsupported test_from_slices mode'
     M = PlotOptions()
-    M.add('default','Default',size=1.2)
-    if len(h)==3:
+    if len(h)>=2:
+        M.add('default','Default',size=1.2)
+    if len(h)>=3:
         M.add('fromslices1d','From slices - 1D',size=0.9)
     M.add('fromslices2d','From slices - 2D',size=0.5)
     c.plotAny(h,M=M,height=1.7)
@@ -863,7 +870,7 @@ if mode=='ALL' or mode=='all':
         h.summary_bin(fname='index')
     if False: # stopped working 06/19/2012. I think before it worked "almost" correctly, but now is substantially off
         test_unfolding(spR.clone(),spT.clone(),asym=False)
-    if False: # make sure rebuilding of abseta from bin-by-bin slices is identical to direct histogram
+    if True: # make sure rebuilding of abseta from bin-by-bin slices is identical to direct histogram
         test_from_slices(spR.clone(),spT.clone(),mode=10)
     if False: # same as above, but compaing at unfolded level. I.e., this also validates direct unfolding vs pt-unfolding inside eta slices
         c = SuCanvas('test_slices_norm')
