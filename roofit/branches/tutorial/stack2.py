@@ -269,6 +269,7 @@ if True:
     pw.adn(name='sig_powheg_herwig',label='W#rightarrow#mu#nu',samples=['mc_powheg_herwig_wminmunu','mc_powheg_herwig_wplusmunu'],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
     pw.adn(name='sig_powheg_pythia',label='W#rightarrow#mu#nu',samples=['mc_powheg_pythia_wminmunu','mc_powheg_pythia_wplusmunu'],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
     pw.adn(name='sig_alpgen_herwig',label='W#rightarrow#mu#nu+jets',samples=['mc_alpgen_herwig_wmunu_np%d'%v for v in range(6)],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
+    pw.adn(name='sig_af_alpgen_herwig',label='W#rightarrow#mu#nu+jets AFII',samples=['mc_af_alpgen_herwig_wmunu_np%d'%v for v in range(6)],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
     pw.adn(name='sig_alpgen_pythia',label='W#rightarrow#mu#nu+jets',samples=['mc_alpgen_pythia_wmunu_np%d'%v for v in range(6)],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
     if opts.bgsig in MAP_BGSIG.keys():
         pw.choose_sig(opts.bgsig)
@@ -384,11 +385,20 @@ tightlvl = ''
 #jetlvl = 'CalJet'
 jetlvl = ''
 spR = SuPlot()
-spR.bootstrap(do_unfold=False,
-              unfold={'sysdir':tightlvl+'Nominal'+jetlvl,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
-              charge=q,var=opts.var,histo=opts.hsource,
-              sysdir=[tightlvl+'Nominal'+jetlvl,tightlvl+'Nominal'+jetlvl,opts.isofail+jetlvl],subdir='st_w_final',basedir='baseline',
-              qcd={'var':'met','nbins':100,'min':0,'max':100,'metfit':'metfit','wmtfit':'wmtfit','forcenominal':False})
+if True:
+    spR.bootstrap(do_unfold=False,
+                  unfold={'sysdir':tightlvl+'Nominal'+jetlvl,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
+                  charge=q,var=opts.var,histo=opts.hsource,
+                  sysdir=[tightlvl+'Nominal'+jetlvl,tightlvl+'Nominal'+jetlvl,opts.isofail+jetlvl],subdir='st_w_final',basedir='baseline',
+                  qcd={'var':'met','nbins':100,'min':0,'max':100,'metfit':'metfit','wmtfit':'wmtfit','forcenominal':False})
+else:
+    # rawmet, full met range
+    spR.bootstrap(do_unfold=False,
+                  unfold={'sysdir':tightlvl+'Rawmet'+jetlvl,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
+                  charge=q,var=opts.var,histo=opts.hsource,
+                  sysdir=[tightlvl+'Rawmet'+jetlvl,tightlvl+'Rawmet'+jetlvl,opts.isofail+jetlvl],subdir='st_w_final',basedir='metfit',
+                  qcd={'var':'met','nbins':100,'min':0,'max':100,'metfit':'metfit','wmtfit':'wmtfit','forcenominal':False})
+    
 SuStack.QCD_SYS_SCALES = opts.metallsys
 SuStack.QCD_TF_FITTER = True
 SuStack.QCD_STAT_HACK = True
@@ -462,7 +472,7 @@ def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errors
     OMAP.append(c)
     return h[-1]
 
-#FIXME TODO: modify m=0 to m=isys, with extra string values to do total-systematic
+#TODO: modify m=0 to m=isys, with extra string values to do total-systematic
 def plot_stack(spR2,var,bin=None,q=2,m=0,new_scales=None,name=''):
     if new_scales!=None: SuStackElm.new_scales = new_scales
     spR2.update_var( var , bin )
@@ -532,9 +542,9 @@ def test_from_slices(spR2,spT2,mode=1,name='test_slices'):  # test: reconstructi
     elif mode==100:
         SuStackElm.new_scales = False
         spR2.enable_nominal()
-        #h1 = po.data_sub('pos',spR2.clone(q=0,do_unfold=True))
+        h1 = po.data_sub('pos',spR2.clone(q=0,do_unfold=True))
         h2 = po.data_sub('pos',spR2.clone(q=0,do_unfold=True,histo='d2_abseta_lpt:y:0:8',sliced_2d=True))
-        h = [h2,]
+        h = [h1,h2]
     else:
         assert False,'Unsupported test_from_slices mode'
     M = PlotOptions()
@@ -988,6 +998,7 @@ if mode=='prepare_qcd_1d' or mode=='prepare_qcd_2d':
         SuSample.xsecerr = -1
         po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),dname='POS_sig%d_ewk%d_xsecdown'%(sig,ewk)); itot+=1
         po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_sig%d_ewk%d_xsecdown'%(sig,ewk));  itot+=1
+
 # comprehensive study of qcd fits in 2d: pt x eta bins, using histograms.
 # UPD: now also supports 1D and 0D (all-inclusive) fits
 if mode=='qcdfit_2d':
@@ -1336,6 +1347,27 @@ if mode=='qcd_isolation':
     c.plotAny(hs,M=M)
     OMAP.append(c)
 
+if mode=='manual':
+    SuStackElm.new_scales = False
+    spR.enable_nominal()
+    plots = [opts.hsource,]
+    s1 = po.find_sample('mc_alpgen_herwig_wmunu_np0')
+    h1 = s1.histo('s1',spR.clone())
+    assert s1
+    s2 = po.find_sample('mc_af_alpgen_herwig_wmunu_np0')
+    assert s2
+    h2 = s2.histo('s2',spR.clone())
+    M = PlotOptions()
+    M.add('s1','Full sim',color=2,size=1.0,ratio=True)
+    M.add('s2','Fast sim',color=3,size=0.5)
+    hs = [h1,h2]
+    c = SuCanvas('FASTSIM_'+QMAP[q][1]+'_'+opts.hsource)
+    c._ratioName = 'Fast/Full'
+    leg = ROOT.TLegend(0.55,0.70,0.88,0.88,'Simulation type:',"brNDC")
+    leg.SetFillColor(0)
+    c.plotAny(hs,M=M,leg=leg,w=800,h=600)
+    OMAP.append(c)
+    
 if mode=='one_plot':
     if True:
         SuStackElm.new_scales = False
@@ -1358,6 +1390,20 @@ if mode=='qcd_bgsub':
     qcd3 = po.qcd('qcd3',opts.var,opts.bin,pre_isol,path=path_reco)
     po.choose_qcd(4)
     plot_stacks(spR.clone(),plots,m=1,qs=(opts.charge,),name='QCD4')
+
+if mode=='unfold2d':
+    c = SuCanvas(mode)
+    SuStackElm.new_scales = False
+    ipt = opts.preNN if opts.preNN=='ALL' else int(opts.preNN)
+    imin,imax = (ipt,ipt) if ipt!='ALL' else (0,8)
+    spR.enable_names(['Nominal','MuonScaleKUp','MuonScaleKDown','MuonScaleCUp','MuonScaleCDown'])
+    #h = po.data_sub('pos',spR.clone(q=0,do_unfold=True,histo='d2_abseta_lpt:y:%d:%d'%(imin,imax),sliced_2d=True))
+    h = po.sig('Q%d'%opts.charge,spR.clone(q=opts.charge,do_unfold=False,histo='d2_abseta_lpt:y:%d:%d'%(imin,imax),sliced_2d=True))
+    M = PlotOptions()
+    M.add('fromslices2d','From slices - 2D',size=0.5)
+    c.plotAny([h,],M=M,height=1.7)
+    OMAP.append(c)
+    OMAP.append( h.individual_systematics(canvas_name=c.namebase()+'_SYS') )
 
 if mode=='100': # creates efficiency histogram (corrects back to particle level)
     renormalize()

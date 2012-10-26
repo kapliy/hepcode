@@ -66,8 +66,12 @@ class SuCanvas:
   def __init__(s,name='plot'):
     s.data = []
     s._ratioDrawn = False
+    s._ratioName = "data / MC"
     s.savename = SuCanvas.cleanse(name)
     s._plotPad,s._coverPad,s._ratioPad,s._canvas = None,None,None,None
+
+  def namebase(s):
+      return s.savename
 
   def FixupHisto(s,h):
     h.GetXaxis().SetTitleOffset( s.getXtitleOffset() );
@@ -122,7 +126,7 @@ class SuCanvas:
     refLine.GetYaxis().SetNdivisions( 406 );
     if xtitle:
       refLine.GetXaxis().SetTitle( xtitle );
-    refLine.GetYaxis().SetTitle( "data / MC" );
+    refLine.GetYaxis().SetTitle( s._ratioName );
     refLine.SetLineWidth( 3 );
     refLine.SetLineStyle( ROOT.kDashed );
     refLine.Draw( "hist" );
@@ -344,7 +348,7 @@ class SuCanvas:
       leg.Draw("same")
     s.update()
 
-  def plotAny(s,hplots,M=None,height=1.7,leg=None,title=None,xtitle=None):
+  def plotAny(s,hplots,M=None,height=1.7,leg=None,title=None,xtitle=None,w=1024,h=800):
     """ A generic function to plot several SuPlot's.
     M is: a PlotOptions object describing formatting and colors
     In this version, systematic error mode is encoded inside M
@@ -354,13 +358,14 @@ class SuCanvas:
       assert M.ntot()==len(hplots),'Size mismatch between SuPlots and PlotOptions'
     if not leg:
       leg = ROOT.TLegend(0.55,0.70,0.88,0.88,'Legend',"brNDC")
+      leg.SetFillColor(0)
     if title!=None: leg.SetHeader(title)
     s.data.append( (hplots,leg) )
     if M and M.any_ratios():
-      s.buildRatio()
+      s.buildRatio(width=w,height=h)
       s.cd_plotPad()
     else:
-      s.buildDefault(width=1024,height=800)
+      s.buildDefault(width=w,height=h)
       s.cd_canvas();
     # plot actual histograms
     hs = []
@@ -415,15 +420,15 @@ class SuCanvas:
         s.data.append( (hratio,href) )
     s.update()
 
-  def plotStack(s,hstack,hdata,leg=None,height=1.5,mode=0,pave=True):
+  def plotStack(s,hstack,hdata,leg=None,height=1.5,mode=0,pave=True,rebin=1.0):
     """ Wrapper to make a complete plot of stack and data overlayed - SuData version
     mode=0 - nominal only
     mode=1 - apply systematics
     """
     s.buildRatio();
     s.cd_plotPad();
-    stack = hstack.nominal().stack.Clone()
-    data = hdata.nominal_h()
+    stack = hstack.nominal().get_stack(rebin).Clone()
+    data = hdata.nominal_h(rebin)
     s.data.append((stack,data,leg))
     hsys = None
     # mc
