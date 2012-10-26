@@ -1,5 +1,10 @@
+QCD:
+important: exclude bins with zero entries from the fit!
+Finish coding rebin functionality
+
 STYLE:
-Sort stack histograms from smallest to largest contributions.
+Ability to rebin stacks
+Re-sort stack histograms from smallest to largest contributions.
 
 OCTOBER:
 MAX: repeat unfolded distribution errors

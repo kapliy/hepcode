@@ -60,6 +60,22 @@ class SuSys:
         s.sysdir = s.qlist(sysdir)
         s.subdir = s.qlist(subdir)
         s.basedir = s.qlist(basedir)
+    def get_h(s,rebin=1.0):
+        if rebin==1.0:
+            return s.h
+        else:
+            h = s.h.Clone()
+            h.Rebin(rebin)
+            return h
+    def get_stack(s,rebin=1.0):
+        if rebin==1.0:
+            return s.stack
+        else:
+            h = s.stack.Clone()
+            NBG = h.GetStack().GetLast()
+            for ii in range(0,NBG+1):
+                h.GetHists().At(ii).Rebin(rebin)
+            return h
     def use_ntuple(s):
         """ True or False """
         return s.ntuple!=None
@@ -364,17 +380,28 @@ class SuPlot:
         return s.sys[0][0]
     def nominal(s):
         return s.flat[0]
-    def nominal_h(s):
-        return s.nominal().h
+    def nominal_h(s,rebin=1.0):
+        if rebin==1.0:
+            return s.nominal().h
+        else:
+            h = s.nominal().h.Clone()
+            h.Rebin(rebin)
+            return h
     def enable_name(s,name):
-        idx = 0 
+        return s.enable_names([name,])
+    def enable_names(s,names):
+        idx = 0
+        s.enable = []
         for sgroups in s.sys:
             for sinst in sgroups:
-                if sinst.name==sysname:
-                    s.enable = [idx]
-                    return
+                if sinst.name in names:
+                    s.enable.append(idx)
                 idx+=1
-        print 'WARNING: could not enable systematic:',name
+        if len(s.enable)==0:
+            print 'WARNING: could not enable any of these systematics:',names
+        else:
+            print 'Enabled',len(s.enable),'systematics out of',len(names)
+            print names
     def enable_nominal(s):
         s.enable = [0,]
     def enable_some(s,v):
@@ -555,14 +582,20 @@ class SuPlot:
             for hs in hss: # loop over systematics in this group
                 print '%s \t\t:\t\t %.2f%%' % (hs.name, 100.0*(hs.h.GetBinContent(b) - nom.GetBinContent(b))/nom.GetBinContent(b) if nom.GetBinContent(b) else 0 )
         pass
-    def summary_bin(s,b=None,fname=None):
-        """ Prints relative deviation of various systematics in a given bin, compared with the statistical uncertainty """
-        MAKE_PLOT = True
+    def summary_bin(s,b=None,html_name=None,canvas_name='SYS',MAKE_PLOT=True):
+        """
+        Prints relative deviation of various systematics in a given bin, compared with the statistical uncertainty
+        """
+        assert MAKE_PLOT==True,'Please enable making of the plot in SuData::summary_bin'
+        assert 0 in s.enable
         nom = s.nominal_h()
         bins = b if b else range(1,nom.GetNbinsX()+1)
         oldsys,f = sys.stdout,None
-        if fname:
-            f = open(fname+'.html','w')
+        if html_name:
+            f = open(html_name+'.html','w')
+            sys.stdout = f
+        else:
+            f = open(os.devnull, 'w')
             sys.stdout = f
         print '<HTML><BODY>'
         print '<TABLE border="1">'
@@ -589,10 +622,20 @@ class SuPlot:
         markerlist+= markerlist
         markerlist+= markerlist
         if MAKE_PLOT:
-            s.Cc = Cc = ROOT.TCanvas('SYSC','SYSC',600,600)
+            import SuCanvas
+            s.Ccan = SuCanvas.SuCanvas(canvas_name)
+            s.Ccan.buildDefault(width=800,height=600)
+            s.Cc = Cc = s.Ccan.cd_canvas()
             Cc.cd()
             for ig,hss in enumerate(s.sys[1:]):
-                Hh.append( SuSample.make_habseta('hsys%d'%ig) )
+                if False:
+                    bla = nom.Clone('hsys%d'%ig)
+                    bla.Reset()
+                    bla.Sumw2()
+                    bla.SetFillColor(0)
+                    Hh.append( bla )
+                else:
+                    Hh.append( SuSample.make_habseta('hsys%d'%ig) )
                 Hh[-1].SetLineColor(colorlist[ig])
                 #Hh[-1].SetFillColor(colorlist[ig])
                 Hh[-1].SetMarkerColor(colorlist[ig])
@@ -600,12 +643,14 @@ class SuPlot:
             s.Ll = Ll = ROOT.TLegend(0.75,0.60,0.92,0.88,'Systematics',"brNDC")
             Ll.SetFillColor(0)
             Ll.SetHeader('Systematics:')
+        itot = 1
         for ig,hss in enumerate(s.sys[1:]):
             print '<TR><TD colspan="%d">'%(len(bins)+1)
             print s.groups[ig+1]
             print '</TD></TR>'
             maxd = [0]*(len(bins)+2)
             for hs in hss:
+                if itot not in s.enable: continue
                 name = hs.name
                 print '<TR>'
                 print '<TD>%s</TD>'%name
@@ -613,6 +658,8 @@ class SuPlot:
                     diff = 100.0*(hs.h.GetBinContent(b) - nom.GetBinContent(b))/nom.GetBinContent(b) if nom.GetBinContent(b) else -999
                     maxd[b] = maxd[b] if maxd[b]>abs(diff) else abs(diff)
                 print '</TR>'
+                itot += 1
+            # use maximum deviation within this *group*
             if MAKE_PLOT:
                 [ Hh[ig].SetBinContent(b,maxd[b]) for b in bins ]
                 Ll.AddEntry(Hh[ig],s.groups[ig+1],'LP')
@@ -627,7 +674,72 @@ class SuPlot:
             Hh[0].GetXaxis().SetTitle('|#eta|')
             [ih.Draw('C P0 same') for ih in Hh[1:]]
             Ll.Draw('same')
-            Cc.SaveAs("SYST_%s.png"%fname)
+            #Cc.SaveAs("SYST_%s.png"%fname)
+        return s.Ccan
+    def individual_systematics(s,canvas_name='SYS',norm=False):
+        """
+        if norm==True, absolute relative deviations are plotted
+        """
+        assert 0 in s.enable,'Nominal histogram must always be enabled'
+        nom = s.nominal_h()
+        bins = range(1,nom.GetNbinsX()+1)
+        # statistical errors (for reference)
+        stat = nom.Clone("staterr")
+        stat.Reset()
+        stat.Sumw2()
+        for b in bins:
+            err  = 100.0*(nom.GetBinError(b))/nom.GetBinContent(b) if nom.GetBinContent(b) else 0
+            stat.SetBinContent(b,err)
+        Cc,Hh,Ll = None,[],None
+        s.Hh = Hh
+        colorlist = [2,3,4,5,6,20,28,41,46]
+        colorlist += colorlist
+        colorlist += colorlist
+        markerlist = [20,21,22,23,29,33,34]
+        markerlist+= markerlist
+        markerlist+= markerlist
+        import SuCanvas
+        s.Ccan = SuCanvas.SuCanvas(canvas_name)
+        s.Ccan.buildDefault(width=800,height=600)
+        s.Cc = Cc = s.Ccan.cd_canvas()
+        Cc.cd()
+        for ig,hss in enumerate(s.flat[1:]):
+            if ig+1 not in s.enable: continue
+            hh = nom.Clone('hsys%d'%ig)
+            hh.Reset()
+            hh.Sumw2()
+            hh.SetFillColor(0)
+            Hh.append( hh )
+            Hh[-1].SetLineColor(colorlist[ig])
+            Hh[-1].SetMarkerColor(colorlist[ig])
+            Hh[-1].SetMarkerStyle(markerlist[ig])
+            Hh[-1].SetMarkerSize(1.5)
+        s.Ll = Ll = ROOT.TLegend(0.75,0.60,0.92,0.88,'Systematics',"brNDC")
+        Ll.SetFillColor(0)
+        Ll.SetHeader('Systematics:')
+        itot = 0
+        for ig,hs in enumerate(s.flat[1:]):
+            if ig+1 not in s.enable: continue
+            name = hs.name
+            for b in bins:
+                diff = 100.0*(hs.h.GetBinContent(b) - nom.GetBinContent(b))/nom.GetBinContent(b) if nom.GetBinContent(b) else 0
+                if norm==True:
+                    diff = abs(diff)
+                Hh[itot].SetBinContent(b,diff)
+            Ll.AddEntry(Hh[itot],name,'LP')
+            itot += 1
+        Hh[0].Draw('C P0')
+        vmax = max ( hh.GetMaximum() for hh in Hh )
+        vmax = vmax*2.5 if vmax>0 else vmax
+        vmin = min ( hh.GetMinimum() for hh in Hh )
+        vmin = vmin*1.3 if vmin<0 else vmin
+        Hh[0].GetYaxis().SetRangeUser(vmin,vmax)
+        Hh[0].GetYaxis().SetTitle('Percentage deviation')
+        Hh[0].GetXaxis().SetTitle('|#eta|')
+        [ih.Draw('C P0 same') for ih in Hh[1:]]
+        #stat.Draw('C P0 same')
+        Ll.Draw('same')
+        return s.Ccan
     def update_var(s,histo,bin=None):
         """ Updates histogram name and ntuple-expression (aka variable)
         In reality, only one of these applies for a given SuData instance.
@@ -1223,7 +1335,7 @@ class SuStack:
             h = d.h if d.h else d.stack.GetStack().Last()
             assert response
             method = d.unfold['method']
-            print 'Unfolding method:',method,d.name,d.unfold['mc']
+            #print 'Unfolding method:',method,d.name,d.unfold['mc']
             par = d.unfold['par']
             unfold = None
             if method=='RooUnfoldBayes':
@@ -1233,7 +1345,7 @@ class SuStack:
             elif method=='RooUnfoldSvd':
                 unfold = ROOT.RooUnfoldSvd(response, h, par);
             assert unfold
-            unfold.SetVerbose(1)
+            unfold.SetVerbose(0)
             # replace original histo
             d.h = unfold.Hreco()
         return out
@@ -1426,6 +1538,12 @@ class SuStack:
         s.scales[key] = (f.scales[0],f.scalesE[0], f.fractions[0],f.fractionsE[0], f.Wscales[0],f.WscalesE[0], f.Wfractions[0],f.WfractionsE[0], f.chi2[0],f.ndf[0] , f.nfits)
         s.scalekeys.append(key)
         return s.scale_sys(key,d)
+    def find_sample(s,name):
+        for grp in s.elm:
+            for sam in grp.samples:
+                if sam.name==name:
+                    return sam
+        return None
     def histo(s,name,hname,d,norm=None):
         """ generic function to return histogram for a particular subsample """
         loop = [z for z in s.elm if z.name==name]
