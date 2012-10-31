@@ -392,11 +392,11 @@ if True:
                   sysdir=[tightlvl+'Nominal'+jetlvl,tightlvl+'Nominal'+jetlvl,opts.isofail+jetlvl],subdir='st_w_final',basedir='baseline',
                   qcd={'var':'met','nbins':100,'min':0,'max':100,'metfit':'metfit','wmtfit':'wmtfit','forcenominal':False})
 else:
-    # rawmet, full met range
+    # rawmet
     spR.bootstrap(do_unfold=False,
                   unfold={'sysdir':tightlvl+'Rawmet'+jetlvl,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
                   charge=q,var=opts.var,histo=opts.hsource,
-                  sysdir=[tightlvl+'Rawmet'+jetlvl,tightlvl+'Rawmet'+jetlvl,opts.isofail+jetlvl],subdir='st_w_final',basedir='metfit',
+                  sysdir=[tightlvl+'Rawmet'+jetlvl,tightlvl+'Rawmet'+jetlvl,opts.isofail+jetlvl],subdir='st_w_final',basedir='baseline',
                   qcd={'var':'met','nbins':100,'min':0,'max':100,'metfit':'metfit','wmtfit':'wmtfit','forcenominal':False})
     
 SuStack.QCD_SYS_SCALES = opts.metallsys
@@ -1398,7 +1398,8 @@ if mode=='unfold2d':
     imin,imax = (ipt,ipt) if ipt!='ALL' else (0,8)
     spR.enable_names(['Nominal','MuonScaleKUp','MuonScaleKDown','MuonScaleCUp','MuonScaleCDown'])
     #h = po.data_sub('pos',spR.clone(q=0,do_unfold=True,histo='d2_abseta_lpt:y:%d:%d'%(imin,imax),sliced_2d=True))
-    h = po.sig('Q%d'%opts.charge,spR.clone(q=opts.charge,do_unfold=False,histo='d2_abseta_lpt:y:%d:%d'%(imin,imax),sliced_2d=True))
+    #h = po.sig('Q%d'%opts.charge,spR.clone(q=opts.charge,do_unfold=False,histo='d2_abseta_lpt:y:%d:%d'%(imin,imax),sliced_2d=True))
+    h = po.sig('Q%d'%opts.charge,spR.clone(q=opts.charge,do_unfold=False,histo=opts.hsource%(imin,imax),sliced_2d=True))
     M = PlotOptions()
     M.add('fromslices2d','From slices - 2D',size=0.5)
     c.plotAny([h,],M=M,height=1.7)
@@ -1975,8 +1976,13 @@ for key,val in po.fits.iteritems():
 
 # save images
 if not opts.antondb:
-    if not os.path.isdir(opts.output):
-        os.makedirs(SuCanvas.savedir)
+    if not os.path.isdir(SuCanvas.savedir):
+        import time
+        time.sleep(0.1)
+        if not os.path.isdir(SuCanvas.savedir):
+            time.sleep(0.3)
+            if not os.path.isdir(SuCanvas.savedir):
+                os.makedirs(SuCanvas.savedir)
     # save all plots
     for i,obj in enumerate(OMAP):
         savename = obj.savename
