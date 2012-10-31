@@ -1,8 +1,16 @@
+OCT29:
+* Finish study of bin migrations due to MCP systematic
+  Run a small example to confirm that the pT is shifted, as expected. Maybe dump numbers on 5k events into a text file.
+  Try the same but WITHOUT met propagation (have to do that at ntuple level)
+* Look at MCP systematics by-hand: is statistical uncertainty dominant? If not, can we reduce it by averaging?
+* Apply d0/z0 cuts in ntuple format and see if eta spectrum smoothness improves
+
+
 QCD:
 important: exclude bins with zero entries from the fit!
-Finish coding rebin functionality
 
 STYLE:
+Implement Sebastian's style
 Ability to rebin stacks
 Re-sort stack histograms from smallest to largest contributions.
 
@@ -45,16 +53,9 @@ W/Gamma alpgen: 117410-15
 Idea: fit in delta-phi between MET and muon
 TODO: understand the Z MC veto and drell-yan
 
-MAX TODO:
-- neutrino pt vs met-truth (to factor out jets)
-- compare tunes of powheg/herwig and mc@nlo
-
 MEL TODO:
 MCP corrections: is most of uncertainty statistical? Then no point messing with the systematics!
 MCP corrections: split in phi bins, for the barrel case where there is large C offset?
-
-Make sure I save the correct eff uncertainty in ntuples!
-Check if Max gets a really large trig effuncertainty because he does not use corresponding unfolding matrices!
 
 Peter: why w mt is best.
 it factors out w pt. Overlay templates for different generators - expect better agreement between them in w_mt (vs other variables).
@@ -65,46 +66,16 @@ Consider EtMissRel instead of etmiss?
 ME:
 * Add dressed muons for C_W factors!
 
-MAX: MET disagreement in PowHeg - understand
-     ABCD: iso - MET
-
-MAX: why muon pt cut not 25 GeV?
-MAX: cutflow convergence!
-MAX: C_W vs unfolding. Default: born
-
-
-Understand why MC event counts (CUTFLOW) are rounded to integers!!!
-
-wire up the flag is_syst to skip initialization of many classes, in particular having to do with jet stuffs
 MET propagation: see if KC corrections are actually valid for low-pt muons, which are used for MET propagation!
 Peter: isolation is very different between b and c. Need to worry about the mix.
-For merge jobs, require 4GB of RAM (?)
 
 Max meeting:
-
-Q: discuss statistics issue
-
 Q: chi2 plot script 
    number of sigma
    data-mc / (sum of errors). For fit, chi2 is directly from the fit bin-by-bin. sqrt(chi2). Sign is comparing template to data. MC below - > chi2 contribution positive.
-
 Q: muon efficiency: correlated uncertainty?
-   TODO: discuss with MCP - follow up
-   TODO: remind about scale - Max will do it
 
-Q: unfolding
-   EWUNFOLD - xml unfolding steering.
-
-* I think QCD fits are not normalized correctly in roofit/.
-* Add additional isolations. Get rid of extraneous plots (metfit where we don't need it)
-
-Peter: WZ D3PDs have huge truth
 Understand why the TFractionFitter metfit fails in some cases yet succeeds if it is attempted one more time. Understand if ewk normalization is floating, and if so, add it to canvas printout
-z0 reweighting
-* Consider allowing floating normalization to EWK
-
-Check out this line: - it gets triggered on met_phi in Zmumu events.
-    if( safe_divide(tmp,den) > 1E6 ) { printf( "num = %f , den = %f\n" , num , den ); return 0; assert(false); } //FIXME AK
 
 Peter: Photos  -> Dressed truth should be the same
 FEWZ has no ewk FSR term. -> FEWZ 3.0
@@ -127,25 +98,12 @@ Work in progress:
 * separate run for wmunu pt reweighting for samples with the same PDF.
 * add isoww_metfit category to get isolation choice systematic
 
-roofit updates:
-[AFTER FIXING HISTO BUG:]
-* Compare ntuple-derived and histogram-based asymmetry
-[IMMEDIATE:]
-* Get back to QCD studies. Make the anti-isolated muon template; normalze via usual fit.
-* w pt plots from peter
-* Big jordan update
-
 
 TrigFTKAna updates:
 * add tag-probe in.
   hardcode in study class, as Ho Ling does!
-* LATER: Add truth-level 4-momentum and njets to reco ntuple (maybe implement global passing via a map in DgEventInfo?)
 * LATER: Add FSR tool; add FSR-present flag; add FSR-corrected Z
 * LATER: add dressed truth leptons
-
-The scale factors do not depent on pT, but the errors do. So to get
-the right errors with the scale factors,  you must use the
-fourmomentum before the smearing.
 
 * Mel: compare Pythia and Alpgen pre-FSR distributions.
   Peter: identify and veto events that have an FSR photon around the mu

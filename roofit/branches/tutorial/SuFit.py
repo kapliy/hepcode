@@ -124,16 +124,20 @@ class SuFit:
   def exclude_zero_bins(f,hs=[]):
     """ f is a TFractionFitter object. hs[] is a collection of histograms
     This function modifies the TFractionFitter object to exclude bins
-    where at least one of the hs[] have no entries
+    where at least one of the hs[] have no entries (or negative entries)
     """
-    assert False,'FIXME: work in progress'
     if len(hs)==0:
       return
-    for i in xrange(0,hs[0].GetNbinsX()+1):
-      if h.GetBinContent(i-1)>0 and h.GetBinContent(i)>0:
-        return i-1 # i  # set to i to skip the first bin, too!
-    print 'WARNING: failed to find a non-zero bin in first_nonzero_bin. Proceeding starting with first bin...'
-    return bmin
+    nbins = hs[0].GetNbinsX() + 1
+    nexcl = 0
+    print hs
+    for ibin in xrange(0,nbins):
+      if any( [h.GetBinContent(ibin)<=0 for h in hs] ):
+        f.ExcludeBin(ibin)
+        nexcl += 1
+    if nexcl>0:
+      print 'WARNING: TFractionFitter excluded %d out of %d bins due to low statistics'%(nexcl,nbins)
+    return True
 
   def doFitTF(s):
     """ A version of doFit using TFractionFitter
@@ -160,7 +164,7 @@ class SuFit:
     print 'INFO: SuFit::doFitTF fit range:',s.vnames[0],s.fitmin,s.fitmax
     sys.stdout.flush()
     fit.SetRangeX(s.fitmin,s.fitmax) # choose MET fit range
-    SuFit.exclude_zero_bins( fit , [s.fixed,s.free,s.data] )
+    SuFit.exclude_zero_bins( fit , [s.fixed,s.free[0],s.data] )
     if False: # debugging
       s.dump_plot([data,s.fixed,s.free[0]])
     # set up extra parameters. frac0 = EWK (fixed), frac1 = QCD (free)
@@ -506,17 +510,20 @@ class SuFit:
     #ROOT.gStyle.SetErrorX(0.001)
     data.Draw('X0 A SAME')
 
+    # y axis
+    stack.GetYaxis().SetRangeUser(0,data.GetMaximum()*2)
+
     # prettify
     obj = stack
     if obj:
       obj.GetXaxis().SetRange(s.plotmin,s.plotmax)
       obj.GetXaxis().SetTitleOffset( canvas.getXtitleOffset() )
-      obj.GetYaxis().SetTitleOffset( canvas.getYtitleOffset() )
       obj.GetXaxis().SetTitle( s.w.var(s.vnames[ivar]).GetName() )
       obj.GetXaxis().SetTitleColor(ROOT.kBlack)
       obj.GetXaxis().SetLabelSize( canvas.getLabelSize() )
       obj.GetXaxis().SetTitleSize( canvas.getAxisTitleSize() )
       obj.GetXaxis().CenterTitle()
+      obj.GetYaxis().SetTitleOffset( canvas.getYtitleOffset() )
       obj.GetYaxis().SetTitle( "entries / GeV" )
       obj.GetYaxis().SetLabelSize( canvas.getLabelSize() )
       obj.GetYaxis().SetTitleSize( canvas.getAxisTitleSize() )
