@@ -8,7 +8,7 @@ _PRE_MAX = "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt
 _BEF = 'lX_idhits==1 && fabs(lP_z0)<10. && fabs(lX_eta)<2.4 && lX_pt>10.0 && lY_idhits==1 && fabs(lN_z0)<10. && fabs(lY_eta)<2.4 && lY_pt>10.0 && Z_m>81.0 && Z_m<101.0 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0 && lX_ptiso40<2.0 && lX_etiso40<2.0'
 _AFT = _BEF + ' && ' + 'lY_etiso40<2.0'
 
-import sys,re
+import sys,re,os
 from hashlib import md5
 from optparse import OptionParser
 import antondb
@@ -80,7 +80,7 @@ parser.add_option("--rebin",dest="rebin",
                   type="int", default=1,
                   help="Rebin histograms")
 parser.add_option("--refline",dest="refline",
-                  type="string", default='0.5,1.5',
+                  type="string", default='0.81,1.19',
                   help="The range for ratio histogram reference line used in stack plots")
 parser.add_option("--antondb",dest="antondb",
                   type="string", default=None,
@@ -102,6 +102,9 @@ parser.add_option("--lumi",dest="lumi",
 parser.add_option("--qcd",dest="qcdscale",
                   type="string", default='1.0',
                   help="QCD scale factor")
+parser.add_option("--qcdsource",dest="qcdsource",
+                  type="string", default=None,
+                  help="A source of QCD histogram in a separate file")
 parser.add_option("-o", "--output",dest="output",
                   type="string", default=None,
                   help="Name of output dir for plots")
@@ -162,17 +165,22 @@ SuCanvas.savetag     = opts.tag
 SuCanvas.savedir = './'
 if opts.output:
     SuCanvas.savedir = opts.output+'/'
+# overrides for default style:
+SuCanvas.g_lin_ratio_y_title_offset = 1.7
+SuCanvas.g_marker_size = 0.7
+SuCanvas.g_legend_x1_ndc = 0.55
+SuCanvas.g_text_size = 18
+SuCanvas.g_legend_height_per_entry = 0.04
+# Apply plot style
+SuCanvas.cgStyle = SuCanvas.ControlPlotStyle()
+#SetStyle("AtlasStyle.C")
 
-SetStyle("AtlasStyle.C")
 from SuData import *
 SuSample.rootpath = opts.input
 SuSample.debug = opts.verbose
 SuSample.lumi = opts.lumi
 SuSample.xsecerr = opts.xsecerr
-SuSample.rebin = opts.rebin
-SuSample.qcdscale = float(opts.qcdscale) if not opts.qcdscale in ('AUTO','auto','Auto') else 1.0
-
-#SetStyle()
+SuStackElm.qcdsource = opts.qcdsource
 
 from ntuple_tools import *
 def renormalize(bin='100,5,100'):
@@ -402,6 +410,7 @@ else:
 SuStack.QCD_SYS_SCALES = opts.metallsys
 SuStack.QCD_TF_FITTER = True
 SuStack.QCD_STAT_HACK = True
+SuStack.QCD_EXC_ZERO_BINS = 1 #FIXME
 spR.enable_all()
 # Reco-level [ntuple]
 spRN = SuPlot()
@@ -477,10 +486,10 @@ def plot_stack(spR2,var,bin=None,q=2,m=0,new_scales=None,name=''):
     if new_scales!=None: SuStackElm.new_scales = new_scales
     spR2.update_var( var , bin )
     c = SuCanvas('stack_'+var+'_'+SuSys.QMAP[q][1]+('_'+name if name !='' else ''))
-    leg = ROOT.TLegend(0.55,0.70,0.88,0.88,var,"brNDC")
+    leg = ROOT.TLegend()
     hstack = po.stack('mc',spR2.clone(q=q),leg=leg)
     hdata = po.data('data',spR2.clone(q=q),leg=leg)
-    c.plotStack(hstack,hdata,mode=m,leg=leg,height=1.7)
+    c.plotStack(hstack,hdata,mode=m,leg=leg,height=2.0,pave=False,rebin=opts.rebin)
     OMAP.append(c)
     return hdata,hstack
 
@@ -706,6 +715,10 @@ if mode=='ALL' or mode=='all':
         plots = ['lepton_absetav','lpt','met','wmt']
         plots = [opts.hsource,]
         plot_stacks(spR.clone(),plots,m=1,qs=(0,1,2))
+    if True:
+        spR.enable_nominal()
+        plots = [opts.hsource,]
+        plot_stacks(spR.clone(),plots,m=1,qs=(0,1))
     if False: # inclusive reco-level and truth-level asymmetry
         plot_any(spR.clone(q=0),spT.clone(q=0),m=2,do_unfold=True,do_errorsDA=True,do_summary=True,name='POS')
         plot_any(spR.clone(q=1),spT.clone(q=1),m=2,do_unfold=True,do_errorsDA=True,do_summary=True,name='NEG')
@@ -880,7 +893,7 @@ if mode=='ALL' or mode=='all':
         h.summary_bin(fname='index')
     if False: # stopped working 06/19/2012. I think before it worked "almost" correctly, but now is substantially off
         test_unfolding(spR.clone(),spT.clone(),asym=False)
-    if True: # make sure rebuilding of abseta from bin-by-bin slices is identical to direct histogram
+    if False: # make sure rebuilding of abseta from bin-by-bin slices is identical to direct histogram
         test_from_slices(spR.clone(),spT.clone(),mode=10)
     if False: # same as above, but compaing at unfolded level. I.e., this also validates direct unfolding vs pt-unfolding inside eta slices
         c = SuCanvas('test_slices_norm')
@@ -1019,6 +1032,7 @@ if mode=='qcdfit_2d':
     imax = int(ibin.split(',')[2])
     var = None
     pvar = None
+    # TODO: convert to using 2d histograms
     if ieta=='ALL' and ipt=='ALL':
         var  = '%s'%(ivar)
         pvar = '%s'%(ivar)
@@ -1363,7 +1377,7 @@ if mode=='manual':
     hs = [h1,h2]
     c = SuCanvas('FASTSIM_'+QMAP[q][1]+'_'+opts.hsource)
     c._ratioName = 'Fast/Full'
-    leg = ROOT.TLegend(0.55,0.70,0.88,0.88,'Simulation type:',"brNDC")
+    leg = ROOT.TLegend()
     leg.SetFillColor(0)
     c.plotAny(hs,M=M,leg=leg,w=800,h=600)
     OMAP.append(c)
@@ -1485,7 +1499,7 @@ if mode in ('sig_reco','sig_truth'): # compares distributions in different signa
     cc = c.cd_canvas()
     cc.cd(1)
     h = []
-    leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
+    leg = ROOT.TLegend()
     leg.SetHeader(opts.var)
     SuSample.unitize = True
     for i in xrange(M.ntot()):
@@ -1510,7 +1524,7 @@ if mode=='asym_truth': # asymmetry, at truth level, of different monte-carlos.
     cc.cd(1)
     h = []
     hasym = []
-    leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
+    leg = ROOT.TLegend()
     leg.SetHeader('Asymmetry:')
     for i in xrange(M.ntot()):
         h.append([None,None])
@@ -1603,7 +1617,7 @@ if mode=='matrix_2010inc': # QCD estimation using matrix method
     hN_loose.GetYaxis().SetRangeUser(0,max(hN_loose.GetMaximum(),hN_isol.GetMaximum())*1.5)
     hN_loose.GetYaxis().SetTitle('Loose and Isolated muons')
     hN_isol.Draw('same A')
-    leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
+    leg = ROOT.TLegend()
     leg.AddEntry(hN_loose,'Loose muons','LP')
     leg.AddEntry(hN_isol,'Isolated muons','LP')
     leg.Draw('same')
@@ -1625,7 +1639,7 @@ if mode=='matrix_2010inc': # QCD estimation using matrix method
     haxis.GetYaxis().SetRangeUser(0,max(haxis.GetMaximum(),haxis2.GetMaximum())*1.5)
     haxis.GetYaxis().SetTitle('QCD template after isolation cut')
     haxis.GetXaxis().SetTitle(opts.var)
-    leg = ROOT.TLegend(0.55,0.70,0.88,0.88,QMAP[q][3],"brNDC")
+    leg = ROOT.TLegend()
     leg.AddEntry(hqcd_tight,'Matrix-method QCD','LP')
     leg.AddEntry(hqcd_mc,'MC QCD (bb/cc mu15x)','LP')
     leg.Draw('same')
@@ -2007,3 +2021,5 @@ if opts.antondb:
 sys.stdout.flush()
 
 print 'stack.py finished'
+sys.stdout.flush()
+os._exit(0)
