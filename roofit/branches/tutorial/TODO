@@ -1,3 +1,7 @@
+Peter: do double
+Plot muon missing et term (don't need that many events, I think)
+Try it with a somewhat higher pt cut
+
 OCT29:
 * Finish study of bin migrations due to MCP systematic
   Run a small example to confirm that the pT is shifted, as expected. Maybe dump numbers on 5k events into a text file.

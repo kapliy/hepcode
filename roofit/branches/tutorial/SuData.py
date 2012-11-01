@@ -72,9 +72,10 @@ class SuSys:
             return s.stack
         else:
             h = s.stack.Clone()
-            NBG = h.GetStack().GetLast()
-            for ii in range(0,NBG+1):
-                h.GetHists().At(ii).Rebin(rebin)
+            NBG = h.GetHists().GetSize()
+            for ii in xrange(0,NBG):
+                htmp = h.GetHists().At(ii)
+                htmp.Rebin(rebin)
             return h
     def use_ntuple(s):
         """ True or False """
@@ -284,8 +285,8 @@ class SuSys:
         else:
             assert False
         return True
-    def AddStack(s,o):
-        return s.stack.Add(o.h) if s.stack and o.h else None
+    def AddStack(s,o,opt='hist'):
+        return s.stack.Add(o.h,opt) if s.stack and o.h else None
     def SetName(s,n):
         return s.h.SetName(n) if s.h else None
     def SetLineColor(s,c):
@@ -326,6 +327,8 @@ class SuPlot:
         s.flat = []     # flat list of all systematics
         s.enable = [0,] # flat list of enabled indices
         s.do_unfold = False
+    def has_systematics(s):
+        return len(s.enable)>1
     def Add(s,h,dd=1.0):
         return [ p1.Add(p2,dd) for i,(p1,p2) in enumerate(zip(s.flat,h.flat)) if i in s.enable]
     def AddStack(s,h):
@@ -540,7 +543,7 @@ class SuPlot:
             next('UNFOLDING')
         assert len(s.sys)==len(s.groups)
         print 'Created systematic variations: N =',len(s.sys)
-    def update_errors(s,sysonly=False,force=False):
+    def update_errors(s,sysonly=False,force=False,rebin=1.0):
         """ folds systematic variations into total TH1 error. TODO: independent two-sided variations (non-symmetrized)  """
         if s.hsys and sysonly==True and not force: return s.hsys
         if s.htot and sysonly==False and not force: return s.htot
@@ -573,6 +576,9 @@ class SuPlot:
                 # htot
                 olderr = s.htot.GetBinError(ibin)
                 s.htot.SetBinError(ibin,1.0*math.sqrt(olderr*olderr + 1.0*newerr*newerr))
+        if rebin!=1.0:
+            s.hsys.Rebin(rebin)
+            s.htot.Rebin(rebin)
         return s.hsys if sysonly else s.htot
     def summary_bin_txt(s,b):
         """ Prints relative deviation of various systematics in a given bin """
@@ -640,7 +646,7 @@ class SuPlot:
                 #Hh[-1].SetFillColor(colorlist[ig])
                 Hh[-1].SetMarkerColor(colorlist[ig])
                 Hh[-1].SetMarkerStyle(markerlist[ig])
-            s.Ll = Ll = ROOT.TLegend(0.75,0.60,0.92,0.88,'Systematics',"brNDC")
+            s.Ll = Ll = ROOT.TLegend()
             Ll.SetFillColor(0)
             Ll.SetHeader('Systematics:')
         itot = 1
@@ -669,10 +675,12 @@ class SuPlot:
         if f: f.close()
         if MAKE_PLOT:
             Hh[0].Draw('C P0')
+            s.Ccan.ConfigureAxis(Hh[0], None)
             Hh[0].GetYaxis().SetRangeUser(0.0,3.0)
             Hh[0].GetYaxis().SetTitle('Percentage deviation')
             Hh[0].GetXaxis().SetTitle('|#eta|')
             [ih.Draw('C P0 same') for ih in Hh[1:]]
+            s.Ccan.ConfigureLegend(Ll)
             Ll.Draw('same')
             #Cc.SaveAs("SYST_%s.png"%fname)
         return s.Ccan
@@ -714,7 +722,7 @@ class SuPlot:
             Hh[-1].SetMarkerColor(colorlist[ig])
             Hh[-1].SetMarkerStyle(markerlist[ig])
             Hh[-1].SetMarkerSize(1.5)
-        s.Ll = Ll = ROOT.TLegend(0.75,0.60,0.92,0.88,'Systematics',"brNDC")
+        s.Ll = Ll = ROOT.TLegend()
         Ll.SetFillColor(0)
         Ll.SetHeader('Systematics:')
         itot = 0
@@ -729,6 +737,7 @@ class SuPlot:
             Ll.AddEntry(Hh[itot],name,'LP')
             itot += 1
         Hh[0].Draw('C P0')
+        s.Ccan.ConfigureAxis(Hh[0], None)
         vmax = max ( hh.GetMaximum() for hh in Hh )
         vmax = vmax*2.5 if vmax>0 else vmax
         vmin = min ( hh.GetMinimum() for hh in Hh )
@@ -738,6 +747,7 @@ class SuPlot:
         Hh[0].GetXaxis().SetTitle('|#eta|')
         [ih.Draw('C P0 same') for ih in Hh[1:]]
         #stat.Draw('C P0 same')
+        s.Ccan.ConfigureLegend(Ll)
         Ll.Draw('same')
         return s.Ccan
     def update_var(s,histo,bin=None):
@@ -898,10 +908,6 @@ class SuSample:
         # This is legacy QCD scaling ( for ntuple-based analysis via renormalize() ) - thus fully DISABLED
         # New histogram-based scaling is applied to the stack element (i.e., after summing SuSample's)
         qcdscale = 1.0
-        if False and re.search('mu15x',s.name):
-            qcdscale=s.qcdscale
-            if qcdscale!=1.0:
-                print 'MC QCD: extra scaling by %.3f'%qcdscale
         if mrun:
             xsec = mrun.xsec*mrun.filteff*(1.0 + SuSample.xsecerr*mrun.err)
             # Choose the right evcnt - depending on which scale factors were used (effw/trigw)
@@ -1107,6 +1113,8 @@ class SuStackElm:
     For example: jimmy_wmunu_np{0..5}
     """
     new_scales = True
+    qcdsource = None
+    qcdfile = None
     def __init__(s,name,label,samples,color=ROOT.kBlack,flags=[],table={},po=None,sample_weights=None):
         """ constructor """
         s.samples = [SuSample(a) for a in samples]
@@ -1133,6 +1141,27 @@ class SuStackElm:
         if len(s.samples)==0:
             return None
         assert len(s.samples) == len(s.sample_weights),'Unequal number of samples (%d) and sample weights (%d)'%(len(s.samples),len(s.sample_weights))
+        # special case: qcd from a separate ROOT file
+        if s.qcdsource and 'qcd' in s.flags and (isinstance(d,SuPlot) and d.status==0):
+            qs = s.qcdsource
+            assert len(qs.split(':'))==2,'Format: file.root:histo'
+            qs1 = qs.split(':')[0]
+            qs2 = qs.split(':')[1]
+            if not SuStackElm.qcdfile:
+                SuStackElm.qcdfile = ROOT.TFile.Open(qs1,'READ')
+            assert SuStackElm.qcdfile.IsOpen()
+            hpath = SuSys.QMAP[d.nominal().charge][1] + '/' + qs2
+            htmp = SuStackElm.qcdfile.Get(hpath)
+            assert htmp,'ERROR: unable to retrieve QCD histogram %s from file %s'%(hpath,qs1)
+            htmp = htmp.Clone('qcd_from_file')
+            htmp.SetLineColor(ROOT.kBlack)
+            htmp.SetFillColor(s.color)
+            dout = d.clone()
+            for dd in dout.flat:
+                dd.h = htmp
+            print 'INFO: retrieved QCD histogram from file : %s'%hpath
+            return dout
+        # otherwise retrieve the histogram from the main ntuples
         res = s.samples[0].histo(hname,d,rebin=rebin)
         for ih,h in enumerate(s.samples[1:]):
             htmp = h.histo(hname,d.clone(),rebin=rebin)
@@ -1140,7 +1169,7 @@ class SuStackElm:
         if res:
             res.SetLineColor(ROOT.kBlack)
             res.SetFillColor(s.color)
-            res.SetMarkerSize(0)
+            #res.SetMarkerSize(0)
             # special scaling: for QCD
             if unitize:
                 res.Unitize()
@@ -1168,6 +1197,7 @@ class SuStack:
     QCD_SYS_SCALES = False
     QCD_TF_FITTER = True
     QCD_STAT_HACK = True
+    QCD_EXC_ZERO_BINS = None
     def __init__(s):
         """ constructor """
         # stack elements
@@ -1525,12 +1555,10 @@ class SuStack:
         tmp = None
         logscale = 'log' in d2.qcd and d2.qcd['log']==True
         if SuStack.QCD_TF_FITTER:
-            f.doFitTF()
+            f.doFitTF(SuStack.QCD_EXC_ZERO_BINS)
             tmp = f.drawFitsTF(key,logscale=logscale)
         else:
-            f.doFit()
-            tmp = f.drawFitsTF(key,logscale=logscale)
-            #tmp = f.drawFits(key)
+            assert False,'roofit fitter has been deprecated'
         assert tmp
         s.fitnames[key] = fitname
         s.fits[key] = tmp[0]
@@ -1642,7 +1670,7 @@ class SuStack:
         """
         NMAP = {}
         NMAP['t#bar{t}'] = 'ttbar'
-        NMAP['single_top'] = 'stop'
+        NMAP['single-top'] = 'stop'
         NMAP['wtaunu_powheg_pythia'] = 'wtaunu'
         NMAP['wtaunu_powheg_herwig'] = 'wtaunu'
         NMAP['wtaunu_mcnlo'] = 'wtaunu'
@@ -1816,7 +1844,7 @@ class SuStack:
                 res = htmp
         if res:
             res.SetName(hname)
-            res.SetMarkerSize(0)
+            #res.SetMarkerSize(0)
             if norm:
                 res.Unitize()
                 #res.Scale(1/res.GetSumOfWeights())

@@ -20,7 +20,7 @@ import sys,os,re,math,copy
 import antondb
 
 # Define all systematics. Note that bgsig is NOT present here, since we save separate histograms for each bgsig
-#'/iq%d/X%d/bgewk%d/bgsig%d/iso%s/ivar%s/ibin%s/ieta%d/ipt%s'%(iq,xsecerr,bgewk,bgsig,isofail,ivar,ibin,ieta,ipt)
+#'/iq%d/X%d/bgqcd3/bgewk%d/bgsig%d/iso%s/ivar%s/ibin%s/ieta%d/ipt%s'%(iq,xsecerr,bgewk,bgsig,isofail,ivar,ibin,ieta,ipt)
 msys = []
 for xsecerr in [ (0,) ]:
     for bgewk in [ (5,),(2,) ]:
@@ -30,6 +30,7 @@ for xsecerr in [ (0,) ]:
                 msys.append( xsecerr+bgewk+isofail+ivar )
 msys_nom = (0,5,'IsoFail20','met','50,0,80')
 bgsigs = [5,4,1][:]
+bgqcd = 3
 
 QMAP = {0:'mu+',1:'mu-',2:'both charges'}
 QMAPN = {0:'POS',1:'NEG',2:'ALL'}
@@ -73,6 +74,9 @@ fin_name = 'IN_09282012.newSFTFQ_QCD4.v1.%s.%dD.root'%(eword,DIM)
 db_name = 'DB_09282012_POW8_ETA_NEWSFTFQ'
 fin_name = 'IN_09282012.newSFTFQ.v1.%s.%dD.root'%(eword,DIM)
 
+# disabling wpol weight; adding latest trigger scale factors (not applied to scales though)
+db_name = 'DB_10122012_ALL'
+fin_name = 'IN_10122012_ALL.v1.%s.%dD.root'%(eword,DIM)
 
 fout_name = re.sub('IN_','OUT_',fin_name)
 if os.path.exists(fin_name):
@@ -102,7 +106,7 @@ def get(iq,bgsig,ieta,ipt):
     bla2=[]
     bla5=[]
     for xsecerr,bgewk,isofail,ivar,ibin in msys:
-        key = '/iq%d/X%d/bgewk%d/bgsig%d/iso%s/ivar%s/ibin%s/%s%s/ipt%s'%(iq,xsecerr,bgewk,bgsig,isofail,ivar,ibin,'ieta' if ETAMODE==2 else 'iseta',ieta,ipt)
+        key = '/iq%d/X%d/bgqcd%d/bgewk%d/bgsig%d/iso%s/ivar%s/ibin%s/%s%s/ipt%s'%(iq,xsecerr,bgqcd,bgewk,bgsig,isofail,ivar,ibin,'ieta' if ETAMODE==2 else 'iseta',ieta,ipt)
         if key in R:
             fracs.append(R[key]['frac'])
             sc = R[key]['scales']
@@ -348,6 +352,8 @@ if __name__=='__main__':
             if True:
                 bgsig=5
                 adir.Get('data').Write('data',ROOT.TObject.kOverwrite)
+                for iqcd in (0,3,4,5,6):
+                    QCD[iqcd].Write(QCD[iqcd].GetTitle(),ROOT.TObject.kOverwrite)
                 adir4 = fin.Get('%s_sig4_ewk5'%QMAPN[iq]); assert adir4
                 adir1 = fin.Get('%s_sig1_ewk5'%QMAPN[iq]); assert adir1
                 for system in systems:
