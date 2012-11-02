@@ -1114,6 +1114,7 @@ class SuStackElm:
     """
     new_scales = True
     qcdsource = None
+    qcdscale = None
     qcdfile = None
     def __init__(s,name,label,samples,color=ROOT.kBlack,flags=[],table={},po=None,sample_weights=None):
         """ constructor """
@@ -1142,7 +1143,7 @@ class SuStackElm:
             return None
         assert len(s.samples) == len(s.sample_weights),'Unequal number of samples (%d) and sample weights (%d)'%(len(s.samples),len(s.sample_weights))
         # special case: qcd from a separate ROOT file
-        if s.qcdsource and 'qcd' in s.flags and (isinstance(d,SuPlot) and d.status==0):
+        if s.qcdsource!=None and 'qcd' in s.flags and (isinstance(d,SuPlot) and d.status==0):
             qs = s.qcdsource
             assert len(qs.split(':'))==2,'Format: file.root:histo'
             qs1 = qs.split(':')[0]
@@ -1174,17 +1175,20 @@ class SuStackElm:
             if unitize:
                 res.Unitize()
             elif SuStackElm.new_scales==True and 'qcd' in s.flags and (isinstance(d,SuPlot) and d.status==0):
-                print '--------->', 'qcd scaling start:',hname
-                sys.stdout.flush()
-                scales = s.po.get_scales(d)
-                print '--------->', 'qcd scaling applying (QCD_SYS_SCALES=%d):'%SuStack.QCD_SYS_SCALES,hname
-                sys.stdout.flush()
-                if SuStack.QCD_SYS_SCALES:
-                    res.Scale(scales)
+                if s.qcdscale!=None:
+                    res.ScaleOne(s.qcdscale)
                 else:
-                    res.ScaleOne(scales)
-                print '--------->', 'qcd scaling end:',hname
-                sys.stdout.flush()
+                    print '--------->', 'qcd scaling start:',hname
+                    sys.stdout.flush()
+                    scales = s.po.get_scales(d)
+                    print '--------->', 'qcd scaling applying (QCD_SYS_SCALES=%d):'%SuStack.QCD_SYS_SCALES,hname
+                    sys.stdout.flush()
+                    if SuStack.QCD_SYS_SCALES:
+                        res.Scale(scales)
+                    else:
+                        res.ScaleOne(scales)
+                    print '--------->', 'qcd scaling end:',hname
+                    sys.stdout.flush()
         assert res,'Failed to create: ' + hname
         return res
 
@@ -1606,11 +1610,12 @@ class SuStack:
             if hPOS.h and hNEG.h:
                 d.flat[i].h = SuCanvas.SuCanvas.WRatio(hPOS.h,hNEG.h)
         return d
-    def data(s,hname,d,leg=None):
+    def data(s,hname,d,leg=[]):
         """ data summed histogram """
         loop = [e for e in s.elm if 'data' in e.flags and 'no' not in e.flags]
         res = s.histosum(loop,hname,d)
-        if leg:
+        leg.append( ['data','data 2011 (#sqrt{s} = 7 TeV)','LP'] )
+        if False:
             leg.AddEntry(res.nominal_h(),'Data(#int L dt = %.1f pb^{-1})'%(SuSample.lumi/1000.0),'LP')
         return res
     def asym_data(s,*args,**kwargs):
@@ -1670,6 +1675,7 @@ class SuStack:
         """
         NMAP = {}
         NMAP['t#bar{t}'] = 'ttbar'
+        NMAP['t#bar{t}+single-top'] = 'ttbar_stop'
         NMAP['single-top'] = 'stop'
         NMAP['wtaunu_powheg_pythia'] = 'wtaunu'
         NMAP['wtaunu_powheg_herwig'] = 'wtaunu'
@@ -1731,14 +1737,11 @@ class SuStack:
         adir.cd()
         [ h.Write(h.GetTitle(),ROOT.TObject.kOverwrite) for h in hs ]
         fout.Close()
-    def stack(s,hname,d,flags=['mc'],leg=None):
+    def stack(s,hname,d,flags=['mc'],leg=[]):
         """ MC histogram stack (legacy, ntuple-based)"""
         # prepare containers for results
         res = d
         res.MakeStacks(hname)
-        if leg:
-            leg.SetFillStyle(1001)
-            leg.SetFillColor(10)
         # populate with data
         loop = [e for e in s.elm if set(flags) == (set(flags) & set(e.flags)) and 'no' not in e.flags]
         #loop = [e for e in s.elm if 'mc' in e.flags]
@@ -1746,8 +1749,9 @@ class SuStack:
             h = bg.histo(hname,d.clone())
             if h:
                 res.AddStack(h)
-                if leg:
+                if False:
                     leg.AddEntry(h.nominal_h(),bg.label,'F')
+                leg.append( [bg.name,bg.label,'F'] )
         return res
     def histosum(s,loop,hname,d,norm=None,weights=None):
         """ a wrapper around histosum_apply: allows reconstruction of histograms in eta slices """
