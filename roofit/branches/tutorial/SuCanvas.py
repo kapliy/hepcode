@@ -38,7 +38,6 @@ class SuCanvas:
         s.data = []
         s._ratioDrawn = False
         s._ratioName = "Data / MC"
-        s._xaxisName = "#mu #eta"
         s.savename = SuCanvas.cleanse(name)
         s._logy = False
         s._plotPad,s._coverPad,s._ratioPad,s._canvas = None,None,None,None
@@ -82,6 +81,7 @@ class SuCanvas:
         legend.SetTextFont(SuCanvas.g_text_font);
         legend.SetTextSize(SuCanvas.g_text_size);
         legend.SetFillStyle(0);
+        #legend.SetFillColor(10)
         legend.SetBorderSize(0);
 
     def ConfigureAxisMain(s,stack,noratio=False):
@@ -210,7 +210,6 @@ class SuCanvas:
         hratio.GetYaxis().SetNdivisions(6,0,0)
         hratio.GetYaxis().SetRangeUser(s._refLineMin,s._refLineMax)
         hratio.GetYaxis().SetTitle(s._ratioName)
-        hratio.GetXaxis().SetTitle(s._xaxisName)
         
     def drawRatioHash(s,ratio,hash=True,mstyle=2):
         """ Draws a ratio histogram """
@@ -765,7 +764,7 @@ class SuCanvas:
 
     def plotStack(s,hstack,hdata,leg=None,height=1.5,mode=0,pave=True,
                   rebin=1.0,
-                  xaxis_label=None,xaxis_units=None):
+                  xaxis_info=None):
         """ Wrapper to make a complete plot of stack and data overlayed - SuData version
         mode=0 - nominal only
         mode=1 - apply systematics
@@ -774,16 +773,33 @@ class SuCanvas:
         s.cd_plotPad();
         stack = hstack.nominal().get_stack(rebin).Clone()
         data = hdata.nominal_h(rebin)
+        # create the legend from the legend specifier
+        if leg!=None:
+            daleg = [l for l in leg if l[0]=='data']
+            if len(daleg)==0:
+                daleg.append( ['data','data 2011 (#sqrt{s} = 7 TeV)','LP'] )
+            mcleg = [l for l in leg if l[0]!='data']
+            leg = ROOT.TLegend()
+            leg.AddEntry(data,daleg[0][1],daleg[0][2])
+            NBG = stack.GetHists().GetSize()
+            assert NBG == len(mcleg), 'Different number of elements in stack and legend label array'
+            for ii in reversed(xrange(0,NBG)):
+                htmp = stack.GetHists().At(ii)
+                leg.AddEntry(htmp,mcleg[ii][1],mcleg[ii][2])
         s.data.append((stack,data,leg))
         hsys = None
         # mc
         stack.Draw() # "HIST"
-        if xaxis_label!=None and xaxis_units!=None:
-            bin_width = stack.GetHistogram().GetXaxis().GetBinWidth(1)
-            bin_units = xaxis_units
-            stack.GetYaxis().SetTitle( "Events / %.2f %s" % (bin_width,bin_units) )
-            stack.GetXaxis().SetTitle( xaxis_label )
-        #stack.GetYaxis().SetTitle("Events / bin")            
+        xaxis_label = None
+        if xaxis_info!=None:
+            assert len(xaxis_info)>=2,'Incorrect format of xaxis_info: [xaxis_label , xaxis_units , ...]'
+            xaxis_label,xaxis_units = xaxis_info[0],xaxis_info[1]
+            if xaxis_units==None:
+                stack.GetYaxis().SetTitle( "Entries" )
+            else:
+                bin_width = stack.GetHistogram().GetXaxis().GetBinWidth(1)
+                stack.GetYaxis().SetTitle( "Entries / %.1f %s" % (bin_width,xaxis_units) )
+                xaxis_label += '[%s]'%xaxis_units
         # systematics
         if mode==1 and hstack.has_systematics():
             s.htot = htot = hstack.update_errors(rebin=rebin)
@@ -813,6 +829,8 @@ class SuCanvas:
         hratio = s.hratio = data.Clone("hratio")
         hratio.Divide(stack.GetStack().Last())
         s.drawRatio(hratio)
+        if xaxis_label:
+            hratio.GetXaxis().SetTitle( xaxis_label )
         if mode==1 and hstack.has_systematics() and False:
             s.hsysr = hsysr = data.Clone("hratio_sys")
             hsysr.Divide(s.hsys)

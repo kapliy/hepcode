@@ -99,8 +99,8 @@ _DATA_PERIODS_DEFAULT = ('D','E','F','G','H','I','J','K','L','M') # default
 parser.add_option("--lumi",dest="lumi",
                   type="float", default=4644.0*1000.0,
                   help="Integrated luminosity for data (in nb^-1)")
-parser.add_option("--qcd",dest="qcdscale",
-                  type="string", default='1.0',
+parser.add_option("--qcdscale",dest="qcdscale",
+                  type="float", default=None,
                   help="QCD scale factor")
 parser.add_option("--qcdsource",dest="qcdsource",
                   type="string", default=None,
@@ -166,11 +166,12 @@ SuCanvas.savedir = './'
 if opts.output:
     SuCanvas.savedir = opts.output+'/'
 # overrides for default style:
-SuCanvas.g_lin_ratio_y_title_offset = 1.7
-SuCanvas.g_marker_size = 0.7
-SuCanvas.g_legend_x1_ndc = 0.55
-SuCanvas.g_text_size = 18
-SuCanvas.g_legend_height_per_entry = 0.04
+if True:
+    SuCanvas.g_lin_ratio_y_title_offset = 1.7
+    SuCanvas.g_marker_size = 0.9
+    SuCanvas.g_legend_x1_ndc = 0.55
+    SuCanvas.g_text_size = 20
+    SuCanvas.g_legend_height_per_entry = 0.04
 # Apply plot style
 SuCanvas.cgStyle = SuCanvas.ControlPlotStyle()
 #SetStyle("AtlasStyle.C")
@@ -181,6 +182,7 @@ SuSample.debug = opts.verbose
 SuSample.lumi = opts.lumi
 SuSample.xsecerr = opts.xsecerr
 SuStackElm.qcdsource = opts.qcdsource
+SuStackElm.qcdscale = opts.qcdscale
 
 from ntuple_tools import *
 def renormalize(bin='100,5,100'):
@@ -213,25 +215,32 @@ def particle(h,inp=opts.input,var=opts.var,bin=opts.bin,q=opts.charge):
 pw,pz = [SuStack() for zz in xrange(2)]
 # w samples:
 if True:
-    #TOP:
-    pw.add(name='t#bar{t}',samples='mc_mcnlo_ttbar', color=ROOT.kGreen+1,flags=['bg','mc','ewk'])
-    pw.add(name='single-top',label='single-top',samples=['mc_acer_schan_munu','mc_acer_schan_taunu','mc_acer_tchan_munu','mc_acer_tchan_taunu','mc_acer_wt'],color=ROOT.kGreen+3,flags=['bg','mc','ewk'])
-    #ZTAUTAU:
-    pw.adn(name='ztautau_alpgen_herwig',label='Z#rightarrow#tau#tau',samples=['mc_alpgen_herwig_ztautau_np%d'%v for v in range(6)],color=ROOT.kViolet,flags=['bg','mc','ewk','ztautau'])
-    pw.adn(name='ztautau_pythia',label='Z#rightarrow#tau#tau',samples='mc_pythia_ztautau',color=ROOT.kViolet,flags=['bg','mc','ewk','ztautau'])
-    pw.adn(name='ztautau_powheg_pythia',label='Z#rightarrow#tau#tau',samples='mc_powheg_pythia_ztautau',color=ROOT.kViolet,flags=['bg','mc','ewk','ztautau'])
-    #WTAUNU:
-    pw.adn(name='wtaunu_alpgen_herwig',label='W#rightarrow#tau#nu',samples=['mc_alpgen_herwig_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow-9,flags=['bg','mc','ewk','wtaunu'])
-    pw.adn(name='wtaunu_pythia',label='W#rightarrow#tau#nu',samples='mc_pythia_wtaunu',color=ROOT.kYellow-9,flags=['bg','mc','ewk','wtaunu'])
-    pw.adn(name='wtaunu_powheg_pythia',label='W#rightarrow#tau#nu',samples=['mc_powheg_pythia_wplustaunu','mc_powheg_pythia_wmintaunu'],color=ROOT.kYellow-9,flags=['bg','mc','ewk','wtaunu'])
-    #ZMUMU:
-    pw.adn(name='zmumu_alpgen_herwig',label='Z#rightarrow#mu#mu',samples=['mc_alpgen_herwig_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['bg','mc','ewk','zmumu'])
-    pw.adn(name='zmumu_pythia',label='Z#rightarrow#mu#mu',samples=['mc_pythia_zmumu'],color=ROOT.kRed,flags=['bg','mc','ewk','zmumu'])
-    pw.adn(name='zmumu_powheg_pythia',label='Z#rightarrow#mu#mu',samples='mc_powheg_pythia_zmumu',color=ROOT.kRed,flags=['bg','mc','ewk','zmumu'])
-    #DYAN (Zll = 15 .. 60 GeV):
-    pw.add(name='dyan_pythia',label='Drell-Yan',samples='mc_pythia_dyan',color=156,flags=['bg','mc','ewk','dyan'])
     #DIBOSON:
-    pw.add(name='WW/WZ/ZZ',samples=['mc_herwig_ww','mc_herwig_wz','mc_herwig_zz'],color=ROOT.kOrange-4,flags=['bg','mc','ewk','diboson'])
+    pw.add(name='WW/WZ/ZZ',label='Dibosons',samples=['mc_herwig_ww','mc_herwig_wz','mc_herwig_zz'],color=ROOT.kOrange-4,flags=['bg','mc','ewk','diboson'])
+    #ZTAUTAU:
+    pw.adn(name='ztautau_alpgen_herwig',label='Z #rightarrow #tau#tau',samples=['mc_alpgen_herwig_ztautau_np%d'%v for v in range(6)],color=ROOT.kViolet,flags=['bg','mc','ewk','ztautau'])
+    pw.adn(name='ztautau_pythia',label='Z #rightarrow #tau#tau',samples='mc_pythia_ztautau',color=ROOT.kViolet,flags=['bg','mc','ewk','ztautau'])
+    pw.adn(name='ztautau_powheg_pythia',label='Z #rightarrow #tau#tau',samples='mc_powheg_pythia_ztautau',color=ROOT.kViolet,flags=['bg','mc','ewk','ztautau'])
+    #TOP:
+    if False: # separate ttbar and single top
+        pw.add(name='t#bar{t}',label='t #bar{t}',samples='mc_mcnlo_ttbar', color=ROOT.kGreen+1,flags=['bg','mc','ewk'])
+        pw.add(name='single-top',label='single top',samples=['mc_acer_schan_munu','mc_acer_schan_taunu','mc_acer_tchan_munu','mc_acer_tchan_taunu','mc_acer_wt'],color=ROOT.kGreen+3,flags=['bg','mc','ewk'])
+    else:     # combined tops
+        pw.add(name='t#bar{t}+single-top',label='t#bar{t} + single top',samples=['mc_mcnlo_ttbar','mc_acer_schan_munu','mc_acer_schan_taunu','mc_acer_tchan_munu','mc_acer_tchan_taunu','mc_acer_wt'], color=ROOT.kGreen+1,flags=['bg','mc','ewk'])
+    #WTAUNU:
+    pw.adn(name='wtaunu_alpgen_herwig',label='W #rightarrow #tau#nu',samples=['mc_alpgen_herwig_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow-9,flags=['bg','mc','ewk','wtaunu'])
+    pw.adn(name='wtaunu_pythia',label='W #rightarrow #tau#nu',samples='mc_pythia_wtaunu',color=ROOT.kYellow-9,flags=['bg','mc','ewk','wtaunu'])
+    pw.adn(name='wtaunu_powheg_pythia',label='W #rightarrow #tau#nu',samples=['mc_powheg_pythia_wplustaunu','mc_powheg_pythia_wmintaunu'],color=ROOT.kYellow-9,flags=['bg','mc','ewk','wtaunu'])
+    #ZMUMU + DYAN (Zll = 15 .. 60 GeV) :
+    if False: # separate Zmumu and Drell-Yan
+        pw.adn(name='zmumu_alpgen_herwig',label='Z #rightarrow #mu#mu',samples=['mc_alpgen_herwig_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['bg','mc','ewk','zmumu'])
+        pw.adn(name='zmumu_pythia',label='Z #rightarrow #mu#mu',samples=['mc_pythia_zmumu'],color=ROOT.kRed,flags=['bg','mc','ewk','zmumu'])
+        pw.adn(name='zmumu_powheg_pythia',label='Z #rightarrow #mu#mu',samples='mc_powheg_pythia_zmumu',color=ROOT.kRed,flags=['bg','mc','ewk','zmumu'])
+        pw.add(name='dyan_pythia',label='Drell-Yan',samples='mc_pythia_dyan',color=156,flags=['bg','mc','ewk','dyan'])
+    else:     # combined zmumu
+        pw.adn(name='zmumu_alpgen_herwig',label='Z #rightarrow #mu#mu + Drell-Yan',samples=['mc_pythia_dyan',]+['mc_alpgen_herwig_zmumu_np%d'%v for v in range(6)],color=ROOT.kRed,flags=['bg','mc','ewk','zmumu'])
+        pw.adn(name='zmumu_pythia',label='Z #rightarrow #mu#mu + Drell-Yan',samples=['mc_pythia_dyan',]+['mc_pythia_zmumu'],color=ROOT.kRed,flags=['bg','mc','ewk','zmumu'])
+        pw.adn(name='zmumu_powheg_pythia',label='Z #rightarrow #mu#mu + Drell-Yan',samples=['mc_pythia_dyan',]+['mc_powheg_pythia_zmumu',],color=ROOT.kRed,flags=['bg','mc','ewk','zmumu'])
     #EWK SEL: (defaults to alpgen, wherever possible)
     if opts.bgewk==0: #pythia
         pw.choose_wtaunu(0)
@@ -260,25 +269,25 @@ if True:
     else:
         assert False,'Unknown bgewk option: %s'%opts.bgewk
     #QCD:
-    pw.adn(name='qcd_mc',label='bbmu15X/ccmu15X',samples=['mc_pythia_bbmu15x','mc_pythia_ccmu15x'],color=ROOT.kAzure-9,flags=['bg','mc','qcd'])
-    pw.adn(name='qcd_mc_driven',label='bbmu15X/ccmu15X',samples=['mc_pythia_bbmu15x','mc_pythia_ccmu15x'],color=ROOT.kAzure-9,flags=['bg','mc','qcd','driven'])
-    pw.adn(name='qcd_bb',label='bbmu15X',samples=['mc_pythia_bbmu15x'],color=ROOT.kAzure-9,flags=['bg','mc','qcd'])
-    pw.adn(name='qcd_JX',label='QCD J0..J5',samples=['mc_pythia_J%d'%v for v in xrange(5)],color=ROOT.kAzure-9,flags=['bg','mc','qcd'])
-    pw.adn(name='qcd_driven',label='QCD data-driven',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kAzure-9,flags=['bg','mc','qcd','driven'])
-    pw.adn(name='qcd_driven_sub',label='QCD data-driven',samples=['data_period%s'%s for s in _DATA_PERIODS]+['mc_powheg_pythia_wminmunu','mc_powheg_pythia_wplusmunu'  ,  'mc_mcnlo_ttbar','mc_acer_schan_munu','mc_acer_schan_taunu','mc_acer_tchan_munu','mc_acer_tchan_taunu','mc_acer_wt'  ,  'mc_powheg_pythia_ztautau','mc_powheg_pythia_zmumu','mc_powheg_pythia_wplustaunu','mc_powheg_pythia_wmintaunu','mc_pythia_dyan'   ,   'mc_herwig_ww','mc_herwig_wz','mc_herwig_zz'],color=ROOT.kAzure-9,flags=['bg','mc','qcd','driven_sub'],sample_weights_bgsub=True)
+    pw.adn(name='qcd_mc',label='QCD (bbmu15X/ccmu15X)',samples=['mc_pythia_bbmu15x','mc_pythia_ccmu15x'],color=ROOT.kAzure-9,flags=['bg','mc','qcd'])
+    pw.adn(name='qcd_mc_driven',label='QCD (bbmu15X/ccmu15X)',samples=['mc_pythia_bbmu15x','mc_pythia_ccmu15x'],color=ROOT.kAzure-9,flags=['bg','mc','qcd','driven'])
+    pw.adn(name='qcd_bb',label='QCD (bbmu15X)',samples=['mc_pythia_bbmu15x'],color=ROOT.kAzure-9,flags=['bg','mc','qcd'])
+    pw.adn(name='qcd_JX',label='QCD (J0..J5)',samples=['mc_pythia_J%d'%v for v in xrange(5)],color=ROOT.kAzure-9,flags=['bg','mc','qcd'])
+    pw.adn(name='qcd_driven',label='QCD (template)',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kAzure-9,flags=['bg','mc','qcd','driven'])
+    pw.adn(name='qcd_driven_sub',label='QCD (template)',samples=['data_period%s'%s for s in _DATA_PERIODS]+['mc_powheg_pythia_wminmunu','mc_powheg_pythia_wplusmunu'  ,  'mc_mcnlo_ttbar','mc_acer_schan_munu','mc_acer_schan_taunu','mc_acer_tchan_munu','mc_acer_tchan_taunu','mc_acer_wt'  ,  'mc_powheg_pythia_ztautau','mc_powheg_pythia_zmumu','mc_powheg_pythia_wplustaunu','mc_powheg_pythia_wmintaunu','mc_pythia_dyan'   ,   'mc_herwig_ww','mc_herwig_wz','mc_herwig_zz'],color=ROOT.kAzure-9,flags=['bg','mc','qcd','driven_sub'],sample_weights_bgsub=True)
     if opts.bgqcd in MAP_BGQCD.keys():
         pw.choose_qcd(opts.bgqcd)
     else:
         assert False,'Unknown bgqcd option: %s'%opts.bgqcd
     #SIG:
-    pw.adn(name='sig_pythia',label='W#rightarrow#mu#nu',samples='mc_pythia_wmunu',color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
-    pw.adn(name='sig_sherpa',label='W#rightarrow#mu#nu',samples='mc_sherpa_wmunu',color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
-    pw.adn(name='sig_mcnlo',label='W#rightarrow#mu#nu',samples=['mc_mcnlo_wminmunu','mc_mcnlo_wplusmunu'],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
-    pw.adn(name='sig_powheg_herwig',label='W#rightarrow#mu#nu',samples=['mc_powheg_herwig_wminmunu','mc_powheg_herwig_wplusmunu'],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
-    pw.adn(name='sig_powheg_pythia',label='W#rightarrow#mu#nu',samples=['mc_powheg_pythia_wminmunu','mc_powheg_pythia_wplusmunu'],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
-    pw.adn(name='sig_alpgen_herwig',label='W#rightarrow#mu#nu+jets',samples=['mc_alpgen_herwig_wmunu_np%d'%v for v in range(6)],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
-    pw.adn(name='sig_af_alpgen_herwig',label='W#rightarrow#mu#nu+jets AFII',samples=['mc_af_alpgen_herwig_wmunu_np%d'%v for v in range(6)],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
-    pw.adn(name='sig_alpgen_pythia',label='W#rightarrow#mu#nu+jets',samples=['mc_alpgen_pythia_wmunu_np%d'%v for v in range(6)],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
+    pw.adn(name='sig_pythia',label='W #rightarrow #mu#nu (Pythia)',samples='mc_pythia_wmunu',color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
+    pw.adn(name='sig_sherpa',label='W #rightarrow #mu#nu (Sherpa)',samples='mc_sherpa_wmunu',color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
+    pw.adn(name='sig_mcnlo',label='W #rightarrow #mu#nu (MC@NLO)',samples=['mc_mcnlo_wminmunu','mc_mcnlo_wplusmunu'],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
+    pw.adn(name='sig_powheg_herwig',label='W #rightarrow #mu#nu (Powheg+Herwig)',samples=['mc_powheg_herwig_wminmunu','mc_powheg_herwig_wplusmunu'],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
+    pw.adn(name='sig_powheg_pythia',label='W #rightarrow #mu#nu (Powheg+Pythia)',samples=['mc_powheg_pythia_wminmunu','mc_powheg_pythia_wplusmunu'],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
+    pw.adn(name='sig_alpgen_herwig',label='W #rightarrow #mu# (Alpgen+Herwig)',samples=['mc_alpgen_herwig_wmunu_np%d'%v for v in range(6)],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
+    pw.adn(name='sig_af_alpgen_herwig',label='W #rightarrow #mu#nu (Alpgen AFII)',samples=['mc_af_alpgen_herwig_wmunu_np%d'%v for v in range(6)],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
+    pw.adn(name='sig_alpgen_pythia',label='W #rightarrow #mu#nu (Alpgen+Pythia)',samples=['mc_alpgen_pythia_wmunu_np%d'%v for v in range(6)],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
     if opts.bgsig in MAP_BGSIG.keys():
         pw.choose_sig(opts.bgsig)
     else:
@@ -291,18 +300,18 @@ if True:
     pz.add(name='t#bar{t}',samples='mc_mcnlo_ttbar', color=ROOT.kGreen+1,flags=['bg','mc','ewk'])
     pz.add(name='single-top',label='single-top',samples=['mc_acer_schan_munu','mc_acer_schan_taunu','mc_acer_tchan_munu','mc_acer_tchan_taunu','mc_acer_wt'],color=ROOT.kGreen+3,flags=['bg','mc','ewk'])
     #ZTAUTAU:
-    pz.adn(name='ztautau_alpgen_herwig',label='Z#rightarrow#tau#tau',samples=['mc_alpgen_herwig_ztautau_np%d'%v for v in range(6)],color=ROOT.kViolet,flags=['bg','mc','ewk','ztautau'])
-    pz.adn(name='ztautau_pythia',label='Z#rightarrow#tau#tau',samples='mc_pythia_ztautau',color=ROOT.kViolet,flags=['bg','mc','ewk','ztautau'])
-    pz.adn(name='ztautau_powheg_pythia',label='Z#rightarrow#tau#tau',samples='mc_powheg_pythia_ztautau',color=ROOT.kViolet,flags=['bg','mc','ewk','ztautau'])
+    pz.adn(name='ztautau_alpgen_herwig',label='Z #rightarrow #tau#tau',samples=['mc_alpgen_herwig_ztautau_np%d'%v for v in range(6)],color=ROOT.kViolet,flags=['bg','mc','ewk','ztautau'])
+    pz.adn(name='ztautau_pythia',label='Z #rightarrow #tau#tau',samples='mc_pythia_ztautau',color=ROOT.kViolet,flags=['bg','mc','ewk','ztautau'])
+    pz.adn(name='ztautau_powheg_pythia',label='Z #rightarrow #tau#tau',samples='mc_powheg_pythia_ztautau',color=ROOT.kViolet,flags=['bg','mc','ewk','ztautau'])
     #WTAUNU:
-    pz.adn(name='wtaunu_alpgen_herwig',label='W#rightarrow#tau#nu',samples=['mc_alpgen_herwig_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow-9,flags=['bg','mc','ewk','wtaunu'])
-    pz.adn(name='wtaunu_pythia',label='W#rightarrow#tau#nu',samples='mc_pythia_wtaunu',color=ROOT.kYellow-9,flags=['bg','mc','ewk','wtaunu'])
-    pz.adn(name='wtaunu_powheg_pythia',label='W#rightarrow#tau#nu',samples=['mc_powheg_pythia_wplustaunu','mc_powheg_pythia_wmintaunu'],color=ROOT.kYellow-9,flags=['bg','mc','ewk','wtaunu'])
+    pz.adn(name='wtaunu_alpgen_herwig',label='W #rightarrow #tau#nu',samples=['mc_alpgen_herwig_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow-9,flags=['bg','mc','ewk','wtaunu'])
+    pz.adn(name='wtaunu_pythia',label='W #rightarrow #tau#nu',samples='mc_pythia_wtaunu',color=ROOT.kYellow-9,flags=['bg','mc','ewk','wtaunu'])
+    pz.adn(name='wtaunu_powheg_pythia',label='W #rightarrow #tau#nu',samples=['mc_powheg_pythia_wplustaunu','mc_powheg_pythia_wmintaunu'],color=ROOT.kYellow-9,flags=['bg','mc','ewk','wtaunu'])
     #WMUNU:
-    pz.adn(name='wmumu_alpgen_herwig',label='W#rightarrow#mu#nu',samples=['mc_alpgen_herwig_wmunu_np%d'%v for v in range(6)],color=ROOT.kBlue,flags=['bg','mc','ewk','wmunu'])
-    pz.adn(name='wmumu_pythia',label='W#rightarrow#mu#nu',samples=['mc_pythia_wmunu'],color=ROOT.kBlue,flags=['bg','mc','ewk','wmunu'])
-    pz.adn(name='wmumu_powheg_herwig',label='W#rightarrow#mu#nu',samples=['mc_powheg_herwig_wminmunu','mc_powheg_herwig_wplusmunu'],color=ROOT.kBlue,flags=['bg','mc','ewk','wmunu'])
-    pz.adn(name='wmumu_powheg_pythia',label='W#rightarrow#mu#nu',samples=['mc_powheg_pythia_wminmunu','mc_powheg_pythia_wplusmunu'],color=ROOT.kBlue,flags=['bg','mc','ewk','wmunu'])
+    pz.adn(name='wmumu_alpgen_herwig',label='W #rightarrow #mu#nu',samples=['mc_alpgen_herwig_wmunu_np%d'%v for v in range(6)],color=ROOT.kBlue,flags=['bg','mc','ewk','wmunu'])
+    pz.adn(name='wmumu_pythia',label='W #rightarrow #mu#nu',samples=['mc_pythia_wmunu'],color=ROOT.kBlue,flags=['bg','mc','ewk','wmunu'])
+    pz.adn(name='wmumu_powheg_herwig',label='W #rightarrow #mu#nu',samples=['mc_powheg_herwig_wminmunu','mc_powheg_herwig_wplusmunu'],color=ROOT.kBlue,flags=['bg','mc','ewk','wmunu'])
+    pz.adn(name='wmumu_powheg_pythia',label='W #rightarrow #mu#nu',samples=['mc_powheg_pythia_wminmunu','mc_powheg_pythia_wplusmunu'],color=ROOT.kBlue,flags=['bg','mc','ewk','wmunu'])
     #DYAN (Zll = 15 .. 60 GeV):
     pz.add(name='dyan_pythia',label='Drell-Yan',samples='mc_pythia_dyan',color=156,flags=['bg','mc','ewk','dyan'])
     #DIBOSON:
@@ -346,13 +355,13 @@ if True:
     else:
         assert False,'Unknown bgqcd option: %s'%opts.bgqcd
     #SIG:
-    pz.adn(name='sig_pythia',label='Z#rightarrow#mu#mu',samples='mc_pythia_zmumu',color=ROOT.kWhite,flags=['sig','mc','ewk','zmumu'])
-    pz.adn(name='sig_sherpa',label='Z#rightarrow#mu#mu',samples='mc_sherpa_zmumu',color=ROOT.kWhite,flags=['sig','mc','ewk','zmumu'])
-    pz.adn(name='sig_mcnlo',label='Z#rightarrow#mu#mu',samples='mc_mcnlo_zmumu',color=ROOT.kWhite,flags=['sig','mc','ewk','zmumu'])
-    pz.adn(name='sig_powheg_herwig',label='Z#rightarrow#mu#mu',samples='mc_powheg_herwig_zmumu',color=ROOT.kWhite,flags=['sig','mc','ewk','zmumu'])
-    pz.adn(name='sig_powheg_pythia',label='Z#rightarrow#mu#mu',samples='mc_powheg_pythia_zmumu',color=ROOT.kWhite,flags=['sig','mc','ewk','zmumu'])
-    pz.adn(name='sig_alpgen_herwig',label='Z#rightarrow#mu#mu+jets',samples=['mc_alpgen_herwig_zmumu_np%d'%v for v in range(6)],color=ROOT.kWhite,flags=['sig','mc','ewk','zmumu'])
-    pz.adn(name='sig_alpgen_pythia',label='Z#rightarrow#mu#mu+jets',samples=['mc_alpgen_pythia_zmumu_np%d'%v for v in range(6)],color=ROOT.kWhite,flags=['sig','mc','ewk','zmumu'])
+    pz.adn(name='sig_pythia',label='Z #rightarrow #mu#mu',samples='mc_pythia_zmumu',color=ROOT.kWhite,flags=['sig','mc','ewk','zmumu'])
+    pz.adn(name='sig_sherpa',label='Z #rightarrow #mu#mu',samples='mc_sherpa_zmumu',color=ROOT.kWhite,flags=['sig','mc','ewk','zmumu'])
+    pz.adn(name='sig_mcnlo',label='Z #rightarrow #mu#mu',samples='mc_mcnlo_zmumu',color=ROOT.kWhite,flags=['sig','mc','ewk','zmumu'])
+    pz.adn(name='sig_powheg_herwig',label='Z #rightarrow #mu#mu',samples='mc_powheg_herwig_zmumu',color=ROOT.kWhite,flags=['sig','mc','ewk','zmumu'])
+    pz.adn(name='sig_powheg_pythia',label='Z #rightarrow #mu#mu',samples='mc_powheg_pythia_zmumu',color=ROOT.kWhite,flags=['sig','mc','ewk','zmumu'])
+    pz.adn(name='sig_alpgen_herwig',label='Z #rightarrow #mu#mu+jets',samples=['mc_alpgen_herwig_zmumu_np%d'%v for v in range(6)],color=ROOT.kWhite,flags=['sig','mc','ewk','zmumu'])
+    pz.adn(name='sig_alpgen_pythia',label='Z #rightarrow #mu#mu+jets',samples=['mc_alpgen_pythia_zmumu_np%d'%v for v in range(6)],color=ROOT.kWhite,flags=['sig','mc','ewk','zmumu'])
     if opts.bgsig in MAP_BGSIG.keys():
         pz.choose_sig(opts.bgsig)
     else:
@@ -481,15 +490,38 @@ def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errors
     OMAP.append(c)
     return h[-1]
 
-#TODO: modify m=0 to m=isys, with extra string values to do total-systematic
+LABELMAP = {}
+LABELMAP['lepton_etav'] = ['#eta',None]
+LABELMAP['l_eta'] = ['#eta',None]
+LABELMAP['lP_eta'] = ['#eta',None]
+LABELMAP['lN_eta'] = ['#eta',None]
+LABELMAP['lepton_etavHP'] = ['#eta',None]
+LABELMAP['lepton_absetav'] = ['|#eta|',None]
+LABELMAP['fabs(l_eta)'] = ['|#eta|',None]
+LABELMAP['fabs(lP_eta)'] = ['|#eta|',None]
+LABELMAP['fabs(lN_eta)'] = ['|#eta|',None]
+LABELMAP['wmt'] = ['m_{T}^{W}','GeV']
+LABELMAP['w_mt'] = ['m_{T}^{W}','GeV']
+LABELMAP['met'] = ['E_{T}^{Miss}','GeV']
+LABELMAP['lpt'] = ['p_{T}','GeV']
+LABELMAP['l_pt'] = ['p_{T}','GeV']
+LABELMAP['lP_pt'] = ['p_{T}','GeV']
+LABELMAP['lN_pt'] = ['p_{T}','GeV']
+LABELMAP['wpt'] = ['p_{T}^{W}','GeV']
+LABELMAP['w_pt'] = ['p_{T}^{W}','GeV']
+LABELMAP['nvtxs_all'] = ['Number of vertices',None]
+LABELMAP['lepton_phi'] = ['#phi',None]
+LABELMAP['l_phi'] = ['#phi',None]
+
 def plot_stack(spR2,var,bin=None,q=2,m=0,new_scales=None,name=''):
     if new_scales!=None: SuStackElm.new_scales = new_scales
     spR2.update_var( var , bin )
     c = SuCanvas('stack_'+var+'_'+SuSys.QMAP[q][1]+('_'+name if name !='' else ''))
-    leg = ROOT.TLegend()
+    leg = []
     hstack = po.stack('mc',spR2.clone(q=q),leg=leg)
     hdata = po.data('data',spR2.clone(q=q),leg=leg)
-    c.plotStack(hstack,hdata,mode=m,leg=leg,height=2.0,pave=False,rebin=opts.rebin)
+    xaxis_info = LABELMAP[var] if var in LABELMAP else None
+    c.plotStack(hstack,hdata,mode=m,leg=leg,height=2.0,pave=False,rebin=opts.rebin,xaxis_info=xaxis_info)
     OMAP.append(c)
     return hdata,hstack
 
@@ -715,7 +747,7 @@ if mode=='ALL' or mode=='all':
         plots = ['lepton_absetav','lpt','met','wmt']
         plots = [opts.hsource,]
         plot_stacks(spR.clone(),plots,m=1,qs=(0,1,2))
-    if True:
+    if False:
         spR.enable_nominal()
         plots = [opts.hsource,]
         plot_stacks(spR.clone(),plots,m=1,qs=(0,1))
@@ -1419,6 +1451,18 @@ if mode=='unfold2d':
     c.plotAny([h,],M=M,height=1.7)
     OMAP.append(c)
     OMAP.append( h.individual_systematics(canvas_name=c.namebase()+'_SYS') )
+
+if mode=='control_stack':
+    spR.enable_nominal()
+    plots = [opts.hsource,]
+    plot_stacks(spR.clone(),plots,m=1,qs=(0,1))
+
+if mode=='control_stack_nonorm':
+    assert False,'Make sure to change baseline to metfit region'
+    spR.enable_nominal()
+    SuStackElm.new_scales = False
+    plots = [opts.hsource,]
+    plot_stacks(spR.clone(),plots,m=1,qs=(1,))
 
 if mode=='100': # creates efficiency histogram (corrects back to particle level)
     renormalize()
