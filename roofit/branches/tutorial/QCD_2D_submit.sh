@@ -25,13 +25,13 @@ for iblk in `seq 0 ${nblk}`; do
 	fi
 	echo "Sleeping sequence: $islp because ${nactive} active jobs exceed ${nsubmin} job limit"
 	((islp++))
-	sleep 20
+	sleep 8
     done
     echo "BLOCK ${iblk} / ${nblk} : `expr ${ijmax} - ${ijmin} + 1` jobs: ${ijmin} to ${ijmax}"
     # submit jobs in this group
     for i in `seq ${ijmin} ${ijmax}`; do
 	jid=`qsub -v id=$i -N QCD2D_${i} -o /home/antonk/roofit/logs/log.QCD2D.${i}.stdout -e /home/antonk/roofit/logs/log.QCD2D.${i}.stderr QCD_2D.sh`
-	echo "EYING: $i"
+	echo "JOB: $i"
 	if [ "$jid" == "" ]; then
 	    echo "Retrying submission: $i"
 	    sleep 10
