@@ -419,7 +419,7 @@ else:
 SuStack.QCD_SYS_SCALES = opts.metallsys
 SuStack.QCD_TF_FITTER = True
 SuStack.QCD_STAT_HACK = True
-SuStack.QCD_EXC_ZERO_BINS = 1 #FIXME
+SuStack.QCD_EXC_ZERO_BINS = 1
 spR.enable_all()
 # Reco-level [ntuple]
 spRN = SuPlot()
@@ -1434,7 +1434,6 @@ if mode=='qcd_bgsub':
     plots = [opts.hsource,]
     po.choose_qcd(3)
     plot_stacks(spR.clone(),plots,m=1,qs=(opts.charge,),name='QCD3')
-    #FIXME TODO: work in progress
     qcd3 = po.qcd('qcd3',opts.var,opts.bin,pre_isol,path=path_reco)
     po.choose_qcd(4)
     plot_stacks(spR.clone(),plots,m=1,qs=(opts.charge,),name='QCD4')
