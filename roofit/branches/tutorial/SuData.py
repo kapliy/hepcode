@@ -1615,8 +1615,6 @@ class SuStack:
         loop = [e for e in s.elm if 'data' in e.flags and 'no' not in e.flags]
         res = s.histosum(loop,hname,d)
         leg.append( ['data','data 2011 (#sqrt{s} = 7 TeV)','LP'] )
-        if False:
-            leg.AddEntry(res.nominal_h(),'Data(#int L dt = %.1f pb^{-1})'%(SuSample.lumi/1000.0),'LP')
         return res
     def asym_data(s,*args,**kwargs):
         return s.asym_generic(s.data,*args,**kwargs)
@@ -1749,9 +1747,8 @@ class SuStack:
             h = bg.histo(hname,d.clone())
             if h:
                 res.AddStack(h)
-                if False:
-                    leg.AddEntry(h.nominal_h(),bg.label,'F')
-                leg.append( [bg.name,bg.label,'F'] )
+                if h.nominal_h():
+                    leg.append( [bg.name,bg.label,'F'] )
         return res
     def histosum(s,loop,hname,d,norm=None,weights=None):
         """ a wrapper around histosum_apply: allows reconstruction of histograms in eta slices """

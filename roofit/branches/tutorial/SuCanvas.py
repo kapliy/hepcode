@@ -775,6 +775,7 @@ class SuCanvas:
         data = hdata.nominal_h(rebin)
         # create the legend from the legend specifier
         if leg!=None:
+            alleg = leg[:]
             daleg = [l for l in leg if l[0]=='data']
             if len(daleg)==0:
                 daleg.append( ['data','data 2011 (#sqrt{s} = 7 TeV)','LP'] )
@@ -782,6 +783,10 @@ class SuCanvas:
             leg = ROOT.TLegend()
             leg.AddEntry(data,daleg[0][1],daleg[0][2])
             NBG = stack.GetHists().GetSize()
+            if NBG!=len(mcleg):
+                print 'Stack size:',NBG
+                print 'Legend list:',len(alleg),alleg
+                print 'MC legend list:',len(mcleg),mcleg
             assert NBG == len(mcleg), 'Different number of elements in stack and legend label array'
             for ii in reversed(xrange(0,NBG)):
                 htmp = stack.GetHists().At(ii)
@@ -799,7 +804,7 @@ class SuCanvas:
             else:
                 bin_width = stack.GetHistogram().GetXaxis().GetBinWidth(1)
                 stack.GetYaxis().SetTitle( "Entries / %.1f %s" % (bin_width,xaxis_units) )
-                xaxis_label += '[%s]'%xaxis_units
+                xaxis_label += ' [%s]'%xaxis_units
         # systematics
         if mode==1 and hstack.has_systematics():
             s.htot = htot = hstack.update_errors(rebin=rebin)

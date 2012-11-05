@@ -30,7 +30,7 @@ source bashmap.sh
 SMART_KILLER="./smart_killer.sh"
 #SMART_KILLER=""
 
-antondb='HISTO_10122012_ALL'
+antondb='HISTO_11022012_ALL'
 mkdir -p ${antondb}
 #input=/share/t3data3/antonk/ana/ana_v29G_07252012_newROOT_stacoCB_all
 #input=/share/t3data3/antonk/ana/ana_v29G_08242012_allwts_V29I_stacoCB_all  # ALL weights + v29i ntuple + jerup/down
@@ -41,6 +41,7 @@ input=/share/t3data3/antonk/ana/ana_v29I_09272012_allwts_wptPow8_eta_newSFTF_sta
 input=/share/t3data3/antonk/ana/ana_v29I_09282012_allwts_wptPow8_eta_newSFTFQ_stacoCB_all  # added charge-dependent trigger SF from Max. BUGGY
 input=/share/t3data3/antonk/ana/ana_v29I_1002012_allwts_wptPow8_eta_newSFTFQ_stacoCB_all #fixed
 input=/share/t3data3/antonk/ana/ana_v29I_10122012_new_trigETAPTQ_stacoCB_all # fixed OLD unfolding matrices
+input=/share/t3data3/antonk/ana/ana_v29I_11022012_unfold_stacoCB_all
 
 ETAMODES="1 2" # 2=|eta| bins, 1=eta bins
 bgsigs="1 4 5"
@@ -82,7 +83,7 @@ for ETAMODE in ${ETAMODES}; do
 			    for ieta in ${ietas}; do
 				for ipt in ${ipts}; do
 				    if [ "$id" == "$irun" -o "$id" == "ALL" ]; then
-					eval ${SMART_KILLER} ./stack2.py --input ${input} -b --charge $iq ${optsz} ${optsi} -o TEST_EM${ETAMODE}_QCD${bgqcd}_Q${iq}/ETA${ieta}/PT${ipt} -t ${tagi}_${tagz} -m qcdfit_2d --bgsig ${bgsig} --bgewk ${bgewk} --bgqcd ${bgqcd} --preNN ${ieta} --preNQ ${ipt} --extra ${antondb}/${antondb}.PART.${iq}.${bgsig}.${bgewk}.${ieta}.${ipt} --var ${var} --xsecerr 0 --etamode ${ETAMODE}
+					eval ${SMART_KILLER} ./stack2.py --input ${input} -b --charge $iq ${optsz} ${optsi} -o TEST_EM${ETAMODE}_QCD${bgqcd}_Q${iq}/ETA${ieta}/PT${ipt} -t ${tagi}_${tagz} -m qcdfit_2d --bgsig ${bgsig} --bgewk ${bgewk} --bgqcd ${bgqcd} --preNN ${ieta} --preNQ ${ipt} --extra ${antondb}/${antondb}.PART.${iq}.${bgsig}.${bgewk}.${ieta}.${ipt} --var ${var} --xsecerr 0 --etamode ${ETAMODE} --rebin 4
 				    fi
 				    ((irun++))
 				done

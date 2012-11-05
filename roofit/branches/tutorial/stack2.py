@@ -513,7 +513,7 @@ LABELMAP['nvtxs_all'] = ['Number of vertices',None]
 LABELMAP['lepton_phi'] = ['#phi',None]
 LABELMAP['l_phi'] = ['#phi',None]
 
-def plot_stack(spR2,var,bin=None,q=2,m=0,new_scales=None,name=''):
+def plot_stack(spR2,var,bin=None,q=2,m=0,new_scales=None,pave=False,name=''):
     if new_scales!=None: SuStackElm.new_scales = new_scales
     spR2.update_var( var , bin )
     c = SuCanvas('stack_'+var+'_'+SuSys.QMAP[q][1]+('_'+name if name !='' else ''))
@@ -521,7 +521,7 @@ def plot_stack(spR2,var,bin=None,q=2,m=0,new_scales=None,name=''):
     hstack = po.stack('mc',spR2.clone(q=q),leg=leg)
     hdata = po.data('data',spR2.clone(q=q),leg=leg)
     xaxis_info = LABELMAP[var] if var in LABELMAP else None
-    c.plotStack(hstack,hdata,mode=m,leg=leg,height=2.0,pave=False,rebin=opts.rebin,xaxis_info=xaxis_info)
+    c.plotStack(hstack,hdata,mode=m,leg=leg,height=2.0,pave=pave,rebin=opts.rebin,xaxis_info=xaxis_info)
     OMAP.append(c)
     return hdata,hstack
 
@@ -1064,7 +1064,6 @@ if mode=='qcdfit_2d':
     imax = int(ibin.split(',')[2])
     var = None
     pvar = None
-    # TODO: convert to using 2d histograms
     if ieta=='ALL' and ipt=='ALL':
         var  = '%s'%(ivar)
         pvar = '%s'%(ivar)
@@ -1074,10 +1073,13 @@ if mode=='qcdfit_2d':
     elif (ipt!='ALL') and (ieta!='ALL'):
         var = 'bin%s_%d/lpt_%d/%s'%('' if opts.etamode==2 else 'e',ieta,ipt,ivar)
         pvar = 'bin%s_%d/lpt_%d/%s'%('' if opts.etamode==2 else 'e',ieta,ipt,opts.var)
+    elif (ieta=='ALL') and (ipt!='ALL'):
+        var = 'bin%s_%d/%s'%('p',ipt,ivar)
+        pvar = 'bin%s_%d/%s'%('p',ipt,opts.var)
     else:
         assert False,'Unsupported ieta/ipt choice for mode qcdfit_2d.'
     qcdadd={'var':var,'min':imin,'max':imax,'rebin':2}
-    hdata,hstack = plot_stack(spR.clone(qcdadd=qcdadd),var=pvar,q=iq,m=1,new_scales=True,name=po.get_flagsum()+'_F'+ivar)
+    hdata,hstack = plot_stack(spR.clone(qcdadd=qcdadd),var=pvar,q=iq,m=1,new_scales=True,pave=True,name=po.get_flagsum()+'_F'+ivar)
     hfrac=hstack.nominal().stack_bg_frac()
     key = po.scalekeys[-1]
     scales = po.scales[key]

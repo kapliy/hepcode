@@ -1,4 +1,6 @@
 REMOVE --qcd everywhere!
+muonboy vs ref-final in two "bad" bins
+MET_Muonboy vs muon pt correlation plot in that bin.
 
 Peter: do double
 Plot muon missing et term (don't need that many events, I think)
@@ -11,22 +13,14 @@ OCT29:
 * Look at MCP systematics by-hand: is statistical uncertainty dominant? If not, can we reduce it by averaging?
 * Apply d0/z0 cuts in ntuple format and see if eta spectrum smoothness improves
 
-
-QCD:
-important: exclude bins with zero entries from the fit!
-
 STYLE:
-Implement Sebastian's style
-Ability to rebin stacks
 Re-sort stack histograms from smallest to largest contributions.
 
 OCTOBER:
 MAX: repeat unfolded distribution errors
 * C_W calculation: try dropping individual cuts, especially MET.
 * Study QCD bg subtraction: overlay templates with and without subtraction on each other with ratio!
-* DONE: Finish QCD bg-subtraction estimate. Needs more study: QCD is generally down with bg-subtracted templates. But why??
 * Study QCD: saw funny business between MC template vs data-driven.
-
 * TODO: simplify qcdsys2d.py script. rms(qcdfrac) = final figure of merit?
 * DONE: Re-run October 4 version in TrigFTKAna_trunk with new MCP-curvature offsets.
   Perhaps this will/can fix the ugly hole? - NOPE
