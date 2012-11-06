@@ -37,7 +37,7 @@ parser.add_option("-v", "--var",dest="var",
                   help="Variable to plot: met or l_pt")
 parser.add_option("-c", "--cut",dest="cut",
                   type="string", default='mask*mcw*puw*vxw*ls1w*ls2w*effw*isow*trigw',
-                  help="Ntuple cut, usually a subset of: mask*mcw*puw*wzptw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw")
+                  help="Ntuple cut, usually a subset of: mask*mcw*puw*wzptw*vxw*ls1w*ls2w*effw*isow*trigw")
 parser.add_option("--truth", default=False,
                   action="store_true",dest="truth",
                   help="If set to true, plot at truth (Born) level")
@@ -105,7 +105,7 @@ cT.Divide(1,2)
 cT.cd(1)
 leg = ROOT.TLegend(0.55,0.70,0.88,0.88,'Muon pT',"brNDC")
 
-def cr(name,T,cut = '(mcw*puw*wzptw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw)*(mask)',idx=0):
+def cr(name,T,cut = '(mcw*puw*wzptw*vxw*ls1w*ls2w*effw*isow*trigw)*(mask)',idx=0):
     h = ROOT.TH1D('h'+name,'h'+name,len(ptbins)-1,ptbins)
     print 'Making ',name
     T.Draw('%s>>h%s'%(var,name),cut,'goff',MAXENTRIES)

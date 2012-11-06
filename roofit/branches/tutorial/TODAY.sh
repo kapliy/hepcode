@@ -121,7 +121,7 @@ fi
 
 # stack plots and single-MC asymmetry
 if [ "$mode" == "wstack" ]; then
-    common="${common} --qcd AUTO"
+    common="${common}"
     i=0
     gput tagss ${i} WJ_pythia_q2 "--pre \"${wpre_jordan}\" --cut \"${cut}\" --bgsig 0 --charge 2"
     ((i++))
@@ -315,7 +315,7 @@ fi
 
 # creation and verification of unfolding efficiency histograms
 if [ "$mode" == "unfold" ]; then
-    common="${common} --qcd AUTO"
+    common="${common}"
     pre="${wpre_jordan}"
     common="${common} --effroot asymmetry_eff.root"
 
@@ -365,7 +365,7 @@ fi;
 # reco-level asymmetry plots for multiple generators
 # also allows to perform a correction to particle level
 if [ "$mode" == "asym" -o "$mode" == "asym_reco" ]; then
-    common="${common} --qcd AUTO"
+    common="${common}"
     pre="${wpre_jordan}"
     m=asym_reco
 
@@ -434,7 +434,7 @@ fi
 
 # reco-level asymmetry: systematic variations
 if [ "$mode" == "syst" ]; then
-    common="${common} --qcd AUTO"
+    common="${common}"
     pre="${wpre_jordan}"
     m=asym_syst
 
@@ -456,7 +456,7 @@ fi
 
 # W QCD FITS
 if [ "$mode" == "qcd" ]; then
-    common="${common} --qcd AUTO"
+    common="${common}"
     #./stack2.py -b -m99 --var 'met' --bin '50,25,100' --hsource WJ/st_w_final/00_wmt/met --rebin 4
     i=0
     gput tagsq ${i} J_qcdfit  "--pre \"${wpre_jordan}\" --bin \"100,5,100\" "

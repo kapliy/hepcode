@@ -65,7 +65,7 @@ parser.add_option("--isofail",dest="isofail",
                   type="string", default='IsoFail20', #IsoWind20
                   help="QCD fits: QCD template anti-isolation")
 parser.add_option("--cut",dest="cut",
-                  type="string", default='mcw*puw*wzptw*wpolw*vxw*ls1w*ls2w*effw*isow*trigw',
+                  type="string", default='mcw*puw*wzptw*vxw*ls1w*ls2w*effw*isow*trigw',
                   help="Additional cut to select events")
 parser.add_option("--hsource",dest="hsource",
                   type="string", default='%s/st_%s_final/%s',
@@ -561,7 +561,9 @@ def test_unfolding(spR2,spT2,asym=True,name='test_unfolding'):
 def test_from_slices(spR2,spT2,mode=1,name='test_slices'):  # test: reconstruction in eta slices
     c = SuCanvas(name)
     h1,h2,h3=None,None,None
-    mode=100
+    var = 'lepton_absetav'
+    spR2.update_var( var )
+    spT2.update_var( var )
     if mode==0:
         h1 = po.sig('pos',spT2.clone(q=0,do_unfold=False))
         h2 = po.sig('pos',spT2.clone(q=0,do_unfold=False,histo='d2_abseta_lpt:y:0:8',sliced_2d=True))
@@ -803,17 +805,15 @@ if mode=='ALL' or mode=='all':
             var=bla[0]
             bin=bla[1]
             pre=bla[2]
-            weight = "mcw*puw*wptw*wpolw*vxw"
+            weight = "mcw*puw*wptw*vxw"
             plot_any(spTN.clone(var=var,pre=pre,bin=bin,weight=weight),None,m=2,var=None,name='WALL_reco_'+var,do_data=False,do_ratios=True,new_scales=False)
             if True:
-                weight = "mcw*puw*wptw*wpolw"
+                weight = "mcw*puw*wptw"
                 plot_any(spTN.clone(var=var,pre=pre,bin=bin,weight=weight),None,m=2,var=None,name='WNOZ_reco_'+var,do_data=False,do_ratios=True,new_scales=False)
                 weight = "mcw*puw"
                 plot_any(spTN.clone(var=var,pre=pre,bin=bin,weight=weight),None,m=2,var=None,name='WNON_reco_'+var,do_data=False,do_ratios=True,new_scales=False)
                 weight = "mcw*puw*wptw"
                 plot_any(spTN.clone(var=var,pre=pre,bin=bin,weight=weight),None,m=2,var=None,name='WWPT_reco_'+var,do_data=False,do_ratios=True,new_scales=False)
-                weight = "mcw*puw*wpolw"
-                plot_any(spTN.clone(var=var,pre=pre,bin=bin,weight=weight),None,m=2,var=None,name='WPOL_reco_'+var,do_data=False,do_ratios=True,new_scales=False)
     if False: # QCD systematic in 2d study: does |eta| slice plot to force QCD fits in |eta| x pT bins. Dumps fit scales to pickle file
         spR.enable_nominal()
         histo = 'bin_%d/lepton_pt:0:8'
@@ -846,7 +846,7 @@ if mode=='ALL' or mode=='all':
         #SuSample.GLOBAL_CACHE = None
         spR.enable_nominal()
         weight = "mcw*puw*effw*trigw*isow"
-        weight += "*wptw*wzptw*wpolw*vxw*ls1w*ls2w"
+        weight += "*wptw*wzptw*vxw*ls1w*ls2w"
         SuCanvas._refLineMin = 0.95
         SuCanvas._refLineMax = 1.05
         if False:
@@ -925,8 +925,8 @@ if mode=='ALL' or mode=='all':
         h.summary_bin(fname='index')
     if False: # stopped working 06/19/2012. I think before it worked "almost" correctly, but now is substantially off
         test_unfolding(spR.clone(),spT.clone(),asym=False)
-    if False: # make sure rebuilding of abseta from bin-by-bin slices is identical to direct histogram
-        test_from_slices(spR.clone(),spT.clone(),mode=10)
+    if True: # make sure rebuilding of abseta from bin-by-bin slices is identical to direct histogram
+        test_from_slices(spR.clone(),spT.clone(),mode=0)
     if False: # same as above, but compaing at unfolded level. I.e., this also validates direct unfolding vs pt-unfolding inside eta slices
         c = SuCanvas('test_slices_norm')
         SuStack.QCD_SYS_SCALES = False
@@ -1123,7 +1123,7 @@ if mode=='study_weights':
     assert opts.extra!=None,'EXITING - please set --extra to 0'
     extra = int(opts.extra)
     if extra==0:
-        weight = "mcw*puw*effw*trigw*isow*wzptw*wpolw*vxw*ls1w*ls2w"
+        weight = "mcw*puw*effw*trigw*isow*wzptw*vxw*ls1w*ls2w"
         qcdadd['descr'] = 'WALL'
         plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=opts.charge,m=0,name='ntuple_'+qcdadd['descr'])
     if extra==1:
@@ -1135,11 +1135,11 @@ if mode=='study_weights':
         qcdadd['descr'] = 'WALL_NOPOL'
         plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=opts.charge,m=0,name='ntuple_'+qcdadd['descr'])
     if extra==3:
-        weight = "mcw*puw*effw*trigw*isow*wzptw2*wpolw*vxw*ls1w*ls2w"
+        weight = "mcw*puw*effw*trigw*isow*wzptw2*vxw*ls1w*ls2w"
         qcdadd['descr'] = 'WALL_PYTHIA10'
         plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=opts.charge,m=0,name='ntuple_'+qcdadd['descr'])
     if extra==4:
-        weight = "mcw*puw*effw*trigw*isow*wzptw3*wpolw*vxw*ls1w*ls2w"
+        weight = "mcw*puw*effw*trigw*isow*wzptw3*vxw*ls1w*ls2w"
         qcdadd['descr'] = 'WALL_SHERPA'
         plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,q=opts.charge,m=0,name='ntuple_'+qcdadd['descr'])
 
