@@ -4,6 +4,7 @@
 
 input=/share/t3data3/antonk/ana/ana_v29I_10212012_unfold_stacoCB_all  # max's trigger SF
 input=/share/t3data3/antonk/ana/ana_v29I_10292012_unfold_newTrigWZPTnoPol_stacoCB_all # new trigger SF
+input=/share/t3data3/antonk/ana/ana_v29I_11022012_unfold_stacoCB_all # adding met muon term plots and additional 2d histos. adding pt slices. adding phi plot.
 
 # eta plots for different MC
 if [ "0" == "1" ]; then
@@ -27,7 +28,7 @@ if [ "0" == "1" ]; then
 fi
 
 # Lepton pT
-if [ "1" == "1" ]; then
+if [ "0" == "1" ]; then
     ./stack2.py -b --input ${input} --hsource "lpt" -o CONTROL -t PowhegPythia -m control_stack --bgsig 5 --bgewk 5 --bgqcd 3 --refline 0.91,1.09 &
     ./stack2.py -b --input ${input} --hsource "lpt" -o CONTROL -t PowhegHerwig -m control_stack --bgsig 4 --bgewk 5 --bgqcd 3 --refline 0.91,1.09 &
     ./stack2.py -b --input ${input} --hsource "lpt" -o CONTROL -t McAtNlo -m control_stack --bgsig 1 --bgewk 5 --bgqcd 3 --refline 0.91,1.09 &

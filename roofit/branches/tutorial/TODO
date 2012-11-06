@@ -1,4 +1,3 @@
-REMOVE --qcd everywhere!
 muonboy vs ref-final in two "bad" bins
 MET_Muonboy vs muon pt correlation plot in that bin.
 
@@ -7,9 +6,7 @@ Plot muon missing et term (don't need that many events, I think)
 Try it with a somewhat higher pt cut
 
 OCT29:
-* Finish study of bin migrations due to MCP systematic
-  Run a small example to confirm that the pT is shifted, as expected. Maybe dump numbers on 5k events into a text file.
-  Try the same but WITHOUT met propagation (have to do that at ntuple level)
+* Try muon systematics WITHOUT met propagation (have to do that at ntuple level). Shouldn't be a big effect!
 * Look at MCP systematics by-hand: is statistical uncertainty dominant? If not, can we reduce it by averaging?
 * Apply d0/z0 cuts in ntuple format and see if eta spectrum smoothness improves
 
