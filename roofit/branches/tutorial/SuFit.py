@@ -121,7 +121,7 @@ class SuFit:
     return bmin
 
   @staticmethod
-  def exclude_zero_bins(f,hs=[]):
+  def exclude_zero_bins(f,hs=[],limit=0):
     """ f is a TFractionFitter object. hs[] is a collection of histograms
     This function modifies the TFractionFitter object to exclude bins
     where at least one of the hs[] have no entries (or negative entries)
@@ -131,11 +131,13 @@ class SuFit:
     nbins = hs[0].GetNbinsX() + 1
     nexcl = 0
     for ibin in xrange(0,nbins):
-      if any( [h.GetBinContent(ibin)<=0 for h in hs] ):
+      if any( [h.GetBinContent(ibin)<=limit for h in hs] ):
         f.ExcludeBin(ibin)
         nexcl += 1
     if nexcl>0:
-      print 'WARNING: TFractionFitter excluded %d out of %d bins due to low statistics'%(nexcl,nbins)
+      print 'WARNING: TFractionFitter excluded %d out of %d bins due to low statistics (nentries<=%d)'%(nexcl,nbins,limit)
+    else:
+      print 'INFO: TFractionFitter does not need to exclude any bins'
     return True
 
   def doFitTF(s,EXCLUDE_ZERO_BINS=None):
@@ -163,8 +165,8 @@ class SuFit:
     print 'INFO: SuFit::doFitTF fit range:',s.vnames[0],s.fitmin,s.fitmax
     sys.stdout.flush()
     fit.SetRangeX(s.fitmin,s.fitmax) # choose MET fit range
-    if EXCLUDE_ZERO_BINS not in (None,False):
-      SuFit.exclude_zero_bins( fit , [s.fixed,s.free[0],s.data] )
+    if EXCLUDE_ZERO_BINS!=None:
+      SuFit.exclude_zero_bins( fit , [s.fixed,s.free[0],s.data] , EXCLUDE_ZERO_BINS )
     if False: # debugging
       s.dump_plot([data,s.fixed,s.free[0]])
     # set up extra parameters. frac0 = EWK (fixed), frac1 = QCD (free)
@@ -173,21 +175,22 @@ class SuFit:
       [ fit.Constrain(i,0.0,1.0) for i in xrange(0, mc.GetSize()) ] # constrain fractions to be between 0 and 1
     else:
       ewkfrac = s.fixed.Integral(s.fitmin,s.fitmax)/data.Integral(s.fitmin,s.fitmax)
-      fixpars = False
-      if ewkfrac>1.0:
+      if True: # get away from the edges
+        if ewkfrac>0.80: ewkfrac = 0.80
+        if ewkfrac<0.20: ewkfrac = 0.20
+      if ewkfrac>1.0: # legacy, should never happen
         print 'WARNING: SuFit::doFitTF EWK background already exceeds DATA',ewkfrac,s.fixed.Integral(s.fitmin,s.fitmax),data.Integral(s.fitmin,s.fitmax)
         sys.stdout.flush()
         ewkfrac = 0.95
-        fixpars = False
       qcdfrac = 1.0-ewkfrac
       fit.GetFitter().SetParameter(0,"ewkfrac",ewkfrac,0.01,0.0,1.0);
       fit.GetFitter().SetParameter(1,"qcdfrac",qcdfrac,0.01,0.0,1.0);
-      if fixpars:
+      if False:
         fit.GetFitter().FixParameter(0);
       if False:
         arglist = array.array('d',[1000,0.001])  #ncalls(1000),tolerance(0.001)
         fit.GetFitter().ExecuteCommand("MIGRAD",arglist,2);
-      print 'INFO: SuFit::doFitTF parameter defaults:',ewkfrac,qcdfrac
+      print 'INFO: SuFit::doFitTF parameter defaults: EWK frac = %.2f QCD frac = %.2f'%(ewkfrac,qcdfrac)
       sys.stdout.flush()
     # start the fits
     print 'Starting fits...'
@@ -262,7 +265,8 @@ class SuFit:
     s.chi2.append( fit.GetChisquare() )
     #s.chi2.append( data.Chi2Test( s.fit.GetPlot(), "UW CHI2" )  )
     s.ndf.append( fit.GetNDF() )
-    print 'Chi2 =','%8f'%s.chi2[-1],' NDF =',s.ndf[-1]
+    print 'INFO: EWK frac = %.2f  QCD frac = %.2f'%(s.fractions[-1],s.Wfractions[-1])
+    print 'INFO: Chi2 =','%8f'%s.chi2[-1],' NDF =',s.ndf[-1]
     sys.stdout.flush()
 
   def drawFitsTF(s,title='random',logscale=False):
