@@ -3,7 +3,7 @@
 # smart script to keep submitting jobs as long as there are queue slots available
 
 ntot=`./QCD_2D.sh | grep Max | awk '{print $3}'`
-nperblk=600 # njobs per block
+nperblk=800 # njobs per block
 nsubmin=220 # resubmit when jobs fall below this
 nblk=`expr ${ntot} / ${nperblk}` # total number of blocks
 nperlast=`expr ${ntot} % ${nperblk}` # njobs in last block

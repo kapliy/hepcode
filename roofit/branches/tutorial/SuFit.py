@@ -214,6 +214,17 @@ class SuFit:
           sys.stdout.flush()
           s.status = fit.Fit()
           s.nfits += 1
+          # last-ditch attempt: do a full scan with starting point ewkfrac = [0.15..0.85], step 0.05
+          if True and s.status!=0:
+            for ewkfrac in [ 0.05 * xx for xx in xrange(3,18) ]:
+              qcdfrac = 1.0-ewkfrac
+              print 'WARNING: SCANNING FIT (N=%d) with ewkfrac=%.2f'%(s.nfits+1,ewkfrac)
+              fit.GetFitter().SetParameter(0,"ewkfrac",ewkfrac,0.01,0.0,1.0);
+              fit.GetFitter().SetParameter(1,"qcdfrac",qcdfrac,0.01,0.0,1.0);
+              s.status = fit.Fit()
+              s.nfits += 1
+              if s.status==0:
+                break
     if s.status!=0:
       s.fractions.append( 0 )
       s.fractionsE.append( 0 )
