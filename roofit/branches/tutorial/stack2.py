@@ -419,7 +419,7 @@ else:
 SuStack.QCD_SYS_SCALES = opts.metallsys
 SuStack.QCD_TF_FITTER = True
 SuStack.QCD_STAT_HACK = True
-SuStack.QCD_EXC_ZERO_BINS = 3
+SuStack.QCD_EXC_ZERO_BINS = 5
 spR.enable_all()
 # Reco-level [ntuple]
 spRN = SuPlot()
@@ -950,14 +950,13 @@ if mode=='qcdfit_2d':
     scales = po.scales[key]
     # save the results
     skey = '/iq%d/X%d/bgqcd%d/bgewk%d/bgsig%d/iso%s/ivar%s/ibin%s/%s%s/ipt%s'%(iq,opts.xsecerr,bgqcd,bgewk,bgsig,opts.isofail,ivar,ibin,'ieta' if opts.etamode==2 else 'iseta',ieta,ipt)
+    print 'Saving key:',skey
     DATAOUT = { 'frac' : hfrac, 'scales' : scales }
     ROOTOUT = [ OMAP[-1]._canvas , po.fits[key]._canvas ]
     a = antondb.antondb(opts.extra)
     a.add(skey,DATAOUT)
     if True:
         a.add_root(skey,ROOTOUT)
-    if False:
-        sys.exit(0)
 
 # Study different MC weights.
 # Also can be used to perform stack comparison of TH1 and ntuple-based histograms

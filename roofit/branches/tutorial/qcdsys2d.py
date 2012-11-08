@@ -56,7 +56,7 @@ PM = '&plusmn;'
 COLH = 150
 COLW = 95
 
-db_name = 'DB_11022012_ALL'
+db_name = 'DB_11022012_ALL.v2'
 fin_name = 'IN_11022012_ALL.v1.%s.%dD.root'%(eword,DIM)
 
 fout_name = re.sub('IN_','OUT_',fin_name)
