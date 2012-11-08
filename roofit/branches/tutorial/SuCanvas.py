@@ -551,160 +551,20 @@ class SuCanvas:
     def getX2(s):
         return 1. - float( s._canvas.GetRightMargin() ) - 0.01;
 
-    def plotAsymmetryFromComponents(s,hdPOS,hdNEG,hmcPOS,hmcNEG,leg=None):
-        """ DEPRECATED: wrapper to make a complete plot of charge asymmetry for data vs mc
-        from individual charge-dependent histograms """
-        assert False, 'Deprecated'
-        s.data.append((hdPOS,hdNEG,hmcPOS,hmcNEG,leg))
-        s.buildRatio()
-        s.cd_plotPad()
-        # mc
-        s.hmcasym = s.WAsymmetry(hmcPOS,hmcNEG)
-        s.hmcasym.SetLineColor(ROOT.kBlue)
-        s.hmcasym.Draw()
-        s.hmcasym.GetYaxis().SetRangeUser(0.0,0.5)
-        s.hmcasym.GetYaxis().SetTitle('Asymmetry')
-        # data
-        s.hdasym = s.WAsymmetry(hdPOS,hdNEG)
-        s.hdasym.SetMarkerSize(1.0)
-        s.hdasym.Draw("AP same")
-        if leg:
-            leg.Draw("same")
-        # ratio
-        s.cd_ratioPad();
-        s.hratio,s.href = s.hdasym.Clone("hratio"),s.hdasym.Clone("href")
-        s.hratio.Divide(s.hmcasym)
-        s.drawRatio(s.hratio)
-        s.hratio.Draw("AP same");
-        s.update()
-
-    def plotStackHisto_H(s,stack,data,leg=None):
-        """ Wrapper to make a complete plot of stack and data overlayed - TH1 version (deprecated) """
-        s.data.append((stack,data,leg))
-        s.buildRatio()
-        s.cd_plotPad()
-        # mc
-        stack.Draw("HIST")
-        stack.SetMinimum(0.0) # was: 0.1
-        maximum = max((data.GetMaximum(),stack.GetMaximum()))
-        stack.SetMaximum(maximum*1.5)
-        #data
-        data.SetMarkerSize(1.0)
-        data.Draw("AP same")
-        if leg:
-            leg.Draw("same")
-        # ratio
-        s.cd_ratioPad()
-        s.hratio,s.href = data.Clone("hratio"),data.Clone("href")
-        s.hratio.Divide(stack.GetStack().Last())
-        s.drawRatio(s.hratio)
-        s.hratio.Draw("AP same")
-        s.update()
-
-    def plotOne(s,hplot,mode=0,height=1.5,leg=None,title=None):
-        """ A generic function to plot an instance of SuPlot.
-        Mode is: 0=nominal; 1=total errors; 2=all systematic plots
-        Height is: Max*height. Or asym = 0..0.5
-        """
-        s.buildDefault(width=1024,height=400)
-        s.cd_canvas();
-        if not leg:
-            leg = ROOT.TLegend(0.55,0.60,0.88,0.92,'Legend',"brNDC")
-        if title!=None: leg.SetHeader(title)
-        s.data.append( (hplot,leg) )
-        hs = []
-        if mode==1:
-            ht = hplot.clone()
-            h = ht.update_errors()
-            hs.append(h)
-            h.Draw()
-            s.data.append(h)
-        else:
-            for i,hsys in enumerate(hplot.flat):
-                if not hsys.h: continue
-                h = hsys.h.Clone()
-                hs.append(h)
-                s.data.append(h)
-                color = PlotOptions.autocolor(i)
-                h.SetLineColor(color)
-                h.SetMarkerColor(color)
-                leg.AddEntry(h,hsys.name,'LP')
-                if i==0:
-                    h.Draw()
-                else:
-                    h.Draw('A SAME')
-                if mode==0: break
-        maxh = max([h.GetMaximum() for h in hs])
-        if height=='asym':
-            hs[0].GetYaxis().SetRangeUser(0,0.5);
-        elif height=='ratio':
-            hs[0].GetYaxis().SetRangeUser(0,2.0);
-        else:
-            hs[0].GetYaxis().SetRangeUser(0,maxh*float(height));
-        if mode==2: # draw legend for multi-systematic studies
-            leg.Draw("same")
-        s.update()
-
-    def plotMany(s,hplots,M=None,mode=0,height=1.5,leg=None,title=None):
+    def plotAny(s,hplots,M=None,height=1.5,mode=0,
+                rebin=1.0,
+                xaxis_info=None):
         """ A generic function to plot several SuPlot's.
         M is: a PlotOptions object describing formatting and colors
-        Mode is: 0=nominal; 1=total errors
         Height is: Max*height. Or asym = 0..0.5
+        mode=0 - nominal only
+        mode=1 - apply systematics
         """
         if M:
             assert M.ntot()==len(hplots),'Size mismatch between SuPlots and PlotOptions'
-        if not leg:
-            leg = ROOT.TLegend(0.55,0.70,0.88,0.88,'Legend',"brNDC")
-        if title!=None: leg.SetHeader(title)
-        s.data.append( (hplots,leg) )
-        s.buildDefault(width=1024,height=400)
-        s.cd_canvas();
-        hs = []
-        for i,hplot in enumerate(hplots):
-            h0 = hplot.nominal().stack.GetStack().Last() if hplot.nominal().stack else hplot.nominal_h()
-            assert h0
-            if mode==1:
-                ht = hplot.clone()
-                h0 = ht.update_errors()
-            if not h0: continue
-            h = h0.Clone()
-            hs.append(h)
-            s.data.append(h)
-            if M:
-                h.SetLineColor(M.colors[i])
-                h.SetMarkerColor(M.colors[i])
-                h.SetMarkerStyle(M.styles[i])
-                h.SetMarkerSize(M.sizes[i])
-                leg.AddEntry(h,M.labels[i],'LP')
-            else:
-                h.SetLineColor( PlotOptions.autocolor(i) )
-            if i==0:
-                h.Draw()
-            else:
-                h.Draw('A SAME')
-        maxh = max([h.GetMaximum() for h in hs])
-        if height=='asym':
-            hs[0].GetYaxis().SetRangeUser(0,0.5);
-        elif height=='ratio':
-            hs[0].GetYaxis().SetRangeUser(0,2.0);
-        else:
-            hs[0].GetYaxis().SetRangeUser(0,maxh*float(height));
-        if True:
-            leg.Draw("same")
-        s.update()
-
-    def plotAny(s,hplots,M=None,height=1.7,leg=None,title=None,xtitle=None,w=1024,h=800):
-        """ A generic function to plot several SuPlot's.
-        M is: a PlotOptions object describing formatting and colors
-        In this version, systematic error mode is encoded inside M
-        Height is: Max*height. Or asym = 0..0.5
-        """
-        if M:
-            assert M.ntot()==len(hplots),'Size mismatch between SuPlots and PlotOptions'
-        if not leg:
-            leg = ROOT.TLegend(0.55,0.70,0.88,0.88,'Legend',"brNDC")
-            leg.SetFillColor(0)
-        if title!=None: leg.SetHeader(title)
+        leg = ROOT.TLegend()
+        if M and M.title!=None:
+            leg.SetHeader(M.title)
         s.data.append( (hplots,leg) )
         if M and M.any_ratios():
             s.buildRatio(width=w,height=h)
@@ -945,6 +805,7 @@ class PlotOptions:
     msize = 1.5
     def __init__(s):
       s.n = 0
+      s.title = None
       s.names = []
       s.labels = []
       s.colors = []

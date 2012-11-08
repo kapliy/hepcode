@@ -30,24 +30,15 @@ source bashmap.sh
 SMART_KILLER="./smart_killer.sh"
 #SMART_KILLER=""
 
-antondb='HISTO_11022012_ALL'
+antondb='HISTO_11022012_ALL.v2'
 mkdir -p ${antondb}
-#input=/share/t3data3/antonk/ana/ana_v29G_07252012_newROOT_stacoCB_all
-#input=/share/t3data3/antonk/ana/ana_v29G_08242012_allwts_V29I_stacoCB_all  # ALL weights + v29i ntuple + jerup/down
-#input=/share/t3data3/antonk/ana/ana_v29I_08242012_allwts_wptMC10_stacoCB_all # same, but using MC10 reweighting
-input=/share/t3data3/antonk/ana/ana_v29I_09082012_allwts_wptPow8_eta_stacoCB_all #changed to powheg8 wpt reweighting. Fixed alpgen. Added eta (vs |eta|) histograms.
-input=/share/t3data3/antonk/ana/ana_v29I_09082012_allwts_wptPow8_eta_newSF_stacoCB_all # added new reco-level scale factors in measurement bins
-input=/share/t3data3/antonk/ana/ana_v29I_09272012_allwts_wptPow8_eta_newSFTF_stacoCB_all # added trigger SF, too (from Max)
-input=/share/t3data3/antonk/ana/ana_v29I_09282012_allwts_wptPow8_eta_newSFTFQ_stacoCB_all  # added charge-dependent trigger SF from Max. BUGGY
-input=/share/t3data3/antonk/ana/ana_v29I_1002012_allwts_wptPow8_eta_newSFTFQ_stacoCB_all #fixed
-input=/share/t3data3/antonk/ana/ana_v29I_10122012_new_trigETAPTQ_stacoCB_all # fixed OLD unfolding matrices
 input=/share/t3data3/antonk/ana/ana_v29I_11022012_unfold_stacoCB_all
 
 ETAMODES="1 2" # 2=|eta| bins, 1=eta bins
 bgsigs="1 4 5"
 bgqcds="3 4" # 3=regular, 4=bgsub in qcd template
 bgewks="5 2"
-var='met'
+var='met'  # plotting var (not relevant for scale definition; only for fraction)
 ipts=`echo {0..6} ALL`
 
 i=0
@@ -60,6 +51,7 @@ gput tagzs ${i} met0to80 "--lvar met --lbin 50,0,80 " ; ((i++))
 gput tagzs ${i} met0to90 "--lvar met --lbin 50,0,90 " ; ((i++))
 gput tagzs ${i} met0to60 "--lvar met --lbin 50,0,60 " ; ((i++))
 gput tagzs ${i} met0to50 "--lvar met --lbin 50,0,50 " ; ((i++))
+gput tagzs ${i} met10to50 "--lvar met --lbin 50,10,50 " ; ((i++))
 gput tagzs ${i} wmt40to90 "--lvar wmt --lbin 50,40,90 "  ; ((i++))
 gput tagzs ${i} wmt35to100 "--lvar wmt --lbin 50,35,100 "  ; ((i++))
 gput tagzs ${i} wmt40to70 "--lvar wmt --lbin 50,40,70 "  ; ((i++))
@@ -84,6 +76,9 @@ for ETAMODE in ${ETAMODES}; do
 				for ipt in ${ipts}; do
 				    if [ "$id" == "$irun" -o "$id" == "ALL" ]; then
 					eval ${SMART_KILLER} ./stack2.py --input ${input} -b --charge $iq ${optsz} ${optsi} -o TEST_EM${ETAMODE}_QCD${bgqcd}_Q${iq}/ETA${ieta}/PT${ipt} -t ${tagi}_${tagz} -m qcdfit_2d --bgsig ${bgsig} --bgewk ${bgewk} --bgqcd ${bgqcd} --preNN ${ieta} --preNQ ${ipt} --extra ${antondb}/${antondb}.PART.${iq}.${bgsig}.${bgewk}.${ieta}.${ipt} --var ${var} --xsecerr 0 --etamode ${ETAMODE} --rebin 4
+					if [ ! "$id" == "ALL" ]; then
+					    exit 0
+					fi
 				    fi
 				    ((irun++))
 				done

@@ -56,27 +56,8 @@ PM = '&plusmn;'
 COLH = 150
 COLW = 95
 
-db_name = 'DB_08272012_MC10'
-fin_name = 'IN_08272012.v2.%dD.root'%DIM
-
-db_name = 'DB_09082012_POW8_ETA'
-fin_name = 'IN_09082012.v1.%s.%dD.root'%(eword,DIM)
-
-# new reco SF
-db_name = 'DB_09212012_POW8_ETA_NEWSF'
-fin_name = 'IN_09212012.v1.%s.%dD.root'%(eword,DIM)
-
-# new reco SF plus Max's update to trigger SF (per charge)
-db_name = 'DB_09282012_POW8_ETA_NEWSFTFQ_QCD4'  # bg-subtracted qcd
-fin_name = 'IN_09282012.newSFTFQ_QCD4.v1.%s.%dD.root'%(eword,DIM)
-
-# new reco SF plus Max's update to trigger SF (per charge)
-db_name = 'DB_09282012_POW8_ETA_NEWSFTFQ'
-fin_name = 'IN_09282012.newSFTFQ.v1.%s.%dD.root'%(eword,DIM)
-
-# disabling wpol weight; adding latest trigger scale factors (not applied to scales though)
-db_name = 'DB_10122012_ALL'
-fin_name = 'IN_10122012_ALL.v1.%s.%dD.root'%(eword,DIM)
+db_name = 'DB_11022012_ALL'
+fin_name = 'IN_11022012_ALL.v1.%s.%dD.root'%(eword,DIM)
 
 fout_name = re.sub('IN_','OUT_',fin_name)
 if os.path.exists(fin_name):
@@ -118,6 +99,8 @@ def get(iq,bgsig,ieta,ipt):
             chindfs.append( 1.0*sc[-3]/sc[-2] )
             if bgewk==2: bla2.append(fracs[-1])
             if bgewk==5: bla5.append(fracs[-1])
+        else:
+            print 'MISSING:',key
         idxs.append(idx)
         idx += 1
     return idxs,fracs,scales,scalesE,chindfs,scalesL,scalesLE

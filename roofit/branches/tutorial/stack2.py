@@ -419,7 +419,7 @@ else:
 SuStack.QCD_SYS_SCALES = opts.metallsys
 SuStack.QCD_TF_FITTER = True
 SuStack.QCD_STAT_HACK = True
-SuStack.QCD_EXC_ZERO_BINS = 1
+SuStack.QCD_EXC_ZERO_BINS = 3
 spR.enable_all()
 # Reco-level [ntuple]
 spRN = SuPlot()
@@ -483,35 +483,13 @@ def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errors
     title = var
     if is_asym:
         title='Detector-level asymmetry' if do_unfold==False else 'Born-level asymmetry'
-    c.plotAny(h,M=M,height=height,title=title)
+    M.title = title
+    c.plotAny(h,M=M,height=height)
     if do_summary:
         h[-1].summary_bin(fname='index_%s_%s'%(opts.tag,name))
         pass
     OMAP.append(c)
     return h[-1]
-
-LABELMAP = {}
-LABELMAP['lepton_etav'] = ['#eta',None]
-LABELMAP['l_eta'] = ['#eta',None]
-LABELMAP['lP_eta'] = ['#eta',None]
-LABELMAP['lN_eta'] = ['#eta',None]
-LABELMAP['lepton_etavHP'] = ['#eta',None]
-LABELMAP['lepton_absetav'] = ['|#eta|',None]
-LABELMAP['fabs(l_eta)'] = ['|#eta|',None]
-LABELMAP['fabs(lP_eta)'] = ['|#eta|',None]
-LABELMAP['fabs(lN_eta)'] = ['|#eta|',None]
-LABELMAP['wmt'] = ['m_{T}^{W}','GeV']
-LABELMAP['w_mt'] = ['m_{T}^{W}','GeV']
-LABELMAP['met'] = ['E_{T}^{Miss}','GeV']
-LABELMAP['lpt'] = ['p_{T}','GeV']
-LABELMAP['l_pt'] = ['p_{T}','GeV']
-LABELMAP['lP_pt'] = ['p_{T}','GeV']
-LABELMAP['lN_pt'] = ['p_{T}','GeV']
-LABELMAP['wpt'] = ['p_{T}^{W}','GeV']
-LABELMAP['w_pt'] = ['p_{T}^{W}','GeV']
-LABELMAP['nvtxs_all'] = ['Number of vertices',None]
-LABELMAP['lepton_phi'] = ['#phi',None]
-LABELMAP['l_phi'] = ['#phi',None]
 
 def plot_stack(spR2,var,bin=None,q=2,m=0,new_scales=None,pave=False,name=''):
     if new_scales!=None: SuStackElm.new_scales = new_scales
@@ -552,13 +530,13 @@ def test_unfolding(spR2,spT2,asym=True,name='test_unfolding'):
     M.add('truth','Pythia truth',color=1)
     M.add('reco','Pythia reco',color=2)
     M.add('unfold','Pythia unfold',color=3)
-    c.plotMany(h,M=M,mode=0,height=1.6)
+    c.plotAny(h,M=M,height=1.6)
     OMAP.append(c)
     if False:
         hpos_u = po.sig('pos',spR.clone(q=0,do_unfold=True))
         hpos_tru = po.sig('pos',spT.clone(q=0,do_unfold=False))
 
-def test_from_slices(spR2,spT2,mode=1,name='test_slices'):  # test: reconstruction in eta slices
+def test_from_slices(spR2,spT2,mode=1,name='test_slices'):
     c = SuCanvas(name)
     h1,h2,h3=None,None,None
     var = 'lepton_absetav'
@@ -597,7 +575,6 @@ def test_from_slices(spR2,spT2,mode=1,name='test_slices'):  # test: reconstructi
         M.add('fromslices1d','From slices - 1D',size=0.9)
     M.add('fromslices2d','From slices - 2D',size=0.5)
     c.plotAny(h,M=M,height=1.7)
-    #c.plotOne(h1,mode=2,height=1.7)
     OMAP.append(c)
 
 def test_ntuple_histo(spR2,var='lepton_absetav',new_scales=None,name='ntuple_histo'):
@@ -605,7 +582,7 @@ def test_ntuple_histo(spR2,var='lepton_absetav',new_scales=None,name='ntuple_his
     if new_scales!=None: SuStackElm.new_scales = new_scales
     if spR2: spR2.update_var( var )
     c = SuCanvas('%s_%s'%(name,'detector'))
-    M = PlotOptions()
+    M = PlotOptions('Ntuple-Histo comparison')
     M.prefill_mc()
     M.prefill_data()
     h = []
@@ -614,97 +591,8 @@ def test_ntuple_histo(spR2,var='lepton_absetav',new_scales=None,name='ntuple_his
             h.append( po.asym_data_sub('data',spR2.clone()) )
         else: #MC
             h.append( po.asym_mc('mc', spR2.clone() ,name=M.names[i]) )
-    c.plotAny(h,M=M,height='asym',title='Ntuple-Histo comparison')
-    #c.plotAny(h,M=M,height=4000*1000,title='Ntuple-Histo comparison')
+    c.plotAny(h,M=M,height='asym')
     OMAP.append(c)
-
-def june26_asymmetry_all_slices():
-    if True: # FINAL asymmetry in slices of various variables
-        plot_any(spR.clone(),spT.clone(),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='INCLUSIVE_DIRECT')
-        if opts.extra=='1':
-            histo = 'bin_%d/lepton_pt:0:8'
-            plot_any(spR.clone(histo=histo,sliced_1d=True),spT.clone(histo=histo,sliced_1d=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='INCLUSIVE_SLICES')
-            histo = 'bin_%d/lepton_pt:1:1'
-            plot_any(spR.clone(histo=histo,sliced_1d=True),spT.clone(histo=histo,sliced_1d=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='LEPTON_PT2025')
-            histo = 'bin_%d/lepton_pt:1:2'
-            plot_any(spR.clone(histo=histo,sliced_1d=True),spT.clone(histo=histo,sliced_1d=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='LEPTON_PT2040')
-            histo = 'bin_%d/lepton_pt:3:3'
-            plot_any(spR.clone(histo=histo,sliced_1d=True),spT.clone(histo=histo,sliced_1d=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='LEPTON_PT4080')
-        elif opts.extra=='2':
-            histo = 'bin_%d/wpt:1:1'
-            plot_any(spR.clone(histo=histo,sliced_1d=True),spT.clone(histo=histo,sliced_1d=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WPT0010')
-            histo = 'bin_%d/wpt:2:2'
-            plot_any(spR.clone(histo=histo,sliced_1d=True),spT.clone(histo=histo,sliced_1d=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WPT1020')
-            histo = 'bin_%d/wpt:3:3'
-            plot_any(spR.clone(histo=histo,sliced_1d=True),spT.clone(histo=histo,sliced_1d=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WPT20200')
-        elif opts.extra=='3':
-            histo = 'bin_%d/wmt:1:1'
-            plot_any(spR.clone(histo=histo,sliced_1d=True),spT.clone(histo=histo,sliced_1d=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WMT4060')
-            histo = 'bin_%d/wmt:2:2'
-            plot_any(spR.clone(histo=histo,sliced_1d=True),spT.clone(histo=histo,sliced_1d=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WMT6080')
-            histo = 'bin_%d/wmt:3:3'
-            plot_any(spR.clone(histo=histo,sliced_1d=True),spT.clone(histo=histo,sliced_1d=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='WMT80200')
-        elif opts.extra=='4':
-            histo = 'bin_%d/met:1:1'
-            plot_any(spR.clone(histo=histo,sliced_1d=True),spT.clone(histo=histo,sliced_1d=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='MET2540')
-            histo = 'bin_%d/met:2:2'
-            plot_any(spR.clone(histo=histo,sliced_1d=True),spT.clone(histo=histo,sliced_1d=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='MET40200')
-        elif opts.extra=='5':
-            histo = 'bin_%d/njets:1:1'
-            plot_any(spR.clone(histo=histo,sliced_1d=True),spT.clone(histo=histo,sliced_1d=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='NJETS0')
-            histo = 'bin_%d/njets:2:2'
-            plot_any(spR.clone(histo=histo,sliced_1d=True),spT.clone(histo=histo,sliced_1d=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='NJETS1')
-            histo = 'bin_%d/njets:3:3'
-            plot_any(spR.clone(histo=histo,sliced_1d=True),spT.clone(histo=histo,sliced_1d=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='NJETS2')
-            histo = 'bin_%d/njets:4:5'
-            plot_any(spR.clone(histo=histo,sliced_1d=True),spT.clone(histo=histo,sliced_1d=True),var=None,m=20,do_unfold=True,do_errorsDA=True,do_summary=True,name='NJETS3UP')
-
-def july02_summarize_qcd_fits(fitvar,fitrange):
-    """ DEPRECATED: now we save fit results in a pickle file and use a separate script to post-process it """
-    fitreg = 'metfit' if fitvar=='met' else 'baseline'
-    assert len(fitrange)==2
-    #TEST_Q3S2X5Y5Z5_isofail__tight_nominal_st_w_final_metfit_bin_8_lepton_pt_4_NEG_met_0to100.png
-    #TEST_Q3S5X5Y5Z5_loose_isofail__nominal_st_w_final_metfit_bin_0_lepton_pt_4_POS_met_0to100.png
-    n = 'Q3S%dX5Y5Z5_'%opts.bgsig+'loose_isofail__nominal_st_w_final_' + fitreg + '_bin_%d_lepton_pt_%d_%s_' + fitvar + '_' + str(fitrange[0]) + 'to' + str(fitrange[1])
-    f = open('qcd.html','w')
-
-    print >>f,'<HTML><BODY>'
-    for iq in ('POS','NEG'):
-        print >>f,'<HR>'
-        print >>f,iq
-        print >>f,'<HR>'
-        #print table
-        print >>f,'<TABLE border="1" width="900">'
-        print >>f,'<TR>'
-        print >>f, '<TD width="100">pT/eta</TD>'
-        for ipt in xrange(0,len(ptbins)-1):
-            print >>f,'<TD width="50">','%d&lt;pT&lt;%d'%(ptbins[ipt],ptbins[ipt+1]),'</TD>'
-        print >>f,'</TR>'
-        for ieta in xrange(0,len(absetabins)-1):
-            print >>f,'<TR>'
-            print >>f, '<TD width="100">','%.2f&lt;|eta|&lt;%.2f'%(absetabins[ieta],absetabins[ieta+1]),"</TD>"
-            for ipt in xrange(0,len(ptbins)-1):
-                key = n%(ieta,ipt,iq)
-                v = -1.0
-                if key in po.scales:
-                    v = po.scales[key][0]  #scale factor
-                    v = po.scales[key][2]*100.0  #fraction
-                print >>f,'<TD width="50">','%.1f%%'%(v),'</TD>'
-            print >>f,'</TR>'
-        print >>f,'</TABLE>'
-        # print images
-        print >>f,'<BR>'
-        print >>f,'<TABLE border="0" width="2240">'
-        NF='http://www.wzone.com/myimages/PageNotFound-Man.jpg'
-        for ieta in xrange(0,len(absetabins)-1):
-            print >>f,'<TR>'
-            for ipt in xrange(0,len(ptbins)-1):
-                key = n%(ieta,ipt,iq)
-                print >>f,'<TD width="280" align="center"><img src="TEST/%s_%s.png" width="270"/></TD>'%(opts.tag,SuCanvas.cleanse(key))
-            print >>f,'</TR>'
-        print >>f,'</TABLE>'
-    print >>f,'</BODY></HTML>'
-    f.close()
 
 def study_jet_calibration_effects():
     if True:   # manually plot MET shapes to study jet calibratione effects
@@ -717,19 +605,19 @@ def study_jet_calibration_effects():
             spR.update_var( var )
             c = SuCanvas('JetCal_data_%s'%var)
             h = []
-            M = PlotOptions()
+            M = PlotOptions('Legend')
             M.add('default','MET from default jets',size=0.4)
             M.add('calib','MET from calibrated jets',size=0.2)
             h.append( po.data('data',spR.clone(q=2,sysdir='nominal')) )
             h.append( po.data('data',spR.clone(q=2,sysdir='nominal_caljet')) )
-            c.plotAny(h,M=M,height=1.7,title='Legend',xtitle=VARMAP[var])
+            c.plotAny(h,M=M,height=1.7,xtitle=VARMAP[var])
             OMAP.append(c)
         for var in ('met','lpt','lepton_abseta_fine'):
             spR.update_var( var )
             po.choose_sig(5)
             c = SuCanvas('JetCal_mc_%s'%var)
             h = []
-            M = PlotOptions()
+            M = PlotOptions('Legend')
             M.add('default','MET from default jets',size=0.4)
             M.add('calib','MET from calibrated jets',size=0.2)
             #M.add('default','MET from smeared jets',size=0.2)
@@ -740,7 +628,7 @@ def study_jet_calibration_effects():
             #h.append( po.sig('sig',spR.clone(q=2,sysdir='jet_jer')) )
             h.append( po.sig('sig',spR.clone(q=2,sysdir='jet_jesup')) )
             h.append( po.sig('sig',spR.clone(q=2,sysdir='jet_jesdown')) )
-            c.plotAny(h,M=M,height=1.7,title='Legend',xtitle=VARMAP[var])
+            c.plotAny(h,M=M,height=1.7,xtitle=VARMAP[var])
             OMAP.append(c)
 
 # combined plots
@@ -826,18 +714,9 @@ if mode=='ALL' or mode=='all':
                 plot_any(spR.clone(histo=histo,qcdadd=qcdadd,sliced_1d=True),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='SLICES_sig%d_%d'%(bgsig,iqcd))
         # dump all stats into a pickle file
         dump_pickle(po.scales)
-    if False: # reconstruction in |eta| slices + QCD fits in |eta| x pT bins
-        spR.enable_nominal()
-        plot_any(spR.clone(),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='INCLUSIVE_DIRECT')
-        histo = 'bin_%d/lepton_pt:0:8'
-        qcdadd={'var':'met','min':0,'max':80}
-        #qcdadd={'var':'wmt','min':40,'max':90}
-        if True:
-            plot_any(spR.clone(histo=histo,sliced_1d=True,qcdadd=qcdadd),None,var=None,m=20,do_unfold=False,do_errorsDA=True,do_errorsMC=True,do_summary=False,name='INCLUSIVE_SLICES')
-            july02_summarize_qcd_fits(qcdadd['var'],(qcdadd['min'],qcdadd['max']))
     if False: # simple histogram comparison of TH1 and ntuple-based histograms: one MC and Data only
         c = SuCanvas('TEST')
-        M = PlotOptions()
+        M = PlotOptions('Ntuple-Histo comparison')
         M.add('h','histo',ratio=1,size=1.0)
         M.add('nt','ntuple',ratio=1,size=0.5)
         h = []
@@ -856,7 +735,7 @@ if mode=='ALL' or mode=='all':
             h.append( po.mc('mc',spR.clone(histo='lpt',bin='200,0,200',q=2),name='sig_pythia') )
             h.append( po.mc('mc',spRN.clone(var='l_pt',bin='200,0,200',q=2,pre=pre,weight=weight),name='sig_pythia') )
         print 'NBINS:',h[-2].nominal().h.GetNbinsX(),h[-1].nominal().h.GetNbinsX()
-        c.plotAny(h,M=M,height=1.6,title='Ntuple-Histo comparison')
+        c.plotAny(h,M=M,height=1.6)
         OMAP.append(c)
     if False: # bg-subtracted asymmetry comparison of TH1 vs ntuple based basic histogram. Ignores QCD normalization issues
         SuSample.debug = True
@@ -911,18 +790,6 @@ if mode=='ALL' or mode=='all':
                     print 'Working on:','SIG:',MAP_BGSIG[bgsig],'QCD:',MAP_BGQCD[bgqcd],'EWK:',MAP_BGSIG[bgewk]
                     for iqcdadd,qcdadd in enumerate(qcdadds):
                         plot_stacks(spR.clone(qcdadd=qcdadd),plots,m=1 if plot_sys==True else 0, name='%s_qcd%d'%(po.get_flagsum(),iqcdadd) )
-    if False: # mel test: look at systematic variations in signal only, see if it is one-sided
-        spR.update_var( 'lepton_absetav' )
-        c = SuCanvas('systematics')
-        if False: # in asymmetry
-            h = po.asym_sig('asym',spR.clone(do_unfold=0))
-            c.plotOne(h,mode=2,height='asym',title='Signal MC asymmetry: systematics')
-        else:     # in signal
-            #h = po.sig('asym',spR.clone(q=0))
-            h = po.mc('asym',spR.clone(q=1),name='sig_pythia')
-            c.plotOne(h,mode=2,height=1.5,title='Signal MC asymmetry: systematics')
-        OMAP.append(c)
-        h.summary_bin(fname='index')
     if False: # stopped working 06/19/2012. I think before it worked "almost" correctly, but now is substantially off
         test_unfolding(spR.clone(),spT.clone(),asym=False)
     if True: # make sure rebuilding of abseta from bin-by-bin slices is identical to direct histogram
@@ -947,8 +814,7 @@ if mode=='ALL' or mode=='all':
         #M.add('pt4080','pt4080')
         #M.add('pt80200','pt80200')
         print '--------->', 'Starting plotting...'
-        c.plotMany([h1R,h2R]+hpt,M=M,mode=0,height='asym')
-        #c.plotOne(h1R,mode=2,height=1.7)
+        c.plotAny([h1R,h2R]+hpt,M=M,height='asym')
         OMAP.append(c)
     if False: # test: reconstruction in eta slices, also visualizes a gazillion SCALE refits
         c = SuCanvas('test_slices_norm')
@@ -960,8 +826,7 @@ if mode=='ALL' or mode=='all':
         M = PlotOptions()
         M.add('default','default')
         M.add('inbins','inbins')
-        c.plotMany([h1R,h2R],M=M,mode=0,height=1.7)
-        #c.plotOne(h1R,mode=2,height=1.7)
+        c.plotAny([h1R,h2R],M=M,height=1.7)
         OMAP.append(c)
     if False: # antonio study of muon exms_pt/id_pt in low-pt muon region. refLine = 0.0,3.0
         plot_stack(spRN.clone(var='l_pt_exms/l_pt_id',histo='',bin='50,0.5,1.5',q=2),var='l_pt_exms/l_pt_id',q=2,new_scales=False,name='antonio_ptEXMS_ptID')
@@ -1411,9 +1276,7 @@ if mode=='manual':
     hs = [h1,h2]
     c = SuCanvas('FASTSIM_'+QMAP[q][1]+'_'+opts.hsource)
     c._ratioName = 'Fast/Full'
-    leg = ROOT.TLegend()
-    leg.SetFillColor(0)
-    c.plotAny(hs,M=M,leg=leg,w=800,h=600)
+    c.plotAny(hs,M=M)
     OMAP.append(c)
     
 if mode=='one_plot':
@@ -1524,18 +1387,6 @@ if mode=='2': # signal - directly from MC, or bg-subtracted data - allow applica
         htruth.Draw('')
         hsig_eff.Draw('A same')
         #hd_sig_eff.Draw('A same')
-
-def asymmetry_old():
-    assert opts.ntuple=='w','ERROR: asymmetry can only be computed for the w ntuple'
-    hsig = po.sig('signalPOS',spR.clone(q=0))
-    hd   = po.data_sub('dataPOS',spR.clone(q=0))
-    c = SuCanvas()
-    c.plotAsymmetryFromComponents(hd[POS],hd[NEG],hsig[POS],hsig[NEG])
-    OMAP.append(c)
-    return c
-
-if mode=='11': # asymmetry (bg-subtracted)
-    asymmetry_old()
 
 if mode in ('sig_reco','sig_truth'): # compares distributions in different signal monte-carlos.
     is_truth = (mode=='sig_truth')
