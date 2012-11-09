@@ -417,9 +417,9 @@ else:
                   qcd={'var':'met','nbins':100,'min':0,'max':100,'metfit':'metfit','wmtfit':'wmtfit','forcenominal':False})
     
 SuStack.QCD_SYS_SCALES = opts.metallsys
-SuStack.QCD_TF_FITTER = True
-SuStack.QCD_STAT_HACK = True
-SuStack.QCD_EXC_ZERO_BINS = 5
+SuStack.QCD_STAT_HACK = True           # scale ewk template so that the signal Monte-Carlo reflects the true statistics
+SuStack.QCD_EXC_ZERO_BINS = 5          # exclude from fit all bins where any of the templates or data have less than X entries
+SuStack.QCD_PLOT_MODIFIED_BINS = True  # if True, we plot templates varied within poisson stats for best fit agreement
 spR.enable_all()
 # Reco-level [ntuple]
 spRN = SuPlot()
@@ -637,10 +637,10 @@ if mode=='ALL' or mode=='all':
         plots = ['lepton_absetav','lpt','met','wmt']
         plots = [opts.hsource,]
         plot_stacks(spR.clone(),plots,m=1,qs=(0,1,2))
-    if False:
+    if True:
         spR.enable_nominal()
         plots = [opts.hsource,]
-        plot_stacks(spR.clone(),plots,m=1,qs=(0,1))
+        plot_stacks(spR.clone(),plots,m=1,qs=(0,))
     if False: # inclusive reco-level and truth-level asymmetry
         plot_any(spR.clone(q=0),spT.clone(q=0),m=2,do_unfold=True,do_errorsDA=True,do_summary=True,name='POS')
         plot_any(spR.clone(q=1),spT.clone(q=1),m=2,do_unfold=True,do_errorsDA=True,do_summary=True,name='NEG')
@@ -792,7 +792,8 @@ if mode=='ALL' or mode=='all':
                         plot_stacks(spR.clone(qcdadd=qcdadd),plots,m=1 if plot_sys==True else 0, name='%s_qcd%d'%(po.get_flagsum(),iqcdadd) )
     if False: # stopped working 06/19/2012. I think before it worked "almost" correctly, but now is substantially off
         test_unfolding(spR.clone(),spT.clone(),asym=False)
-    if True: # make sure rebuilding of abseta from bin-by-bin slices is identical to direct histogram
+    if False: # make sure rebuilding of abseta from bin-by-bin slices is identical to direct histogram
+        #FIXME WORK IN PROGRESS - FIX plotAny function!!!
         test_from_slices(spR.clone(),spT.clone(),mode=0)
     if False: # same as above, but compaing at unfolded level. I.e., this also validates direct unfolding vs pt-unfolding inside eta slices
         c = SuCanvas('test_slices_norm')
@@ -1320,8 +1321,25 @@ if mode=='control_stack':
     plots = [opts.hsource,]
     plot_stacks(spR.clone(),plots,m=1,qs=(0,1))
 
+if mode=='control_stack_dratio':
+    spR.enable_nominal()
+    plots = [opts.hsource,]
+    plot_stacks(spR.clone(),plots,m=1,qs=(0,1))
+    assert len(OMAP)==2
+    hPOS = OMAP[0].hratio
+    hNEG = OMAP[1].hratio
+    hdr = hPOS.Clone()
+    hdr.Divide(hNEG)
+    cc = ROOT.TCanvas('c','c',800,600)
+    cc.cd()
+    hdr.Draw()
+    hdr.GetYaxis().SetRangeUser(0.95,1.05)
+    hdr.GetYaxis().SetTitle('Double ratio mu+/mu-')
+    cc.SaveAs('PLOT_double_ratio.png')
+
 if mode=='control_stack_nonorm':
-    assert False,'Make sure to change baseline to metfit region'
+    # This is used to study 
+    #assert False,'Make sure to change baseline to metfit region'
     spR.enable_nominal()
     SuStackElm.new_scales = False
     plots = [opts.hsource,]

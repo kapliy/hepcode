@@ -30,7 +30,6 @@ for xsecerr in [ (0,) ]:
                 msys.append( xsecerr+bgewk+isofail+ivar )
 msys_nom = (0,5,'IsoFail20','met','50,0,80')
 bgsigs = [5,4,1][:]
-bgqcd = 3
 
 QMAP = {0:'mu+',1:'mu-',2:'both charges'}
 QMAPN = {0:'POS',1:'NEG',2:'ALL'}
@@ -56,6 +55,11 @@ PM = '&plusmn;'
 COLH = 150
 COLW = 95
 
+bgqcd = 4
+db_name = 'DB_11022012_ALL.v2'
+fin_name = 'IN_11022012_ALL.v2.%s.%dD.root'%(eword,DIM)
+
+bgqcd = 3
 db_name = 'DB_11022012_ALL.v2'
 fin_name = 'IN_11022012_ALL.v1.%s.%dD.root'%(eword,DIM)
 

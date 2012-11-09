@@ -1558,11 +1558,8 @@ class SuStack:
             f.blowUpErrors(0,100,inc=True)
         tmp = None
         logscale = 'log' in d2.qcd and d2.qcd['log']==True
-        if SuStack.QCD_TF_FITTER:
-            f.doFitTF(SuStack.QCD_EXC_ZERO_BINS)
-            tmp = f.drawFitsTF(key,logscale=logscale)
-        else:
-            assert False,'roofit fitter has been deprecated'
+        f.doFitTF(SuStack.QCD_EXC_ZERO_BINS)
+        tmp = f.drawFitsTF(key,logscale=logscale,modbins=SuStack.QCD_PLOT_MODIFIED_BINS)
         assert tmp
         s.fitnames[key] = fitname
         s.fits[key] = tmp[0]
