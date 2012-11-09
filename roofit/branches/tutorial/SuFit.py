@@ -253,7 +253,7 @@ class SuFit:
     # fractions
     s.fractions.append( float(value) )
     s.fractionsE.append( float(error) )
-    # scales
+    # scales, defined as FRACTION * INT_DATA / INT_TEMPLATE [in the range of fit]
     s.scales.append( float(value) )
     s.scales[-1] *= s.data.Integral(s.fitmin,s.fitmax)
     s.scales[-1] /= s.free[0].Integral(s.fitmin,s.fitmax) # original qcd fraction
@@ -273,6 +273,8 @@ class SuFit:
     s.WscalesE[-1] *= s.data.Integral(s.fitmin,s.fitmax)
     s.WscalesE[-1] /= s.fixed.Integral(s.fitmin,s.fitmax) # original ewk fraction
     # fit quality
+    # The following two are different because TFractionFitter actually modified the shapes of templates
+    # by allowing bin by bin variations.
     s.chi2.append( fit.GetChisquare() )
     #s.chi2.append( data.Chi2Test( s.fit.GetPlot(), "UW CHI2" )  )
     s.ndf.append( fit.GetNDF() )
@@ -280,15 +282,19 @@ class SuFit:
     print 'INFO: Chi2 =','%8f'%s.chi2[-1],' NDF =',s.ndf[-1]
     sys.stdout.flush()
 
-  def drawFitsTF(s,title='random',logscale=False):
+  def drawFitsTF(s,title='random',logscale=False,modbins=True):
     """ Draw fits in all variables - using the TFractionFitter version """
     res = []
     for ivar in xrange(len(s.vnames)):
-      res += s.drawFitTF(ivar,title,logscale=logscale)
+      res += s.drawFitTF(ivar,title,logscale=logscale,modbins=modbins)
     return res
 
-  def drawFitTF(s,ivar,title='random',logscale=False):
-    """ Draw the fit for ivar's variable - TFractionFitter version """
+  def drawFitTF(s,ivar,title='random',logscale=False,modbins=True):
+    """ Draw the fit for ivar's variable - TFractionFitter version
+    if modbins==True, it uses modified templates where each bin is allowed to float within Poisson stats
+    Otherwise, it uses the original out-of-the-box templates
+    modbins==True plots produce a much better agreement (visually)
+    """
     import SuCanvas
     s.canvas = canvas = SuCanvas.SuCanvas()
     canvas.buildRatio()
@@ -296,11 +302,12 @@ class SuFit:
     # main plot area: draw {data,model,fixed,qcd}
     canvas.cd_plotPad()
     fit = s.fit
-    stack = None
+    stack,fixed,free = None,None,None
+    assert s.status==0,'Fit failed or not performed yet'
     if s.status==0:
       # fixed - must be scaled
       ipattern = 3001
-      fixed = s.hfixed
+      fixed = s.hfixed if modbins==True else s.fixed.Clone()
       fixed.SetLineColor(8)
       fixed.SetFillColor(8)
       fixed.SetFillStyle(ipattern)
@@ -309,7 +316,7 @@ class SuFit:
       # free (qcd) - must be scaled
       ift = 0
       ipattern=1001
-      free = s.hfree
+      free = s.hfree if modbins==True else s.free[0].Clone()
       free.SetFillColor(s.free[ift].GetFillColor())
       free.SetLineColor(s.free[ift].GetFillColor())
       free.SetFillStyle(ipattern)
@@ -378,8 +385,8 @@ class SuFit:
       if False: # this hmodel only includes bins that were actually part of the TFractionFitter fit
         hmodel = s.hmodel.Clone()
       else:     # this includes all bins in the original range of the histograms
-        hmodel = s.hfixed.Clone()
-        hmodel.Add( s.hfree )
+        hmodel = fixed.Clone()
+        hmodel.Add( free )
       #scalefactor = 1.0*data.Integral(s.fitmin,s.fitmax)/model.Integral(s.fitmin,s.fitmax)
       #hmodel.Scale( scalefactor ); # scale model to actual data integral (not needed!)
       s.hratio = data.Clone('hratio')

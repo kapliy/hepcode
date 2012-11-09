@@ -30,9 +30,9 @@ source bashmap.sh
 SMART_KILLER="./smart_killer.sh"
 #SMART_KILLER=""
 
-antondb='HISTO_11022012_ALL.v2'
+antondb='HISTO_11022012_ALL.v3'
 mkdir -p ${antondb}
-input=/share/t3data3/antonk/ana/ana_v29I_11022012_unfold_stacoCB_all
+input=/share/t3data3/antonk/ana/ana_v29I_11072012_unfold_stacoCB_all/
 
 ETAMODES="1 2" # 2=|eta| bins, 1=eta bins
 bgsigs="1 4 5"

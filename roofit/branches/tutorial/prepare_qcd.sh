@@ -4,7 +4,10 @@
 input=/share/t3data3/antonk/ana/ana_v29I_10212012_unfold_stacoCB_all  # renamed lepton_pt for consistency
 input=/share/t3data3/antonk/ana/ana_v29I_10292012_unfold_newTrigWZPTnoPol_stacoCB_all # new trigger SF
 input=/share/t3data3/antonk/ana/ana_v29I_11022012_unfold_stacoCB_all # adding met muon term plots and additional 2d histos. adding pt slices. adding phi plot.
+input=/share/t3data3/antonk/ana/ana_v29I_11072012_unfold_stacoCB_all/
 
+bgqcd=4
+name="IN_11022012_ALL.v2"
 
 bgqcd=3
 name="IN_11022012_ALL.v1"
