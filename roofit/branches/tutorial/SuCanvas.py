@@ -567,20 +567,22 @@ class SuCanvas:
             leg.SetHeader(M.title)
         s.data.append( (hplots,leg) )
         if M and M.any_ratios():
-            s.buildRatio(width=w,height=h)
+            s.buildRatio()
             s.cd_plotPad()
         else:
-            s.buildDefault(width=w,height=h)
+            s.buildDefault()
             s.cd_canvas();
         # plot actual histograms
         hs = []
+        hdraw = None
         for i,hplot in enumerate(hplots):
-            h0 = hplot.nominal().stack.GetStack().Last() if hplot.nominal().stack else hplot.nominal_h()
+            h0 = hplot.nominal_stack(rebin).GetStack().Last() if hplot.nominal().stack else hplot.nominal_h(rebin)
             htot = None
             assert h0
-            if M and M.errors[i]: # total error (including systematics)
+            # total error (including systematics)
+            if M and M.errors[i] and hplot.has_systematics():
                 ht = hplot.clone()
-                htot = ht.update_errors()
+                htot = ht.update_errors(rebin=rebin)
                 s.data.append(htot)
             h = h0.Clone()
             hs.append(h)
@@ -595,10 +597,26 @@ class SuCanvas:
                     htot.SetFillColor(M.colors[i])
                     htot.SetFillStyle(3004)
                 else:
-                    h.SetLineColor( PlotOptions.autocolor(i) )
-                    h.Draw() if i==0 else h.Draw('A SAME')
+                    #h.SetLineColor( PlotOptions.autocolor(i) )
+                    if i==0:
+                        h.Draw()
+                        hdraw = h
+                    else:
+                        h.Draw('A SAME')
             if htot:
                 htot.Draw('A same E2')
+        # axis labeling
+        xaxis_label = None
+        if xaxis_info!=None:
+            assert len(xaxis_info)>=2,'Incorrect format of xaxis_info: [xaxis_label , xaxis_units , ...]'
+            xaxis_label,xaxis_units = xaxis_info[0],xaxis_info[1]
+            if xaxis_units==None:
+                hdraw.GetYaxis().SetTitle( "Entries" )
+            else:
+                bin_width = hdraw().GetXaxis().GetBinWidth(1)
+                hdraw.GetYaxis().SetTitle( "Entries / %.1f %s" % (bin_width,xaxis_units) )
+                xaxis_label += ' [%s]'%xaxis_units
+        # axis ranges
         maxh = max([h.GetMaximum() for h in hs])
         if height=='asym':
             hs[0].GetYaxis().SetRangeUser(0,0.5);
@@ -608,18 +626,21 @@ class SuCanvas:
             hs[0].GetYaxis().SetRangeUser(0,maxh*float(height));
         else:
             hs[0].GetYaxis().SetRangeUser(0,height);
-        if xtitle!=None: hs[0].GetXaxis().SetTitle(xtitle)
-        if True:
-            leg.Draw("same")
+        # legend
+        s.ConfigureLegend(leg)
+        leg.Draw("same")
         # draw ratios with respect to the first histogram
+        hdrawratio = None
         if M and M.any_ratios():
             s.cd_ratioPad();
             for i,h in enumerate(hs):
                 hratio,href = hs[i].Clone("hratio"),hs[i].Clone("href")
                 hratio.Divide(hs[0])
                 [hratio.SetBinError(ii,0) for ii in xrange(0,hratio.GetNbinsX()+2)]
-                s.drawRatio(hratio,hash=False,mstyle=20)
+                hdrawratio = hratio
+                s.drawRatio(hratio)
                 s.data.append( (hratio,href) )
+        s.ConfigureAxis(hdraw, hdrawratio)
         s.update()
 
     def plotStack(s,hstack,hdata,leg=None,height=1.5,mode=0,pave=True,
@@ -803,9 +824,9 @@ class SuCanvas:
 class PlotOptions:
     """ Handles colors and marker styles for various MC generators """
     msize = 1.5
-    def __init__(s):
+    def __init__(s,title=None):
       s.n = 0
-      s.title = None
+      s.title = title
       s.names = []
       s.labels = []
       s.colors = []
