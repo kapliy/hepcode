@@ -426,7 +426,7 @@ spRN = SuPlot()
 spRN.bootstrap(ntuple=opts.ntuple,histo=opts.hsource,
                charge=q,var=opts.var,path=path_reco,bin=opts.bin,
                weight=opts.cut,pre=opts.pre,
-               qcd={'var':'met','nbins':100,'min':0,'max':100,'metfit':'metfit','wmtfit':'wmtfit','forcenominal':False})
+               qcd={'var':'met','nbins':100,'min':0,'max':100,'metfit':'metfit','wmtfit':'wmtfit','forcenominal':False,'descr':'default'})
 spRN.enable_nominal()
 # Truth-level [histo]
 spT= SuPlot()
@@ -637,10 +637,10 @@ if mode=='ALL' or mode=='all':
         plots = ['lepton_absetav','lpt','met','wmt']
         plots = [opts.hsource,]
         plot_stacks(spR.clone(),plots,m=1,qs=(0,1,2))
-    if True:
+    if False:
         spR.enable_nominal()
         plots = [opts.hsource,]
-        plot_stacks(spR.clone(),plots,m=1,qs=(0,))
+        plot_stacks(spRN.clone(),plots,m=1,qs=(0,))
     if False: # inclusive reco-level and truth-level asymmetry
         plot_any(spR.clone(q=0),spT.clone(q=0),m=2,do_unfold=True,do_errorsDA=True,do_summary=True,name='POS')
         plot_any(spR.clone(q=1),spT.clone(q=1),m=2,do_unfold=True,do_errorsDA=True,do_summary=True,name='NEG')
@@ -715,35 +715,31 @@ if mode=='ALL' or mode=='all':
         # dump all stats into a pickle file
         dump_pickle(po.scales)
     if False: # simple histogram comparison of TH1 and ntuple-based histograms: one MC and Data only
+        spR.enable_nominal()
         c = SuCanvas('TEST')
         M = PlotOptions('Ntuple-Histo comparison')
-        M.add('h','histo',ratio=1,size=1.0)
-        M.add('nt','ntuple',ratio=1,size=0.5)
+        M.add('hh','histo',ratio=1,size=1.0)
+        M.add('nt','ntuple',ratio=1,size=0.7)
         h = []
-        pre = 'ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
-        SuSample.debug = True
+        #SuSample.debug = True
         #SuSample.GLOBAL_CACHE = None
-        spR.enable_nominal()
-        weight = "mcw*puw*effw*trigw*isow"
-        weight += "*wptw*wzptw*vxw*ls1w*ls2w"
-        SuCanvas._refLineMin = 0.95
-        SuCanvas._refLineMax = 1.05
         if False:
-            h.append( po.data('mcd',spR.clone(q=2)) )
-            h.append( po.data('mcd',spRN.clone(q=2,pre=pre,weight=weight)) )
+            h.append( po.data('mcd',spR.clone()) )
+            h.append( po.data('mcd',spRN.clone()) )
         else:
-            h.append( po.mc('mc',spR.clone(histo='lpt',bin='200,0,200',q=2),name='sig_pythia') )
-            h.append( po.mc('mc',spRN.clone(var='l_pt',bin='200,0,200',q=2,pre=pre,weight=weight),name='sig_pythia') )
+            h.append( po.mc('mc',spR.clone(histo='lpt',bin='200,0,200'),name='sig_pythia') )
+            h.append( po.mc('mc',spRN.clone(var='l_pt',bin='200,0,200'),name='sig_pythia') )
         print 'NBINS:',h[-2].nominal().h.GetNbinsX(),h[-1].nominal().h.GetNbinsX()
+        print 'MEAN:',h[-2].nominal().h.GetMean(),h[-1].nominal().h.GetMean()
         c.plotAny(h,M=M,height=1.6)
         OMAP.append(c)
     if False: # bg-subtracted asymmetry comparison of TH1 vs ntuple based basic histogram. Ignores QCD normalization issues
         SuSample.debug = True
         spR.enable_nominal()
         po.choose_qcd(0)
-        pre = 'ptiso20/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2'
         test_ntuple_histo(spR.clone(),name='asym_histo',new_scales=False)
-        test_ntuple_histo(spRN.clone(path=path_reco,pre=pre),name='asym_ntuple_all',new_scales=False)
+        test_ntuple_histo(spRN.clone(path=path_reco),name='asym_ntuple_all',new_scales=False)
+        pre=opts.pre
         if False: # study effect of d0 cuts
             newpre=opts.pre + ' && ' + 'fabs(d0sig)<5.0'
             test_ntuple_histo(spRN.clone(path=path_reco,pre=newpre),name='asym_ntuple_d05',new_scales=False)

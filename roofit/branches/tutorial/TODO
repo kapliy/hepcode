@@ -2,10 +2,7 @@ Peter: Endcap EE (EEL/EES?) disk chambers went on C side, but not on A side. For
 Putting them in bit by bit over time. First installed on C side.
 Trigger chambers? Or reco chambers?
 PETER: zoom in ratios
-
 muonboy vs ref-final in two "bad" bins
-
-Peter: do double ratio of mu+/mu- plot
 Try it with a somewhat higher pt cut
 
 OCT29:
@@ -14,7 +11,7 @@ OCT29:
 * Apply d0/z0 cuts in ntuple format and see if eta spectrum smoothness improves
 
 STYLE:
-Re-sort stack histograms from smallest to largest contributions.
+Re-sort stack histograms from smallest to largest contributions (BUT: maybe keep hardcoded order for consistency?)
 
 OCTOBER:
 MAX: repeat unfolded distribution errors
@@ -25,7 +22,7 @@ MAX: repeat unfolded distribution errors
 * DONE: Re-run October 4 version in TrigFTKAna_trunk with new MCP-curvature offsets.
   Perhaps this will/can fix the ugly hole? - NOPE
 * Re-generate MCP scripts with coarser binning that follows detector geometry
-  WHY is Max seeing funny MCP numbers?
+  WHY is Max seeing funny MCP numbers? He uses old version!
 
 UNFOLDING AND WEIGHTS:
 Consider this simplified example.

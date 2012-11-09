@@ -36,6 +36,11 @@ for iblk in `seq 0 ${nblk}`; do
 	    echo "Retrying submission: $i"
 	    sleep 10
 	    jid=`qsub -v id=$i -N QCD2D_${i} -o /home/antonk/roofit/logs/log.QCD2D.${i}.stdout -e /home/antonk/roofit/logs/log.QCD2D.${i}.stderr QCD_2D.sh`
+	    if [ "$jid" == "" ]; then
+		echo "Re-Retrying submission: $i"
+		sleep 20
+		jid=`qsub -v id=$i -N QCD2D_${i} -o /home/antonk/roofit/logs/log.QCD2D.${i}.stdout -e /home/antonk/roofit/logs/log.QCD2D.${i}.stderr QCD_2D.sh`
+	    fi
 	fi
     done
 done
