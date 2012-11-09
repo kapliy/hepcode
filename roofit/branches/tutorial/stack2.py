@@ -425,8 +425,9 @@ spR.enable_all()
 spRN = SuPlot()
 spRN.bootstrap(ntuple=opts.ntuple,histo=opts.hsource,
                charge=q,var=opts.var,path=path_reco,bin=opts.bin,
-               weight=opts.cut,pre=opts.pre,
-               qcd={'var':'met','nbins':100,'min':0,'max':100,'metfit':'metfit','wmtfit':'wmtfit','forcenominal':False,'descr':'default'})
+               weight=opts.cut,pre=(opts.preNN,opts.preNN,opts.preNQ), #opts.pre,
+               qcd={'var':'met','nbins':100,'min':0,'max':100,'metfit':'metfit','wmtfit':'wmtfit',
+                    'forcenominal':False,'descr':'default','pre':(opts.preFN,opts.preFN,opts.preFQ)})
 spRN.enable_nominal()
 # Truth-level [histo]
 spT= SuPlot()
@@ -637,7 +638,7 @@ if mode=='ALL' or mode=='all':
         plots = ['lepton_absetav','lpt','met','wmt']
         plots = [opts.hsource,]
         plot_stacks(spR.clone(),plots,m=1,qs=(0,1,2))
-    if False:
+    if True:
         spR.enable_nominal()
         plots = [opts.hsource,]
         plot_stacks(spRN.clone(),plots,m=1,qs=(0,))
