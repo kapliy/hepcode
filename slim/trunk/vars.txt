@@ -291,8 +291,6 @@ mu_trig_l2matchdelr
 mu_trig_l2matchvector
 mu_trig_l2samatchdelr
 mu_trig_l2samatchvector
-trig_l1
-trig_l2
 mu_type
 mu_vtx
 mu_vtxtype
@@ -306,6 +304,8 @@ nmu
 nvx
 run
 trig_ef
+trig_l1
+trig_l2
 vx_ntracks
 vx_sumpt
 vx_type
