@@ -1,0 +1,29 @@
+option -e not recognized
+Accepted command line options:
+ -i, --in=<INFNAME>                   ...  file containing the list of input files
+ -o, --out=<OUTFNAME>                 ...  output file name
+ -t, --tree=<TREENAME>                ...  name of the tree to be filtered.
+                                           other trees won't be copied by default
+                                           (except if you pass --keep-all-trees)
+     --var=<VARSFNAME>                ...  path to file listing the branch names
+                                           to be kept in the output file.
+     --grl=<GRLFNAME>                 ...  path to a GRL XML file or a list of
+                                           comma-separated GRL XML files
+ -m, --maxsize=<sz>                   ...  maximum zip size of the main tree (in Mb.)
+     --fakeout                        ...  create fake output file if empty or
+                                           non valid input tree is found (ease
+                                           the pain on the GRID)
+ -s, --selection=<PYTHON_CODE>        ...  a python snippet to select events
+                                           or the path to python file holding
+                                           the definition of a 'filter_fct'.
+                                           ex:
+                                             t.eg_px[0] > 10000 and t.eg_py[0] > 10000
+                                           NOTE: the tree must be named 't' in your code.
+                                           or:
+                                            file:foo.py
+                                            where foo.py contains:
+                                            def filter_fct(t):
+                                                return t.eg_px[0] > 10000
+                                           NOTE: the function must be named 'filter_fct' and take the tree as a parameter
+     --keep-all-trees                 ...  keep, filter and merge all other trees.
+ 
