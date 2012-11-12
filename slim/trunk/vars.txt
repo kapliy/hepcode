@@ -6,6 +6,13 @@ bs_status
 bs_x
 bs_y
 bs_z
+ele_et
+ele_eta
+ele_phi
+ele_MET_status
+ele_MET_wet
+ele_MET_wpx
+ele_MET_wpy
 error_background
 error_lar
 event
@@ -298,6 +305,7 @@ mu_z0
 mu_zb
 mu_zvx
 mu_zxpv
+nele
 njet
 nmc
 nmu
