@@ -336,7 +336,7 @@ def merge_all_trees(fnames, tree_name, memory, sfo,
 
             accept_entry = True
             if do_grl_selection:
-                if not pass_grl(tree.RunNumber, tree.lbn, good_lbs):
+                if not pass_grl(tree.run, tree.lb, good_lbs):
                     accept_entry = False
                 pass
             
