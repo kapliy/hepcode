@@ -57,11 +57,11 @@ for dname in `cd ${mc11} && ls -1 *.dat`; do
 	extras=`get_extras $dsample`
 	jid=`qsub -v anadir=${anadir},outdir=${outdir}/$dsample,inlist=${JNAME},outfile=${outfile},extras="$extras" -N ${JBASE} -o $anadir/logs/log.${JBASE}.stdout -e $anadir/logs/log.${JBASE}.stderr pbs.sh`
 	if [ "$jid" == "" ]; then
-	    echo "Retrying submission: $i"
+	    echo "Retrying submission: ${JBASE}"
 	    sleep 10
 	    jid=`qsub -v anadir=${anadir},outdir=${outdir}/$dsample,inlist=${JNAME},outfile=${outfile},extras="$extras" -N ${JBASE} -o $anadir/logs/log.${JBASE}.stdout -e $anadir/logs/log.${JBASE}.stderr pbs.sh`
 	    if [ "$jid" == "" ]; then
-		echo "Re-Retrying submission: $i"
+		echo "Re-Retrying submission: ${JBASE}"
 		sleep 20
 		jid=`qsub -v anadir=${anadir},outdir=${outdir}/$dsample,inlist=${JNAME},outfile=${outfile},extras="$extras" -N ${JBASE} -o $anadir/logs/log.${JBASE}.stdout -e $anadir/logs/log.${JBASE}.stderr pbs.sh`
 		if [ "$jid" == "" ]; then
