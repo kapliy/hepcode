@@ -5,23 +5,24 @@ export X509_USER_PROXY=/home/antonk/.globus/tmp.proxy
 (source /share/wlcg-client/setup.sh && voms-proxy-init -pwstdin -voms atlas -valid 999:0 -out ${X509_USER_PROXY} < /home/antonk/setup/info 2>&1)
 
 rm -f lists/*dat
-outdir=/atlas/uct3/data/users/antonk/NTUPLE/v1_29l
+outdir=/atlas/uct3/data/users/antonk/NTUPLE/v1_29l_ptfilt
+nper=15
 anadir=/home/antonk/slim
 
 function get_extras() {
     d=$1
     # data: apply all cuts
     echo $d | grep -q data_ && {
-	echo "--grl /home/antonk/TrigFTKAna/good_run_lists/asym_data11_7TeV.pro10.DtoM.xml --pt 15.0 --trigger"
+	echo "--grl /home/antonk/TrigFTKAna/good_run_lists/asym_data11_7TeV.pro10.DtoM.xml --pt 19.98 --trigger"
 	return
     }
     # signal MC: apply nothing, just remove useless branches
-    echo $d | egrep -q 'wmunu|wminmunu|wplusmunu' && {
+    echo $d | egrep -q 'wminmunu|wplusmunu' && {
 	echo ""
 	return
     }
     # any other MC: apply relaxed cuts (because pt can swing up during smearing/scaling), but no GRL
-    echo "--pt 13.0 --trigger"
+    echo "--pt 16.0 --trigger"
     return
 }
 
@@ -35,7 +36,6 @@ for dname in `cd ${mc11} && ls -1 *.dat`; do
 	mkdir -p ${outsubdir}
     fi
     nfiles=`wc -l < ${mc11}/${dname}`;
-    nper=15
     njobs=$(($nfiles / $nper))
     nrem=$(($nfiles % $nper))
     gmax="$(expr $njobs)"
