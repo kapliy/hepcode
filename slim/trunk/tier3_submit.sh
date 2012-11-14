@@ -22,7 +22,7 @@ function get_extras() {
 	return
     }
     # any other MC: apply relaxed cuts (because pt can swing up during smearing/scaling), but no GRL
-    echo "--pt 16.0 --trigger"
+    echo "--pt 15.0 --trigger"
     return
 }
 

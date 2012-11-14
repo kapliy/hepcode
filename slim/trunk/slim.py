@@ -3,6 +3,7 @@
 """ A slimming script """
 
 import math,sys,glob,re,os
+import common
 import ROOT
 ROOT.gROOT.SetBatch(1)
 ROOT.gROOT.ProcessLine('.L loader.C+')
