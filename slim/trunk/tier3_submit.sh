@@ -6,7 +6,7 @@ export X509_USER_PROXY=/home/antonk/.globus/tmp.proxy
 
 rm -f lists/*dat
 outdir=/atlas/uct3/data/users/antonk/NTUPLE/v1_29l_ptfilt
-nper=15
+nper=10
 anadir=/home/antonk/slim
 
 function get_extras() {
