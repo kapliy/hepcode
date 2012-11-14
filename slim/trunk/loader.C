@@ -14,6 +14,5 @@ using namespace std;
 #pragma link C++ class vector<vector<float> >;
 #pragma link C++ class vector<vector<double> >;
 #pragma link C++ class vector<vector<string> >;
-#pragma link C++ class pair<int,int>;
 #pragma link C++ class vector<pair<int,int> >;
 #endif

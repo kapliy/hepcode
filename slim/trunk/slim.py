@@ -31,7 +31,7 @@ parser.add_option( "--grl",dest="grl",
                   type="string", default=None,
                   help="Path to good run list")
 parser.add_option( "--pt",dest="pt",
-                  type="float", default=0,
+                  type="float", default=None,
                   help="Minimum pt cut to apply")
 parser.add_option('--trigger', default=False,
                   action="store_true",dest="trigger",
@@ -62,13 +62,19 @@ if nentries==0:
     print 'Nothing to do: found zero entries in file list:'
     print flist
     sys.exit(0)
-if len(varlist)==0:
-    ch.SetBranchStatus("*", 1)
-else:
-    ch.SetBranchStatus("*", 0)
-    for var in varlist:
-        ch.SetBranchStatus(var,1)
-ch.LoadTree(0) # force 1st tree to be loaded
+ch.LoadTree(0)
+ch.SetBranchStatus("*", 1)
+if len(varlist)>0:
+    all_br_names = list(set(br.GetName() for br in ch.GetListOfBranches()))
+    for var in all_br_names:
+        if var not in varlist:
+            ch.SetBranchStatus(var,0)
+            if re.search('mu_trig_l1match',var):
+                ch.SetBranchStatus("mu_trig_l1match*",0);
+            if re.search('mu_trig_l2match',var):
+                ch.SetBranchStatus("mu_trig_l2match*",0);
+            if re.search('mu_trig_l2samatch',var):
+                ch.SetBranchStatus("mu_trig_l2samatch*",0);
 
 # TTreeCache on input TChain
 tree = ch.GetTree()
@@ -108,7 +114,7 @@ for i in range(nentries):
     if grl and not grl.HasRunLumiBlock(ch.run,ch.lb):
         continue
     # pt cut (optional)
-    if opts.pt>0 and len( [z for z in xrange(ch.nmu) if ch.mu_primauthor[z]==6 and ch.mu_pt[z]>opts.pt] )==0:
+    if opts.pt!=None and len( [z for z in xrange(ch.nmu) if ch.mu_pt[z]>=opts.pt] )==0:
         continue
     ch_new.Fill()
     isaved += 1

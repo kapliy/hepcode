@@ -12,7 +12,7 @@ function get_extras() {
     d=$1
     # data: apply all cuts
     echo $d | grep -q data_ && {
-	echo "--grl /home/antonk/TrigFTKAna/good_run_lists/asym_data11_7TeV.pro10.DtoM.xml --pt 19.99 --trigger"
+	echo "--grl /home/antonk/TrigFTKAna/good_run_lists/asym_data11_7TeV.pro10.DtoM.xml --pt 15.0 --trigger"
 	return
     }
     # signal MC: apply nothing
@@ -20,8 +20,8 @@ function get_extras() {
 	echo ""
 	return
     }
-    # any other MC: apply relaxed cuts, but no GRL
-    echo "--pt 15.0 --trigger"
+    # any other MC: apply relaxed cuts (because pt can swing up during smearing/scaling), but no GRL
+    echo "--pt 13.0 --trigger"
     return
 }
 
