@@ -8,5 +8,6 @@ for dname in `ls -1 *.dat`; do
     fdirfull=`dirname $fname`
     fdirdirty=`basename ${fdirfull}`
     fdir=`echo "${fdirdirty%.*}"`
-    echo mv $dsample $fdir
+    zdir=`echo $fdir | sed -e 's#v1_29i#v1_29l#g' -e 's#v1_29g#v1_29l#g'`
+    echo mv $dsample $zdir
 done
