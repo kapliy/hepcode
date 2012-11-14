@@ -15,7 +15,7 @@ function get_extras() {
 	echo "--grl /home/antonk/TrigFTKAna/good_run_lists/asym_data11_7TeV.pro10.DtoM.xml --pt 15.0 --trigger"
 	return
     }
-    # signal MC: apply nothing
+    # signal MC: apply nothing, just remove useless branches
     echo $d | egrep -q 'wmunu|wminmunu|wplusmunu' && {
 	echo ""
 	return
@@ -25,7 +25,6 @@ function get_extras() {
     return
 }
 
-id=0
 mc11="mc11c"
 for dname in `cd ${mc11} && ls -1 *.dat`; do
     dsample=`echo ${dname} | sed -e 's#wasymmetry29I_##g' -e 's#.dat##g'`
@@ -36,7 +35,7 @@ for dname in `cd ${mc11} && ls -1 *.dat`; do
 	mkdir -p ${outsubdir}
     fi
     nfiles=`wc -l < ${mc11}/${dname}`;
-    nper=10
+    nper=15
     njobs=$(($nfiles / $nper))
     nrem=$(($nfiles % $nper))
     gmax="$(expr $njobs)"
@@ -56,10 +55,19 @@ for dname in `cd ${mc11} && ls -1 *.dat`; do
 	cat ${mc11}/${dname} | head -n $(expr $jmax + 1) | tail -n $ntail > ${JNAME}
 	echo "   -> Submitting ${JBASE}"
 	extras=`get_extras $dsample`
-	qsub -v anadir=${anadir},outdir=${outdir}/$dsample,inlist=${JNAME},outfile=${outfile},extras="$extras" -N ${JBASE} -o $anadir/logs/log.${JBASE}.stdout -e $anadir/logs/log.${JBASE}.stderr pbs.sh
+	jid=`qsub -v anadir=${anadir},outdir=${outdir}/$dsample,inlist=${JNAME},outfile=${outfile},extras="$extras" -N ${JBASE} -o $anadir/logs/log.${JBASE}.stdout -e $anadir/logs/log.${JBASE}.stderr pbs.sh`
+	if [ "$jid" == "" ]; then
+	    echo "Retrying submission: $i"
+	    sleep 10
+	    jid=`qsub -v anadir=${anadir},outdir=${outdir}/$dsample,inlist=${JNAME},outfile=${outfile},extras="$extras" -N ${JBASE} -o $anadir/logs/log.${JBASE}.stdout -e $anadir/logs/log.${JBASE}.stderr pbs.sh`
+	    if [ "$jid" == "" ]; then
+		echo "Re-Retrying submission: $i"
+		sleep 20
+		jid=`qsub -v anadir=${anadir},outdir=${outdir}/$dsample,inlist=${JNAME},outfile=${outfile},extras="$extras" -N ${JBASE} -o $anadir/logs/log.${JBASE}.stdout -e $anadir/logs/log.${JBASE}.stderr pbs.sh`
+		if [ "$jid" == "" ]; then
+		    echo "ERROR: FAILED TO SUBMIT ${JBASE}"
+		fi
+	    fi
+	fi
     done
-    break
-    continue
-    ((id++))
 done
-
