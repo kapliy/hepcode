@@ -9,6 +9,10 @@ date
 source /home/antonk/.bashrc
 anaquick5
 
+function trim() {
+    echo $1;
+}
+
 date
 echo "anadir=${anadir}"
 echo "outdir=${outdir}"
@@ -34,13 +38,15 @@ md5dest="DESTMD5"
     md5source=`md5sum ${tmpdir}/${outfile} | awk '{print $1}'`
     md5dest=`xrdcp -s -f -md5 ${tmpdir}/${outfile} ${OUTDIR}/${outfile} | awk '{print $2}'`
 }
+md5source=`trim ${md5source}`
+md5dest=`trim ${md5dest}`
 if [ "${md5source}" == "{md5dest}" ]; then
     echo "SUCCESS: ${outdir}/${outfile} ${md5source} "
 else
     echo "File sizes:"
-    ls -l ${tmpdir}/${outfile}
-    ls -l ${outdir}/${outfile}
-    echo "ERROR: ${outdir}/${outfile} ${md5source} ${md5dest}"
+    /bin/ls -l ${tmpdir}/${outfile}
+    /bin/ls -l ${outdir}/${outfile}
+    echo "ERROR: ${outdir}/${outfile} [${md5source}] [${md5dest}]"
     rm -f ${outdir}/${outfile}
 fi
 rm -f ${tmpdir}/${outfile}
