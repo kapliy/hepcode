@@ -40,7 +40,7 @@ md5dest="DESTMD5"
 }
 md5source=`trim ${md5source}`
 md5dest=`trim ${md5dest}`
-if [ "${md5source}" == "{md5dest}" ]; then
+if [ "${md5source}" == "${md5dest}" ]; then
     echo "SUCCESS: ${outdir}/${outfile} ${md5source} "
 else
     echo "File sizes:"
