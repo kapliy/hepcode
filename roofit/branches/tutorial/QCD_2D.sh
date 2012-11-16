@@ -47,13 +47,16 @@ irun=0
 gput tagis ${i} isofail "--isofail IsoFail20 " ; ((i++))
 gput tagis ${i} isowind "--isofail IsoWind20 " ; ((i++))
 
-gput tagzs ${i} met0to80 "--lvar met --lbin 50,0,80 " ; ((i++))
-gput tagzs ${i} met0to90 "--lvar met --lbin 50,0,90 " ; ((i++))
+if [ "0" == "1" ]; then # old (now disabled) binning. in particular, this utilizes the badly modeled high-tail
+    gput tagzs ${i} met0to80 "--lvar met --lbin 50,0,80 " ; ((i++))
+    gput tagzs ${i} met0to90 "--lvar met --lbin 50,0,90 " ; ((i++))
+    gput tagzs ${i} wmt40to90 "--lvar wmt --lbin 50,40,90 "  ; ((i++))
+    gput tagzs ${i} wmt35to100 "--lvar wmt --lbin 50,35,100 "  ; ((i++))
+    gput tagzs ${i} met10to50 "--lvar met --lbin 50,10,50 " ; ((i++))
+fi
+
 gput tagzs ${i} met0to60 "--lvar met --lbin 50,0,60 " ; ((i++))
 gput tagzs ${i} met0to50 "--lvar met --lbin 50,0,50 " ; ((i++))
-gput tagzs ${i} met10to50 "--lvar met --lbin 50,10,50 " ; ((i++))
-gput tagzs ${i} wmt40to90 "--lvar wmt --lbin 50,40,90 "  ; ((i++))
-gput tagzs ${i} wmt35to100 "--lvar wmt --lbin 50,35,100 "  ; ((i++))
 gput tagzs ${i} wmt40to70 "--lvar wmt --lbin 50,40,70 "  ; ((i++))
 gput tagzs ${i} wmt35to80 "--lvar wmt --lbin 50,35,80 "  ; ((i++))
 

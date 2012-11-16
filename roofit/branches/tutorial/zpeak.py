@@ -43,7 +43,7 @@ parser.add_option("--pre",dest="pre",
                   type="string", default=_PRE_PETER,
                   help="Preliminary cuts to select final W candidates")
 parser.add_option("--data",dest="data",
-                  type="string", default='dg/nominal/st_z_final/ntuple',
+                  type="string", default='dg/Nominal/st_z_final/ntuple',
                   help="ntuple name for data")
 parser.add_option("--mc",dest="mc",
                   type="string", default='dg/smeared_unscaled/st_z_final/ntuple',

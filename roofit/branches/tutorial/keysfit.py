@@ -46,7 +46,7 @@ parser.add_option("--pre",dest="pre",
                   type="string", default=_PRE_PETER,
                   help="Preliminary cuts to select final W candidates")
 parser.add_option("--data",dest="data",
-                  type="string", default='dg/nominal/st_z_final/ntuple',
+                  type="string", default='dg/Nominal/st_z_final/ntuple',
                   help="TGraph containing data histograms")
 parser.add_option("--region",dest="region",
                   type="string", default='BB',

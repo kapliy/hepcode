@@ -165,6 +165,7 @@ SuCanvas.savetag     = opts.tag
 SuCanvas.savedir = './'
 if opts.output:
     SuCanvas.savedir = opts.output+'/'
+    SuCanvas.savetypes = ['png','pdf']
 # overrides for default style:
 if True:
     SuCanvas.g_lin_ratio_y_title_offset = 1.7
@@ -174,7 +175,7 @@ if True:
     SuCanvas.g_legend_height_per_entry = 0.04
 # Apply plot style
 SuCanvas.cgStyle = SuCanvas.ControlPlotStyle()
-#SetStyle("AtlasStyle.C")
+
 
 from SuData import *
 SuSample.rootpath = opts.input
@@ -407,14 +408,14 @@ if True:
                   unfold={'sysdir':tightlvl+'Nominal'+jetlvl,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
                   charge=q,var=opts.var,histo=opts.hsource,
                   sysdir=[tightlvl+'Nominal'+jetlvl,tightlvl+'Nominal'+jetlvl,opts.isofail+jetlvl],subdir='st_w_final',basedir='baseline',
-                  qcd={'var':'met','nbins':100,'min':0,'max':100,'metfit':'metfit','wmtfit':'wmtfit','forcenominal':False})
+                  qcd={'var':'met','nbins':60,'min':0,'max':60,'metfit':'metfit','wmtfit':'wmtfit','forcenominal':False})
 else:
     # rawmet
     spR.bootstrap(do_unfold=False,
                   unfold={'sysdir':tightlvl+'Rawmet'+jetlvl,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
                   charge=q,var=opts.var,histo=opts.hsource,
                   sysdir=[tightlvl+'Rawmet'+jetlvl,tightlvl+'Rawmet'+jetlvl,opts.isofail+jetlvl],subdir='st_w_final',basedir='baseline',
-                  qcd={'var':'met','nbins':100,'min':0,'max':100,'metfit':'metfit','wmtfit':'wmtfit','forcenominal':False})
+                  qcd={'var':'met','nbins':60,'min':0,'max':60,'metfit':'metfit','wmtfit':'wmtfit','forcenominal':False})
     
 SuStack.QCD_SYS_SCALES = opts.metallsys
 SuStack.QCD_STAT_HACK = True           # scale ewk template so that the signal Monte-Carlo reflects the true statistics
@@ -426,7 +427,7 @@ spRN = SuPlot()
 spRN.bootstrap(ntuple=opts.ntuple,histo=opts.hsource,
                charge=q,var=opts.var,path=path_reco,bin=opts.bin,
                weight=opts.cut,pre=(opts.preNN,opts.preNN,opts.preNQ), #opts.pre,
-               qcd={'var':'met','nbins':100,'min':0,'max':100,'metfit':'metfit','wmtfit':'wmtfit',
+               qcd={'var':'met','nbins':60,'min':0,'max':60,'metfit':'metfit','wmtfit':'wmtfit',
                     'forcenominal':False,'descr':'default','pre':(opts.preFN,opts.preFN,opts.preFQ)})
 spRN.enable_nominal()
 # Truth-level [histo]
@@ -500,6 +501,7 @@ def plot_stack(spR2,var,bin=None,q=2,m=0,new_scales=None,pave=False,name=''):
     hstack = po.stack('mc',spR2.clone(q=q),leg=leg)
     hdata = po.data('data',spR2.clone(q=q),leg=leg)
     xaxis_info = LABELMAP[var] if var in LABELMAP else None
+    print 'AXIS_INFO: ',var,xaxis_info
     c.plotStack(hstack,hdata,mode=m,leg=leg,height=2.0,pave=pave,rebin=opts.rebin,xaxis_info=xaxis_info)
     OMAP.append(c)
     return hdata,hstack
@@ -634,14 +636,14 @@ def study_jet_calibration_effects():
 
 # combined plots
 if mode=='ALL' or mode=='all':
-    if False:
+    if True:
         plots = ['lepton_absetav','lpt','met','wmt']
         plots = [opts.hsource,]
-        plot_stacks(spR.clone(),plots,m=1,qs=(0,1,2))
-    if True:
+        plot_stacks(spR.clone(),plots,m=1,qs=(0,1))
+    if False:
         spR.enable_nominal()
         plots = [opts.hsource,]
-        plot_stacks(spRN.clone(),plots,m=1,qs=(0,))
+        plot_stacks(spRN.clone(),plots,m=1,qs=(opts.charge,))
     if False: # inclusive reco-level and truth-level asymmetry
         plot_any(spR.clone(q=0),spT.clone(q=0),m=2,do_unfold=True,do_errorsDA=True,do_summary=True,name='POS')
         plot_any(spR.clone(q=1),spT.clone(q=1),m=2,do_unfold=True,do_errorsDA=True,do_summary=True,name='NEG')
@@ -1284,9 +1286,9 @@ if mode=='one_plot':
     plot_stacks(spR.clone(),plots,m=1,qs=(0,1,2))
 
 if mode=='one_plot_nt':
-    SuStackElm.new_scales = False
+    spR.enable_nominal()
     plots = [opts.hsource,]
-    plot_stacks(spRN.clone(),plots,m=1,qs=(0,1,2))
+    plot_stacks(spRN.clone(),plots,m=1,qs=(opts.charge,))
 
 if mode=='qcd_bgsub':
     # studying background subtraction in data-driven qcd template

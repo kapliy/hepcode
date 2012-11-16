@@ -383,6 +383,11 @@ class SuPlot:
         return s.sys[0][0]
     def nominal(s):
         return s.flat[0]
+    def any_h(s):
+        for h in s.flat:
+            if h:
+                return h
+        return None
     def nominal_h(s,rebin=1.0):
         if rebin==1.0:
             return s.nominal().h
@@ -522,9 +527,10 @@ class SuPlot:
             add('ResoSoftTermsUp_ptHard','ResoSoftTermsUp_ptHard')
             add('ResoSoftTermsDown_ptHard','ResoSoftTermsDown_ptHard')
             next('MET_RESO_COR')
-            add('ResoSoftTermsUpDown_ptHard','ResoSoftTermsUpDown_ptHard')
-            add('ResoSoftTermsDownUp_ptHard','ResoSoftTermsDownUp_ptHard')
-            next('MET_RESO_ACOR')
+            if False:
+                add('ResoSoftTermsUpDown_ptHard','ResoSoftTermsUpDown_ptHard')
+                add('ResoSoftTermsDownUp_ptHard','ResoSoftTermsDownUp_ptHard')
+                next('MET_RESO_ACOR')
             add('ScaleSoftTermsUp_ptHard','ScaleSoftTermsUp_ptHard')
             add('ScaleSoftTermsDown_ptHard ','ScaleSoftTermsDown_ptHard')
             next('MET_SCALE')
@@ -992,6 +998,7 @@ class SuSample:
         else:
             key_str_all =  '_'.join([str(zz) for zz in key])
             key_str = md5(key_str_all).hexdigest()
+        hname2 = hname + '_' + s.name + key_str
         needs_saving = s.GLOBAL_CACHE
         if s.GLOBAL_CACHE and os.path.exists(s.GLOBAL_CACHE%s.name):
             #if True:
@@ -1001,35 +1008,35 @@ class SuSample:
                 if s.cache.Get(key_str):
                     if SuSample.debug==True:
                         print 'TTree::Cache :',os.path.basename(s.files[0].GetName()),var,'|',bin,'|',cut
-                    s.data[key]=s.cache.Get(key_str).Clone(hname)
+                    s.data[key]=s.cache.Get(key_str).Clone(hname2)
                     s.data[key].SetDirectory(0)
                     needs_saving = False
                 s.cache.Close()
                 s.cache = None
         if not key in s.data:
-            hname = hname + '_' + s.name
+            #hname = hname + '_' + s.name
             usebin,xtra = True,''
             # special handling to create variable-bin eta histograms:
             if spair == _HSPECIAL[0]:
-                s.habseta = s.make_habseta(hname)
+                s.habseta = s.make_habseta(hname2)
                 usebin = False
                 xtra = ' with special abseta binning'
             elif spair == _HSPECIAL[1]:
-                s.heta = s.make_heta(hname)
+                s.heta = s.make_heta(hname2)
                 usebin = False
                 xtra = ' with special eta binning'
-            print '--> creating %s%s'%(hname,xtra)
+            print '--> creating sample %s: %s%s'%(s.name,hname,xtra)
             sys.stdout.flush()
             # build from TNtuple
-            drawstring = '%s>>%s'%(var,hname)
+            drawstring = '%s>>%s'%(var,hname2)
             if usebin:
-                drawstring = '%s>>%s(%s)'%(var,hname,bin)
+                drawstring = '%s>>%s(%s)'%(var,hname2,bin)
             if SuSample.debug==True:
                 print 'TTree::Draw :',drawstring,'|',cut
             s.nt[path].Draw(drawstring,cut,'goff')
-            if not ROOT.gDirectory.Get(hname):
+            if not ROOT.gDirectory.Get(hname2):
                 return None
-            s.data[key] = ROOT.gDirectory.Get(hname).Clone()
+            s.data[key] = ROOT.gDirectory.Get(hname2).Clone()
             if needs_saving:
                 #print 'SAVING INTO CACHE:',key
                 with FileLock(s.GLOBAL_CACHE%s.name):
@@ -1739,13 +1746,11 @@ class SuStack:
         res.MakeStacks(hname)
         # populate with data
         loop = [e for e in s.elm if set(flags) == (set(flags) & set(e.flags)) and 'no' not in e.flags]
-        #loop = [e for e in s.elm if 'mc' in e.flags]
         for bg in loop:
             h = bg.histo(hname,d.clone())
-            if h:
+            if h.any_h():
                 res.AddStack(h)
-                if h.nominal_h():
-                    leg.append( [bg.name,bg.label,'F'] )
+                leg.append( [bg.name,bg.label,'F'] )
         return res
     def histosum(s,loop,hname,d,norm=None,weights=None):
         """ a wrapper around histosum_apply: allows reconstruction of histograms in eta slices """
