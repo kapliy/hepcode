@@ -41,6 +41,12 @@ def sys(obj,dored=True):
     obj.SetLineStyle( 2 );
     obj.SetLineWidth( 2 );
 
+# SETTINGS
+g_text_font = 43
+g_text_size = 20
+g_lin_main_x_title_offset = 1.7;
+g_lin_main_y_title_offset = 1.7;
+            
 # plots vs eta
 ceta = ROOT.TCanvas('ceta','ceta',800,600)
 ceta.cd()
@@ -64,14 +70,29 @@ px7.SetMarkerColor(ROOT.kGreen)
 leg.AddEntry(px7,'p_{T} = 50..120','LP')
 px1.Draw()
 px1.GetYaxis().SetRangeUser(-0.05,1.5*max(o.GetMaximum() for o in (px1,px2,px5,px7)))
+px1.GetXaxis().SetLabelFont(g_text_font)
+px1.GetXaxis().SetLabelSize(g_text_size)
+px1.GetXaxis().SetTitleFont(g_text_font)
+px1.GetXaxis().SetTitleSize(g_text_size)
+px1.GetYaxis().SetLabelFont(g_text_font)
+px1.GetYaxis().SetLabelSize(g_text_size)
+px1.GetYaxis().SetTitleFont(g_text_font)
+px1.GetYaxis().SetTitleSize(g_text_size)
+px1.GetYaxis().SetTitleOffset(g_lin_main_y_title_offset)
+px1.GetXaxis().SetTitleOffset(g_lin_main_x_title_offset)
+px1.GetXaxis().SetTitle('Muon #eta')
+px1.GetYaxis().SetTitle('QCD absolute error (%)' if mode=='ERR' else 'QCD fraction (%)')
 px2.Draw('A SAME')
 px5.Draw('A SAME')
 px7.Draw('A SAME')
 leg.SetFillColor(10)
+leg.SetTextFont(g_text_font);
+leg.SetTextSize(g_text_size);
 leg.Draw('SAME')
 ceta.Modified()
 ceta.Update()
 ceta.SaveAs('PNG_qcd%s_vs_eta.png'%mode)
+ceta.SaveAs('PNG_qcd%s_vs_eta.pdf'%mode)
 
 
 # plots vs pt
@@ -92,9 +113,23 @@ py11.SetMarkerColor(ROOT.kGreen)
 leg2.AddEntry(py11,'|#eta| = 2.18-2.4','LP')
 py1.Draw()
 py1.GetYaxis().SetRangeUser(-0.05,1.2*max(o.GetMaximum() for o in (py1,py5,py11)))
+py1.GetXaxis().SetLabelFont(g_text_font)
+py1.GetXaxis().SetLabelSize(g_text_size)
+py1.GetXaxis().SetTitleFont(g_text_font)
+py1.GetXaxis().SetTitleSize(g_text_size)
+py1.GetYaxis().SetLabelFont(g_text_font)
+py1.GetYaxis().SetLabelSize(g_text_size)
+py1.GetYaxis().SetTitleFont(g_text_font)
+py1.GetYaxis().SetTitleSize(g_text_size)
+py1.GetYaxis().SetTitleOffset(g_lin_main_y_title_offset)
+py1.GetXaxis().SetTitleOffset(g_lin_main_x_title_offset)
+py1.GetXaxis().SetTitle('Muon p_{T}')
+py1.GetYaxis().SetTitle('QCD absolute error (%)' if mode=='ERR' else 'QCD fraction (%)')
 py5.Draw('A SAME')
 py11.Draw('A SAME')
 leg2.SetFillColor(10)
+leg2.SetTextFont(g_text_font);
+leg2.SetTextSize(g_text_size);
 leg2.Draw('SAME')
 cpt.Modified()
 cpt.Update()
