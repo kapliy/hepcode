@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ntver=29G
+ntver=29L
 
 for f in pythia* acer* alpgen* herwig* mcnlo* powheg*; do 
     if [ -s $f ]; then 

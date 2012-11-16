@@ -1,15 +1,27 @@
 #!/bin/bash
 
-tag=v1_29i
+# if reading from LOCALGROUPDISK and XROOTD
+if [ "0" -eq "1" ]; then
+    tag=v1_29g
+    CDIR=/atlas/uct3/data/users/antonk/NTUPLE/BACKUP/${tag}
+    RDIR=/pnfs/uchicago.edu/atlaslocalgroupdisk/user/kapliy/UCNTUP
+fi
 
-RDIR=/atlas/uct3/data/users/antonk/NTUPLE/${tag}
+# if reading from LOCALGROUPDISK and LOCAL DIR
+if [ "0" -eq "1" ]; then
+    tag=v1_29i
+    RDIR=/share/t3data3/antonk/NTUPLE/${tag}
+    CDIR=/pnfs/uchicago.edu/atlaslocalgroupdisk/user/kapliy/UCNTUP
+fi
 
-# if reading from LOCALGROUPDISK
-CDIR=/pnfs/uchicago.edu/atlaslocalgroupdisk/user/kapliy/UCNTUP
-# if reading from tier3 XROOTD
-#CDIR=/atlas/uct3/data/users/antonk/NTUPLE/BACKUP/${tag}
+# if reading slimmed v1_29i/v1_29g ntuples (v1_29l)
+if [ "1" -eq "1" ]; then
+    tag=v1_29l
+    CDIR=/atlas/uct3/data/users/antonk/NTUPLE/v1_29l_ptfilt
+    RDIR=/home/antonk/bin
+fi
 
-rm -f pythia_* alpgen_* jimmy_* acer_* mcnlo_* herwig_* powheg_* sherpa_* {B..M}
+rm -f af_alpgen_* af_pythia_* pythia_* alpgen_* jimmy_* acer_* mcnlo_* herwig_* powheg_* sherpa_* {B..M}
 
 function list_dir () {
     SOURCEDIR=$1
@@ -28,10 +40,12 @@ function run () {
     list_dir ${CDIR} ${OUTNAME} ${RFLAG}
     list_dir ${RDIR} ${OUTNAME} ${RFLAG}
     # duplicate removal. RDIR (xrootd) takes precedence over CDIR (dcache)
-    mv ${OUTNAME} ${OUTNAME}.tmp
-    awk 'function bn(p) { n=split(p,a,"/"); return a[n]; } {CACHE[bn($1)]=$1} END{for(key in CACHE) print CACHE[key];}' ${OUTNAME}.tmp | sort > ${OUTNAME}
-    echo "Working on: ${OUTNAME} : `wc -l < ${OUTNAME}.tmp` -> `wc -l < ${OUTNAME}`"
-    rm -f ${OUTNAME}.tmp
+    if [ -f "${OUTNAME}" ]; then
+	mv ${OUTNAME} ${OUTNAME}.tmp
+	awk 'function bn(p) { n=split(p,a,"/"); return a[n]; } {CACHE[bn($1)]=$1} END{for(key in CACHE) print CACHE[key];}' ${OUTNAME}.tmp | sort > ${OUTNAME}
+	echo "Working on: ${OUTNAME} : `wc -l < ${OUTNAME}.tmp` -> `wc -l < ${OUTNAME}`"
+	rm -f ${OUTNAME}.tmp
+    fi
 }
 
 for p in D E F G H I J K L M; do
@@ -49,24 +63,21 @@ run alpgen_herwig_wmunu_np2 107692
 run alpgen_herwig_wmunu_np3 107693
 run alpgen_herwig_wmunu_np4 107694
 run alpgen_herwig_wmunu_np5 107695
-run alpgen_pythia_wmunu_np0 117690
-run alpgen_pythia_wmunu_np1 117691
-run alpgen_pythia_wmunu_np2 117692
-run alpgen_pythia_wmunu_np3 117693
-run alpgen_pythia_wmunu_np4 117694
-run alpgen_pythia_wmunu_np5 117695
+
 run alpgen_herwig_wtaunu_np0 107700
 run alpgen_herwig_wtaunu_np1 107701
 run alpgen_herwig_wtaunu_np2 107702
 run alpgen_herwig_wtaunu_np3 107703
 run alpgen_herwig_wtaunu_np4 107704
 run alpgen_herwig_wtaunu_np5 107705
+
 run alpgen_herwig_zmumu_np0 107660
 run alpgen_herwig_zmumu_np1 107661
 run alpgen_herwig_zmumu_np2 107662
 run alpgen_herwig_zmumu_np3 107663
 run alpgen_herwig_zmumu_np4 107664
 run alpgen_herwig_zmumu_np5 107665
+
 run alpgen_herwig_ztautau_np0 107670
 run alpgen_herwig_ztautau_np1 107671
 run alpgen_herwig_ztautau_np2 107672
@@ -74,7 +85,27 @@ run alpgen_herwig_ztautau_np3 107673
 run alpgen_herwig_ztautau_np4 107674
 run alpgen_herwig_ztautau_np5 107675
 
+run alpgen_herwig_wgamma_np0 117410
+run alpgen_herwig_wgamma_np1 117411
+run alpgen_herwig_wgamma_np2 117412
+run alpgen_herwig_wgamma_np3 117413
+run alpgen_herwig_wgamma_np4 117414
+run alpgen_herwig_wgamma_np5 117415
+
 if [ "0" -eq "1" ]; then
+    run alpgen_herwig_wgamma_np0 117410
+    run alpgen_herwig_wgamma_np1 117411
+    run alpgen_herwig_wgamma_np2 117412
+    run alpgen_herwig_wgamma_np3 117413
+    run alpgen_herwig_wgamma_np4 117414
+    run alpgen_herwig_wgamma_np5 117415
+fi
+run pythia_wgammamunu 128851
+run pythia_wgammataunu 128852
+run pythia_zgammamumu 108324
+run pythia_zgammatautau 108325
+
+if [ "1" -eq "1" ]; then
     run alpgen_herwig_wmunubb_np0 107280
     run alpgen_herwig_wmunubb_np1 107281
     run alpgen_herwig_wmunubb_np2 107282
@@ -89,6 +120,16 @@ if [ "0" -eq "1" ]; then
     run alpgen_herwig_wmunuc_np3 117296
     run alpgen_herwig_wmunuc_np4 117297
 fi
+
+# mc11c too buggy
+if [ "0" -eq "1" ]; then
+    run alpgen_pythia_wmunu_np0 117690
+    run alpgen_pythia_wmunu_np1 117691
+    run alpgen_pythia_wmunu_np2 117692
+    run alpgen_pythia_wmunu_np3 117693
+    run alpgen_pythia_wmunu_np4 117694
+    run alpgen_pythia_wmunu_np5 117695
+fi;
 
 # Pythia
 run pythia_wtaunu 107054
@@ -187,7 +228,9 @@ if [ "1" -eq "1" ]; then
     run acer_wt 105500
     # MC@NLO version
     run mcnlo_schan_munu 108344
+    run mcnlo_schan_taunu 108345
     run mcnlo_tchan_munu 108341
+    run mcnlo_tchan_taunu 108342
     run mcnlo_wt 108346
 fi
 
