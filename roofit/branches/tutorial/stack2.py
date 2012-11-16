@@ -167,11 +167,17 @@ if opts.output:
     SuCanvas.savedir = opts.output+'/'
     SuCanvas.savetypes = ['png','pdf']
 # overrides for default style:
-if True:
+if False:
     SuCanvas.g_lin_ratio_y_title_offset = 1.7
     SuCanvas.g_marker_size = 0.9
     SuCanvas.g_legend_x1_ndc = 0.55
     SuCanvas.g_text_size = 20
+    SuCanvas.g_legend_height_per_entry = 0.04
+else:  # optimized for pdfs
+    SuCanvas.g_lin_ratio_y_title_offset = 1.7
+    SuCanvas.g_marker_size = 0.9
+    SuCanvas.g_legend_x1_ndc = 0.55
+    SuCanvas.g_text_size = 16
     SuCanvas.g_legend_height_per_entry = 0.04
 # Apply plot style
 SuCanvas.cgStyle = SuCanvas.ControlPlotStyle()
