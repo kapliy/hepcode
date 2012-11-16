@@ -27,24 +27,6 @@ if [ "1" -eq "1" ]; then
 fi;
 done
 
-# test (broken): apply to MC
-if [ "0" -eq "1" ]; then
-    data="--root '/share/ftkdata1/antonk/ana_${flabel}_noscale_stacoCB/mc_pythia_zmumu/root_mc_pythia_zmumu*.root'"
-    gput tags $i r17_MCdefault_staco    "--antondb ${antondb} ${data} --zmin 80 --zmax 100"
-    ((i++))
-    gput tags $i r17_MCm70110_staco     "--antondb ${antondb} ${data} --zmin 70 --zmax 110"
-    ((i++))
-    gput tags $i r17_MCklu_staco        "--antondb ${antondb} ${data} --zmin 80 --zmax 100 --kluit"
-    ((i++))
-    data="--root '/share/ftkdata1/antonk/ana_${flabel}_noscale_muidCB/mc_pythia_zmumu/root_mc_pythia_zmumu*.root'"
-    gput tags $i r17_MCdefault_muid    "--antondb ${antondb} ${data} --zmin 80 --zmax 100"
-    ((i++))
-    gput tags $i r17_MCm70110_muid     "--antondb ${antondb} ${data} --zmin 70 --zmax 110"
-    ((i++))
-    gput tags $i r17_MCklu_muid        "--antondb ${antondb} ${data} --zmin 80 --zmax 100 --kluit"
-    ((i++))
-fi;
-
 tts="cmb id exms"
 #regs="AA BB CC Bcc Baa FWC FWA MWC MWA" # "FWC0 FWC1 FWC2 FWC3 FWA0 FWA1 FWA2 FWA3"
 regs="`echo E{0..25}E`"
@@ -52,6 +34,7 @@ regs="`echo T{0..13}T`"
 regs="`echo S{0..7}S`"
 regs="AA BB CC Bcc Baa" #2012
 regs="`echo W{0..9}W`"
+regs="`echo U{0..21}U`"
 xtra="--template --ext eps"
 i=0
 

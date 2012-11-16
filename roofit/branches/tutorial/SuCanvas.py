@@ -31,7 +31,7 @@ class SuCanvas:
     _refLineMax = 1.19
     
     savedir = './'
-    savetype = 'png'
+    savetypes = ['png',]
     savetag = ''
 
     def __init__(s,name='plot'):
@@ -444,7 +444,7 @@ class SuCanvas:
         if logy:
             s._canvas.SetLogy(logy)
 
-    def buildRatio(s,width=800,height=800,title=None,margin=0.05,logy=False):
+    def buildRatio(s,width=600,height=600,title=None,margin=0.05,logy=False):
         """ Sebastian version """
         if not title:
             title = rand_name()
@@ -481,24 +481,13 @@ class SuCanvas:
         """ auto-save version """
         assert s.savedir
         assert s.savename
-        assert s.savetype
-        return s.SaveAs(s.savetag+'_'+s.savename,s.savetype,s.savedir)
-    def SaveAs(s,name2,ext='png',DIR='./'):
+        assert type(s.savetypes)==type([]) and len(s.savetypes)>0
+        return s.SaveAs(s.savetag+'_'+s.savename,s.savetypes,s.savedir)
+    def SaveAs(s,name2,exts,DIR='./'):
         name = s.cleanse(name2)
         c = s._canvas
-        c.SaveAs(DIR+'%s.%s'%(name,ext))
-        if ext=='eps':
-            c.SaveAs(DIR+'%s.%s'%(name,'png'))
-    def saveAs( s, fullname ):
-        """ save the canvas """
-        s._canvas.SaveAs( fullname );
-    def saveAsEps( s, filename ):
-        filename +=  ".eps" 
-        s._canvas.SaveAs( filename );
-    def saveAsPng( s, filename ):
-        filename += ".png"
-        s._canvas.SaveAs( filename.c_str() );
-    
+        [ c.SaveAs(DIR+'%s.%s'%(name,ext)) for ext in exts ]
+
     def clear(s):
         """ clear the canvas """
         s._canvas.Clear()

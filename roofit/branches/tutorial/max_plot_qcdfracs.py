@@ -6,11 +6,16 @@ import sys,os
 import common
 import ROOT
 common.SetStyle("AtlasStyle.C")
+ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
-fname = 'OUT_09282012.newSFTFQ.v1.abseta.2D.root'
+fname = 'OUT_11022012_ALL.v1.abseta.2D.root'  #bgqcd=3
+fname = 'OUT_11022012_ALL.v2.abseta.2D.root'  #bgqcd=4
 n_frac = 'POS/qcd_Fraction_MCAverage'
 n_err  = 'POS/qcd_FractionStackError_MCAverage'
 
+if len(sys.argv)>2:
+    fname = sys.argv[1]
+print 'Opening:',fname
 fin = ROOT.TFile.Open(fname,'READ')
 assert fin.IsOpen()
 h_frac = fin.Get(n_frac)
@@ -94,4 +99,4 @@ leg2.Draw('SAME')
 cpt.Modified()
 cpt.Update()
 cpt.SaveAs('PNG_qcd%s_vs_pt.png'%mode)
-
+cpt.SaveAs('PNG_qcd%s_vs_pt.pdf'%mode)

@@ -7,15 +7,14 @@ input=/share/t3data3/antonk/ana/ana_v29I_10292012_unfold_newTrigWZPTnoPol_stacoC
 input=/share/t3data3/antonk/ana/ana_v29I_11022012_unfold_stacoCB_all # adding met muon term plots and additional 2d histos. adding pt slices. adding phi plot.
 input=/share/t3data3/antonk/ana/ana_v29I_11072012_unfold_stacoCB_all/
 
-OUTPR="OUT_10122012_ALL.v1" ; bgqcd=3
-OUTPR="OUT_11022012_ALL.v1" ; bgqcd=3
-#OUTPR="OUT_11022012_ALL.v2" ; bgqcd=4
+#OUTPR="OUT_11022012_ALL.v1" ; bgqcd=3
+OUTPR="OUT_11022012_ALL.v2" ; bgqcd=4
 
 # eta plots for different MC
-if [ "0" == "1" ]; then
+if [ "1" == "1" ]; then
     ./stack2.py -b --input ${input} --hsource "lepton_etav" -o CONTROL -t PowhegPythia -m control_stack --bgsig 5 --bgewk 5 --bgqcd ${bgqcd} --refline 0.94,1.06 --qcdsource "${OUTPR}.eta.1D.root:qcd_MCAverage" &
-    ./stack2.py -b --input ${input} --hsource "lepton_etav" -o CONTROL -t PowhegHerwig -m control_stack --bgsig 4 --bgewk 5 --bgqcd ${bgqcd} --refline 0.94,1.06 --qcdsource "${OUTPR}.eta.1D.root:qcd_MCAverage" &
-    ./stack2.py -b --input ${input} --hsource "lepton_etav" -o CONTROL -t McAtNlo -m control_stack --bgsig 1 --bgewk 5 --bgqcd ${bgqcd} --refline 0.94,1.06 --qcdsource "${OUTPR}.eta.1D.root:qcd_MCAverage" &
+    #./stack2.py -b --input ${input} --hsource "lepton_etav" -o CONTROL -t PowhegHerwig -m control_stack --bgsig 4 --bgewk 5 --bgqcd ${bgqcd} --refline 0.94,1.06 --qcdsource "${OUTPR}.eta.1D.root:qcd_MCAverage" &
+    #./stack2.py -b --input ${input} --hsource "lepton_etav" -o CONTROL -t McAtNlo -m control_stack --bgsig 1 --bgewk 5 --bgqcd ${bgqcd} --refline 0.94,1.06 --qcdsource "${OUTPR}.eta.1D.root:qcd_MCAverage" &
 fi
 if [ "0" == "1" ]; then # double ratio
     ./stack2.py -b --input ${input} --hsource "lepton_etav" -o CONTROL -t PowhegPythia_dratio -m control_stack_dratio --bgsig 5 --bgewk 5 --bgqcd ${bgqcd} --refline 0.94,1.06 --qcdsource "${OUTPR}.eta.1D.root:qcd_MCAverage" &
@@ -36,7 +35,7 @@ if [ "0" == "1" ]; then
 fi
 
 # W kinematic variables [alpgen]
-if [ "1" == "1" ]; then
+if [ "0" == "1" ]; then
     ./stack2.py -b --input ${input} --hsource "wmt" -o CONTROL -t AlpgenHerwig -m control_stack --bgsig 2 --bgewk 2 --bgqcd ${bgqcd} --refline 0.81,1.19 &
     ./stack2.py -b --input ${input} --hsource "wpt" -o CONTROL -t AlpgenHerwig -m control_stack --bgsig 2 --bgewk 2 --bgqcd ${bgqcd} --refline 0.81,1.19 &
     ./stack2.py -b --input ${input} --hsource "met" -o CONTROL -t AlpgenHerwig -m control_stack --bgsig 2 --bgewk 2 --bgqcd ${bgqcd} --refline 0.81,1.19 &

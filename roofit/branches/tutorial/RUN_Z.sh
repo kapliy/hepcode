@@ -7,7 +7,7 @@ flabel=NONE
 i=0
 
 # Specify the list of tags
-for flabel in v29G_08102012_MCP_OLD v29G_08102012_MCP_NEW; do
+for flabel in v29I_11022012_unfold; do
 antondb=out2011_${flabel}
 if [ "1" -eq "1" ]; then
     data="--rootdata '/share/t3data3/antonk/ana/ana_${flabel}_stacoCB_MCPscale/data*/root_data*.root'"
@@ -39,32 +39,6 @@ if [ "1" -eq "1" ]; then
 fi
 done
 
-if [ "0" -eq "1" ]; then
-    data="--rootdata '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_default/data_period*/root_data_period*.root'"
-    mc="--rootmc '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_noscale/mc_pythia_zmumu/root_mc_pythia_zmumu.root'" #noscale
-    gput tags $i r17_default_staco     " --antondb ${antondb} ${data} ${mc} --func gaus0 --min 70 --max 110"
-    ((i++))
-    gput tags $i r17_default_staco     " --antondb ${antondb} ${data} ${mc} --func egge3 --min 70 --max 110"
-    ((i++))
-    gput tags $i r17_m80100_staco      " --antondb ${antondb} ${data} ${mc} --func egge3 --min 80 --max 100"
-    ((i++))
-    
-    mcKC="--rootmc '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_scaleMC_KC/mc_pythia_zmumu/root_mc_pythia_zmumu.root'"
-    mcdefault="--rootmc '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_default/mc_pythia_zmumu/root_mc_pythia_zmumu.root'"
-    #mcKC="--rootmc '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_scaleMC_KC/mc_jimmy_zmumu*/root_mc*.root'"
-    #mcdefault="--rootmc '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_default/mc_jimmy_zmumu*/root_mc*.root'"
-
-    gput tags $i r17_default_staco_mcKC     " --antondb ${antondb} ${data} ${mcKC} --func gaus0 --min 70 --max 110"
-    ((i++))
-    #gput tags $i r17_default_staco_mcdefault     " --antondb ${antondb} ${data} ${mcdefault} --func gaus0 --min 70 --max 110"
-    ((i++))
-
-    #dataKC="--rootdata '/share/ftkdata1/antonk/ana_${flabel}_stacoCB_scaleDATA_KC/data_period*/root_data_period*.root'"
-    #gput tags $i r17_default_staco_dataKC     " --antondb ${antondb} ${dataKC} ${mc} --func gaus0 --min 70 --max 110"
-    #((i++))
-    
-fi
-
 tts="cmb id exms"
 #regs="AA BB CC Bcc Baa FWC FWA MWC MWA" # "FWC0 FWC1 FWC2 FWC3 FWA0 FWA1 FWA2 FWA3"
 regs="`echo E{0..25}E`"
@@ -73,6 +47,7 @@ regs="`echo S{0..7}S`"
 regs="AA BB CC Bcc Baa" #2012
 regs="`echo W{0..9}W`"
 regs="`echo V{0..21}V`"
+regs="`echo U{0..21}U`"
 xtra="--ext eps"
 i=0
 
@@ -97,6 +72,7 @@ for itag in `gkeys tags`; do
 	    ndata=200000
 	    cmd="./zpeak.py -b ${opts} --tt ${tt} --region ${reg} --tag ${tag} --ndata $ndata --nmc $nmc ${xtra}"
 	    echo $cmd
+	    exit 0
 	    echo $cmd >> $J
 	    qsub -l mem=3000mb -N Z${i} -o ${LOG} -e ${ERR} ${J}
 	    ((i++))

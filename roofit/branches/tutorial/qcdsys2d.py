@@ -21,14 +21,16 @@ import antondb
 
 # Define all systematics. Note that bgsig is NOT present here, since we save separate histograms for each bgsig
 #'/iq%d/X%d/bgqcd3/bgewk%d/bgsig%d/iso%s/ivar%s/ibin%s/ieta%d/ipt%s'%(iq,xsecerr,bgewk,bgsig,isofail,ivar,ibin,ieta,ipt)
+FITS = [ ('met','50,0,80'),('met','50,0,90'),('wmt','50,40,90'),('wmt','50,35,100') ] # anton's old fits
+FITS = [ ('met','50,0,60'),('met','50,0,50'),('wmt','50,40,70'),('wmt','50,35,80') ] # adrian lewis-inspired ranges
 msys = []
 for xsecerr in [ (0,) ]:
     for bgewk in [ (5,),(2,) ]:
         #for isofail in [ ('IsoFail20',),('IsoWind20',) ] [:] :
         for isofail in [ ('IsoFail20',) ]:
-            for ivar in [ ('met','50,0,80'),('met','50,0,90'),('wmt','50,40,90'),('wmt','50,35,100') ]:
+            for ivar in FITS:
                 msys.append( xsecerr+bgewk+isofail+ivar )
-msys_nom = (0,5,'IsoFail20','met','50,0,80')
+msys_nom = (0,5,'IsoFail20')+FITS[0]
 bgsigs = [5,4,1][:]
 
 QMAP = {0:'mu+',1:'mu-',2:'both charges'}
@@ -55,13 +57,13 @@ PM = '&plusmn;'
 COLH = 150
 COLW = 95
 
-bgqcd = 4
-db_name = 'DB_11022012_ALL.v2'
-fin_name = 'IN_11022012_ALL.v2.%s.%dD.root'%(eword,DIM)
-
 bgqcd = 3
 db_name = 'DB_11022012_ALL.v2'
 fin_name = 'IN_11022012_ALL.v1.%s.%dD.root'%(eword,DIM)
+
+bgqcd = 4
+db_name = 'DB_11022012_ALL.v2'
+fin_name = 'IN_11022012_ALL.v2.%s.%dD.root'%(eword,DIM)
 
 fout_name = re.sub('IN_','OUT_',fin_name)
 if os.path.exists(fin_name):

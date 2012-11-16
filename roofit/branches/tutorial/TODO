@@ -1,3 +1,21 @@
+Implement cutflow in stack.py
+
+ASK MAX:
+- remind link to his tfractionfitter. BUT: seems to be using TTrees
+- muon momentum class version seems to be incorrect
+- major changes to jes/jer ?? Do I need to propagate?
+
+MAX: plot met without cutting met/wmt
+     plot  pt without cutting pt
+     plot wmt without cutting others
+     correlate met-muonboy with met-reffinal [see if met-muonboy at 40 has lots of met at reffinal 25]
+     try adding njet cuts
+     plot met_MuonBoy [raw - corrected]
+     try to use just calo + one selected muon
+MAX: try eta/phi map
+
+LONG overdue: really need to understand difference in bgqcd=3 and bgqcd=4. Plot normalized templates on top of each other!
+
 Peter: Endcap EE (EEL/EES?) disk chambers went on C side, but not on A side. For production/cost reasons.
 Putting them in bit by bit over time. First installed on C side.
 Trigger chambers? Or reco chambers?
