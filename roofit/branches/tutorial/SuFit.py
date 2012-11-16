@@ -340,7 +340,7 @@ class SuFit:
 
     # y axis
     canvas.cd_plotPad()
-    stack.SetMaximum(stack.GetMaximum()*2)
+    stack.SetMaximum(stack.GetMaximum()*2.1)
 
     # prettify
     obj = stack
@@ -394,6 +394,14 @@ class SuFit:
       canvas.drawRatio(s.hratio)
       canvas.ConfigureAxis(stack, s.hratio)
       s.hratio.GetXaxis().SetRange(s.plotmin,s.plotmax)
+      TMAP = {}
+      TMAP['met'] = 'E_{T}^{miss}'
+      TMAP['wmt'] = 'm_{T}^{W}'
+      TMAP['w_mt'] = TMAP['wmt']
+      vname = s.w.var(s.vnames[ivar]).GetName()
+      xtitle = TMAP[vname] if vname in TMAP else vname
+      s.hratio.GetXaxis().SetTitle( xtitle )
+
     # finalize
     canvas.update()
     if False: # debugging:
