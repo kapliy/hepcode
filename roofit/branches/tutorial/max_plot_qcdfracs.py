@@ -12,6 +12,7 @@ fname = 'OUT_11022012_ALL.v1.abseta.2D.root'  #bgqcd=3
 fname = 'OUT_11022012_ALL.v2.abseta.2D.root'  #bgqcd=4
 n_frac = 'POS/qcd_Fraction_MCAverage'
 n_err  = 'POS/qcd_FractionStackError_MCAverage'
+wname = 'Wplus'
 
 if len(sys.argv)>2:
     fname = sys.argv[1]
@@ -46,9 +47,33 @@ g_text_font = 43
 g_text_size = 20
 g_lin_main_x_title_offset = 1.7;
 g_lin_main_y_title_offset = 1.7;
-            
+g_legend_x1_ndc = 0.50
+g_legend_y2_ndc = 0.9
+g_legend_height_per_entry = 0.043
+g_legend_width = 0.2;
+g_legend_symbol_width = 0.1;
+
+def ConfigureLegend(legend, legend_x1=None, legend_y2=None):
+    """ Sebastian legend configuration """
+    if legend_x1==None: legend_x1 = g_legend_x1_ndc
+    if legend_y2==None: legend_y2 = g_legend_y2_ndc
+    legend_x2 = legend_x1 + g_legend_width;
+    legend_y1 = legend_y2 - g_legend_height_per_entry*legend.GetNRows();
+    print 'INFO: TLegend coordinates: x=[%.2f..%.2f] y=[%.2f..%.2f]'%(legend_x1,legend_x2,legend_y1,legend_y2)
+    legend.SetX1NDC(legend_x1);
+    legend.SetX2NDC(legend_x2);
+    legend.SetY1NDC(legend_y1);
+    legend.SetY2NDC(legend_y2);
+    legend.SetTextAlign(12);
+    legend.SetMargin(g_legend_symbol_width/g_legend_width);
+    legend.SetTextFont(g_text_font);
+    legend.SetTextSize(g_text_size);
+    legend.SetFillStyle(0);
+    #legend.SetFillColor(10)
+    legend.SetBorderSize(0);
+
 # plots vs eta
-ceta = ROOT.TCanvas('ceta','ceta',800,600)
+ceta = ROOT.TCanvas('ceta','ceta',600,600)
 ceta.cd()
 leg = ROOT.TLegend(0.55,0.70,0.88,0.88,'QCD %s vs |#eta| in p_{T} bins'%('fraction' if mode=='FRAC' else 'uncertainty'),"brNDC")
 px1 = h.ProjectionX('_px1',1,1,'e')
@@ -88,15 +113,15 @@ px7.Draw('A SAME')
 leg.SetFillColor(10)
 leg.SetTextFont(g_text_font);
 leg.SetTextSize(g_text_size);
+ConfigureLegend(leg)
 leg.Draw('SAME')
 ceta.Modified()
 ceta.Update()
-ceta.SaveAs('PNG_qcd%s_vs_eta.png'%mode)
-ceta.SaveAs('PNG_qcd%s_vs_eta.pdf'%mode)
-
+ceta.SaveAs('qcd%s_%s_vs_eta.png'%(mode,wname))
+ceta.SaveAs('qcd%s_%s_vs_eta.pdf'%(mode,wname))
 
 # plots vs pt
-cpt = ROOT.TCanvas('cpt','cpt',800,600)
+cpt = ROOT.TCanvas('cpt','cpt',600,600)
 cpt.cd()
 leg2 = ROOT.TLegend(0.55,0.70,0.88,0.88,'QCD %s vs muon p_{T} in |#eta| bins'%('fraction' if mode=='FRAC' else 'uncertainty'),"brNDC")
 py1 = h.ProjectionY('_py1',1,1,'e')
@@ -130,8 +155,9 @@ py11.Draw('A SAME')
 leg2.SetFillColor(10)
 leg2.SetTextFont(g_text_font);
 leg2.SetTextSize(g_text_size);
+ConfigureLegend(leg2)
 leg2.Draw('SAME')
 cpt.Modified()
 cpt.Update()
-cpt.SaveAs('PNG_qcd%s_vs_pt.png'%mode)
-cpt.SaveAs('PNG_qcd%s_vs_pt.pdf'%mode)
+cpt.SaveAs('qcd%s_%s_vs_pt.png'%(mode,wname))
+cpt.SaveAs('qcd%s_%s_vs_pt.pdf'%(mode,wname))
