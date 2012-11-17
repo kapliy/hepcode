@@ -17,7 +17,7 @@ fi
 # if reading slimmed v1_29i/v1_29g ntuples (v1_29l)
 if [ "1" -eq "1" ]; then
     tag=v1_29l
-    CDIR=/atlas/uct3/data/users/antonk/NTUPLE/v1_29l_ptfilt
+    CDIR=/atlas/uct3/data/users/antonk/NTUPLE/v1_29l
     RDIR=/home/antonk/bin
 fi
 
