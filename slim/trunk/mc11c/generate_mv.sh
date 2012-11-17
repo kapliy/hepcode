@@ -9,5 +9,5 @@ for dname in `ls -1 *.dat`; do
     fdirdirty=`basename ${fdirfull}`
     fdir=`echo "${fdirdirty%.*}"`
     zdir=`echo $fdir | sed -e 's#v1_29i#v1_29l#g' -e 's#v1_29g#v1_29l#g'`
-    echo mv $dsample $zdir
+    echo "if [ -d $dsample ]; then mv $dsample $zdir; else echo WARNING missing folder $dsample; fi"
 done
