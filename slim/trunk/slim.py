@@ -54,6 +54,7 @@ else:
     f = open(opts.input,'read')
     flist += [ff.strip() for ff in f]
     f.close()
+nfiles = len(flist)
 
 # Input TChain
 ch = ROOT.TChain(opts.tree,opts.tree)
@@ -104,9 +105,13 @@ newFile = ROOT.TFile(outFile, "RECREATE")
 ch_new = ch.GetTree().CloneTree(0)
 
 # Copy loop
-print 'Processing %d entries...'%nentries
+print 'Processing %d entries from %d files'%(nentries,nfiles)
+nsteps  = 20
+step = int(nentries / nsteps) or 1
 isaved = 0
 for i in range(nentries):
+    if (i%step)==0:
+        print 'Event (%03d):'%(i/step),i
     ch.GetEntry(i)
     # trigger
     if opts.trigger and not (  ('EF_mu18_MG_medium' in ch.trig_ef) or ('EF_mu18_MG' in ch.trig_ef)  ):
@@ -121,8 +126,18 @@ for i in range(nentries):
     isaved += 1
 
 # use GetCurrentFile just in case we went over the
-# (customizable) maximum file size 
+# (customizable) maximum file size
+fdel = [ outFile, ]
+if ch_new.GetCurrentFile().GetName() not in fdel:
+    fdel.append( ch_new.GetCurrentFile().GetName() )
 ch_new.GetCurrentFile().Write()
 ch_new.GetCurrentFile().Close()
 
-print 'Saved %d / %d events (efficiency = %.1f%%)'%(isaved,nentries,isaved*100.0/nentries)
+print 'Saved %d / %d events (efficiency = %.1f%%) from %d files'%(isaved,nentries,isaved*100.0/nentries,nfiles)
+if isaved==0:
+    print 'No events passed selections. Deleting file(s):',fdel
+    for fname in fdel:
+        try:
+            os.unlink(fname)
+        except:
+            pass
