@@ -5,7 +5,6 @@
 #PBS -m e
 
 echo HOSTNAME=$HOSTNAME
-date
 source /home/antonk/.bashrc
 anaquick5
 
@@ -37,6 +36,7 @@ md5dest="DESTMD5"
 ./slim.py -i ${inlist} -o ${tmpdir}/${outfile} --tree tree --var vars.txt  ${extras} && {
     md5source=`md5sum ${tmpdir}/${outfile} | awk '{print $1}'`
     md5dest=`xrdcp -s -f -md5 ${tmpdir}/${outfile} ${OUTDIR}/${outfile} | awk '{print $2}'`
+    date
 }
 md5source=`trim ${md5source}`
 md5dest=`trim ${md5dest}`
