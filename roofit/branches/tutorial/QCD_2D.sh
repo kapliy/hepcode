@@ -53,12 +53,15 @@ if [ "0" == "1" ]; then # old (now disabled) binning. in particular, this utiliz
     gput tagzs ${i} wmt40to90 "--lvar wmt --lbin 50,40,90 "  ; ((i++))
     gput tagzs ${i} wmt35to100 "--lvar wmt --lbin 50,35,100 "  ; ((i++))
     gput tagzs ${i} met10to50 "--lvar met --lbin 50,10,50 " ; ((i++))
+    gput tagzs ${i} wmt40to70 "--lvar wmt --lbin 50,40,70 "  ; ((i++))
+    gput tagzs ${i} wmt35to80 "--lvar wmt --lbin 50,35,80 "  ; ((i++))
+    gput tagzs ${i} met0to60 "--lvar met --lbin 50,0,60 " ; ((i++))
 fi
 
-gput tagzs ${i} met0to60 "--lvar met --lbin 50,0,60 " ; ((i++))
 gput tagzs ${i} met0to50 "--lvar met --lbin 50,0,50 " ; ((i++))
-gput tagzs ${i} wmt40to70 "--lvar wmt --lbin 50,40,70 "  ; ((i++))
-gput tagzs ${i} wmt35to80 "--lvar wmt --lbin 50,35,80 "  ; ((i++))
+gput tagzs ${i} met5to60 "--lvar met --lbin 50,5,60 " ; ((i++))
+gput tagzs ${i} wmt40to80 "--lvar wmt --lbin 50,40,80 "  ; ((i++))
+gput tagzs ${i} wmt35to70 "--lvar wmt --lbin 50,35,70 "  ; ((i++))
 
 for ETAMODE in ${ETAMODES}; do
     ietas=`echo {0..10} ALL`

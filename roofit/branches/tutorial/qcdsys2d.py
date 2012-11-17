@@ -122,10 +122,11 @@ def scale_bin(h,ietabin,iptbin,v):
     h.SetBinError(ibin, h.GetBinError(ibin)*v)
     return h
 
-def make_total(csys,samples,cdir,title=None):
+def make_total(csys,samples,cdir,prefix=None):
     """ Makes and saves total-bg histograms.
     Additionally, saved all components AND ewk-only AND qcd-only.
     Assumes QCD is always the last one under samples[] """
+    h,g = None,None
     # save subsamples
     if True:
         sdir = cdir.Get("all") if cdir.Get("all") else cdir.mkdir("all")
@@ -143,7 +144,7 @@ def make_total(csys,samples,cdir,title=None):
         h = samples[0].Clone('totalbg_'+csys)
         #print 'Adding:',[ sample.GetName() for sample in samples[:] ]
         [ h.Add( sample ) for sample in samples[1:] ]
-        h.SetTitle(title if title else h.GetName())
+        h.SetTitle(prefix if prefix else h.GetName())
     return h
 
 if __name__=='__main__':
@@ -383,8 +384,9 @@ if __name__=='__main__':
                     bdir = fin.Get('%s_sig5_ewk2'%QMAPN[iq])
                     assert bdir
                     allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
-                    htot = make_total(system,allsamples,fout_D[iq])
-                    htot.Write('totalbg_Nominal_ewk_alpgen',ROOT.TObject.kOverwrite)
+                    htot = make_total(system,allsamples,fout_D[iq],'_ewk_alpgen')
+                    htot.Write()
+                    #htot.Write('totalbg_Nominal_ewk_alpgen',ROOT.TObject.kOverwrite)
                 # generate histograms for ewkbg xsec variations
                 if True:
                     bdir = fin.Get('%s_sig5_ewk5_xsecup'%QMAPN[iq])

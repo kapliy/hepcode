@@ -1,27 +1,46 @@
-Implement cutflow in stack.py
+Work on qcdsys2d: automatically save qcd and ewk!!!
 
-ASK MAX:
-- remind link to his tfractionfitter. BUT: seems to be using TTrees
-- muon momentum class version seems to be incorrect
-- major changes to jes/jer ?? Do I need to propagate?
+DONE: Check Max's physics_Nominal - he does include all truth, so can be used for acceptance correction
+      DONE: speed: stays the same
+DONE: PDF REWEIGHTING:
+      study LHA pdf reweighting via TrigFTKAna addition
+DONE: include some extra variables in unfolding to derive isFiducial on-the-fly
+DONE: implement Carl's eta/phi map for trigger efficiencies
 
-MAX: plot met without cutting met/wmt
+CHECK: did slimmed ntuples work fine? Why are there still some differences?
+
+FRIDAY:
+Implement cutflow tables by parsing OUT*root files
+
+QCD FITS:
+Convert to using 3d histograms
+check if last two-three pt bins have vastly different scale factors. If not, see if we can fit them all together (easy via 3d histos)
+This will reduce nfits by a lot, and will give us more statistics.
+LONG overdue: really need to understand difference in bgqcd=3 and bgqcd=4. Plot normalized templates on top of each other!
+
+INCLUSIVE FITS:
+- show shape change in tfraction fitter vs in stack plots in all variables (met,wmt,pt)
+- show how ewk normalization changes in tfraction fitter (how it is scaled relative to cross-section) Do math back.
+- plot muon pt when fit was done in pt, vs when fit was done in met. how much does it improve?
+- ratio band: add band of qcd systematic in three different variables
+- ZOOM: 5% on eta, 10% on others
+- AMBITIOUS: add other variables in slices of pt-eta bins and then re-add them using correct QCD scale factors!
+            this needs to be done soon - to be added to the ntuple!
+            can qcd templates then be re-built inside qcdsys2d?
+
+
+BAD BIN: switch to ntuple-based studies with un-normalized bb/cc MC
+     plot met without cutting met/wmt
      plot  pt without cutting pt
      plot wmt without cutting others
      correlate met-muonboy with met-reffinal [see if met-muonboy at 40 has lots of met at reffinal 25]
      try adding njet cuts
+     Try it with a somewhat higher pt cut
      plot met_MuonBoy [raw - corrected]
      try to use just calo + one selected muon
-MAX: try eta/phi map
-
-LONG overdue: really need to understand difference in bgqcd=3 and bgqcd=4. Plot normalized templates on top of each other!
-
 Peter: Endcap EE (EEL/EES?) disk chambers went on C side, but not on A side. For production/cost reasons.
 Putting them in bit by bit over time. First installed on C side.
 Trigger chambers? Or reco chambers?
-PETER: zoom in ratios
-muonboy vs ref-final in two "bad" bins
-Try it with a somewhat higher pt cut
 
 OCT29:
 * Try muon systematics WITHOUT met propagation (have to do that at ntuple level). Shouldn't be a big effect!
