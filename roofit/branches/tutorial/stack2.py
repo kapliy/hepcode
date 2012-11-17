@@ -425,7 +425,7 @@ else:
     
 SuStack.QCD_SYS_SCALES = opts.metallsys
 SuStack.QCD_STAT_HACK = True           # scale ewk template so that the signal Monte-Carlo reflects the true statistics
-SuStack.QCD_EXC_ZERO_BINS = 5          # exclude from fit all bins where any of the templates or data have less than X entries
+SuStack.QCD_EXC_ZERO_BINS = 2          # exclude from fit all bins where any of the templates or data have less than X entries
 SuStack.QCD_PLOT_MODIFIED_BINS = True  # if True, we plot templates varied within poisson stats for best fit agreement
 spR.enable_all()
 # Reco-level [ntuple]
