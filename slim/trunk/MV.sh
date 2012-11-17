@@ -1,97 +1,97 @@
-mv data_periodD user.kapliy.UCNTUP.data11_7TeV.periodD.physics_Muons.PhysCont.AOD.pro10_v01.j.data.v1_29l
-mv data_periodE user.kapliy.UCNTUP.data11_7TeV.periodE.physics_Muons.PhysCont.AOD.pro10_v01.j.data.v1_29l
-mv data_periodF user.kapliy.UCNTUP.data11_7TeV.periodF.physics_Muons.PhysCont.AOD.pro10_v01.j.data.v1_29l
-mv data_periodG user.kapliy.UCNTUP.data11_7TeV.periodG.physics_Muons.PhysCont.AOD.pro10_v01.j.data.v1_29l
-mv data_periodH user.kapliy.UCNTUP.data11_7TeV.periodH.physics_Muons.PhysCont.AOD.pro10_v01.j.data.v1_29l
-mv data_periodI user.kapliy.UCNTUP.data11_7TeV.periodI.physics_Muons.PhysCont.AOD.pro10_v01.j.data.v1_29l
-mv data_periodJ user.kapliy.UCNTUP.data11_7TeV.periodJ.physics_Muons.PhysCont.AOD.pro10_v01.j.data.v1_29l
-mv data_periodK user.kapliy.UCNTUP.data11_7TeV.periodK.physics_Muons.PhysCont.AOD.pro10_v01.j.data.v1_29l
-mv data_periodL user.kapliy.UCNTUP.data11_7TeV.periodL.physics_Muons.PhysCont.AOD.pro10_v01.j.data.v1_29l
-mv data_periodM user.kapliy.UCNTUP.data11_7TeV.periodM.physics_Muons.PhysCont.AOD.pro10_v01.j.data.v1_29l
-mv mc_acer_schan_munu user.kapliy.UCNTUP.mc11_7TeV.117364.st_schan_munu_AcerMC.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_acer_schan_taunu user.kapliy.UCNTUP.mc11_7TeV.117365.st_schan_taunu_AcerMC.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_acer_tchan_munu user.kapliy.UCNTUP.mc11_7TeV.117361.st_tchan_munu_AcerMC.merge.AOD.e835_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_acer_tchan_taunu user.kapliy.UCNTUP.mc11_7TeV.117362.st_tchan_taunu_AcerMC.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_acer_wt user.kapliy.UCNTUP.mc11_7TeV.105500.AcerMC_Wt.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wgamma_np0 user.kapliy.UCNTUP.mc11_7TeV.117410.AlpgenJimmyWgammaNp0_pt20.merge.AOD.e873_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wgamma_np1 user.kapliy.UCNTUP.mc11_7TeV.117411.AlpgenJimmyWgammaNp1_pt20.merge.AOD.e873_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wgamma_np2 user.kapliy.UCNTUP.mc11_7TeV.117412.AlpgenJimmyWgammaNp2_pt20.merge.AOD.e873_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wgamma_np3 user.kapliy.UCNTUP.mc11_7TeV.117413.AlpgenJimmyWgammaNp3_pt20.merge.AOD.e873_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wgamma_np4 user.kapliy.UCNTUP.mc11_7TeV.117414.AlpgenJimmyWgammaNp4_pt20.merge.AOD.e873_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wgamma_np5 user.kapliy.UCNTUP.mc11_7TeV.117415.AlpgenJimmyWgammaNp5_pt20.merge.AOD.e873_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wmunubb_np0 user.kapliy.UCNTUP.mc11_7TeV.107280.AlpgenJimmyWbbFullNp0_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wmunubb_np1 user.kapliy.UCNTUP.mc11_7TeV.107281.AlpgenJimmyWbbFullNp1_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wmunubb_np2 user.kapliy.UCNTUP.mc11_7TeV.107282.AlpgenJimmyWbbFullNp2_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wmunubb_np3 user.kapliy.UCNTUP.mc11_7TeV.107283.AlpgenJimmyWbbFullNp3_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wmunucc_np0 user.kapliy.UCNTUP.mc11_7TeV.117284.AlpgenWccFullNp0_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wmunucc_np1 user.kapliy.UCNTUP.mc11_7TeV.117285.AlpgenWccFullNp1_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wmunucc_np2 user.kapliy.UCNTUP.mc11_7TeV.117286.AlpgenWccFullNp2_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wmunucc_np3 user.kapliy.UCNTUP.mc11_7TeV.117287.AlpgenWccFullNp3_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wmunuc_np0 user.kapliy.UCNTUP.mc11_7TeV.117293.AlpgenWcNp0_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wmunuc_np1 user.kapliy.UCNTUP.mc11_7TeV.117294.AlpgenWcNp1_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wmunuc_np2 user.kapliy.UCNTUP.mc11_7TeV.117295.AlpgenWcNp2_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wmunuc_np3 user.kapliy.UCNTUP.mc11_7TeV.117296.AlpgenWcNp3_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wmunuc_np4 user.kapliy.UCNTUP.mc11_7TeV.117297.AlpgenWcNp4_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wmunu_np0 user.kapliy.UCNTUP.mc11_7TeV.107690.AlpgenJimmyWmunuNp0_pt20.merge.AOD.e825_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wmunu_np1 user.kapliy.UCNTUP.mc11_7TeV.107691.AlpgenJimmyWmunuNp1_pt20.merge.AOD.e825_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wmunu_np2 user.kapliy.UCNTUP.mc11_7TeV.107692.AlpgenJimmyWmunuNp2_pt20.merge.AOD.e825_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wmunu_np3 user.kapliy.UCNTUP.mc11_7TeV.107693.AlpgenJimmyWmunuNp3_pt20.merge.AOD.e825_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wmunu_np4 user.kapliy.UCNTUP.mc11_7TeV.107694.AlpgenJimmyWmunuNp4_pt20.merge.AOD.e825_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wmunu_np5 user.kapliy.UCNTUP.mc11_7TeV.107695.AlpgenJimmyWmunuNp5_pt20.merge.AOD.e825_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wtaunu_np0 user.kapliy.UCNTUP.mc11_7TeV.107700.AlpgenJimmyWtaunuNp0_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wtaunu_np1 user.kapliy.UCNTUP.mc11_7TeV.107701.AlpgenJimmyWtaunuNp1_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wtaunu_np2 user.kapliy.UCNTUP.mc11_7TeV.107702.AlpgenJimmyWtaunuNp2_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wtaunu_np3 user.kapliy.UCNTUP.mc11_7TeV.107703.AlpgenJimmyWtaunuNp3_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wtaunu_np4 user.kapliy.UCNTUP.mc11_7TeV.107704.AlpgenJimmyWtaunuNp4_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_wtaunu_np5 user.kapliy.UCNTUP.mc11_7TeV.107705.AlpgenJimmyWtaunuNp5_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_zmumu_np0 user.kapliy.UCNTUP.mc11_7TeV.107660.AlpgenJimmyZmumuNp0_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_zmumu_np1 user.kapliy.UCNTUP.mc11_7TeV.107661.AlpgenJimmyZmumuNp1_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_zmumu_np2 user.kapliy.UCNTUP.mc11_7TeV.107662.AlpgenJimmyZmumuNp2_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_zmumu_np3 user.kapliy.UCNTUP.mc11_7TeV.107663.AlpgenJimmyZmumuNp3_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_zmumu_np4 user.kapliy.UCNTUP.mc11_7TeV.107664.AlpgenJimmyZmumuNp4_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_zmumu_np5 user.kapliy.UCNTUP.mc11_7TeV.107665.AlpgenJimmyZmumuNp5_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_ztautau_np0 user.kapliy.UCNTUP.mc11_7TeV.107670.AlpgenJimmyZtautauNp0_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_ztautau_np1 user.kapliy.UCNTUP.mc11_7TeV.107671.AlpgenJimmyZtautauNp1_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_ztautau_np2 user.kapliy.UCNTUP.mc11_7TeV.107672.AlpgenJimmyZtautauNp2_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_ztautau_np3 user.kapliy.UCNTUP.mc11_7TeV.107673.AlpgenJimmyZtautauNp3_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_ztautau_np4 user.kapliy.UCNTUP.mc11_7TeV.107674.AlpgenJimmyZtautauNp4_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_alpgen_herwig_ztautau_np5 user.kapliy.UCNTUP.mc11_7TeV.107675.AlpgenJimmyZtautauNp5_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_herwig_ww user.kapliy.UCNTUP.mc11_7TeV.105985.WW_Herwig.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_herwig_wz user.kapliy.UCNTUP.mc11_7TeV.105987.WZ_Herwig.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_herwig_zz user.kapliy.UCNTUP.mc11_7TeV.105986.ZZ_Herwig.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_mcnlo_schan_munu user.kapliy.UCNTUP.mc11_7TeV.108344.st_schan_munu_McAtNlo_Jimmy.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_mcnlo_schan_taunu user.kapliy.UCNTUP.mc11_7TeV.108345.st_schan_taunu_McAtNlo_Jimmy.merge.AOD.e835_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_mcnlo_tchan_munu user.kapliy.UCNTUP.mc11_7TeV.108341.st_tchan_munu_McAtNlo_Jimmy.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_mcnlo_tchan_taunu user.kapliy.UCNTUP.mc11_7TeV.108342.st_tchan_taunu_McAtNlo_Jimmy.merge.AOD.e835_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_mcnlo_ttbar user.kapliy.UCNTUP.mc11_7TeV.105200.T1_McAtNlo_Jimmy.merge.AOD.e835_s1272_s1274_r3043_r2993.j.mc11c.v1_29l
-mv mc_mcnlo_wminmunu user.kapliy.UCNTUP.mc11_7TeV.106084.McAtNloWminmunu_no_filter.merge.AOD.e878_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_mcnlo_wmintaunu user.kapliy.UCNTUP.mc11_7TeV.108329.McAtNloWmintaunu_no_filter.merge.AOD.e878_s1349_s1300_r3060_r2993.j.mc11c.v1_29l
-mv mc_mcnlo_wplusmunu user.kapliy.UCNTUP.mc11_7TeV.106083.McAtNloWplusmunu_no_filter.merge.AOD.e878_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_mcnlo_wplustaunu user.kapliy.UCNTUP.mc11_7TeV.108328.McAtNloWplustaunu_no_filter.merge.AOD.e872_s1349_s1300_r3060_r2993.j.mc11c.v1_29l
-mv mc_mcnlo_wt user.kapliy.UCNTUP.mc11_7TeV.108346.st_Wt_McAtNlo_Jimmy.merge.AOD.e835_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_mcnlo_zmumu user.kapliy.UCNTUP.mc11_7TeV.106088.McAtNloZmumu_no_filter.merge.AOD.e1096_s1372_s1370_r3043_r2993.j.mc11c.v1_29l
-mv mc_mcnlo_ztautau user.kapliy.UCNTUP.mc11_7TeV.106062.McAtNloZtautau.merge.AOD.e872_s1349_s1300_r3060_r2993.j.mc11c.v1_29l
-mv mc_powheg_herwig_dyan user.kapliy.UCNTUP.mc11_7TeV.129809.PowHegDYmuJimmy.merge.AOD.e1423_s1372_s1370_r3108_r3109.j.mc11c.v1_29l
-mv mc_powheg_herwig_wminmunu user.kapliy.UCNTUP.mc11_7TeV.113185.PowHegWminmunuJimmy.merge.AOD.e995_s1372_s1370_r3043_r2993.j.mc11c.v1_29l
-mv mc_powheg_herwig_wmintaunu user.kapliy.UCNTUP.mc11_7TeV.107394.PowHegWmintaunu_incl_Jimmy.merge.AOD.e1039_s1378_s1370_r3060_r2993.j.mc11c.v1_29l
-mv mc_powheg_herwig_wplusmunu user.kapliy.UCNTUP.mc11_7TeV.113187.PowHegWplusmunuJimmy.merge.AOD.e995_s1372_s1370_r3043_r2993.j.mc11c.v1_29l
-mv mc_powheg_herwig_zmumu user.kapliy.UCNTUP.mc11_7TeV.126007.PowHegZmuJimmy.merge.AOD.e995_s1372_s1370_r3043_r2993.j.mc11c.v1_29l
-mv mc_powheg_herwig_ztautau user.kapliy.UCNTUP.mc11_7TeV.107395.PowHegZtautau_incl_Jimmy.merge.AOD.e1039_s1378_s1370_r3060_r2993.j.mc11c.v1_29l
-mv mc_powheg_pythia_dyan user.kapliy.UCNTUP.mc11_7TeV.129807.PowHegDYmuPythia.merge.AOD.e1423_s1372_s1370_r3108_r3109.j.mc11c.v1_29l
-mv mc_powheg_pythia_wminmunu user.kapliy.UCNTUP.mc11_7TeV.108301.PowHegWminmunuPythia.merge.AOD.e825_s1372_s1370_r3043_r2993.j.mc11c.v1_29l
-mv mc_powheg_pythia_wmintaunu user.kapliy.UCNTUP.mc11_7TeV.107391.PowHegWmintaunu_incl_Pythia.merge.AOD.e1039_s1378_s1370_r3060_r2993.j.mc11c.v1_29l
-mv mc_powheg_pythia_wplusmunu user.kapliy.UCNTUP.mc11_7TeV.108298.PowHegWplusmunuPythia.merge.AOD.e825_s1372_s1370_r3043_r2993.j.mc11c.v1_29l
-mv mc_powheg_pythia_wplustaunu user.kapliy.UCNTUP.mc11_7TeV.107390.PowHegWplustaunu_incl_Pythia.merge.AOD.e1039_s1378_s1370_r3060_r2993.j.mc11c.v1_29l
-mv mc_powheg_pythia_zmumu user.kapliy.UCNTUP.mc11_7TeV.108304.PowHegZmuPythia.merge.AOD.e825_s1372_s1370_r3043_r2993.j.mc11c.v1_29l
-mv mc_powheg_pythia_ztautau user.kapliy.UCNTUP.mc11_7TeV.107392.PowHegZtautau_incl_Pythia.merge.AOD.e1039_s1378_s1370_r3060_r2993.j.mc11c.v1_29l
-mv mc_pythia_bbmu15x user.kapliy.UCNTUP.mc11_7TeV.108405.PythiaB_bbmu15X.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_pythia_ccmu15x user.kapliy.UCNTUP.mc11_7TeV.106059.PythiaB_ccmu15X.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_pythia_dyan user.kapliy.UCNTUP.mc11_7TeV.108319.PythiaDrellYan_mumu.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_pythia_wgammamunu user.kapliy.UCNTUP.mc11_7TeV.128851.MadGraphPythia_WgammaTolnumumu.merge.AOD.e970_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_pythia_wgammataunu user.kapliy.UCNTUP.mc11_7TeV.128852.MadGraphPythia_WgammaTolnutautau.merge.AOD.e970_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_pythia_wmunu user.kapliy.UCNTUP.mc11_7TeV.106044.PythiaWmunu_no_filter.merge.AOD.e815_s1272_s1274_r3043_r2993.j.mc11c.v1_29l
-mv mc_pythia_wtaunu user.kapliy.UCNTUP.mc11_7TeV.107054.PythiaWtaunu_incl.merge.AOD.e825_s1349_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_pythia_zgammamumu user.kapliy.UCNTUP.mc11_7TeV.108324.Pythia_MadGraph_Zmumugamma.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_pythia_zgammatautau user.kapliy.UCNTUP.mc11_7TeV.108325.Pythia_MadGraph_Ztautaugamma.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l
-mv mc_pythia_zmumu user.kapliy.UCNTUP.mc11_7TeV.106047.PythiaZmumu_no_filter.merge.AOD.e815_s1272_s1274_r3043_r2993.j.mc11c.v1_29l
-mv mc_pythia_ztautau user.kapliy.UCNTUP.mc11_7TeV.106052.PythiaZtautau.merge.AOD.e825_s1349_s1300_r3043_r2993.j.mc11c.v1_29l
+if [ -d data_periodD ]; then mv data_periodD user.kapliy.UCNTUP.data11_7TeV.periodD.physics_Muons.PhysCont.AOD.pro10_v01.j.data.v1_29l; else echo WARNING missing folder data_periodD; fi
+if [ -d data_periodE ]; then mv data_periodE user.kapliy.UCNTUP.data11_7TeV.periodE.physics_Muons.PhysCont.AOD.pro10_v01.j.data.v1_29l; else echo WARNING missing folder data_periodE; fi
+if [ -d data_periodF ]; then mv data_periodF user.kapliy.UCNTUP.data11_7TeV.periodF.physics_Muons.PhysCont.AOD.pro10_v01.j.data.v1_29l; else echo WARNING missing folder data_periodF; fi
+if [ -d data_periodG ]; then mv data_periodG user.kapliy.UCNTUP.data11_7TeV.periodG.physics_Muons.PhysCont.AOD.pro10_v01.j.data.v1_29l; else echo WARNING missing folder data_periodG; fi
+if [ -d data_periodH ]; then mv data_periodH user.kapliy.UCNTUP.data11_7TeV.periodH.physics_Muons.PhysCont.AOD.pro10_v01.j.data.v1_29l; else echo WARNING missing folder data_periodH; fi
+if [ -d data_periodI ]; then mv data_periodI user.kapliy.UCNTUP.data11_7TeV.periodI.physics_Muons.PhysCont.AOD.pro10_v01.j.data.v1_29l; else echo WARNING missing folder data_periodI; fi
+if [ -d data_periodJ ]; then mv data_periodJ user.kapliy.UCNTUP.data11_7TeV.periodJ.physics_Muons.PhysCont.AOD.pro10_v01.j.data.v1_29l; else echo WARNING missing folder data_periodJ; fi
+if [ -d data_periodK ]; then mv data_periodK user.kapliy.UCNTUP.data11_7TeV.periodK.physics_Muons.PhysCont.AOD.pro10_v01.j.data.v1_29l; else echo WARNING missing folder data_periodK; fi
+if [ -d data_periodL ]; then mv data_periodL user.kapliy.UCNTUP.data11_7TeV.periodL.physics_Muons.PhysCont.AOD.pro10_v01.j.data.v1_29l; else echo WARNING missing folder data_periodL; fi
+if [ -d data_periodM ]; then mv data_periodM user.kapliy.UCNTUP.data11_7TeV.periodM.physics_Muons.PhysCont.AOD.pro10_v01.j.data.v1_29l; else echo WARNING missing folder data_periodM; fi
+if [ -d mc_acer_schan_munu ]; then mv mc_acer_schan_munu user.kapliy.UCNTUP.mc11_7TeV.117364.st_schan_munu_AcerMC.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_acer_schan_munu; fi
+if [ -d mc_acer_schan_taunu ]; then mv mc_acer_schan_taunu user.kapliy.UCNTUP.mc11_7TeV.117365.st_schan_taunu_AcerMC.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_acer_schan_taunu; fi
+if [ -d mc_acer_tchan_munu ]; then mv mc_acer_tchan_munu user.kapliy.UCNTUP.mc11_7TeV.117361.st_tchan_munu_AcerMC.merge.AOD.e835_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_acer_tchan_munu; fi
+if [ -d mc_acer_tchan_taunu ]; then mv mc_acer_tchan_taunu user.kapliy.UCNTUP.mc11_7TeV.117362.st_tchan_taunu_AcerMC.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_acer_tchan_taunu; fi
+if [ -d mc_acer_wt ]; then mv mc_acer_wt user.kapliy.UCNTUP.mc11_7TeV.105500.AcerMC_Wt.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_acer_wt; fi
+if [ -d mc_alpgen_herwig_wgamma_np0 ]; then mv mc_alpgen_herwig_wgamma_np0 user.kapliy.UCNTUP.mc11_7TeV.117410.AlpgenJimmyWgammaNp0_pt20.merge.AOD.e873_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wgamma_np0; fi
+if [ -d mc_alpgen_herwig_wgamma_np1 ]; then mv mc_alpgen_herwig_wgamma_np1 user.kapliy.UCNTUP.mc11_7TeV.117411.AlpgenJimmyWgammaNp1_pt20.merge.AOD.e873_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wgamma_np1; fi
+if [ -d mc_alpgen_herwig_wgamma_np2 ]; then mv mc_alpgen_herwig_wgamma_np2 user.kapliy.UCNTUP.mc11_7TeV.117412.AlpgenJimmyWgammaNp2_pt20.merge.AOD.e873_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wgamma_np2; fi
+if [ -d mc_alpgen_herwig_wgamma_np3 ]; then mv mc_alpgen_herwig_wgamma_np3 user.kapliy.UCNTUP.mc11_7TeV.117413.AlpgenJimmyWgammaNp3_pt20.merge.AOD.e873_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wgamma_np3; fi
+if [ -d mc_alpgen_herwig_wgamma_np4 ]; then mv mc_alpgen_herwig_wgamma_np4 user.kapliy.UCNTUP.mc11_7TeV.117414.AlpgenJimmyWgammaNp4_pt20.merge.AOD.e873_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wgamma_np4; fi
+if [ -d mc_alpgen_herwig_wgamma_np5 ]; then mv mc_alpgen_herwig_wgamma_np5 user.kapliy.UCNTUP.mc11_7TeV.117415.AlpgenJimmyWgammaNp5_pt20.merge.AOD.e873_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wgamma_np5; fi
+if [ -d mc_alpgen_herwig_wmunubb_np0 ]; then mv mc_alpgen_herwig_wmunubb_np0 user.kapliy.UCNTUP.mc11_7TeV.107280.AlpgenJimmyWbbFullNp0_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wmunubb_np0; fi
+if [ -d mc_alpgen_herwig_wmunubb_np1 ]; then mv mc_alpgen_herwig_wmunubb_np1 user.kapliy.UCNTUP.mc11_7TeV.107281.AlpgenJimmyWbbFullNp1_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wmunubb_np1; fi
+if [ -d mc_alpgen_herwig_wmunubb_np2 ]; then mv mc_alpgen_herwig_wmunubb_np2 user.kapliy.UCNTUP.mc11_7TeV.107282.AlpgenJimmyWbbFullNp2_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wmunubb_np2; fi
+if [ -d mc_alpgen_herwig_wmunubb_np3 ]; then mv mc_alpgen_herwig_wmunubb_np3 user.kapliy.UCNTUP.mc11_7TeV.107283.AlpgenJimmyWbbFullNp3_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wmunubb_np3; fi
+if [ -d mc_alpgen_herwig_wmunucc_np0 ]; then mv mc_alpgen_herwig_wmunucc_np0 user.kapliy.UCNTUP.mc11_7TeV.117284.AlpgenWccFullNp0_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wmunucc_np0; fi
+if [ -d mc_alpgen_herwig_wmunucc_np1 ]; then mv mc_alpgen_herwig_wmunucc_np1 user.kapliy.UCNTUP.mc11_7TeV.117285.AlpgenWccFullNp1_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wmunucc_np1; fi
+if [ -d mc_alpgen_herwig_wmunucc_np2 ]; then mv mc_alpgen_herwig_wmunucc_np2 user.kapliy.UCNTUP.mc11_7TeV.117286.AlpgenWccFullNp2_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wmunucc_np2; fi
+if [ -d mc_alpgen_herwig_wmunucc_np3 ]; then mv mc_alpgen_herwig_wmunucc_np3 user.kapliy.UCNTUP.mc11_7TeV.117287.AlpgenWccFullNp3_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wmunucc_np3; fi
+if [ -d mc_alpgen_herwig_wmunuc_np0 ]; then mv mc_alpgen_herwig_wmunuc_np0 user.kapliy.UCNTUP.mc11_7TeV.117293.AlpgenWcNp0_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wmunuc_np0; fi
+if [ -d mc_alpgen_herwig_wmunuc_np1 ]; then mv mc_alpgen_herwig_wmunuc_np1 user.kapliy.UCNTUP.mc11_7TeV.117294.AlpgenWcNp1_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wmunuc_np1; fi
+if [ -d mc_alpgen_herwig_wmunuc_np2 ]; then mv mc_alpgen_herwig_wmunuc_np2 user.kapliy.UCNTUP.mc11_7TeV.117295.AlpgenWcNp2_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wmunuc_np2; fi
+if [ -d mc_alpgen_herwig_wmunuc_np3 ]; then mv mc_alpgen_herwig_wmunuc_np3 user.kapliy.UCNTUP.mc11_7TeV.117296.AlpgenWcNp3_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wmunuc_np3; fi
+if [ -d mc_alpgen_herwig_wmunuc_np4 ]; then mv mc_alpgen_herwig_wmunuc_np4 user.kapliy.UCNTUP.mc11_7TeV.117297.AlpgenWcNp4_pt20.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wmunuc_np4; fi
+if [ -d mc_alpgen_herwig_wmunu_np0 ]; then mv mc_alpgen_herwig_wmunu_np0 user.kapliy.UCNTUP.mc11_7TeV.107690.AlpgenJimmyWmunuNp0_pt20.merge.AOD.e825_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wmunu_np0; fi
+if [ -d mc_alpgen_herwig_wmunu_np1 ]; then mv mc_alpgen_herwig_wmunu_np1 user.kapliy.UCNTUP.mc11_7TeV.107691.AlpgenJimmyWmunuNp1_pt20.merge.AOD.e825_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wmunu_np1; fi
+if [ -d mc_alpgen_herwig_wmunu_np2 ]; then mv mc_alpgen_herwig_wmunu_np2 user.kapliy.UCNTUP.mc11_7TeV.107692.AlpgenJimmyWmunuNp2_pt20.merge.AOD.e825_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wmunu_np2; fi
+if [ -d mc_alpgen_herwig_wmunu_np3 ]; then mv mc_alpgen_herwig_wmunu_np3 user.kapliy.UCNTUP.mc11_7TeV.107693.AlpgenJimmyWmunuNp3_pt20.merge.AOD.e825_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wmunu_np3; fi
+if [ -d mc_alpgen_herwig_wmunu_np4 ]; then mv mc_alpgen_herwig_wmunu_np4 user.kapliy.UCNTUP.mc11_7TeV.107694.AlpgenJimmyWmunuNp4_pt20.merge.AOD.e825_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wmunu_np4; fi
+if [ -d mc_alpgen_herwig_wmunu_np5 ]; then mv mc_alpgen_herwig_wmunu_np5 user.kapliy.UCNTUP.mc11_7TeV.107695.AlpgenJimmyWmunuNp5_pt20.merge.AOD.e825_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wmunu_np5; fi
+if [ -d mc_alpgen_herwig_wtaunu_np0 ]; then mv mc_alpgen_herwig_wtaunu_np0 user.kapliy.UCNTUP.mc11_7TeV.107700.AlpgenJimmyWtaunuNp0_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wtaunu_np0; fi
+if [ -d mc_alpgen_herwig_wtaunu_np1 ]; then mv mc_alpgen_herwig_wtaunu_np1 user.kapliy.UCNTUP.mc11_7TeV.107701.AlpgenJimmyWtaunuNp1_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wtaunu_np1; fi
+if [ -d mc_alpgen_herwig_wtaunu_np2 ]; then mv mc_alpgen_herwig_wtaunu_np2 user.kapliy.UCNTUP.mc11_7TeV.107702.AlpgenJimmyWtaunuNp2_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wtaunu_np2; fi
+if [ -d mc_alpgen_herwig_wtaunu_np3 ]; then mv mc_alpgen_herwig_wtaunu_np3 user.kapliy.UCNTUP.mc11_7TeV.107703.AlpgenJimmyWtaunuNp3_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wtaunu_np3; fi
+if [ -d mc_alpgen_herwig_wtaunu_np4 ]; then mv mc_alpgen_herwig_wtaunu_np4 user.kapliy.UCNTUP.mc11_7TeV.107704.AlpgenJimmyWtaunuNp4_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wtaunu_np4; fi
+if [ -d mc_alpgen_herwig_wtaunu_np5 ]; then mv mc_alpgen_herwig_wtaunu_np5 user.kapliy.UCNTUP.mc11_7TeV.107705.AlpgenJimmyWtaunuNp5_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_wtaunu_np5; fi
+if [ -d mc_alpgen_herwig_zmumu_np0 ]; then mv mc_alpgen_herwig_zmumu_np0 user.kapliy.UCNTUP.mc11_7TeV.107660.AlpgenJimmyZmumuNp0_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_zmumu_np0; fi
+if [ -d mc_alpgen_herwig_zmumu_np1 ]; then mv mc_alpgen_herwig_zmumu_np1 user.kapliy.UCNTUP.mc11_7TeV.107661.AlpgenJimmyZmumuNp1_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_zmumu_np1; fi
+if [ -d mc_alpgen_herwig_zmumu_np2 ]; then mv mc_alpgen_herwig_zmumu_np2 user.kapliy.UCNTUP.mc11_7TeV.107662.AlpgenJimmyZmumuNp2_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_zmumu_np2; fi
+if [ -d mc_alpgen_herwig_zmumu_np3 ]; then mv mc_alpgen_herwig_zmumu_np3 user.kapliy.UCNTUP.mc11_7TeV.107663.AlpgenJimmyZmumuNp3_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_zmumu_np3; fi
+if [ -d mc_alpgen_herwig_zmumu_np4 ]; then mv mc_alpgen_herwig_zmumu_np4 user.kapliy.UCNTUP.mc11_7TeV.107664.AlpgenJimmyZmumuNp4_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_zmumu_np4; fi
+if [ -d mc_alpgen_herwig_zmumu_np5 ]; then mv mc_alpgen_herwig_zmumu_np5 user.kapliy.UCNTUP.mc11_7TeV.107665.AlpgenJimmyZmumuNp5_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_zmumu_np5; fi
+if [ -d mc_alpgen_herwig_ztautau_np0 ]; then mv mc_alpgen_herwig_ztautau_np0 user.kapliy.UCNTUP.mc11_7TeV.107670.AlpgenJimmyZtautauNp0_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_ztautau_np0; fi
+if [ -d mc_alpgen_herwig_ztautau_np1 ]; then mv mc_alpgen_herwig_ztautau_np1 user.kapliy.UCNTUP.mc11_7TeV.107671.AlpgenJimmyZtautauNp1_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_ztautau_np1; fi
+if [ -d mc_alpgen_herwig_ztautau_np2 ]; then mv mc_alpgen_herwig_ztautau_np2 user.kapliy.UCNTUP.mc11_7TeV.107672.AlpgenJimmyZtautauNp2_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_ztautau_np2; fi
+if [ -d mc_alpgen_herwig_ztautau_np3 ]; then mv mc_alpgen_herwig_ztautau_np3 user.kapliy.UCNTUP.mc11_7TeV.107673.AlpgenJimmyZtautauNp3_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_ztautau_np3; fi
+if [ -d mc_alpgen_herwig_ztautau_np4 ]; then mv mc_alpgen_herwig_ztautau_np4 user.kapliy.UCNTUP.mc11_7TeV.107674.AlpgenJimmyZtautauNp4_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_ztautau_np4; fi
+if [ -d mc_alpgen_herwig_ztautau_np5 ]; then mv mc_alpgen_herwig_ztautau_np5 user.kapliy.UCNTUP.mc11_7TeV.107675.AlpgenJimmyZtautauNp5_pt20.merge.AOD.e835_s1299_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_alpgen_herwig_ztautau_np5; fi
+if [ -d mc_herwig_ww ]; then mv mc_herwig_ww user.kapliy.UCNTUP.mc11_7TeV.105985.WW_Herwig.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_herwig_ww; fi
+if [ -d mc_herwig_wz ]; then mv mc_herwig_wz user.kapliy.UCNTUP.mc11_7TeV.105987.WZ_Herwig.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_herwig_wz; fi
+if [ -d mc_herwig_zz ]; then mv mc_herwig_zz user.kapliy.UCNTUP.mc11_7TeV.105986.ZZ_Herwig.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_herwig_zz; fi
+if [ -d mc_mcnlo_schan_munu ]; then mv mc_mcnlo_schan_munu user.kapliy.UCNTUP.mc11_7TeV.108344.st_schan_munu_McAtNlo_Jimmy.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_mcnlo_schan_munu; fi
+if [ -d mc_mcnlo_schan_taunu ]; then mv mc_mcnlo_schan_taunu user.kapliy.UCNTUP.mc11_7TeV.108345.st_schan_taunu_McAtNlo_Jimmy.merge.AOD.e835_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_mcnlo_schan_taunu; fi
+if [ -d mc_mcnlo_tchan_munu ]; then mv mc_mcnlo_tchan_munu user.kapliy.UCNTUP.mc11_7TeV.108341.st_tchan_munu_McAtNlo_Jimmy.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_mcnlo_tchan_munu; fi
+if [ -d mc_mcnlo_tchan_taunu ]; then mv mc_mcnlo_tchan_taunu user.kapliy.UCNTUP.mc11_7TeV.108342.st_tchan_taunu_McAtNlo_Jimmy.merge.AOD.e835_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_mcnlo_tchan_taunu; fi
+if [ -d mc_mcnlo_ttbar ]; then mv mc_mcnlo_ttbar user.kapliy.UCNTUP.mc11_7TeV.105200.T1_McAtNlo_Jimmy.merge.AOD.e835_s1272_s1274_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_mcnlo_ttbar; fi
+if [ -d mc_mcnlo_wminmunu ]; then mv mc_mcnlo_wminmunu user.kapliy.UCNTUP.mc11_7TeV.106084.McAtNloWminmunu_no_filter.merge.AOD.e878_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_mcnlo_wminmunu; fi
+if [ -d mc_mcnlo_wmintaunu ]; then mv mc_mcnlo_wmintaunu user.kapliy.UCNTUP.mc11_7TeV.108329.McAtNloWmintaunu_no_filter.merge.AOD.e878_s1349_s1300_r3060_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_mcnlo_wmintaunu; fi
+if [ -d mc_mcnlo_wplusmunu ]; then mv mc_mcnlo_wplusmunu user.kapliy.UCNTUP.mc11_7TeV.106083.McAtNloWplusmunu_no_filter.merge.AOD.e878_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_mcnlo_wplusmunu; fi
+if [ -d mc_mcnlo_wplustaunu ]; then mv mc_mcnlo_wplustaunu user.kapliy.UCNTUP.mc11_7TeV.108328.McAtNloWplustaunu_no_filter.merge.AOD.e872_s1349_s1300_r3060_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_mcnlo_wplustaunu; fi
+if [ -d mc_mcnlo_wt ]; then mv mc_mcnlo_wt user.kapliy.UCNTUP.mc11_7TeV.108346.st_Wt_McAtNlo_Jimmy.merge.AOD.e835_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_mcnlo_wt; fi
+if [ -d mc_mcnlo_zmumu ]; then mv mc_mcnlo_zmumu user.kapliy.UCNTUP.mc11_7TeV.106088.McAtNloZmumu_no_filter.merge.AOD.e1096_s1372_s1370_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_mcnlo_zmumu; fi
+if [ -d mc_mcnlo_ztautau ]; then mv mc_mcnlo_ztautau user.kapliy.UCNTUP.mc11_7TeV.106062.McAtNloZtautau.merge.AOD.e872_s1349_s1300_r3060_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_mcnlo_ztautau; fi
+if [ -d mc_powheg_herwig_dyan ]; then mv mc_powheg_herwig_dyan user.kapliy.UCNTUP.mc11_7TeV.129809.PowHegDYmuJimmy.merge.AOD.e1423_s1372_s1370_r3108_r3109.j.mc11c.v1_29l; else echo WARNING missing folder mc_powheg_herwig_dyan; fi
+if [ -d mc_powheg_herwig_wminmunu ]; then mv mc_powheg_herwig_wminmunu user.kapliy.UCNTUP.mc11_7TeV.113185.PowHegWminmunuJimmy.merge.AOD.e995_s1372_s1370_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_powheg_herwig_wminmunu; fi
+if [ -d mc_powheg_herwig_wmintaunu ]; then mv mc_powheg_herwig_wmintaunu user.kapliy.UCNTUP.mc11_7TeV.107394.PowHegWmintaunu_incl_Jimmy.merge.AOD.e1039_s1378_s1370_r3060_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_powheg_herwig_wmintaunu; fi
+if [ -d mc_powheg_herwig_wplusmunu ]; then mv mc_powheg_herwig_wplusmunu user.kapliy.UCNTUP.mc11_7TeV.113187.PowHegWplusmunuJimmy.merge.AOD.e995_s1372_s1370_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_powheg_herwig_wplusmunu; fi
+if [ -d mc_powheg_herwig_zmumu ]; then mv mc_powheg_herwig_zmumu user.kapliy.UCNTUP.mc11_7TeV.126007.PowHegZmuJimmy.merge.AOD.e995_s1372_s1370_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_powheg_herwig_zmumu; fi
+if [ -d mc_powheg_herwig_ztautau ]; then mv mc_powheg_herwig_ztautau user.kapliy.UCNTUP.mc11_7TeV.107395.PowHegZtautau_incl_Jimmy.merge.AOD.e1039_s1378_s1370_r3060_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_powheg_herwig_ztautau; fi
+if [ -d mc_powheg_pythia_dyan ]; then mv mc_powheg_pythia_dyan user.kapliy.UCNTUP.mc11_7TeV.129807.PowHegDYmuPythia.merge.AOD.e1423_s1372_s1370_r3108_r3109.j.mc11c.v1_29l; else echo WARNING missing folder mc_powheg_pythia_dyan; fi
+if [ -d mc_powheg_pythia_wminmunu ]; then mv mc_powheg_pythia_wminmunu user.kapliy.UCNTUP.mc11_7TeV.108301.PowHegWminmunuPythia.merge.AOD.e825_s1372_s1370_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_powheg_pythia_wminmunu; fi
+if [ -d mc_powheg_pythia_wmintaunu ]; then mv mc_powheg_pythia_wmintaunu user.kapliy.UCNTUP.mc11_7TeV.107391.PowHegWmintaunu_incl_Pythia.merge.AOD.e1039_s1378_s1370_r3060_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_powheg_pythia_wmintaunu; fi
+if [ -d mc_powheg_pythia_wplusmunu ]; then mv mc_powheg_pythia_wplusmunu user.kapliy.UCNTUP.mc11_7TeV.108298.PowHegWplusmunuPythia.merge.AOD.e825_s1372_s1370_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_powheg_pythia_wplusmunu; fi
+if [ -d mc_powheg_pythia_wplustaunu ]; then mv mc_powheg_pythia_wplustaunu user.kapliy.UCNTUP.mc11_7TeV.107390.PowHegWplustaunu_incl_Pythia.merge.AOD.e1039_s1378_s1370_r3060_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_powheg_pythia_wplustaunu; fi
+if [ -d mc_powheg_pythia_zmumu ]; then mv mc_powheg_pythia_zmumu user.kapliy.UCNTUP.mc11_7TeV.108304.PowHegZmuPythia.merge.AOD.e825_s1372_s1370_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_powheg_pythia_zmumu; fi
+if [ -d mc_powheg_pythia_ztautau ]; then mv mc_powheg_pythia_ztautau user.kapliy.UCNTUP.mc11_7TeV.107392.PowHegZtautau_incl_Pythia.merge.AOD.e1039_s1378_s1370_r3060_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_powheg_pythia_ztautau; fi
+if [ -d mc_pythia_bbmu15x ]; then mv mc_pythia_bbmu15x user.kapliy.UCNTUP.mc11_7TeV.108405.PythiaB_bbmu15X.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_pythia_bbmu15x; fi
+if [ -d mc_pythia_ccmu15x ]; then mv mc_pythia_ccmu15x user.kapliy.UCNTUP.mc11_7TeV.106059.PythiaB_ccmu15X.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_pythia_ccmu15x; fi
+if [ -d mc_pythia_dyan ]; then mv mc_pythia_dyan user.kapliy.UCNTUP.mc11_7TeV.108319.PythiaDrellYan_mumu.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_pythia_dyan; fi
+if [ -d mc_pythia_wgammamunu ]; then mv mc_pythia_wgammamunu user.kapliy.UCNTUP.mc11_7TeV.128851.MadGraphPythia_WgammaTolnumumu.merge.AOD.e970_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_pythia_wgammamunu; fi
+if [ -d mc_pythia_wgammataunu ]; then mv mc_pythia_wgammataunu user.kapliy.UCNTUP.mc11_7TeV.128852.MadGraphPythia_WgammaTolnutautau.merge.AOD.e970_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_pythia_wgammataunu; fi
+if [ -d mc_pythia_wmunu ]; then mv mc_pythia_wmunu user.kapliy.UCNTUP.mc11_7TeV.106044.PythiaWmunu_no_filter.merge.AOD.e815_s1272_s1274_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_pythia_wmunu; fi
+if [ -d mc_pythia_wtaunu ]; then mv mc_pythia_wtaunu user.kapliy.UCNTUP.mc11_7TeV.107054.PythiaWtaunu_incl.merge.AOD.e825_s1349_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_pythia_wtaunu; fi
+if [ -d mc_pythia_zgammamumu ]; then mv mc_pythia_zgammamumu user.kapliy.UCNTUP.mc11_7TeV.108324.Pythia_MadGraph_Zmumugamma.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_pythia_zgammamumu; fi
+if [ -d mc_pythia_zgammatautau ]; then mv mc_pythia_zgammatautau user.kapliy.UCNTUP.mc11_7TeV.108325.Pythia_MadGraph_Ztautaugamma.merge.AOD.e887_s1310_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_pythia_zgammatautau; fi
+if [ -d mc_pythia_zmumu ]; then mv mc_pythia_zmumu user.kapliy.UCNTUP.mc11_7TeV.106047.PythiaZmumu_no_filter.merge.AOD.e815_s1272_s1274_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_pythia_zmumu; fi
+if [ -d mc_pythia_ztautau ]; then mv mc_pythia_ztautau user.kapliy.UCNTUP.mc11_7TeV.106052.PythiaZtautau.merge.AOD.e825_s1349_s1300_r3043_r2993.j.mc11c.v1_29l; else echo WARNING missing folder mc_pythia_ztautau; fi

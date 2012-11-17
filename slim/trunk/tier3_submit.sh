@@ -5,7 +5,7 @@ export X509_USER_PROXY=/home/antonk/.globus/tmp.proxy
 (source /share/wlcg-client/setup.sh && voms-proxy-init -pwstdin -voms atlas -valid 999:0 -out ${X509_USER_PROXY} < /home/antonk/setup/info 2>&1)
 
 rm -f lists/*dat
-outdir=/atlas/uct3/data/users/antonk/NTUPLE/v1_29l_ptfilt
+outdir=/atlas/uct3/data/users/antonk/NTUPLE/v1_29l
 nper=10
 anadir=/home/antonk/slim
 
