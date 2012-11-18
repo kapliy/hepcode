@@ -805,7 +805,7 @@ class SuSample:
         s.files = []
         s.flags = []   #general flags
         s.table = {}   #general settings map
-        s._evcounts = ("nevts","nevts_eff","nevts_trig","nevts_efftrig","nevts_unw","nevts_mcw")
+        s._evcounts = ("nevts","nevts_unw","nevts_mcw","nevts2_vtx","nevts3_wz")
         s.seen_samples = []
         # volatile
         s.path = None  # current ntuple path
@@ -823,17 +823,12 @@ class SuSample:
         """ chooses the right nevents histogram depending on which scales were requested
         UPDATE: this should alwats be nevts - otherwise it would revert the scale correction
         """
-        return 'nevts'
-        return 'nevts_mcw' if 'nevts_mcw' in s.nevt[s.path].keys() else 'nevts_unw'
-        effw = re.search('effw',cut)
-        trigw = re.search('trigw',cut)
-        if effw and not trigw:
-            return 'nevts_eff'
-        elif trigw and not effw:
-            return 'nevts_trig'
-        elif trigw and effw:
-            return 'nevts_efftrig'
-        return 'nevts'
+        DEF1 = 'nevts_unw'  # (unweighted)
+        DEF2 = 'nevts_mcw'  # (mc)
+        DEF3 = 'nevts'      # (mc+pu)
+        DEF4 = 'nevts2_vtx' # (mc+pu+vtx) - old default
+        DEF5 = 'nevts3_wz'  # (mc+pu+vtx+wz)
+        return DEF3 # FIXME - reconsider
     def topdir(s,f):
         """ descend down the root file in case it's the output of single-file dgplot merge """
         topdir = 'dg'
