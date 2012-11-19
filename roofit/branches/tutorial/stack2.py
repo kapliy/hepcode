@@ -864,23 +864,14 @@ if mode=='prepare_qcd_1d' or mode=='prepare_qcd_2d':
     po.choose_qcd(opts.bgqcd)
     DONE = []
     # variation of ewk subtraction
-    sig=5
-    for ewk in (5,2,1):
-        po.choose_sig(sig)
-        po.choose_ewk(ewk)
-        if (sig,ewk) not in DONE:
-            po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),mode='RECREATE' if itot==0 else 'UPDATE',dname='POS_sig%d_ewk%d'%(sig,ewk)); itot+=1
-            po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_sig%d_ewk%d'%(sig,ewk));  itot+=1
-        DONE.append( (sig,ewk) )
-    # variation of signal
-    ewk=5
-    for sig in (5,4,1):
-        po.choose_sig(sig)
-        po.choose_ewk(ewk)
-        if (sig,ewk) not in DONE:
-            po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),dname='POS_sig%d_ewk%d'%(sig,ewk)); itot+=1
-            po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_sig%d_ewk%d'%(sig,ewk));  itot+=1
-        DONE.append( (sig,ewk) )
+    for sig in (5,4,2,1):
+        for ewk in (5,4,2,1):
+            po.choose_sig(sig)
+            po.choose_ewk(ewk)
+            if (sig,ewk) not in DONE:
+                po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),mode='RECREATE' if itot==0 else 'UPDATE',dname='POS_sig%d_ewk%d'%(sig,ewk)); itot+=1
+                po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_sig%d_ewk%d'%(sig,ewk));  itot+=1
+            DONE.append( (sig,ewk) )
     # variation of qcd template shape (iso-window instead of iso-reversion)
     if True:
         sig=5

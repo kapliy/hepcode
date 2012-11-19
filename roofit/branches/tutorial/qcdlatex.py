@@ -47,9 +47,13 @@ EWK.append( ['JetScaleUp','JetScaleDown'] )
 EWK.append( ['ResoSoftTermsUp_ptHard','ResoSoftTermsDown_ptHard'] )
 EWK.append( ['ScaleSoftTermsUp_ptHard','ScaleSoftTermsDown_ptHard'] )
 EWK.append( ['Nominal_ewk_xsecdown','Nominal_ewk_xsecup'] )
-EWK.append( ['Nominal_unfoldPowhegJimmy', 'Nominal_unfoldMCNLO'] )
-#TODO: substitute the following with proper PDF reweighting?
+EWK.append( ['Nominal_unfoldPowhegJimmy', 'Nominal_unfoldMCNLO'] ) # caveat: ewk=5 (same)
+#TODO: substitute the following with Powheg+Pythia with PDF reweighting?
+# or if we use alpgen, should we reweigh it to CT10 PDF?
 #EWK.append( ['Nominal_ewk_alpgen'] )
+
+# SIG systematics list. Include difference between three NLO generators? For now, just use Pythia. Also exclude EWK xsec uncertainy from Pythia
+SIG=EWK[:-2]
 
 # QCD systematics list (no need to correlate them here!)
 QCD = []
@@ -96,10 +100,11 @@ def pho(c,m):
     npho = ml - cl if ml>cl else 0
     return phox*npho + ' '
 
-def line(i,data,ewk,qcd):
+def lineXYZ(i,data,ewk,qcd):
     """
     $0.00..0.21$       & $11663 \pm 108$       & $420.7 \pm 8.4 \pm 22.0$      & $250.6 \pm 17.0 \pm 33.5$     & $0.6830 \pm 0.0069 \pm 0.0143$\\
     """
+    assert type(data) != type([]), 'Data cannot be a tuple, since it has no systematic on it!'
     low = '%.2f'%(data.GetBinLowEdge(i))
     high = '%.2f'%(data.GetBinLowEdge(i)+data.GetBinWidth(i))
     maxd = max( [data.GetBinContent(ii) for ii in xrange(1,data.GetNbinsX()+1)] )
@@ -121,9 +126,27 @@ def line(i,data,ewk,qcd):
     print '$%s'%f(qcd[0].GetBinContent(i),maxq),'\pm','%s'%f(qcd[0].GetBinError(i),maxq1),'\pm','%s$'%f(qcd[1].GetBinError(i),maxq2),
     print '\\\\'
 
-if __name__ == '__main__':
+def printDataEwkQcd():
     data = get(NDATA)
     ewk = getStatSys(NEWK,EWK)
     qcd = getStatSys(NQCD,QCD)
     for i in xrange(1,data.GetNbinsX()+1):
-        line(i,data,ewk,qcd)
+        lineXYZ(i,data,ewk,qcd)
+
+def printDataBgsubSig():
+    data = get(NDATA)
+    ewk = getStatSys(NEWK,EWK)
+    qcd = getStatSys(NQCD,QCD)
+    sig = getStatSys(NSIG,SIG)
+    bgsub = [ data.Clone('bgsub_stat') , data.Clone('bgsub_sys') ]
+    for i in xrange(2):
+        bgsub[i].Add(ewk[i],-1)
+        bgsub[i].Add(qcd[i],-1)
+    for i in xrange(1,data.GetNbinsX()+1):
+        lineXYZ(i,data,bgsub,sig)
+
+if __name__ == '__main__':
+    print '======== DATA-EWK-QCD table ========'
+    printDataEwkQcd()
+    print '======== DATA-BGSUB-SIG table ========'
+    printDataBgsubSig()

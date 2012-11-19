@@ -1692,8 +1692,10 @@ class SuStack:
         NMAP['qcd_driven'] = 'qcd'
         NMAP['qcd_driven_sub'] = 'qcd'
         NMAP['qcd_mc'] = 'qcd'
+        NMAP['sig_pythia'] = 'wmunu'
         NMAP['sig_powheg_pythia'] = 'wmunu'
         NMAP['sig_powheg_herwig'] = 'wmunu'
+        NMAP['sig_alpgen_herwig'] = 'wmunu'
         NMAP['sig_mcnlo'] = 'wmunu'
         NMAP['2011 data'] = 'data'
         # populate with data
