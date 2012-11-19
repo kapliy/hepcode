@@ -11,9 +11,11 @@ UPDATE SEP 6: it can alternatively handle 1D histograms now!
 """
 
 memo = """
-<pre>
-<U>Summary of QCD systematics in 2D bins</U>:
-</pre>
+Produced on Nov 18, but using the code from Nov07.
+Caveats: 50..120 GeV bin is NOT inclusive in this version (i.e. there are events in overflow bin beyong 120)
+         Not using the latest W+Z lineshapre reweighting tool (but using an older Z lineshape reweighting)
+Changes: UnfoldMCNLO etc variations use PowhegPythia zmumu,wtaunu,ztautau (not enough statistics otherwise)
+         (but they use MCNLO as signal template used in QCD estimate)
 """
 
 import sys,os,re,math,copy
@@ -32,6 +34,8 @@ for xsecerr in [ (0,) ]:
                 msys.append( xsecerr+bgewk+isofail+ivar )
 msys_nom = (0,5,'IsoFail20')+FITS[0]
 bgsigs = [5,4,1][:]
+memo += 'FITS: ' + str(FITS)
+memo += 'MSYS: ' + str(msys)
 
 QMAP = {0:'mu+',1:'mu-',2:'both charges'}
 QMAPN = {0:'POS',1:'NEG',2:'ALL'}
@@ -127,28 +131,36 @@ def make_total(csys,samples,cdir,prefix=None):
     Additionally, saved all components AND ewk-only AND qcd-only.
     Assumes QCD is always the last one under samples[] """
     h,g = None,None
+    assert samples[0],'Missing first ewk background (please fix or allows this error to be recoverable)'
+    assert samples[-1],'Missing qcd'
     # save subsamples
     if True:
         sdir = cdir.Get("all") if cdir.Get("all") else cdir.mkdir("all")
         sdir.cd()
-        [ h.Write( h.GetTitle() , ROOT.TObject.kOverwrite ) for h in samples ]
+        [ h.Write( h.GetTitle() , ROOT.TObject.kOverwrite)  for h in samples if h]
         sdir.Write()
         cdir.cd()
     # save ewk (all minus QCD)
     if True:
         g = samples[0].Clone('ewk_'+csys)
-        [ g.Add( sample ) for sample in samples[1:-1] ]
+        [ g.Add( sample ) for sample in samples[1:-1] if sample]
         if prefix:
             g.SetTitle('ewk_'+prefix)
         g.Write(g.GetTitle(),ROOT.TObject.kOverwrite)
-    # save totals
+    # save totals (including QCD)
     if True:
         h = samples[0].Clone('totalbg_'+csys)
         #print 'Adding:',[ sample.GetName() for sample in samples[:] ]
-        [ h.Add( sample ) for sample in samples[1:] ]
+        [ h.Add( sample ) for sample in samples[1:] if sample]
         if prefix:
             h.SetTitle('totalbg_'+prefix)
         h.Write(h.GetTitle(),ROOT.TObject.kOverwrite)
+    # save qcd
+    if True:
+        d = samples[-1].Clone('autoqcd_'+csys)
+        if prefix:
+            d.SetTitle('autoqcd_'+prefix)
+        d.Write(d.GetTitle(),ROOT.TObject.kOverwrite)
     return h,g
 
 if __name__=='__main__':
@@ -348,20 +360,26 @@ if __name__=='__main__':
                 adir.Get('data').Write('data',ROOT.TObject.kOverwrite)
                 for iqcd in (0,3,4,5,6):
                     QCD[iqcd].Write(QCD[iqcd].GetTitle(),ROOT.TObject.kOverwrite)
+                # so in principle, we should use correlated ewk here, too (i.e. mcnlo or powheg-herwig)
+                # but unfortunately there is not enough statistics. We have to use alpgen instead???
+                # or: NLO reweighted to something else?
                 adir4 = fin.Get('%s_sig4_ewk5'%QMAPN[iq]); assert adir4
                 adir1 = fin.Get('%s_sig1_ewk5'%QMAPN[iq]); assert adir1
                 for system in systems: #including Nominal
                     allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
-                    htot = make_total(system,allsamples,fout_D[iq],system)
+                    make_total(system,allsamples,fout_D[iq],system)
                     adir.Get('wmunu_'+system).Write('wmunu_PowhegPythia_'+system,ROOT.TObject.kOverwrite)
-                    adir4.Get('wmunu_'+system).Write('wmunu_PowhegHerwig_'+system,ROOT.TObject.kOverwrite)
+                    adir4.Get('wmunu_'+system).Write('wmunu_PowhegJimmy_'+system,ROOT.TObject.kOverwrite)
                     adir1.Get('wmunu_'+system).Write('wmunu_McAtNlo_'+system,ROOT.TObject.kOverwrite)
                 # manually generate nominal histograms with qcd Up/Down variations
                 system='Nominal'
                 allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[1],]
-                htot = make_total(system,allsamples,fout_D[iq],'Nominal_qcd_up')
+                make_total(system,allsamples,fout_D[iq],'Nominal_qcd_up')
                 allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[2],]
-                htot = make_total(system,allsamples,fout_D[iq],'Nominal_qcd_down')
+                make_total(system,allsamples,fout_D[iq],'Nominal_qcd_down')
+                # compatibility: aliases [TODO: handle everything automatically through make_total]
+                adir4.Get('wmunu_'+system).Write('wmunu_PowhegPythia_Nominal_unfoldPowhegJimmy',ROOT.TObject.kOverwrite)
+                adir1.Get('wmunu_'+system).Write('wmunu_PowhegPythia_Nominal_unfoldMCNLO',ROOT.TObject.kOverwrite)
                 # save QCD scale factor histogram
                 QCD[7].SetTitle('qcd_scale_factor')
                 QCD[7].Write(QCD[7].GetTitle(),ROOT.TObject.kOverwrite)
@@ -383,47 +401,53 @@ if __name__=='__main__':
                     bdir = fin.Get('%s_sig5_ewk2'%QMAPN[iq])
                     assert bdir
                     allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
-                    htot = make_total(system,allsamples,fout_D[iq],'Nominal_ewk_alpgen')
+                    make_total(system,allsamples,fout_D[iq],'Nominal_ewk_alpgen')
+                    bdir.Get('wmunu_'+system).Write('wmunu_PowhegPythia_Nominal_ewk_alpgen',ROOT.TObject.kOverwrite)
                 # generate histograms for ewkbg xsec variations
                 if True:
                     bdir = fin.Get('%s_sig5_ewk5_xsecup'%QMAPN[iq])
                     assert bdir
                     allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
-                    htot = make_total(system,allsamples,fout_D[iq],'Nominal_ewk_xsecup')
+                    make_total(system,allsamples,fout_D[iq],'Nominal_ewk_xsecup')
+                    bdir.Get('wmunu_'+system).Write('wmunu_PowhegPythia_Nominal_ewk_xsecup',ROOT.TObject.kOverwrite)
                     bdir = fin.Get('%s_sig5_ewk5_xsecdown'%QMAPN[iq])
                     assert bdir
                     allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
-                    htot = make_total(system,allsamples,fout_D[iq],'Nominal_ewk_xsecdown')
+                    make_total(system,allsamples,fout_D[iq],'Nominal_ewk_xsecdown')
+                    bdir.Get('wmunu_'+system).Write('wmunu_PowhegPythia_Nominal_ewk_xsecdown',ROOT.TObject.kOverwrite)
                 # generate histograms for MC-based BG subtraction & global normalization
                 if True:
                     bdir = fin.Get('%s_sig5_ewk5_qcdmc'%QMAPN[iq])
                     assert bdir
                     allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [bdir.Get('qcd').Clone(),]
-                    htot = make_total(system,allsamples,fout_D[iq],'Nominal_qcdmc')
+                    make_total(system,allsamples,fout_D[iq],'Nominal_qcdmc')
             # totalbg where QCD has been fit using only a particular EWK MC (to correlate QCD with unfolding)
             if True:
                 bgsig=4
                 system='Nominal'
-                allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[3],]
-                htot = make_total(system,allsamples,fout_D[iq],'Nominal_unfoldPowhegJimmy')
+                allsamples = [adir4.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[3],]
+                make_total(system,allsamples,fout_D[iq],'Nominal_unfoldPowhegJimmy')
             if True:
                 bgsig=1
                 system='Nominal'
-                allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[4],]
-                htot = make_total(system,allsamples,fout_D[iq],'Nominal_unfoldMCNLO')
+                allsamples = [adir1.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[4],]
+                make_total(system,allsamples,fout_D[iq],'Nominal_unfoldMCNLO')
             if True:
                 bgsig=5
                 system='Nominal'
                 allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[5],]
-                htot = make_total(system,allsamples,fout_D[iq],'Nominal_qcd_MCAverage')
+                make_total(system,allsamples,fout_D[iq],'Nominal_qcd_MCAverage')
             if True:
                 bgsig=5
                 system='Nominal'
                 allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[6],]
-                htot = make_total(system,allsamples,fout_D[iq],'Nominal_qcdnorm_inclusive')
+                make_total(system,allsamples,fout_D[iq],'Nominal_qcdnorm_inclusive')
             
     if fin and fin.IsOpen():
         fin.Close()
     if fout and fout.IsOpen():
+        fout.cd()
+        sout = ROOT.TObjString(memo)
+        sout.Write("memo")
         fout.Close()
     print >>f,'</BODY></HTML>'
