@@ -145,8 +145,42 @@ def printDataBgsubSig():
     for i in xrange(1,data.GetNbinsX()+1):
         lineXYZ(i,data,bgsub,sig)
 
-if __name__ == '__main__':
+def printEventComposition():
+    samples = ['data' , 'wmunu_PowhegPythia_Nominal' , 'qcd_PowhegPythia' , 'all/zmumu_Nominal' , 'all/wtaunu_Nominal' , 'all/ttbar_stop_Nominal' , 'all/ztautau_Nominal' , 'all/diboson_Nominal']
+    snames = ['Data','Signal','QCD','zmumu+DrellYan','wtaunu','ttbar+stop','ztautau','dibosons']
+    hs = [ get(sample) for sample in samples]
+    ntotal = hs[0].GetNbinsX()
+    nfirst = int(ntotal/2)
+    nsecond = ntotal - nfirst
+    for isub in (0,1):
+        nbins = nfirst if isub == 0 else nsecond
+        binloop = xrange( 1 if isub==0 else nfirst+1 , nbins+1 if isub==0 else ntotal+1)
+        print '\\begin{tabular}{%s}'%('c'*(nbins+1))
+        #/        &  0.00--0.20  &  0.20--0.40  &  0.40--0.60  &  0.60--0.80  &  1.00--1.20  \\
+        print 'Sample/$|\eta|$    ',
+        for ibin in binloop:
+            low = '%.2f'%(hs[0].GetBinLowEdge(ibin))
+            high = '%.2f'%(hs[0].GetBinLowEdge(ibin)+hs[0].GetBinWidth(ibin))
+            print '&   %s--%s   '%(low,high),
+        print '\\\\'
+        print '\hline'
+        for i,h in enumerate(hs):
+            z = [ snames[i] ]
+            for ibin in binloop:
+                z.append( '%d'%h.GetBinContent(ibin) if i==0 else '%.1f'%h.GetBinContent(ibin) )
+            print '  &  '.join(z) + '   \\\\'
+        print '\end{tabular}'
+        if isub==0:
+            print '\hrule'
+
+if __name__ == '__main__' and False:
     print '======== DATA-EWK-QCD table ========'
     printDataEwkQcd()
     print '======== DATA-BGSUB-SIG table ========'
     printDataBgsubSig()
+
+if __name__ == '__main__' and True:
+    print '======== Event composition ========'
+    printEventComposition()
+
+os._exit(0)
