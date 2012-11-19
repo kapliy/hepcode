@@ -21,30 +21,42 @@ cp -a plot_l_eta_5_stack_lepton_etav_POS.pdf $dest/stack_Wplus_eta.pdf
 input=/share/t3data3/antonk/ana/ana_v29I_11072012_unfold_stacoCB_all/
 
 bgsig=5
+bgewk=5
 cut="mcw*puw*wzptw*vxw*effw*isow*trigw"
 out="STACKNT_NOls"
 
 bgsig=5
+bgewk=5
 cut="mcw*puw*wzptw2*vxw*ls1w*ls2w*effw*isow*trigw"
 out="STACKNT_wzptSherpa"
 
 bgsig=5
+bgewk=5
 cut="mcw*puw*wzptw3*vxw*ls1w*ls2w*effw*isow*trigw"
 out="STACKNT_wzptPythia10"
 
 bgsig=5
+bgewk=5
 cut="mcw*puw*vxw*ls1w*ls2w*effw*isow*trigw"
 out="STACKNT_wzptNone"
 
 bgsig=2
+bgewk=2
 cut="mcw*puw*wzptw*vxw*ls1w*ls2w*effw*isow*trigw"
 out="STACKNT_alpgen"
 
-bgsig=2
-cut="mcw*puw*vxw*ls1w*ls2w*effw*isow*trigw"
-out="STACKNT_alpgenNoRw"
+bgsig=4
+bgewk=5
+cut="mcw*puw*wzptw*vxw*ls1w*ls2w*effw*isow*trigw"
+out="STACKNT_powhegherwig"
+
+bgsig=1
+bgewk=5
+cut="mcw*puw*wzptw*vxw*ls1w*ls2w*effw*isow*trigw"
+out="STACKNT_mcnlo"
 
 bgsig=5
+bgewk=5
 cut="mcw*puw*wzptw*vxw*ls1w*ls2w*effw*isow*trigw"
 out="STACKNT"
 
@@ -70,11 +82,11 @@ for q in 0 1; do
 	    wmt=40; if [ "$vname" == "w_mt" ]; then wmt=0; fi
 	    met=25; if [ "$vname" == "met" ]; then met=0; fi
 	    if [ "DISABLE winclusive20" == "winclusive20" ]; then
-		./stack2.py --input ${input} -b ${var} --charge ${q} -o "${out}20" -t plot_${vname}_${bgsig} --pre "ptiso40/l_pt<0.1 && met>${met} && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>${wmt} && idhits==1 && fabs(z0)<10.0 && nmuons==1" --preNN "ptiso40/l_pt<0.1 && met>${met} && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>${wmt} && idhits==1 && fabs(z0)<10.0 && nmuons==1" --preNQ "ptiso20/l_pt>0.1 && met>${met} && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>${wmt} && idhits==1 && fabs(z0)<10.0 && nmuons<2" --preFN "ptiso40/l_pt<0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --preFQ "ptiso20/l_pt>0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2" --cut "${cut}" -m one_plot_nt --bgsig ${bgsig} --bgewk ${bgsig} --bgqcd ${bgqcd} ${refline} &> LOG.XCHECK.inc20.${iz} &
+		./stack2.py --input ${input} -b ${var} --charge ${q} -o "${out}20" -t plot_${vname}_${bgsig} --pre "ptiso40/l_pt<0.1 && met>${met} && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>${wmt} && idhits==1 && fabs(z0)<10.0 && nmuons==1" --preNN "ptiso40/l_pt<0.1 && met>${met} && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>${wmt} && idhits==1 && fabs(z0)<10.0 && nmuons==1" --preNQ "ptiso20/l_pt>0.1 && met>${met} && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>${wmt} && idhits==1 && fabs(z0)<10.0 && nmuons<2" --preFN "ptiso40/l_pt<0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --preFQ "ptiso20/l_pt>0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2" --cut "${cut}" -m one_plot_nt --bgsig ${bgsig} --bgewk ${bgewk} --bgqcd ${bgqcd} ${refline} &> LOG.XCHECK.inc20.${iz} &
 		((iz++))
 	    fi
 	    if [ "winclusive25" == "winclusive25" ]; then
-		./stack2.py --input ${input} -b ${var} --charge ${q} -o "${out}25" -t plot_${vname}_${bgsig} --pre "ptiso40/l_pt<0.1 && met>${met} && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>${wmt} && idhits==1 && fabs(z0)<10.0 && nmuons==1" --preNN "ptiso40/l_pt<0.1 && met>${met} && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>${wmt} && idhits==1 && fabs(z0)<10.0 && nmuons==1" --preNQ "ptiso20/l_pt>0.1 && met>${met} && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>${wmt} && idhits==1 && fabs(z0)<10.0 && nmuons<2" --preFN "ptiso40/l_pt<0.1 && met>0.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --preFQ "ptiso20/l_pt>0.1 && met>0.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2" --cut "${cut}" -m one_plot_nt --bgsig ${bgsig} --bgewk ${bgsig} --bgqcd ${bgqcd} ${refline} &> LOG.XCHECK.inc25.${iz} &
+		./stack2.py --input ${input} -b ${var} --charge ${q} -o "${out}25" -t plot_${vname}_${bgsig} --pre "ptiso40/l_pt<0.1 && met>${met} && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>${wmt} && idhits==1 && fabs(z0)<10.0 && nmuons==1" --preNN "ptiso40/l_pt<0.1 && met>${met} && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>${wmt} && idhits==1 && fabs(z0)<10.0 && nmuons==1" --preNQ "ptiso20/l_pt>0.1 && met>${met} && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>${wmt} && idhits==1 && fabs(z0)<10.0 && nmuons<2" --preFN "ptiso40/l_pt<0.1 && met>0.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --preFQ "ptiso20/l_pt>0.1 && met>0.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2" --cut "${cut}" -m one_plot_nt --bgsig ${bgsig} --bgewk ${bgewk} --bgqcd ${bgqcd} ${refline} &> LOG.XCHECK.inc25.${iz} &
 		((iz++))
 	    fi
 	done
