@@ -1,0 +1,83 @@
+%===========================================
+%  Studying new trigger scale factors
+%===========================================
+
+\slide{}
+{
+\centering
+\Huge New $\eta-\phi$ muon trigger map
+}
+
+\slide{Effect of new $\eta-\phi$ muon trigger corrections}
+{
+\centering
+\alt<1,3>{Old corrections in $\eta-p_{T}$ only}{New corrections in $\eta-p_{T}$ x $\eta-phi$}
+
+\colb[T]
+\column{.5\textwidth}
+\centering
+Muon $\Wminus$ \alt<1,2>{$eta$}{$phi$} \\
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/trig/old_eta_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/trig/new_eta_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<3>{dates/20121119/figures/trig/old_phi_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<4>{dates/20121119/figures/trig/new_phi_NEG.pdf}
+
+\column{.5\textwidth}
+\centering
+Muon $\Wplus$ \alt<1,2>{$eta$}{$phi$} \\
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/trig/old_eta_POS.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/trig/new_eta_POS.pdf}
+\includegraphics[width=1.0\textwidth]<3>{dates/20121119/figures/trig/old_phi_POS.pdf}
+\includegraphics[width=1.0\textwidth]<4>{dates/20121119/figures/trig/new_phi_POS.pdf}
+\cole
+}
+
+%===========================================
+%  Studying reweighting and nevets
+%===========================================
+
+\slide{}
+{
+\centering
+\Huge Which nevents to use to normalize Monte-Carlo to luminosity?
+}
+
+\slide{Choosing different sum of weights for nevents}
+{
+\centering
+\only<1>{ mc (always 1.0, except for MC@NLO) }
+\only<2>{ mc x pileup }
+\only<3>{ mc x pileup x zvertex}
+\only<4>{ mc x pileup x zvertex x wpt }
+\\
+
+\colb[T]
+\column{.5\textwidth}
+\centering
+Muon $\Wminus$ \\
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/rw/w1_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/rw/w2_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<3>{dates/20121119/figures/rw/w3_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<4>{dates/20121119/figures/rw/w4_NEG.pdf}
+
+\column{.5\textwidth}
+\centering
+Muon $\Wplus$ \\
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/rw/w1_POS.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/rw/w2_POS.pdf}
+\includegraphics[width=1.0\textwidth]<3>{dates/20121119/figures/rw/w3_POS.pdf}
+\includegraphics[width=1.0\textwidth]<4>{dates/20121119/figures/rw/w4_POS.pdf}
+\cole
+}
+
+%%%%%%% Back-up slides %%%%%%%%%%
+\appendix
+\newcounter{finalframe}
+\setcounter{finalframe}{\value{framenumber}}
+
+\slide{}
+{
+
+\centering
+\Huge Back-up slides
+}
