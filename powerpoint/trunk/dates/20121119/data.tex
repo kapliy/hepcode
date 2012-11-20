@@ -5,13 +5,13 @@
 \slide{}
 {
 \centering
-\Huge New $\eta-\phi$ muon trigger map
+\large New $\eta-\phi$ muon trigger map
 }
 
 \slide{Effect of new $\eta-\phi$ muon trigger corrections}
 {
 \centering
-\alt<1,3>{Old corrections in $\eta-p_{T}$ only}{New corrections in $\eta-p_{T}$ x $\eta-phi$}
+\alt<1,3>{\purple{Old} corrections in $\eta-p_{T}$ only}{\purple{New} corrections in $\eta-p_{T}$ x $\eta-phi$}
 
 \colb[T]
 \column{.5\textwidth}
@@ -30,44 +30,178 @@ Muon $\Wplus$ \alt<1,2>{$eta$}{$phi$} \\
 \includegraphics[width=1.0\textwidth]<3>{dates/20121119/figures/trig/old_phi_POS.pdf}
 \includegraphics[width=1.0\textwidth]<4>{dates/20121119/figures/trig/new_phi_POS.pdf}
 \cole
+\only<1>{\footnotesize{Positive-negative $\eta$ appears asymmetric: even ignoring choppiness, A-side seems higher. }}
+\only<2>{\footnotesize{No obvious improvement. In fact, the \red{last eta bin} seems to have gotten worse.}}
+\only<3>{\footnotesize{A lot of structure in $\phi$. The structure is mostly charge-symmetric. }}
+\only<4>{\footnotesize{But adding the new $\phi$ corrections does not seem to make it better. Bug? }}
+}
+
+\slide{Plotting event trigger weights in signal MC }
+{
+\centering
+\alt<1,2>{Old corrections in $\eta-p_{T}$ only}{New corrections in $\eta-p_{T}$ x $\eta-phi$}
+\colb[T]
+\column{.5\textwidth}
+\centering
+Muon $\Wminus$ trigger weight \\
+\includegraphics[width=0.8\textwidth]<1>{dates/20121119/figures/trig/old_trigw_NEG.pdf}
+\includegraphics[width=0.8\textwidth]<2>{dates/20121119/figures/trig/new_trigw_NEG.pdf}
+
+\column{.5\textwidth}
+\centering
+Muon $\Wplus$ trigger weight \\
+\includegraphics[width=0.9\textwidth]<1>{dates/20121119/figures/trig/old_trigw_POS.pdf}
+\includegraphics[width=0.9\textwidth]<2>{dates/20121119/figures/trig/new_trigw_POS.pdf}
+\cole
+
+\only<1>{\footnotesize{Note that trigger scale factors reduce MC cross-section by 1.4\%.}}
+\only<2>{\footnotesize{Note a higher RMS and more smoothness due to large phase space of corrections.}}
 }
 
 %===========================================
-%  Studying reweighting and nevets
+%  Studying different definitions of nevets
 %===========================================
 
 \slide{}
 {
 \centering
-\Huge Which nevents to use to normalize Monte-Carlo to luminosity?
+\large Which nevents to use to normalize Monte-Carlo to luminosity?
 }
 
 \slide{Choosing different sum of weights for nevents}
 {
 \centering
-\only<1>{ mc (always 1.0, except for MC@NLO) }
-\only<2>{ mc x pileup }
-\only<3>{ mc x pileup x zvertex}
-\only<4>{ mc x pileup x zvertex x wpt }
+\only<1>{ weight = mc (always 1.0, except for MC@NLO) }
+\only<2>{ weight = mc x pileup }
+\only<3>{ weight = mc x pileup x zvertex}
+\only<4>{ weight = mc x pileup x zvertex x wpt }
 \\
 
 \colb[T]
 \column{.5\textwidth}
 \centering
 Muon $\Wminus$ \\
-\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/rw/w1_NEG.pdf}
-\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/rw/w2_NEG.pdf}
-\includegraphics[width=1.0\textwidth]<3>{dates/20121119/figures/rw/w3_NEG.pdf}
-\includegraphics[width=1.0\textwidth]<4>{dates/20121119/figures/rw/w4_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/nevents_dep/w2_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/nevents_dep/w3_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<3>{dates/20121119/figures/nevents_dep/w4_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<4>{dates/20121119/figures/nevents_dep/w5_NEG.pdf}
 
 \column{.5\textwidth}
 \centering
 Muon $\Wplus$ \\
-\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/rw/w1_POS.pdf}
-\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/rw/w2_POS.pdf}
-\includegraphics[width=1.0\textwidth]<3>{dates/20121119/figures/rw/w3_POS.pdf}
-\includegraphics[width=1.0\textwidth]<4>{dates/20121119/figures/rw/w4_POS.pdf}
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/nevents_dep/w2_POS.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/nevents_dep/w3_POS.pdf}
+\includegraphics[width=1.0\textwidth]<3>{dates/20121119/figures/nevents_dep/w4_POS.pdf}
+\includegraphics[width=1.0\textwidth]<4>{dates/20121119/figures/nevents_dep/w5_POS.pdf}
 \cole
+
+\centering
+\only<1>{ Pay attention to normalization as you flip through the slides. }
+\only<2>{ Pileup weight basically doesn't change anything. }
+\only<3>{ Vertex reweighting introduces a \red{0.5\% shift} in event yield.}
+\only<4>{ $\Wboson$ $p_{T}$ reweighting has a minor effect (0.1-0.2\%). }
+
+}
+
+
+%===========================================
+%  Studying validity of different reweightings
+%===========================================
+
+\slide{}
+{
+\centering
+\large Checking the effect of various reweighting tools
+}
+
+\slide{Pileup reweighting}
+{
+\centering
+\only<1>{ weight = mc (always 1.0, except for MC@NLO) }
+\only<2>{ weight = mc x pileup }
+\\
+
+\colb[T]
+\column{.5\textwidth}
+\centering
+Muon $\Wminus$ \\
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/nevents_dep/w2_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/nevents_dep/w3_NEG.pdf}
+
+\column{.5\textwidth}
+\centering
+Muon $\Wplus$ \\
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/nevents_dep/w2_POS.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/nevents_dep/w3_POS.pdf}
+\cole
+
+\centering
+\only<1>{ Pay attention to normalization as you flip through the slides. }
+\only<2>{ Pileup weight basically doesn't change anything. }
+
+}
+
+
+%===========================================
+%  Looking at W pt
+%===========================================
+
+\slide{}
+{
+\centering
+\large Lepton $p_{T}$ plots with different variations
+}
+
+\slide{Different generators and corrections}
+{
+\centering
+\only<1>{ Signal: McAtNLO. $\Wboson$ $p_{T}$       rw: PowhegPythia8MC11 }
+\only<2>{ Signal: Powheg+Herwig. $\Wboson$ $p_{T}$ rw: PowhegPythia8MC11 }
+\only<3>{ Signal: Powheg+Pythia. $\Wboson$ $p_{T}$ rw: PowhegPythia8MC11 }
+\only<4>{ Signal: Powheg+Pythia. $\Wboson$ $p_{T}$ rw: None }
+\only<5>{ Signal: Powheg+Pythia. $\Wboson$ $p_{T}$ rw: PythiaMC10 }
+\only<6>{ Signal: Powheg+Pythia. $\Wboson$ $p_{T}$ rw: Sherpa14MC11 }
+\only<7>{ Signal: Powheg+Pythia. $\Wboson$ $p_{T}$ rw: AlpgenMC11 }
+\only<8>{ Signal: Powheg+Pythia. $\Wboson$ $p_{T}$ QCD: heavy-flavor bb/cc }
+\\
+
+\colb[T]
+\column{.5\textwidth}
+\centering
+Muon $\Wminus$ \\
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/ptrw/lpt_sig1_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/ptrw/lpt_sig4_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<3>{dates/20121119/figures/ptrw/lpt_sig5_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<4>{dates/20121119/figures/ptrw/lpt_sig5_noptrw_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<5>{dates/20121119/figures/ptrw/lpt_sig5_mc10_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<6>{dates/20121119/figures/ptrw/lpt_sig5_sherpa_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<7>{dates/20121119/figures/ptrw/lpt_sig5_alpgen_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<8>{dates/20121119/figures/ptrw/lpt_mc_NEG.pdf}
+
+\column{.5\textwidth}
+\centering
+Muon $\Wplus$ \\
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/ptrw/lpt_sig1_POS.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/ptrw/lpt_sig4_POS.pdf}
+\includegraphics[width=1.0\textwidth]<3>{dates/20121119/figures/ptrw/lpt_sig5_POS.pdf}
+\includegraphics[width=1.0\textwidth]<4>{dates/20121119/figures/ptrw/lpt_sig5_noptrw_POS.pdf}
+\includegraphics[width=1.0\textwidth]<5>{dates/20121119/figures/ptrw/lpt_sig5_mc10_POS.pdf}
+\includegraphics[width=1.0\textwidth]<6>{dates/20121119/figures/ptrw/lpt_sig5_sherpa_POS.pdf}
+\includegraphics[width=1.0\textwidth]<7>{dates/20121119/figures/ptrw/lpt_sig5_alpgen_POS.pdf}
+\includegraphics[width=1.0\textwidth]<8>{dates/20121119/figures/ptrw/lpt_mc_POS.pdf}
+
+\cole
+
+}
+
+\slide{}
+{
+\iteb
+\item $\Wboson$ $p_{T}$ spectrum always shows some disagreement between Data/MC
+\item Best agreement: nominal Powheg+Pythia MC and Pythia8 $\Wboson$ $p_{T}$ reweighting target
+\item Remaining disagreements on the order of 2-3 \%, especially around the Jacobian peak
+\item Does not appear to be due to muon momentum scale based on $\Zboson$ cross-checks
+\itee
 }
 
 %%%%%%% Back-up slides %%%%%%%%%%
