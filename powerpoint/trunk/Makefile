@@ -9,7 +9,7 @@ full:
 	pdflatex  ${BASENAME}
 
 quick:
-	pdflatex  ${BASENAME}
+	pdflatex  ${BASENAME} && pdflatex  ${BASENAME}
 
 .PHONY: clean
 
