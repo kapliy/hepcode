@@ -33,7 +33,7 @@ Muon $\Wplus$ \alt<1,2>{$eta$}{$phi$} \\
 \only<1>{\footnotesize{Positive-negative $\eta$ appears asymmetric: even ignoring choppiness, A-side seems higher. }}
 \only<2>{\footnotesize{No obvious improvement. In fact, the \red{last eta bin} seems to have gotten worse.}}
 \only<3>{\footnotesize{A lot of structure in $\phi$. The structure is mostly charge-symmetric. }}
-\only<4>{\footnotesize{But adding the new $\phi$ corrections does not seem to make it better. Bug? }}
+\only<4>{\footnotesize{But adding the new $\phi$ corrections \red{does not seem to make it better}. Bug? }}
 }
 
 \slide{Plotting event trigger weights in signal MC }
@@ -54,7 +54,7 @@ Muon $\Wplus$ trigger weight \\
 \includegraphics[width=0.9\textwidth]<2>{dates/20121119/figures/trig/new_trigw_POS.pdf}
 \cole
 
-\only<1>{\footnotesize{Note that trigger scale factors reduce MC cross-section by 1.4\%.}}
+\only<1>{\footnotesize{``Choppiness'' is due to binned nature of the trigger scale factors. }}
 \only<2>{\footnotesize{Note a higher RMS and more smoothness due to large phase space of corrections.}}
 }
 
@@ -98,7 +98,7 @@ Muon $\Wplus$ \\
 \centering
 \only<1>{ Pay attention to normalization as you flip through the slides. }
 \only<2>{ Pileup weight basically doesn't change anything. }
-\only<3>{ Vertex reweighting introduces a \red{0.5\% shift} in event yield.}
+\only<3>{ Vertex reweighting introduces a \red{$>0.5\%$ shift} in event yield.}
 \only<4>{ $\Wboson$ $p_{T}$ reweighting has a minor effect (0.1-0.2\%). }
 
 }
@@ -117,30 +117,56 @@ Muon $\Wplus$ \\
 \slide{Pileup reweighting}
 {
 \centering
-\only<1>{ weight = mc (always 1.0, except for MC@NLO) }
-\only<2>{ weight = mc x pileup }
+\only<1>{ Before pileup reweighting }
+\only<2>{ After pileup reweighting }
 \\
 
 \colb[T]
 \column{.5\textwidth}
 \centering
-Muon $\Wminus$ \\
-\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/nevents_dep/w2_NEG.pdf}
-\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/nevents_dep/w3_NEG.pdf}
+\# of interactions per BCID ($<mu>$) \\
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/reweight/old_avgmu.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/reweight/new_avgmu.pdf}
 
 \column{.5\textwidth}
 \centering
-Muon $\Wplus$ \\
-\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/nevents_dep/w2_POS.pdf}
-\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/nevents_dep/w3_POS.pdf}
+\# of vertices with 3 tracks or more \\
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/reweight/old_nvtx.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/reweight/new_nvtx.pdf}
 \cole
 
 \centering
-\only<1>{ Pay attention to normalization as you flip through the slides. }
-\only<2>{ Pileup weight basically doesn't change anything. }
+\only<1>{ As expected, MC11c has a different $<mu>$ profile }
+\only<2>{ Reweighting improves it, but \red{$<mu>$ should look better}. Bug? }
 
 }
 
+\slide{$\Wboson$ $p_{T}$ and vertex $z_{0}$ reweighting}
+{
+\centering
+\only<1>{ Before reweighting }
+\only<2>{ After reweighting }
+\\
+
+\colb[T]
+\column{.5\textwidth}
+\centering
+$z_{0}$ of primary vertex \\
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/reweight/old_vxz0.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/reweight/new_vxz0.pdf}
+
+\column{.5\textwidth}
+\centering
+$\Wplus$ $p_{T}$ \\
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/reweight/old_wpt_POS.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/reweight/new_wpt_POS.pdf}
+\cole
+
+\centering
+\only<1>{ Notice a dramatically different vertex $z_{0}$ in MC11c }
+\only<2>{ Reweighting workes, as expected. }
+
+}
 
 %===========================================
 %  Looking at W pt
@@ -194,7 +220,7 @@ Muon $\Wplus$ \\
 
 }
 
-\slide{}
+\slide{Summary of Lepton $p_{T}$ plots }
 {
 \iteb
 \item $\Wboson$ $p_{T}$ spectrum always shows some disagreement between Data/MC
@@ -202,6 +228,11 @@ Muon $\Wplus$ \\
 \item Remaining disagreements on the order of 2-3 \%, especially around the Jacobian peak
 \item Does not appear to be due to muon momentum scale based on $\Zboson$ cross-checks
 \itee
+}
+
+\slide{Muon mass scale based on $\Zboson$ events}
+{
+\includegraphics[height=0.9\textheight]{dates/20121119/figures/zplots/zm_nomatch.pdf}
 }
 
 %%%%%%% Back-up slides %%%%%%%%%%
