@@ -77,6 +77,14 @@
 }
 % e.g. \mybox{3}{18}{Pythia}
 
+\AtBeginSection[]
+{
+  \begin{frame}
+    \frametitle{Outline}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
 \newcommand{\slide}[2]
 {
 \addtocounter{framenumber}{-1}
@@ -116,13 +124,13 @@
 \date{\today}
 
 \begin{document}
-{
+
 \frame{
 \titlepage
 \centering
 \red{W/Z inslusive}   \\
 }
-}
+
 
 \input{dates/20121119/data}
 
