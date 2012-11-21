@@ -75,6 +75,8 @@ int make_asymmetry() {
   H[ih]->Write();							\
   ih++
   ASYM("Nominal/Nominal_Unfolded");
+  ASYM("Nominal/Nominal_MCTruth");
+  ASYM("Nominal/Nominal_MCReco");
   ASYM("Systematic/Systematic_JetResolDown_Unfolded");
   ASYM("Systematic/Systematic_JetResolUp_Unfolded");
   ASYM("Systematic/Systematic_JetScaleDown_Unfolded");
