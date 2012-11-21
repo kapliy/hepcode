@@ -67,11 +67,12 @@ refline5=" --refline 0.941,1.059"
 
 # Wc/W selection
 bgqcd=4
+#bgqcd=0
 
 iz=0
 for q in 0 1; do
     for bgsig in $bgsig ; do
-	for var in "--var l_eta --bin 10,0.0,2.5 --hsource lepton_etav" "--var l_pt --bin 95,25,120 --hsource l_pt" "--var met --bin 100,0,100 --hsource met" "--var w_mt --bin 80,40,120 --hsource w_mt"; do
+	for var in "--var l_eta --bin 10,0.0,2.5 --hsource lepton_etav" "--var l_pt --bin 95,25,120 --hsource l_pt" "--var met --bin 100,0,100 --hsource met" "--var w_mt --bin 80,40,120 --hsource wmt" "--var w_pt --bin 120,0,120 --hsource wpt"; do
 	    echo "CHARGE $q BGSIG ${bgsig} : [${var}]"
 	    vname=`echo ${var} | awk '{print $2}'`
 	    if [ "0" == "Wc/W paper" ]; then

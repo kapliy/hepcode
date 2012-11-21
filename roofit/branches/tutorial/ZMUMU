@@ -1,0 +1,24 @@
+#!/bin/bash
+
+#input=/share/t3data3/antonk/ana/ana_v29I_11072012_unfold_stacoCB_all/
+
+#input=/share/t3data3/antonk/ana/ana_v29I_11172012_edboard_stacoCB_all
+input=/share/t3data3/antonk/ana/ana_v29I_11172012_edboard_nophi_stacoCB_all
+
+zpre='lP_pt>20.0 && fabs(lP_eta)<2.4 && lN_pt>20.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2'
+
+# Z PLOTTER
+refline=0.941,1.059
+#./stack2.py --input ${input} -b --ntuple z -q -1 --var "lP_eta" --bin 10,0.0,2.5 --hsource "lepton_etav" -o TEST -t TEST --pre "${zpre}" --cut "mcw*puw*wzptw*vxw*ls1w*ls2w*effw*isow*trigw" -m ALL --bgsig 5 --bgewk 5 --bgqcd 0 --qcdscale 1.0 --refline 0.941,1.059
+
+refline=0.971,1.029
+refline=0.991,1.039
+./stack2.py --input ${input} -b --ntuple z -q -1 --var "lP_eta" --bin 10,0.0,2.5 --hsource "leptonP_etav" -o TEST -t TEST --pre "${zpre}" --cut "mcw*puw*wzptw*vxw*ls1w*ls2w*effw*isow*trigw" -m one_plot --bgsig 5 --bgewk 5 --bgqcd 0 --qcdscale 1.0 --refline ${refline} &
+./stack2.py --input ${input} -b --ntuple z -q -1 --var "lP_eta" --bin 10,-2.5,2.5 --hsource "leptonN_etav" -o TEST -t TEST --pre "${zpre}" --cut "mcw*puw*wzptw*vxw*ls1w*ls2w*effw*isow*trigw" -m one_plot --bgsig 5 --bgewk 5 --bgqcd 0 --qcdscale 1.0 --refline ${refline} &
+
+refline=0.981,1.079
+./stack2.py --input ${input} -b --ntuple z -q -1 --var "Z_m" --bin 10,70,110 --hsource "z_m" -o TEST -t TEST --pre "${zpre}" --cut "mcw*puw*wzptw*vxw*ls1w*ls2w*effw*isow*trigw" -m one_plot --bgsig 5 --bgewk 5 --bgqcd 0 --qcdscale 1.0 --refline ${refline} &
+refline=0.901,1.099
+./stack2.py --input ${input} -b --ntuple z -q -1 --var "Z_pt" --bin 10,0,100 --hsource "z_pt" -o TEST -t TEST --pre "${zpre}" --cut "mcw*puw*wzptw*vxw*ls1w*ls2w*effw*isow*trigw" -m one_plot --bgsig 5 --bgewk 5 --bgqcd 0 --qcdscale 1.0 --refline ${refline} &
+
+echo DONE

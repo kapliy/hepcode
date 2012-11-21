@@ -20,7 +20,7 @@ class SuSys:
     def stack(s,hname,var,bin,cut,path=None,flags=['mc'],leg=None):
     def stack2(s,sysdir,subdir,basedir,charge,hname,qcd={},flags=['mc'],leg=None,unfold=None):
     """
-    QMAP = { 0 : ('/POS','POS','(l_q>0)','mu+ only'), 1 : ('/NEG','NEG','(l_q<0)','mu- only'), 2 : ('','ALL','(l_q!=0)','mu+ and mu-') }
+    QMAP = { 0 : ('/POS','POS','(l_q>0)','mu+ only'), 1 : ('/NEG','NEG','(l_q<0)','mu- only'), 2 : ('','ALL','(l_q!=0)','mu+ and mu-') , -1 : ('','None','1.0','') }
     def qlist(s,v):
         """ Assign a triplet of directory names: data,MC,QCD """
         if isinstance(v,list) or isinstance(v,tuple):
@@ -120,6 +120,10 @@ class SuSys:
                 i=1
         #isowind/st_w_final/metfit/bin_0/lpt_0/POS => #isowind/st_w_final/metfit/POS/bin_0/lpt_0
         hpath = os.path.join(s.sysdir[i],s.subdir[i],s.basedir[i]) + SuSys.QMAP[s.charge][0]
+        if hpath:
+            hpath = re.sub('//','/',hpath) # remove double slashes
+        if hpath and hpath[-1]=='/':
+            hpath = hpath[:-1]
         if re.search('/bin_',hpath) or re.search('/bine_',hpath):
             helms = hpath.split('/')
             helms2 = helms[:-3] + helms[-1:] + helms[-3:-1]
@@ -385,7 +389,7 @@ class SuPlot:
         return s.flat[0]
     def any_h(s):
         for h in s.flat:
-            if h:
+            if h.h:
                 return h
         return None
     def nominal_h(s,rebin=1.0):
@@ -791,6 +795,7 @@ class SuSample:
     For example: jimmy_wmunu_np0
     """
     GLOBAL_CACHE = 'cache/%s.root' # if None, global cache is disabled
+    nevts_histogram = None         # the name of the nevents histogram for QCD normalization (if None, use default)
     cache = None
     rootpath = None
     lumi = None
@@ -821,14 +826,16 @@ class SuSample:
         s.path = path
     def choose_evcount(s,cut):
         """ chooses the right nevents histogram depending on which scales were requested
-        UPDATE: this should alwats be nevts - otherwise it would revert the scale correction
+        info: this should alwats be nevts - otherwise it would revert the scale correction
         """
+        if SuSample.nevts_histogram!=None:
+            return SuSample.nevts_histogram
         DEF1 = 'nevts_unw'  # (unweighted)
         DEF2 = 'nevts_mcw'  # (mc)
         DEF3 = 'nevts'      # (mc+pu)
         DEF4 = 'nevts2_vtx' # (mc+pu+vtx) - old default
         DEF5 = 'nevts3_wz'  # (mc+pu+vtx+wz)
-        return DEF3 # FIXME - reconsider
+        return DEF3
     def topdir(s,f):
         """ descend down the root file in case it's the output of single-file dgplot merge """
         topdir = 'dg'
@@ -906,17 +913,14 @@ class SuSample:
             return 1.0
         from MC import mc
         mrun = mc.match_sample(s.name)
-        # This is legacy QCD scaling ( for ntuple-based analysis via renormalize() ) - thus fully DISABLED
-        # New histogram-based scaling is applied to the stack element (i.e., after summing SuSample's)
-        qcdscale = 1.0
         if mrun:
             xsec = mrun.xsec*mrun.filteff*(1.0 + SuSample.xsecerr*mrun.err)
             # Choose the right evcnt - depending on which scale factors were used (effw/trigw)
             nevents = s.nevt[s.path][evcnt]
             sample = mrun.sample
-            scale = 1.0/nevents*s.lumi*xsec*qcdscale 
+            scale = 1.0/nevents*s.lumi*xsec
             if sample not in s.seen_samples:
-                print 'MC %s: \t xsec=%.1f (%.1f*%.1f) nb \t nevts=%d scale=%.3f'%(sample,xsec,mrun.xsec,mrun.filteff,nevents,scale)
+                print 'MC %s: \t xsec=%.1f (%.1f*%.1f) nb \t nevts=%d scale=%.8f'%(sample,xsec,mrun.xsec,mrun.filteff,nevents,scale)
                 s.seen_samples.append(sample)
             return scale
         print 'WARNING: unable to find scale for MC sample ',s.name
@@ -978,6 +982,7 @@ class SuSample:
     def histo_nt(s,hname,var,bin,cut,path=None,hsource=None,rebin=1.0):
         """ retrieve a particular histogram from ntuple (with cache) """
         _HSPECIAL =  []   # special values of var and hsource
+        _HSPECIAL += [('fabs(l_eta)','lepton_absetav')]
         _HSPECIAL += [('fabs(l_eta)','lepton_absetav')]
         _HSPECIAL += [('l_eta','lepton_etav')]
         path = path if path else s.path
@@ -1578,7 +1583,7 @@ class SuStack:
     def histo(s,name,hname,d,norm=None):
         """ generic function to return histogram for a particular subsample """
         loop = [z for z in s.elm if z.name==name]
-        return s.histosum(loop,hname,d,norm)
+        return s.histosum(loop,hname,d,norm=norm)
     def asym_generic(s,method,hname,d,*args,**kwargs):
         """ Generic function that builds asymmetry for a given method """
         import SuCanvas
@@ -1609,60 +1614,60 @@ class SuStack:
             if hPOS.h and hNEG.h:
                 d.flat[i].h = SuCanvas.SuCanvas.WRatio(hPOS.h,hNEG.h)
         return d
-    def data(s,hname,d,leg=[]):
+    def data(s,hname,d,leg=[],norm=None):
         """ data summed histogram """
         loop = [e for e in s.elm if 'data' in e.flags and 'no' not in e.flags]
-        res = s.histosum(loop,hname,d)
+        res = s.histosum(loop,hname,d,norm=norm)
         leg.append( ['data','data 2011 (#sqrt{s} = 7 TeV)','LP'] )
         return res
     def asym_data(s,*args,**kwargs):
         return s.asym_generic(s.data,*args,**kwargs)
     def ratio_data(s,*args,**kwargs):
         return s.ratio_generic(s.data,*args,**kwargs)
-    def data_sub(s,hname,d):
+    def data_sub(s,hname,d,norm=None):
         """ bg-subtracted data """
         loop1 = [e for e in s.elm if 'data' in e.flags and 'no' not in e.flags]
         weights = [1.0]*len(loop1)
         loop2 = [e for e in s.elm if 'mc' in e.flags and 'sig' not in e.flags and 'no' not in e.flags]
         weights+= [-1.0]*len(loop2)
         loop = loop1 + loop2
-        res = s.histosum(loop,hname,d,weights=weights)
+        res = s.histosum(loop,hname,d,weights=weights,norm=norm)
         return res
     def asym_data_sub(s,*args,**kwargs):
         return s.asym_generic(s.data_sub,*args,**kwargs)
     def ratio_data_sub(s,*args,**kwargs):
         return s.ratio_generic(s.data_sub,*args,**kwargs)
-    def mc(s,hname,d,name=None):
+    def mc(s,hname,d,name=None,norm=None):
         """ MC summed histogram """
         if not name: # use flags to determine which MC to plot
             loop = [e for e in s.elm if 'mc' in e.flags and 'no' not in e.flags]
         else:         # manually specify what to plot
             loop = [e for e in s.elm if e.name==name]
-        return s.histosum(loop,hname,d)
+        return s.histosum(loop,hname,d,norm=norm)
     def asym_mc(s,*args,**kwargs):
         return s.asym_generic(s.mc,*args,**kwargs)
     def ratio_mc(s,*args,**kwargs):
         return s.ratio_generic(s.mc,*args,**kwargs)
-    def sig(s,hname,d):
+    def sig(s,hname,d,norm=None):
         """ signal MC summed histogram """
         loop = [e for e in s.elm if 'sig' in e.flags and 'no' not in e.flags]
-        return s.histosum(loop,hname,d)
+        return s.histosum(loop,hname,d,norm=norm)
     def asym_sig(s,*args,**kwargs):
         return s.asym_generic(s.sig,*args,**kwargs)
     def ratio_sig(s,*args,**kwargs):
         return s.ratio_generic(s.sig,*args,**kwargs)
-    def bg(s,hname,d):
+    def bg(s,hname,d,norm=None):
         """ background MC summed histogram """
         loop = [e for e in s.elm if 'mc' in e.flags and 'sig' not in e.flags and 'no' not in e.flags]
-        return s.histosum(loop,hname,d)
-    def ewk(s,hname,d):
+        return s.histosum(loop,hname,d,norm=norm)
+    def ewk(s,hname,d,norm=None):
         """ EWK background summed histogram """
         loop = [e for e in s.elm if 'ewk' in e.flags and 'no' not in e.flags]
-        return s.histosum(loop,hname,d)
-    def qcd(s,hname,d):
+        return s.histosum(loop,hname,d,norm=norm)
+    def qcd(s,hname,d,norm=None):
         """ QCD background summed histogram """
         loop = [e for e in s.elm if 'qcd' in e.flags and 'no' not in e.flags]
-        return s.histosum(loop,hname,d)
+        return s.histosum(loop,hname,d,norm=norm)
     def SaveROOT(s,fname,d,flags1=['mc'],flags2=['data'],mode='UPDATE',dname=None):
         """ Saves a collection of plots (in d) into a ROOT file """
         ELES = """
