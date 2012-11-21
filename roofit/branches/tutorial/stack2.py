@@ -26,7 +26,7 @@ parser.add_option("--var",dest="var",
                   type="string", default='met',
                   help="Variable to plot")
 parser.add_option("--bin",dest="bin",
-                  type="string", default='50,-2.5,2.5',
+                  type="string", default=None,
                   help="Binning for var")
 parser.add_option("--lvar",dest="lvar",
                   type="string", default='lY_eta',
@@ -70,6 +70,18 @@ parser.add_option("--cut",dest="cut",
 parser.add_option("--hsource",dest="hsource",
                   type="string", default='%s/st_%s_final/%s',
                   help="Template for the path to data histograms")
+parser.add_option("--nevtsh",dest="nevtsh",
+                  type="string", default=None,
+                  help="Name of nevts histogram used to normalize MC to luminosity")
+parser.add_option("--sysdir",dest="sysdir",
+                  type="string", default='Nominal', # 'Rawmet'
+                  help="Nominal/st_w_final/baseline - Nominal")
+parser.add_option("--subdir",dest="subdir",
+                  type="string", default='st_w_final',
+                  help="Nominal/st_w_final/baseline - st_w_final")
+parser.add_option("--basedir",dest="basedir",
+                  type="string", default='baseline',
+                  help="Nominal/st_w_final/baseline - baseline")
 parser.add_option("--etamode",dest="etamode",
                   type="int", default=2,
                   help="Etamode=1 : use eta bins. Etamode=2 : use |eta| bins")
@@ -122,7 +134,7 @@ parser.add_option('-v', "--verbose", default=False,
                   help="Enable verbose printouts")
 parser.add_option("-q", "--charge",dest="charge",
                   type="int", default=2,
-                  help="Which charge to plot: 0=POS, 1=NEG, 2=ALL")
+                  help="Which charge to plot: 0=POS, 1=NEG, 2=ALL, 3=BOTH, -1=NONE")
 parser.add_option("--bgqcd",dest="bgqcd",
                   type="int", default=3,
                   help="QCD: 0=Pythia bb/cc mu15X, 1=Pythia bbmu15X, 2=Pythia J0..J5, 3=data-driven, 4=data-driven with bgsub")
@@ -188,35 +200,11 @@ SuSample.rootpath = opts.input
 SuSample.debug = opts.verbose
 SuSample.lumi = opts.lumi
 SuSample.xsecerr = opts.xsecerr
+SuSample.nevts_histogram = opts.nevtsh
 SuStackElm.qcdsource = opts.qcdsource
 SuStackElm.qcdscale = opts.qcdscale
 
 from ntuple_tools import *
-def renormalize(bin='100,5,100'):
-    """ Normalizes MET template """
-    if not opts.qcdscale in ('AUTO','auto','Auto'):
-        return
-    if opts.ntuple=='z': # later: choose a good region to normalize Z QCD contribution
-        return
-    fitpre = metfitreg(opts.pre)
-    ctmp,frame,scale = run_fit(pre=fitpre,bin=bin)
-    OMAP.append(ctmp)
-    # understand why this is an inverse of fitted scale here!
-    SuSample.qcdscale = 1.0/scale
-
-def particle(h,inp=opts.input,var=opts.var,bin=opts.bin,q=opts.charge):
-    """ Uses pre-computed efficiency histogram to convert a given reco-level quantity to particle-level """
-    if opts.effroot and os.path.exists(opts.effroot):
-        f = ROOT.TFile.Open(opts.effroot,'READ')
-        assert f and f.IsOpen()
-        key_str = re.sub(r'[^\w]', '_', 'eff_%s_%s_%s_%d'%(inp,var,bin,q))
-        assert f.Get(key_str),'Failed to find key: %s'%key_str
-        heff = f.Get(key_str).Clone()
-        if heff:
-            print '---> Applying efficiency histogram to:',h.GetName()
-            h.Divide(heff)
-        f.Close()
-    return h
 
 # MC stack order
 pw,pz = [SuStack() for zz in xrange(2)]
@@ -303,13 +291,18 @@ if True:
 
 # z samples:
 if True:
-    #TOP:
-    pz.add(name='t#bar{t}',samples='mc_mcnlo_ttbar', color=ROOT.kGreen+1,flags=['bg','mc','ewk'])
-    pz.add(name='single-top',label='single-top',samples=['mc_acer_schan_munu','mc_acer_schan_taunu','mc_acer_tchan_munu','mc_acer_tchan_taunu','mc_acer_wt'],color=ROOT.kGreen+3,flags=['bg','mc','ewk'])
+    #DIBOSON:
+    pz.add(name='WW/WZ/ZZ',samples=['mc_herwig_ww','mc_herwig_wz','mc_herwig_zz'],color=ROOT.kOrange-4,flags=['bg','mc','ewk','diboson'])
     #ZTAUTAU:
     pz.adn(name='ztautau_alpgen_herwig',label='Z #rightarrow #tau#tau',samples=['mc_alpgen_herwig_ztautau_np%d'%v for v in range(6)],color=ROOT.kViolet,flags=['bg','mc','ewk','ztautau'])
     pz.adn(name='ztautau_pythia',label='Z #rightarrow #tau#tau',samples='mc_pythia_ztautau',color=ROOT.kViolet,flags=['bg','mc','ewk','ztautau'])
     pz.adn(name='ztautau_powheg_pythia',label='Z #rightarrow #tau#tau',samples='mc_powheg_pythia_ztautau',color=ROOT.kViolet,flags=['bg','mc','ewk','ztautau'])
+    #TOP:
+    if False: # separate ttbar and single top
+        pz.add(name='t#bar{t}',label='t #bar{t}',samples='mc_mcnlo_ttbar', color=ROOT.kGreen+1,flags=['bg','mc','ewk'])
+        pz.add(name='single-top',label='single top',samples=['mc_acer_schan_munu','mc_acer_schan_taunu','mc_acer_tchan_munu','mc_acer_tchan_taunu','mc_acer_wt'],color=ROOT.kGreen+3,flags=['bg','mc','ewk'])
+    else:     # combined tops
+        pz.add(name='t#bar{t}+single-top',label='t#bar{t} + single top',samples=['mc_mcnlo_ttbar','mc_acer_schan_munu','mc_acer_schan_taunu','mc_acer_tchan_munu','mc_acer_tchan_taunu','mc_acer_wt'], color=ROOT.kGreen+1,flags=['bg','mc','ewk'])
     #WTAUNU:
     pz.adn(name='wtaunu_alpgen_herwig',label='W #rightarrow #tau#nu',samples=['mc_alpgen_herwig_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow-9,flags=['bg','mc','ewk','wtaunu'])
     pz.adn(name='wtaunu_pythia',label='W #rightarrow #tau#nu',samples='mc_pythia_wtaunu',color=ROOT.kYellow-9,flags=['bg','mc','ewk','wtaunu'])
@@ -321,8 +314,6 @@ if True:
     pz.adn(name='wmumu_powheg_pythia',label='W #rightarrow #mu#nu',samples=['mc_powheg_pythia_wminmunu','mc_powheg_pythia_wplusmunu'],color=ROOT.kBlue,flags=['bg','mc','ewk','wmunu'])
     #DYAN (Zll = 15 .. 60 GeV):
     pz.add(name='dyan_pythia',label='Drell-Yan',samples='mc_pythia_dyan',color=156,flags=['bg','mc','ewk','dyan'])
-    #DIBOSON:
-    pz.add(name='WW/WZ/ZZ',samples=['mc_herwig_ww','mc_herwig_wz','mc_herwig_zz'],color=ROOT.kOrange-4,flags=['bg','mc','ewk','diboson'])
     #EWK SEL: (defaults to alpgen, wherever possible)
     if opts.bgewk==0: #pythia
         pz.choose_wtaunu(0)
@@ -385,6 +376,9 @@ for it,px in enumerate((pw,pz)):
     px.addchain(ptruth)
     px.addchain(preco)
     px.auto()
+if opts.subdir=='st_w_final' and opts.ntuple=='z':
+    print 'INFO: working on a Z ntuple with subdir=st_w_final. Changing subdir to st_z_final.'
+    opts.subdir = 'st_z_final'
 
 # select main ntuple
 po = None
@@ -399,28 +393,17 @@ if False:
     po.print_counts()
 
 gbg = []
-q = opts.charge
+q = opts.charge if opts.charge in (-1,0,1,2) else 0
 
 # Reco-level [histo]
 unfmethod = 'RooUnfoldBinByBin'
 #unfmethod = 'RooUnfoldBayes'
-tightlvl = ''
-#tightlvl = 'loose_'
-#jetlvl = 'CalJet'
-jetlvl = ''
 spR = SuPlot()
 if True:
     spR.bootstrap(do_unfold=False,
-                  unfold={'sysdir':tightlvl+'Nominal'+jetlvl,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
+                  unfold={'sysdir':opts.sysdir,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
                   charge=q,var=opts.var,histo=opts.hsource,
-                  sysdir=[tightlvl+'Nominal'+jetlvl,tightlvl+'Nominal'+jetlvl,opts.isofail+jetlvl],subdir='st_w_final',basedir='baseline',
-                  qcd={'var':'met','nbins':60,'min':0,'max':60,'metfit':'metfit','wmtfit':'wmtfit','forcenominal':False})
-else:
-    # rawmet
-    spR.bootstrap(do_unfold=False,
-                  unfold={'sysdir':tightlvl+'Rawmet'+jetlvl,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
-                  charge=q,var=opts.var,histo=opts.hsource,
-                  sysdir=[tightlvl+'Rawmet'+jetlvl,tightlvl+'Rawmet'+jetlvl,opts.isofail+jetlvl],subdir='st_w_final',basedir='baseline',
+                  sysdir=[opts.sysdir,opts.sysdir,opts.isofail],subdir=opts.subdir,basedir=opts.basedir,
                   qcd={'var':'met','nbins':60,'min':0,'max':60,'metfit':'metfit','wmtfit':'wmtfit','forcenominal':False})
     
 SuStack.QCD_SYS_SCALES = opts.metallsys
@@ -439,7 +422,7 @@ spRN.enable_nominal()
 # Truth-level [histo]
 spT= SuPlot()
 spT.bootstrap(charge=q,var=opts.var,histo=opts.hsource,
-              sysdir='truth',subdir='st_w_final',basedir='baseline')
+              sysdir='truth',subdir=opts.subdir,basedir=opts.basedir)
 spT.enable_nominal()
 # Truth-level [ntuple]
 spTN = SuPlot()
@@ -499,24 +482,26 @@ def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errors
     OMAP.append(c)
     return h[-1]
 
-def plot_stack(spR2,var,bin=None,q=2,m=0,new_scales=None,pave=False,name=''):
+def plot_stack(spR2,var,bin=None,q=2,m=0,new_scales=None,pave=False,xaxis_range=None,name=''):
     if new_scales!=None: SuStackElm.new_scales = new_scales
     spR2.update_var( var , bin )
     c = SuCanvas('stack_'+var+'_'+SuSys.QMAP[q][1]+('_'+name if name !='' else ''))
     leg = []
     hstack = po.stack('mc',spR2.clone(q=q),leg=leg)
     hdata = po.data('data',spR2.clone(q=q),leg=leg)
-    xaxis_info = LABELMAP[var] if var in LABELMAP else None
+    xaxis_info = LABELMAP[var][:] if var in LABELMAP else None
+    if xaxis_info and xaxis_range:
+        xaxis_info.append( xaxis_range )
     print 'AXIS_INFO: ',var,xaxis_info
     c.plotStack(hstack,hdata,mode=m,leg=leg,height=2.0,pave=pave,rebin=opts.rebin,xaxis_info=xaxis_info)
     OMAP.append(c)
     return hdata,hstack
 
-def plot_stacks(spR2,histos,bin=None,m=0,new_scales=None,name='',qs=(0,1,2)):
+def plot_stacks(spR2,histos,bin=None,m=0,new_scales=None,pave=False,name='',xaxis_range=None,qs=(0,1,2)):
     """ A wrapper to make multiple stack plots for variables listed in histos[] array """
     for q in qs:
         for var in histos:
-            plot_stack(spR2,var,bin=None,q=q,m=m,new_scales=new_scales,name=name)
+            plot_stack(spR2,var,bin=None,q=q,m=m,new_scales=new_scales,pave=pave,xaxis_range=xaxis_range,name=name)
 
 def test_unfolding(spR2,spT2,asym=True,name='test_unfolding'):
     """ tests unfolding on one signal monte-carlo """
@@ -642,12 +627,14 @@ def study_jet_calibration_effects():
 
 # combined plots
 if mode=='ALL' or mode=='all':
-    if True:
-        plots = ['lepton_absetav','lpt','met','wmt']
-        plots = [opts.hsource,]
-        plot_stacks(spR.clone(),plots,m=1,qs=(0,1))
     if False:
         spR.enable_nominal()
+        plots = [opts.hsource,]
+        charges = [opts.charge,]
+        if opts.charge=='BOTH':
+            charges = (0,1)
+        plot_stacks(spR.clone(),plots,m=1,qs=charges)
+    if True:
         plots = [opts.hsource,]
         plot_stacks(spRN.clone(),plots,m=1,qs=(opts.charge,))
     if False: # inclusive reco-level and truth-level asymmetry
@@ -878,7 +865,7 @@ if mode=='prepare_qcd_1d' or mode=='prepare_qcd_2d':
         ewk=5
         po.choose_sig(sig)
         po.choose_ewk(ewk)
-        sysdir_wind=[tightlvl+'Nominal'+jetlvl,tightlvl+'Nominal'+jetlvl,'IsoWind20'+jetlvl]
+        sysdir_wind=['Nominal','Nominal','IsoWind20']
         po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var,sysdir=sysdir_wind),dname='POS_sig%d_ewk%d_qcdwind'%(sig,ewk)); itot+=1
         po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var,sysdir=sysdir_wind),dname='NEG_sig%d_ewk%d_qcdwind'%(sig,ewk)); itot+=1
     # variation of qcd template shape: monte-carlo-driven template. This is automatically pre-normalized!
@@ -1275,17 +1262,50 @@ if mode=='manual':
     c.plotAny(hs,M=M)
     OMAP.append(c)
     
-if mode=='one_plot':
-    if True:
-        SuStackElm.new_scales = False
-        spR.enable_nominal()
-    plots = [opts.hsource,]
-    plot_stacks(spR.clone(),plots,m=1,qs=(0,1,2))
-
-if mode=='one_plot_nt':
+if mode in ('one_plot','one_plot_nt'):
     spR.enable_nominal()
     plots = [opts.hsource,]
-    plot_stacks(spRN.clone(),plots,m=1,qs=(opts.charge,))
+    charges = [opts.charge,]
+    if opts.charge==3:
+        charges = (0,1)
+    xaxis_range=None
+    if opts.bin and len(opts.bin.split(','))==3:
+        sbin = opts.bin.split(',')
+        xaxis_range = [float(sbin[1]),float(sbin[2])]
+    plot_stacks(spR.clone() if mode=='one_plot' else spRN.clone(),plots,m=1,xaxis_range=xaxis_range,qs=charges)
+
+if mode == 'plot_z0':
+    # plots normalized vertex z0 distributions for several Monte-Carlos
+    # also can plot nvtx and avgmu
+    do_top = opts.var=='vxz0'
+    spR.enable_nominal()
+    SuCanvas.g_lin_ratio_y_title_offset = 2.0
+    SuCanvas.g_lin_main_y_title_offset = 2.0
+    c = SuCanvas('vertex_%s'%opts.var)
+    h = []
+    h.append( po.data('h',spR.clone(),norm=True) )
+    h.append(   po.mc('h',spR.clone(),name='sig_powheg_pythia', norm=True) )
+    h.append(   po.mc('h',spR.clone(),name='zmumu_powheg_pythia', norm=True) )
+    h.append(   po.mc('h',spR.clone(),name='wtaunu_powheg_pythia', norm=True) )
+    if do_top:
+        h.append(   po.mc('h',spR.clone(),name='t#bar{t}+single-top', norm=True) )
+    h.append(   po.mc('h',spR.clone(),name='ztautau_powheg_pythia', norm=True) )
+    h.append(   po.mc('h',spR.clone(),name='WW/WZ/ZZ', norm=True) )
+    M = PlotOptions()
+    M.msize = 1.1
+    size = SuCanvas.g_marker_size
+    M.add('data','2011 data',color=1,ratio=True,size=size,style=None)
+    M.add('sig_powheg_pythia','Powheg+Pythia Wmunu',color=11,size=size,style=None)
+    M.add('zmumu_powheg_pythia','Powheg+Pythia Zmumu',color=ROOT.kRed,size=size,style=None)
+    M.add('wtaunu_powheg_pythia','Powheg+Pythia Wtaunu',color=ROOT.kYellow-9,size=size,style=None)
+    if do_top:
+        M.add('ttbar','TTbar+Single-top',color=ROOT.kGreen+1,size=size,style=None)
+    M.add('ztautau_powheg_pythia','Powheg+Pythia Ztautau',color=ROOT.kViolet,size=size,style=None)
+    M.add('dibosons','WW/WZ/ZZ',color=ROOT.kOrange-4,size=size,style=None)
+    xaxis_info = LABELMAP[opts.var] if opts.var in LABELMAP else None
+    print 'AXIS_INFO: ',opts.var,xaxis_info
+    c.plotAny(h,M=M,height=1.6,xaxis_info=xaxis_info)
+    OMAP.append(c)
 
 if mode=='qcd_bgsub':
     # studying background subtraction in data-driven qcd template
@@ -1340,118 +1360,6 @@ if mode=='control_stack_nonorm':
     SuStackElm.new_scales = False
     plots = [opts.hsource,]
     plot_stacks(spR.clone(),plots,m=1,qs=(1,))
-
-if mode=='100': # creates efficiency histogram (corrects back to particle level)
-    renormalize()
-    c = SuCanvas()
-    c.buildDefault(width=1024,height=400)
-    cc = c.cd_canvas()
-    cc.Divide(2,1)
-    cc.cd(1)
-    pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,fortruth(opts.pre))
-    htruth = po.sig('truth',opts.var,opts.bin,pre,path=path_truth)
-    pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre)
-    hreco = po.sig('reco',opts.var,opts.bin,pre,path=path_reco)
-    htruth.SetLineColor(ROOT.kBlack)
-    htruth.Draw('')
-    hreco.SetLineColor(ROOT.kRed)
-    hreco.SetLineWidth(hreco.GetLineWidth()*2)
-    hreco.Draw('A same')
-    cc.cd(2)
-    # efficiency histogram for bin-by-bin unfolding: hreco == htruth * heff
-    heff = hreco.Clone('heff')
-    heff.Divide(htruth)
-    heff.SetLineColor(ROOT.kBlack)
-    heff.Draw('')
-    # save efficiency histogram in a dedicated efficiency file
-    if opts.effroot:
-        with FileLock(opts.effroot):
-            f = ROOT.TFile.Open(opts.effroot,'UPDATE')
-            assert f and f.IsOpen()
-            f.cd()
-            key_str = re.sub(r'[^\w]', '_', 'eff_%s_%s_%s_%d'%(opts.input,opts.var,opts.bin,opts.charge))
-            heff.Write(key_str,ROOT.TObject.kOverwrite)
-            f.Close()
-
-
-if mode=='2': # signal - directly from MC, or bg-subtracted data - allow application of efficiency histogram
-    assert opts.ntuple=='w','Only w ntuple supported for now'
-    renormalize()
-    c = SuCanvas()
-    c.buildDefault(width=1024,height=400)
-    cc = c.cd_canvas()
-    cc.Divide(2,1)
-    cc.cd(1)
-    pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,fortruth(opts.pre))
-    htruth = po.sig('part_truth',opts.var,opts.bin,pre,path=path_truth)
-    htruth.SetLineColor(ROOT.kBlack)
-    hsig  = po.sig('signal',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre))
-    hsig.SetLineColor(ROOT.kRed)
-    hsig_eff = particle(hsig.Clone('signal_eff'))
-    htruth.Draw('')
-    hsig.Draw('A same')
-    if False:
-        hd_sig = po.data_sub('bgsub_data',opts.var,opts.bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,opts.pre))
-        hd_sig.SetLineColor(ROOT.kBlue)
-        hd_sig_eff = particle(hd_sig.Clone('bgsub_data_eff'))
-        hd_sig.Draw('A same')
-    if opts.effroot:
-        cc.cd(2)
-        htruth.Draw('')
-        hsig_eff.Draw('A same')
-        #hd_sig_eff.Draw('A same')
-
-if mode in ('sig_reco','sig_truth'): # compares distributions in different signal monte-carlos.
-    is_truth = (mode=='sig_truth')
-    c = SuCanvas()
-    c.buildDefault(width=1024,height=768)
-    cc = c.cd_canvas()
-    cc.cd(1)
-    h = []
-    leg = ROOT.TLegend()
-    leg.SetHeader(opts.var)
-    SuSample.unitize = True
-    for i in xrange(M.ntot()):
-        print 'Creating:',i
-        cut = opts.cut+'*'+M.cuts[i] if M.cuts[i] else opts.cut
-        pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],opts.cut,fortruth(opts.pre) if is_truth else opts.pre)
-        h.append( po.histo(M.names[i],'plot_%s_%s_%d'%(M.names[i],M.cuts[i] if M.cuts[i] else '',q),opts.var,opts.bin,pre,path=(path_truth if is_truth else path_reco)) )
-        h[-1].SetLineColor(M.colors[i])
-        h[-1].SetMarkerColor(M.colors[i])
-        h[-1].SetMarkerStyle(M.styles[i])
-        h[-1].SetMarkerSize(M.sizes[i])
-        h[-1].Draw() if i==0 else h[-1].Draw('A same')
-        leg.AddEntry(h[-1],M.labels[i],'LP')
-    maxh = max([htmp.GetMaximum() for htmp in h])*1.5
-    h[0].GetYaxis().SetRangeUser(0,maxh)
-    leg.Draw('same')
-
-if mode=='asym_truth': # asymmetry, at truth level, of different monte-carlos.
-    c = SuCanvas()
-    c.buildDefault(width=1024,height=768)
-    cc = c.cd_canvas()
-    cc.cd(1)
-    h = []
-    hasym = []
-    leg = ROOT.TLegend()
-    leg.SetHeader('Asymmetry:')
-    for i in xrange(M.ntot()):
-        h.append([None,None])
-        for q in (0,1):
-            print 'Creating:',i,q
-            cut = opts.cut+'*'+M.cuts[i] if M.cuts[i] else opts.cut
-            pre = '(%s) * (%s) * (%s)'%(QMAP[q][2],cut,fortruth(opts.pre))
-            h[i][q] = po.histo(M.names[i],'truth_%s_%s_%d'%(M.names[i],M.cuts[i] if M.cuts[i] else '',q),opts.var,opts.bin,pre,path=path_truth)
-            h[i][q].SetLineColor(M.colors[i])
-            h[i][q].SetMarkerColor(M.colors[i])
-            h[i][q].SetMarkerStyle(M.styles[i])
-            h[i][q].SetMarkerSize(M.sizes[i])
-        hasym.append(c.WAsymmetry(h[i][POS],h[i][NEG]))
-        hasym[i].Draw() if i==0 else hasym[i].Draw('A same')
-        leg.AddEntry(hasym[i],M.labels[i],'LP')
-    maxh = max([htmp.GetMaximum() for htmp in hasym])*1.5
-    hasym[0].GetYaxis().SetRangeUser(0,maxh)
-    leg.Draw('same')
 
 if mode=='matrix_2010inc': # QCD estimation using matrix method
     c = SuCanvas()
@@ -1556,7 +1464,6 @@ if mode=='matrix_2010inc': # QCD estimation using matrix method
     
 if mode in ('101','102','103'): # tag and probe
     assert opts.ntuple=='z','ERROR: tag-and-probe can only be computed for the z ntuple'
-    #renormalize()
     hda_bef = [None]*2
     hda_aft = [None]*2
     hmc_bef = [None]*2
@@ -1882,10 +1789,6 @@ if mode == '1013': # 10/13/2011: MCP group studies that do not require a Z peak 
         line.SetLineColor(ROOT.kBlack)
         line.Draw('l')
         gbg.append(line)
-
-if mode=='99': # Floating QCD normalization
-    renormalize()  # for testing - only activated when --qcd=auto
-    c,frame,scalef = run_fit(metfitreg(opts.pre),opts.var,opts.bin,opts.cut)
 
 ####################################
 ######## SAVING OUTPUT

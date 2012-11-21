@@ -148,23 +148,3 @@ def revisoreg(pre):
 def looseisoreg(pre):
     """ Loose sample needed for matrix method QCD estimation """
     return prune(pre, ('ptiso','lP_ptiso','l_ptiso','etiso','lP_etiso','lN_etiso','nmuons','l_trigEF') )
-
-def run_fit(pre,var='met',bin='100,5,100',cut='mcw*puw'):
-    """ Deprecated interface to SuFit - this has not been integrated into SuData """
-    import SuFit
-    f = SuFit.SuFit()
-    f.addFitVar( var, float(bin.split(',')[1]) , float(bin.split(',')[2]) , var );
-    # get histograms
-    hdata   = po.data('data',var,bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],cut,pre))
-    hfixed = po.ewk('bgfixed',var,bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],cut,pre))
-    hfree = po.qcd('bgfree',var,bin,'(%s) * (%s) * (%s)'%(QMAP[q][2],cut,pre))
-    assert hfixed,'Failed to find fixed backgrounds'
-    # run SuFit
-    hdata.getLegendName = lambda : 'DATA'
-    hfixed.getLegendName = lambda : 'EWK backgrounds'
-    hfree.getLegendName = lambda : 'QCD (bb/cc mu15X)'
-    f.setDataBackgrounds(hdata,hfixed,hfree)
-    f.doFit()
-    tmp = f.drawFits(pre)
-    gbg.append((f,hdata,hfixed,hfree,tmp))
-    return tmp[0],tmp[1],f.scales[0]

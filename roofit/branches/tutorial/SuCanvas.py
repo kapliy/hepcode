@@ -101,7 +101,10 @@ class SuCanvas:
         stack.GetYaxis().SetTitleSize(SuCanvas.g_text_size)
         stack.GetYaxis().SetTitleOffset(SuCanvas.g_loSuCanvas.g_main_y_title_offset if logy else SuCanvas.g_lin_main_y_title_offset);
         # avoid ticks covered by filled histograms
-        s._plotPad.RedrawAxis();
+        if noratio==False:
+            s._plotPad.RedrawAxis();
+        else:
+            s._canvas.RedrawAxis();
 
     def ConfigureAxisRatio(s,h_ratio=None):
         """ Configures the axis either for a histogram in the ratio pad """
@@ -123,7 +126,8 @@ class SuCanvas:
         s._ratioPad.RedrawAxis();
 
     def ConfigureAxis(s,stack, h_ratio=None):
-        s.ConfigureAxisMain(stack)
+        noratio = (h_ratio==None)
+        s.ConfigureAxisMain(stack,noratio)
         s.ConfigureAxisRatio(h_ratio)
 
     @staticmethod
@@ -205,11 +209,14 @@ class SuCanvas:
         obj.SetLineStyle( 2 );
         obj.SetLineWidth( 2 );
 
-    def drawRatio(s,hratio):
-        hratio.Draw("pe")
-        hratio.GetYaxis().SetNdivisions(6,0,0)
-        hratio.GetYaxis().SetRangeUser(s._refLineMin,s._refLineMax)
-        hratio.GetYaxis().SetTitle(s._ratioName)
+    def drawRatio(s,hratio,same=False):
+        if same:
+            hratio.Draw("pe A SAME")
+        else:
+            hratio.Draw("pe")
+            hratio.GetYaxis().SetNdivisions(6,0,0)
+            hratio.GetYaxis().SetRangeUser(s._refLineMin,s._refLineMax)
+            hratio.GetYaxis().SetTitle(s._ratioName)
         
     def drawRatioHash(s,ratio,hash=True,mstyle=2):
         """ Draws a ratio histogram """
@@ -483,9 +490,10 @@ class SuCanvas:
         assert s.savename
         assert type(s.savetypes)==type([]) and len(s.savetypes)>0
         return s.SaveAs(s.savetag+'_'+s.savename,s.savetypes,s.savedir)
-    def SaveAs(s,name2,exts,DIR='./'):
+    def SaveAs(s,name2,exts,DIR='./',verbose=True):
         name = s.cleanse(name2)
         c = s._canvas
+        print 'SuCanvas: saving plot %s.%s'%(name,exts[0])
         [ c.SaveAs(DIR+'%s.%s'%(name,ext)) for ext in exts ]
 
     def clear(s):
@@ -602,7 +610,7 @@ class SuCanvas:
             if xaxis_units==None:
                 hdraw.GetYaxis().SetTitle( "Entries" )
             else:
-                bin_width = hdraw().GetXaxis().GetBinWidth(1)
+                bin_width = hdraw.GetXaxis().GetBinWidth(1)
                 hdraw.GetYaxis().SetTitle( "Entries / %.1f %s" % (bin_width,xaxis_units) )
                 xaxis_label += ' [%s]'%xaxis_units
         # axis ranges
@@ -626,8 +634,11 @@ class SuCanvas:
                 hratio,href = hs[i].Clone("hratio"),hs[i].Clone("href")
                 hratio.Divide(hs[0])
                 [hratio.SetBinError(ii,0) for ii in xrange(0,hratio.GetNbinsX()+2)]
-                hdrawratio = hratio
-                s.drawRatio(hratio)
+                s.drawRatio(hratio , i!=0 )
+                if i==0:
+                    hdrawratio = hratio
+                    if xaxis_label:
+                        hratio.GetXaxis().SetTitle( xaxis_label )
                 s.data.append( (hratio,href) )
         s.ConfigureAxis(hdraw, hdrawratio)
         s.update()
@@ -666,6 +677,7 @@ class SuCanvas:
         # mc
         stack.Draw() # "HIST"
         xaxis_label = None
+        xaxis_range = None
         if xaxis_info!=None:
             assert len(xaxis_info)>=2,'Incorrect format of xaxis_info: [xaxis_label , xaxis_units , ...]'
             xaxis_label,xaxis_units = xaxis_info[0],xaxis_info[1]
@@ -675,6 +687,13 @@ class SuCanvas:
                 bin_width = stack.GetHistogram().GetXaxis().GetBinWidth(1)
                 stack.GetYaxis().SetTitle( "Entries / %.1f %s" % (bin_width,xaxis_units) )
                 xaxis_label += ' [%s]'%xaxis_units
+            if len(xaxis_info)>2:
+                xaxis_range = xaxis_info[2]
+                assert len(xaxis_range)==2
+                # convert to bin range
+                xaxis_range = [ stack.GetHistogram().FindFixBin(xaxis_range[0]) , stack.GetHistogram().FindFixBin(xaxis_range[1]) ]
+        if xaxis_range!=None:
+            stack.GetXaxis().SetRange(*xaxis_range)
         # systematics
         if mode==1 and hstack.has_systematics():
             s.htot = htot = hstack.update_errors(rebin=rebin)
@@ -717,6 +736,8 @@ class SuCanvas:
         # axis parameters
         logy = s._logy
         stack.SetMaximum(stack.GetMaximum()*10*height if logy else stack.GetMaximum()*height)
+        if xaxis_range!=None:
+            hratio.GetXaxis().SetRange(*xaxis_range)
         s.ConfigureAxis(stack, hratio)
         # fin
         s.update()
@@ -837,7 +858,7 @@ class PlotOptions:
       s.labels.append(label)
       s.colors.append( color if color else s.autocolor(len(s.cuts)) )
       s.sizes.append(size*s.msize)
-      s.styles.append(style)
+      s.styles.append( style if style else s.autostyle(len(s.cuts)) )
       s.cuts.append(cut)
       s.ratios.append(ratio)
       s.errors.append(err)
@@ -860,3 +881,10 @@ class PlotOptions:
       """ choose a reasonable sequence of colors """
       colorlist = [2,3,4,5,6,20,28,41,46]
       return colorlist[i] if i<len(colorlist) else (1 if i==11 else i)
+    @staticmethod
+    def autostyle(i):
+      """ choose a reasonable sequence of styles """
+      style = [20,21,22,23,33,34]
+      style += style
+      style += style
+      return style[i] if i<len(style) else (1 if i==11 else i)

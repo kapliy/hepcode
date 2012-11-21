@@ -1,4 +1,5 @@
-Work on qcdsys2d: automatically save qcd and ewk!!!
+Work on qcdsys2d: automatically save qcd inside make_total, too.
+Add qcd pileup term etc (two terms total) to systematics!
 
 DONE: Check Max's physics_Nominal - he does include all truth, so can be used for acceptance correction
       DONE: speed: stays the same
@@ -6,11 +7,9 @@ DONE: PDF REWEIGHTING:
       study LHA pdf reweighting via TrigFTKAna addition
 DONE: include some extra variables in unfolding to derive isFiducial on-the-fly
 DONE: implement Carl's eta/phi map for trigger efficiencies
+DONE: Implement cutflow tables by parsing OUT*root files
+DONE: slimmed ntuples fully work now. But sometimes they run super slowly, not sure why!
 
-CHECK: did slimmed ntuples work fine? Why are there still some differences?
-
-FRIDAY:
-Implement cutflow tables by parsing OUT*root files
 
 QCD FITS:
 Convert to using 3d histograms
@@ -30,6 +29,7 @@ INCLUSIVE FITS:
 
 
 BAD BIN: switch to ntuple-based studies with un-normalized bb/cc MC
+     Look at muons in Z events (use QCD heavy flavor MC)
      plot met without cutting met/wmt
      plot  pt without cutting pt
      plot wmt without cutting others
