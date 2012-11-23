@@ -1,8 +1,55 @@
 %===========================================
+%  Systematics
+%===========================================
+
+\section{ Systematics }
+\slide{ Corrected systematic uncertainties }
+{
+\centering
+A script Max and I were using to plot uncertainties had a bug \\
+(Systematics where the histogram drops below Nominal weren't shown)
+\colb[T]
+\column{.5\textwidth}
+\centering
+Muon $\Wminus$ uncertainties \\
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/unfold/old_1d_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/unfold/new_1d_NEG.pdf}
+
+\column{.5\textwidth}
+\centering
+Muon $\Wplus$ uncertainties \\
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/unfold/old_1d_POS.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/unfold/new_1d_POS.pdf}
+\cole
+
+\only<1>{\footnotesize{Some systematics are hidden under the 0\% line }}
+\only<2>{\footnotesize{All systematics are present because $|abs|$ was added }}
+}
+
+%===========================================
+%  Asymmetry and uncertainties
+%===========================================
+
+\section{ Asymmetry }
+\slide{ Systematics on asymmetry }
+{
+\centering
+$\Wboson$ charge asymmetry \\
+\includegraphics[width=0.6\textwidth]<1>{dates/20121119/figures/asym/Wmn_Unf_proj.pdf}
+\includegraphics[width=0.6\textwidth]<2>{dates/20121119/figures/asym/Wmn_unf2010_proj.pdf}
+\includegraphics[width=0.6\textwidth]<3>{dates/20121119/figures/asym/Wmn_Unc2_proj.pdf}
+
+\only<1>{\footnotesize{Compared to Powheg+Pythia }}
+\only<2>{\footnotesize{Compared to 2010 }}
+\only<3>{\footnotesize{Systematics (dominated by charge-splitting muon curvature) }}
+
+}
+
+%===========================================
 %  Studying new trigger scale factors
 %===========================================
 
-\section{ New trigger corrections }
+\section{ Trigger corrections }
 
 \slide{Effect of new $\eta-\phi$ muon trigger corrections}
 {
