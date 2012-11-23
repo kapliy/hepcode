@@ -1,0 +1,137 @@
+\documentclass[10pt]{beamer}
+\setbeamertemplate{navigation symbols}{}
+
+%===========================================
+%  Preamble
+%===========================================
+\usepackage{MnSymbol}
+\usepackage{atlasphysics}
+\usepackage{rotating}
+\usepackage{booktabs}
+\usepackage{MnSymbol} 
+\usepackage{multirow}
+\usepackage[multidot]{grffile}
+\usepackage{verbatim}
+\usepackage[absolute,overlay]{textpos}
+\TPGrid[0.5cm,0.5cm]{20}{20}
+\usetheme{Boadilla}
+\usecolortheme{rose}
+\setbeamertemplate{bibliography item}[text]
+\setbeamertemplate{section in toc}[circle]{}
+\setbeamertemplate{subsection in toc}[ball]{}
+\setbeamertemplate{itemize item}{\Large\raise0.0pt\hbox{\donotcoloroutermaths$\star$}}
+\setbeamertemplate{itemize subitem}{\tiny\raise1.25pt\hbox{\donotcoloroutermaths$\surd$}}
+\setbeamertemplate{itemize subsubitem}{\tiny\raise1.25pt\hbox{\donotcoloroutermaths$\hookrightarrow$}}
+\DefineNamedColor{named}{DarkGreen}     {cmyk}{0.704,0.197,0.946,0.483}
+\DefineNamedColor{named}{DarkGray}      {cmyk}{0.687,0.601,0.557,0.101}
+\DefineNamedColor{named}{Blue}            {cmyk}{1,1,0,0}
+\DefineNamedColor{named}{BrickRed}      {cmyk}{0,0.89,0.94,0.28}
+\DefineNamedColor{named}{Brown}         {cmyk}{0,0.81,1,0.60}
+\DefineNamedColor{named}{ForestGreen}   {cmyk}{0.91,0,0.88,0.12}
+\DefineNamedColor{named}{Purple}          {cmyk}{0.45,0.86,0,0}
+\DefineNamedColor{named}{Red}             {cmyk}{0,1,1,0}
+\DefineNamedColor{named}{Black}           {cmyk}{0,0,0,1}
+\DefineNamedColor{named}{RoyalBlue}     {cmyk}{0.939,0.754,0.001,0.003}
+\DefineNamedColor{named}{Orange}        {cmyk}{0.000,0.451,0.864,0.001}
+\newcommand{\pho}{\phantom{0}}
+\newcommand{\red}[1]{{\color{red}#1}}
+\newcommand{\blue}[1]{{\color{blue}#1}}
+\newcommand{\green}[1]{{\color{DarkGreen}#1}}
+\newcommand{\purple}[1]{{\color{Purple}#1}}
+\newcommand{\orange}[1]{{\color{Orange}#1}}
+\newcommand{\brown}[1]{{\color{Brown}#1}}
+\newcommand{\iteb}{\begin{itemize}}
+\newcommand{\itee}{\end{itemize}}
+\newcommand{\colb}{\begin{columns}}
+\newcommand{\cole}{\end{columns}}
+\newcommand{\col}[1]{\column{#1\textwidth}}
+\newcommand{\plot}[2]{\includegraphics[width=#2]{#1}}
+\renewcommand{\thefootnote}{}
+\newcommand{\link}[2]{{\color{cyan}\underline{\href{#1}{#2}}}}
+\newcommand<>{\ovspace}[1]{\only#2{\vspace{#1}}}
+\newcommand{\lumlt}[1]{$L < #1$~cm$^{-2}$s$^{-1}$}
+\newcommand{\lumgt}[1]{$L > #1$~cm$^{-2}$s$^{-1}$}
+\newcommand{\lumeq}[1]{$L = #1$~cm$^{-2}$s$^{-1}$}
+\newcommand{\lumsim}[1]{$L \sim #1$~cm$^{-2}$s$^{-1}$}
+\newcommand{\lumrange}[2]{$#1 < L < #2$~cm$^{-2}$s$^{-1}$}
+\newcommand{\intlumnb}[1]{$\mathcal{L} \sim #1$~nb$^{-1}$}
+\newcommand{\intlumpb}[1]{$\mathcal{L} \sim #1$~pb$^{-1}$}
+\newcommand{\raw}[0]{\purple{$\Rightarrow$}}
+\setbeamercolor{frametitle}{fg=red}
+\setbeamercolor{itemize/enumerate subbody}{fg=Blue,bg=white}
+\setbeamercolor{itemize subitem}{fg=Blue}
+\setbeamercolor{itemize/enumerate subsubbody}{fg=DarkGreen,bg=white}
+\setbeamercolor{itemize subsubitem}{fg=DarkGreen}
+\def\a'{\`a}
+\def\e'{\`e}
+\def\i'{\`i}
+\def\o'{\`o}
+\def\u'{\`u} 
+\newcommand{\mybox}[3]
+{
+\begin{textblock}{5}(#1,#2)
+\begin{flushleft} 
+#3%
+\end{flushleft} 
+\end{textblock}
+}
+% e.g. \mybox{3}{18}{Pythia}
+
+\AtBeginSection[]
+{
+  \begin{frame}
+    \frametitle{Outline}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+\newcommand{\slide}[2]
+{
+\addtocounter{framenumber}{-1}
+\frame{\frametitle{#1}
+\addtocounter{framenumber}{\value{beamerpauses}}
+#2
+}
+}
+
+\DeclareTextFontCommand{\helv}{\fontfamily{phv}\selectfont}
+
+%===========================================
+%  Tips and tricks
+%===========================================
+
+%%%% Font side modifiers
+%% \tiny, \scriptsize, \footnotesize, \small, \normalsize
+%% \large, \Large, \LARGE, \huge, \Huge.
+%%
+%% \iteb, \itee are shortcuts for \begin{itemize}, \end{itemize}
+%% \colb, \cole are shortcuts for \begin{column}, \end{column}
+%% \col{x.y} is a shortcut for \column{x.y\textwidth}
+%%
+
+%===========================================
+%  Title page
+%===========================================
+
+%% \title[]{$\Wboson \rightarrow \mu\nu$ status update}
+%% \author {A.~Kapliy\inst{1} \and M.~Bellomo\inst{2} }
+%% \institute {
+%% \inst{1} University of Chicago \and
+%% \inst{2} CERN
+%% }
+
+%% \date{\today}
+
+\begin{document}
+
+%% \frame{
+%% \titlepage
+%% \centering
+%% \red{W/Z inslusive}   \\
+%% }
+
+
+\input{dates/20121119/trigger}
+
+%%\setcounter{framenumber}{\value{finalframe}}
+\end{document}
