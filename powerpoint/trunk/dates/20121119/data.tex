@@ -27,6 +27,45 @@ Muon $\Wplus$ uncertainties \\
 }
 
 %===========================================
+%  Systematics (2D)
+%===========================================
+
+\slide{2D systematics: $\Wplus \rightarrow \mu^+ \nu$}
+{
+  \centering
+  \includegraphics[width=0.3\textwidth]{dates/20121119/figures/unfold/uncertainties_pos_2.pdf}
+  \includegraphics[width=0.3\textwidth]{dates/20121119/figures/unfold/uncertainties_pos_3.pdf}
+  \includegraphics[width=0.3\textwidth]{dates/20121119/figures/unfold/uncertainties_pos_4.pdf}
+  \newline
+  \centering
+  \includegraphics[width=0.3\textwidth]{dates/20121119/figures/unfold/uncertainties_pos_5.pdf}
+  \includegraphics[width=0.3\textwidth]{dates/20121119/figures/unfold/uncertainties_pos_6.pdf}
+  \includegraphics[width=0.3\textwidth]{dates/20121119/figures/unfold/uncertainties_pos_7.pdf}
+  \newline
+  \footnotesize{Notice how previously unseen \red{muon momentum systematics dominate}.}
+}
+
+\slide{2D systematics: $\Wminus \rightarrow \mu^- \nu$}
+{
+  \centering
+  \includegraphics[width=0.3\textwidth]{dates/20121119/figures/unfold/uncertainties_neg_2.pdf}
+  \includegraphics[width=0.3\textwidth]{dates/20121119/figures/unfold/uncertainties_neg_3.pdf}
+  \includegraphics[width=0.3\textwidth]{dates/20121119/figures/unfold/uncertainties_neg_4.pdf}
+  \newline
+  \centering
+  \includegraphics[width=0.3\textwidth]{dates/20121119/figures/unfold/uncertainties_neg_5.pdf}
+  \includegraphics[width=0.3\textwidth]{dates/20121119/figures/unfold/uncertainties_neg_6.pdf}
+  \includegraphics[width=0.3\textwidth]{dates/20121119/figures/unfold/uncertainties_neg_7.pdf}
+  \newline
+  \footnotesize{Notice how previously unseen \red{muon momentum systematics dominate}.}
+}
+
+
+\slide{ Comment on muon momentum systematics }
+{
+  One caveat in the above plots is that the response matrices were produced with an outdated version of MuonMomentumCorrections, where muon momentum scale and curvature systematics are (incorrectly) applied ``twice-over''. So we need to check how these plots look with the fixed version.
+}
+%===========================================
 %  Asymmetry and uncertainties
 %===========================================
 
@@ -41,7 +80,7 @@ $\Wboson$ charge asymmetry \\
 
 \only<1>{\footnotesize{Compared to Powheg+Pythia }}
 \only<2>{\footnotesize{Compared to 2010 }}
-\only<3>{\footnotesize{Systematics (dominated by charge-splitting muon curvature) }}
+\only<3>{\footnotesize{Systematics (dominated by charge-splitting muon curvature, as expected) }}
 
 }
 
@@ -204,9 +243,40 @@ $\Wplus$ $p_{T}$ \\
 }
 
 %===========================================
+%  Discussion
+%===========================================
+\section{ Discussion }
+\slide{ Additional open items }
+{
+  \iteb
+\item What do we do about trigger efficiency corrections?
+\iteb
+\item Problem with phi corrections?
+\item What about systematics? Via statistical errors in provided histograms?
+\itee
+\item Do we include vertex weights in nevents?
+\item Problem with pileup reweighting?
+\item Does muon momentum scale need more attention?
+  \itee
+}
+
+%%%%%%% Back-up slides %%%%%%%%%%
+\appendix
+\newcounter{finalframe}
+\setcounter{finalframe}{\value{framenumber}}
+
+\slide{}
+{
+
+\centering
+\Huge Back-up slides
+}
+
+
+%===========================================
 %  Looking at W pt
 %===========================================
-\section{ W pT reweighting }
+\subsection{ W pT reweighting }
 
 \slide{Different generators and corrections}
 {
@@ -265,27 +335,4 @@ Looking at muon $p_{T}$ under different $\Wboson$ $p_{T}$ reweighting targets.
 \slide{Muon mass scale based on $\Zboson$ events}
 {
 \includegraphics[height=0.9\textheight]{dates/20121119/figures/zplots/zm_nomatch.pdf}
-}
-
-%===========================================
-%  Looking at W pt
-%===========================================
-\section{ Discussion }
-\slide{ Additional open items }
-{
-  \iteb
-  \item How do we apply trigger systematics? Are the statistical errors in histograms correct?
-  \itee
-}
-
-%%%%%%% Back-up slides %%%%%%%%%%
-\appendix
-\newcounter{finalframe}
-\setcounter{finalframe}{\value{framenumber}}
-
-\slide{}
-{
-
-\centering
-\Huge Back-up slides
 }
