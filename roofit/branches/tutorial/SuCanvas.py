@@ -87,7 +87,7 @@ class SuCanvas:
     def ConfigureAxisMain(s,stack,noratio=False):
         """ Configures the axis either for a stack or a histogram in the main pad """
         logy = s._logy
-        stack.SetMinimum(1 if logy else 0)
+        #stack.SetMinimum(1 if logy else 0) #CAREFUL: this was here before nov 22 2012
         obj = stack.GetHistogram() if stack.InheritsFrom('THStack') else stack
         obj.GetXaxis().SetLabelFont(SuCanvas.g_text_font)
         obj.GetXaxis().SetLabelSize(SuCanvas.g_text_size)
@@ -489,7 +489,8 @@ class SuCanvas:
         assert s.savedir
         assert s.savename
         assert type(s.savetypes)==type([]) and len(s.savetypes)>0
-        return s.SaveAs(s.savetag+'_'+s.savename,s.savetypes,s.savedir)
+        savetag = s.savetag+'_' if s.savetag!='' else ''
+        return s.SaveAs(savetag+s.savename,s.savetypes,s.savedir)
     def SaveAs(s,name2,exts,DIR='./',verbose=True):
         name = s.cleanse(name2)
         c = s._canvas
@@ -573,7 +574,13 @@ class SuCanvas:
         hs = []
         hdraw = None
         for i,hplot in enumerate(hplots):
-            h0 = hplot.nominal_stack(rebin).GetStack().Last() if hplot.nominal().stack else hplot.nominal_h(rebin)
+            if hasattr(hplot,'nominal'):
+                h0 = hplot.nominal_stack(rebin).GetStack().Last() if hplot.nominal().stack else hplot.nominal_h(rebin)
+            else:
+                h0 = hplot.Clone(hplot.GetName()+'_reb')
+                h0.has_systematics = lambda : False
+                if rebin!=1.0:
+                    h0.Rebin(int(rebin))
             htot = None
             assert h0
             # total error (including systematics)
@@ -615,7 +622,9 @@ class SuCanvas:
                 xaxis_label += ' [%s]'%xaxis_units
         # axis ranges
         maxh = max([h.GetMaximum() for h in hs])
-        if height=='asym':
+        if type(height)==type([]):
+            hs[0].GetYaxis().SetRangeUser(height[0],height[1]);
+        elif height=='asym':
             hs[0].GetYaxis().SetRangeUser(0,0.5);
         elif height=='ratio':
             hs[0].GetYaxis().SetRangeUser(0,2.0);
