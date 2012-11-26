@@ -32,18 +32,19 @@ fi
 
 cd ${LHAINST}
 ./configure --prefix=${LHALOC} --disable-octave --disable-doxygen --disable-pyext --disable-old-ccwrap --disable-lhaglue --with-max-num-pdfsets=${LHANMAX} ${PDFSETS} ${LOWMEM}
-ret=?
-cd ../
+ret="$?"
 
 if [ ! "${ret}" == "0" ]; then
-    echo "ERROR: configure script failed"
+    echo "ERROR: configure script failed with error code: [${ret}]"
+    cd ../
     exit 3
 fi
 
 rm -rf ${LHALOC}
 make clean && make -j20 && make install
-
 ret=$?
+
+cd ../
 if [ "${ret}" -ne "0" ]; then
     echo "ERROR: make failed"
     exit 4
