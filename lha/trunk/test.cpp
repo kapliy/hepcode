@@ -2,9 +2,14 @@
 #include <PDFReweightTool.hpp>
 
 int main() {
-  const std::string LHAPATH = "/share/ftkdata/software/pdfsets";
   PDFReweightTool *rw = new PDFReweightTool();
-  rw->SetLHAPATH(LHAPATH);
+  if(false) {
+    const std::string LHAPATH = "/share/ftkdata/software/pdfsets";
+    std::cout << "Using custom $LHAPATH: " << LHAPATH << std::endl;
+    rw->SetLHAPATH(LHAPATH);
+  } else {
+    std::cout << "Taking $LHAPATH from athena" << std::endl;
+  }
   rw->AddPDFSet(10800,"CT10.LHgrid");
   rw->AddPDFSet(21100,"MSTW2008nlo68cl.LHgrid");
   rw->AddPDFSet(192800,"NNPDF21_100.LHgrid");
