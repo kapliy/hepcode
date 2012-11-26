@@ -1,0 +1,53 @@
+---------------------------------------------------
+STEP 1: SET UP ENVIRONMENT (GCC, ROOT, FORTRAN)
+---------------------------------------------------
+The easiest way to accomplish this is to set up a recent version of athena.
+I tested with 17.0.6 and 17.6.0, and confirmed that it works both in 32 and 64 bits.
+Another benefit of using athena is that it will set for you an $LHAPATH environmental variable,
+which contains a few commonly used PDF sets in the athena common area.
+
+# EXAMPLE SETUP SCRIPT ON LXPLUS:
+mkdir -p ${HOME}/work/17.0.6.13
+cd ${HOME}/work/17.0.6.13
+export AtlasSetup=/afs/cern.ch/atlas/software/dist/AtlasSetup
+# FOR 32 BITS:
+source $AtlasSetup/scripts/asetup.sh 17.0.6.13,here
+# FOR 64 BITS:
+source $AtlasSetup/scripts/asetup.sh 17.0.6.13,here,64
+
+---------------------------------------------------
+STEP 2: COMPILE LHAPDF (FORTRAN CODE)
+---------------------------------------------------
+Depending on whether you chose a 32-bit or 64-bit environment, run one of the following:
+
+# FOR 32 BITS:
+./compile32.sh
+# FOR 64 BITS:
+./compile64.sh
+
+The script will extract and compile LHAPDF code and create an .so library for the correct architecture under LHAPDF/lib.
+
+---------------------------------------------------
+STEP 3: UPDATE LD_LIBRARY_PATH
+---------------------------------------------------
+While sitting in the lha/ directory, execute "source source.sh" to update your LD_LIBRARY_PATH.
+
+At this point, PDFReweightingTool.h is ready to be integrated in your analysis code.
+
+---------------------------------------------------
+STEP 4: STUDY EXAMPLES
+---------------------------------------------------
+There are two examples of how to use PDFReweightingTool.h.
+
+test.cpp and Makefile show how to link PDFReweightingTool with a C++ program, performing PDF reweighting of a toy event.
+You can compile it via "make test32" or "make test64", depending on the architecture.
+
+test.py shows how to use PDFReweightingTool.h in python code, and how to interface with D3PD variables.
+Start by editing the path to a sample D3PD file at the top of test.py, and the run it directly via:
+./test.py
+The code will access the relevant mcevt* variables in the D3PD and perform PDF reweighting for the first few events to 3 reweighting targets.
+
+By default, the above examples are configured in verbose mode (last argument in PDFReweightingTool::GetEventWeight()).
+For each event, it will print the original and final PDF values for each incoming parton.
+This allows to perform a closure test: when you start with a CT10 dataset and reweight it to CT10,
+you should see that LHAPDF recomputes exactly the same PDF values as what's already saved in the D3PD.
