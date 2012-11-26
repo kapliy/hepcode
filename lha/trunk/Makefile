@@ -10,5 +10,5 @@ testold: test.cpp PDFReweight.cpp
 
 .PHONY : clean
 clean:
-	@rm -f test *.o
+	@rm -f test *.o PDFReweightTool_hpp.so
 
