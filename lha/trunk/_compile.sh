@@ -18,6 +18,11 @@ LOWMEM="--enable-low-memory"
 ##################### INSTALL ######################
 ####################################################
 
+if [ -z "${mbits}" ]; then
+    echo "ERROR: please run this script via compile32.sh or compile64.sh"
+fi
+
+
 ARCHIVE=lhapdf-5.8.8.tar.gz
 LHAINST=`echo $ARCHIVE | sed -e 's#.tar.gz##g'`
 LHALOC=$PWD/LHAPDF   # final installation location
@@ -29,6 +34,15 @@ if [ ! -d ${LHAINST} ]; then
     echo "ERROR: unable to find extracted lhapdf code under $PWD/${LHAINST}"
     exit 1
 fi
+
+export CPPFLAGS="$CPPFLAGS -m${mbits}"
+export CXXFLAGS="$CXXFLAGS -m${mbits}"
+export CFLAGS="$CFLAGS -m${mbits}"
+export LDFLAGS="$LDFLAGS -m${mbits}"
+export F77="gfortran"
+export F90="gfortran"
+export FFLAGS="$FFLAGS -m${mbits}"
+export FCFLAGS="$FCFLAGS -m${mbits}"
 
 cd ${LHAINST}
 ./configure --prefix=${LHALOC} --disable-octave --disable-doxygen --disable-pyext --disable-old-ccwrap --disable-lhaglue --with-max-num-pdfsets=${LHANMAX} ${PDFSETS} ${LOWMEM}
