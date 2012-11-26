@@ -2,12 +2,14 @@
 
 """ EXAMPLE OF PDF REWEIGHTING USING D3PD EVENTS """
 
+# EDIT THE PATH TO D3PD FILE:
+fname =  "/home/antonk/d3pd/MAX/D3PD/mc11_7TeV.108298.PowHegWplusmunuPythia.merge.NTUP_SMWZ.e825_s1372_s1370_r3043_r2993_p833_tid742962_00/NTUP_SMWZ.742962._000396.root.1";
+
 import os
 import ROOT
 ROOT.gROOT.SetBatch(1)
 
 # LOAD D3PD FILE
-fname =  "/home/antonk/d3pd/MAX/D3PD/mc11_7TeV.108298.PowHegWplusmunuPythia.merge.NTUP_SMWZ.e825_s1372_s1370_r3043_r2993_p833_tid742962_00/NTUP_SMWZ.742962._000396.root.1";
 f = ROOT.TFile.Open(fname,'READ'); assert f.IsOpen,'Unable to open file %s'%fname
 t = f.Get('physics'); assert t,'Unable to find tree "physics" in the D3PD file'
 
