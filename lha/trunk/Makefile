@@ -1,14 +1,12 @@
 .PHONY : all
-all: test
+all: test32 test64
 
-test: test.cpp PDFReweightTool.hpp
-	g++ -I. -I LHAPDF/include/ -L LHAPDF/lib -lLHAPDF test.cpp -o test
+test32: test.cpp PDFReweightTool.hpp
+	g++ -I. -I LHAPDF/include/ -L LHAPDF/lib -lLHAPDF test.cpp -m32 -o test32
 
-testold: test.cpp PDFReweight.cpp
-	g++ -I LHAPDF/include/ -c PDFReweight.cpp -o PDFReweight.o
-	g++ -I. -I LHAPDF/include/ -L LHAPDF/lib -lLHAPDF PDFReweight.o test.cpp -o test
+test64: test.cpp PDFReweightTool.hpp
+	g++ -I. -I LHAPDF/include/ -L LHAPDF/lib -lLHAPDF test.cpp -m64 -o test64
 
 .PHONY : clean
 clean:
-	@rm -f test *.o PDFReweightTool_hpp.so
-
+	@rm -f test test32 test64 *.o PDFReweightTool_hpp.so
