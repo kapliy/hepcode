@@ -11,4 +11,4 @@ test64: test.cpp PDFReweightTool.hpp
 
 .PHONY : clean
 clean:
-	@rm -f test test32 test64 *.o PDFReweightTool_hpp.so
+	@rm -f test test32 test64 *.o PDFReweightTool_hpp.so PDFReweightTool_hpp.d
