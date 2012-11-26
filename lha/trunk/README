@@ -7,8 +7,6 @@ Another benefit of using athena is that it will set for you an $LHAPATH environm
 which contains a few commonly used PDF sets in the athena common area.
 
 # EXAMPLE SETUP SCRIPT ON LXPLUS:
-mkdir -p ${HOME}/work/17.0.6.13
-cd ${HOME}/work/17.0.6.13
 export AtlasSetup=/afs/cern.ch/atlas/software/dist/AtlasSetup
 # FOR 32 BITS:
 source $AtlasSetup/scripts/asetup.sh 17.0.6.13,here
@@ -30,7 +28,9 @@ The script will extract and compile LHAPDF code and create an .so library for th
 ---------------------------------------------------
 STEP 3: UPDATE LD_LIBRARY_PATH
 ---------------------------------------------------
-While sitting in the lha/ directory, execute "source source.sh" to update your LD_LIBRARY_PATH.
+While sitting in the lha/ directory, execute the following to update your LD_LIBRARY_PATH:
+
+source source.sh
 
 At this point, PDFReweightingTool.h is ready to be integrated in your analysis code.
 
