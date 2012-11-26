@@ -22,8 +22,9 @@ public:
   
   void Initialize(bool verbose=true);
   void Info() const;
-  
-  void SetPDFSet(const int& setid, const std::string& setname) {
+ 
+  unsigned int NPDFSets() const { return m_pdflist.size(); }
+  void AddPDFSet(const int& setid, const std::string& setname) {
     m_pdfmap[m_pdflist.size()] = setid;
     m_pdflist.push_back(setname);
   }
@@ -72,7 +73,7 @@ void PDFReweightTool::Initialize(bool verbose) {
 
 void PDFReweightTool::Info() const {
   std::cout <<   "PDFReweightTool::Info status - " << (m_ready ? "READY" : "NOT INITIALIZED") << std::endl;
-  for(int i=0; i<m_pdflist.size(); i++) {
+  for(unsigned int i=0; i<m_pdflist.size(); i++) {
     std::cout << "                  PDF #" << i+1 << ": " << m_pdflist[i] << std::endl;
   }
 }
@@ -80,16 +81,16 @@ void PDFReweightTool::Info() const {
 void PDFReweightTool::AddDefaultPDFSets() {
   assert(!m_ready && "ERROR: PDFReweightTool::GetWeight must be called before PDFReweightTool::Initialize");
   // these following 4 PDF sets will consume about 300 MB of RSS RAM and 3000 MB of VMEM
-  SetPDFSet(10800,"CT10.LHgrid");
-  SetPDFSet(21100,"MSTW2008nlo68cl.LHgrid");
-  SetPDFSet(192800,"NNPDF21_100.LHgrid");
-  SetPDFSet(60700,"HERAPDF15NLO_EIG.LHgrid");
+  AddPDFSet(10800,"CT10.LHgrid");
+  AddPDFSet(21100,"MSTW2008nlo68cl.LHgrid");
+  AddPDFSet(192800,"NNPDF21_100.LHgrid");
+  AddPDFSet(60700,"HERAPDF15NLO_EIG.LHgrid");
   if(false) { // for reference:
-    SetPDFSet(21000,"MSTW2008lo68cl.LHgrid");
-    SetPDFSet(60500,"HERAPDF10_EIG.LHgrid");
-    SetPDFSet(10550,"cteq66.LHgrid");
-    SetPDFSet(10042,"cteq6ll.LHpdf");
-    SetPDFSet(20651,"MRSTMCal.LHgrid");
+    AddPDFSet(21000,"MSTW2008lo68cl.LHgrid");
+    AddPDFSet(60500,"HERAPDF10_EIG.LHgrid");
+    AddPDFSet(10550,"cteq66.LHgrid");
+    AddPDFSet(10042,"cteq6ll.LHpdf");
+    AddPDFSet(20651,"MRSTMCal.LHgrid");
   }
 }
 
@@ -130,12 +131,15 @@ double PDFReweightTool::GetEventWeight(int nset, int member,
   const double pdf2_new = LHAPDF::xfx(nset,x2,Q,id2);
   const double pnew = pdf1_new * pdf2_new;
   if(verbose) {
-    std::cout << "PDFReweightTool: PDFORIG = " << pdf1 << " * " << pdf2 << " = " << porig << " | "
-	      << Q << " " << x1 << " " << x2 << " " << id1 << " " << id2 
+    std::streamsize oldp = std::cout.precision();
+    std::cout.precision(3);
+    std::cout << "PDFReweightTool: ORIGINAL   = " << pdf1 << " * " << pdf2 << " = " << porig << " | "
+	      << "Q=" << Q << " x1=" << x1 << " x2=" << x2 << " id1=" << id1 << " id2=" << id2 
 	      << std::endl
-	      << "                 PDFNEW  = " << pdf1_new << " * " << pdf2_new << " = " << pnew
-	      << "                 EQUAL? " << (std::abs(pnew-porig)<0.01 ? "YES" : "NO" )
+	      << "                 RECOMPUTED = " << pdf1_new << " * " << pdf2_new << " = " << pnew
+	      << "                 EQUAL? " << (std::abs(pnew-porig)<0.0005 ? "YES" : "NO" )
 	      << std::endl;
+    std::cout.precision(oldp);
   }
   return porig ? pnew/porig : 1.0;
 }
