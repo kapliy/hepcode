@@ -1,13 +1,21 @@
 #!/usr/bin/env python
 
 """ Debugging systematic trees """
+try:
+    import common
+except ImportError:
+    pass
 import ROOT
+ROOT.gROOT.SetBatch(1)
+ROOT.gROOT.ProcessLine('.L loader.C+')
 
 import sys
 
-fname = '/home/antonk/d3pd/SYS/AnalysisManager.Wmunu.mc11_7TeV.p833_v0115_plus_syst_powheg_pythia.root'
-if len(sys.argv)>1:
-    fname = '/home/antonk/d3pd/SYS/20121126.unfold.root'
+Q = 'plus'
+
+fname = '/home/antonk/d3pd/SYS/ana_w%s.root'%(Q)
+fname='/home/antonk/TrigFTKAna/results/ana_wasym/max_w%s.dat/20121126.unfold.root'%(Q)
+fname = '/home/antonk/d3pd/SYS/AnalysisManager.Wmunu.mc11_7TeV.p833_v0115_%s_syst_powheg_pythia.root'%(Q)
 
 print 'Opening:',fname
 f = ROOT.TFile.Open(fname)
@@ -35,13 +43,13 @@ def run_tree(name):
     return N,h
 
 TREES = ['physics_Nominal',
-         'physics_NominalWptSherpa',
-         'physics_NominalWptPythiaMC10',
-         'physics_NominalWptAlpgenMC11',
-         'physics_NominalPdfCT10',
-         'physics_NominalPdfMSTW',
-         'physics_NominalPdfNNPDF',
-         'physics_NominalPdfHERA',
+#         'physics_NominalWptSherpa',
+#         'physics_NominalWptPythiaMC10',
+#         'physics_NominalWptAlpgenMC11',
+#         'physics_NominalPdfCT10',
+#         'physics_NominalPdfMSTW',
+#         'physics_NominalPdfNNPDF',
+#         'physics_NominalPdfHERA',
          'physics_MuonRecoSFUp',
          'physics_MuonRecoSFDown',
          'physics_MuonTriggerSFUp',
@@ -56,15 +64,15 @@ TREES = ['physics_Nominal',
          'physics_JetResolDown',
          'physics_JetScaleUp',
          'physics_JetScaleDown',
-         'physics_JetNPVUp',
-         'physics_JetNPVDown',
-         'physics_JetMUUp',
-         'physics_JetMUDown',
+#         'physics_JetNPVUp',
+#         'physics_JetNPVDown',
+#         'physics_JetMUUp',
+#         'physics_JetMUDown',
          'physics_MuonResMSUp',
          'physics_MuonResMSDown',
          'physics_MuonResIDUp',
          'physics_MuonResIDDown',
-         'physics_MuonNoScale',
+#         'physics_MuonNoScale',
          'physics_MuonKScaleUp',
          'physics_MuonKScaleDown',
          'physics_MuonCScaleUp',
@@ -77,5 +85,8 @@ TREES = ['physics_Nominal',
 for tree in TREES:
     N,h = run_tree(tree)
     if N:
-        print tree,N,h[0].GetMean(),h[1].GetMean()
+        print tree,N[0],
+        for n in N[1:]:
+            print '%.2f'%n,
+        print '\t%.3f %.3f'%(h[0].GetMean(),h[1].GetMean())
 
