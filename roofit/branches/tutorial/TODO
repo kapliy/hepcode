@@ -1,3 +1,11 @@
+Muon: do both pt>25 and pt>20
+Compare version summing up sub-components
+Max: add sub-samples of larger vs smaller values of <mu> in single-differential histograms
+Max: add sub-samples of earlier vs later periods.
+Max: wpt reweighting - make sure we have a no-reweigting sub-sample
+
+
+
 Work on qcdsys2d: automatically save qcd inside make_total, too.
 Add qcd pileup term etc (two terms total) to systematics!
 

@@ -6,6 +6,7 @@ This also contains a bunch of junk that's shared among various executables
 """
 
 import array,math,random,string,re,sys,copy
+from common import rand_name
 import ROOT
 
 def SaveAs(c,name,ext):
@@ -18,9 +19,6 @@ def neyman_int(e,N,sgn=1):
     nom=(2*e+1.0/N)+sgn*math.sqrt(4.0*e*(1-e)/N+1/(N*N))
     den=2*(1+1.0/N)
     return nom/den
-
-def rand_name(ln=10):
-    return ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(ln))
 
 def graph_to_array1(hz,maxdata):
     N = hz.GetN()
