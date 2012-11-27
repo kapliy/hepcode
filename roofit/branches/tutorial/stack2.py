@@ -1546,6 +1546,9 @@ if mode in ('101','102','103'): # tag and probe
 
 if mode == '1012': # 10/12/2011: MCP group studies of Z mass peak in data and MC
     assert opts.ntuple=='z','ERROR: MCP Z studies can only be computed for the z ntuple'
+    from load_data import eranges
+    ieta = opts.preNN if opts.preNN=='ALL' else int(opts.preNN)
+    os._exit(0)
     tagcentral = False
     c = SuCanvas()
     c.buildDefault(title='mZ',width=800,height=600)
@@ -1693,6 +1696,7 @@ def loop_zbins(w, pre_in,
                 hNEG.SetBinError(i+1,w.var('m').getError())
     return cscan,hPOS,hNEG
 
+# 10/13/2011: MCP group studies that do not require a Z peak (automated looper)
 if mode == '1111':
     pvar,pvarbins = opts.var,opts.bin
     lvar,lvarbins = opts.lvar,opts.lbin
@@ -1724,7 +1728,8 @@ if mode == '1111':
     OMAP.append( cscan )
     pass
 
-if mode == '1013': # 10/13/2011: MCP group studies that do not require a Z peak (MS-ID-CB comparisons)
+# 10/13/2011: MCP group studies that do not require a Z peak (MS-ID-CB comparisons)
+if mode == '1013':
     # we still use Z events to ensure little QCD contamination
     assert opts.ntuple=='z','ERROR: MCP Z studies can only be computed for the z ntuple'
     tagcentral = False

@@ -111,7 +111,7 @@ c.plotAny(ACC,M=M,height=[0.55,0.85],xaxis_info=xaxis_info)
 c.SaveSelf()
 
 c2 = SuCanvas('acceptance_%s_25GeV'%tQ)
-c._ratioName = "Systematic / Nominal"
+c2._ratioName = "Systematic / Nominal"
 c2.plotAny(PTC,M=M,height=[0.85,1.0],xaxis_info=xaxis_info)
 c2.SaveSelf()
 
