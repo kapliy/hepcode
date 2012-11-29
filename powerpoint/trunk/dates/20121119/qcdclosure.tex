@@ -1,0 +1,82 @@
+\section{ QCD closure }
+
+\slide{ QCD closure}
+{
+\iteb
+\item Small study looking at single-differential cross-section
+\item All plots at detector level
+\item Signal and EWK are Powheg+Pythia, tau is Alpgen+Herwig
+\item QCD template is one of:
+\iteb
+\item Heavy-flavor MC
+\item Data (anti-isolated control region)
+\item Heavy-flavor MC (anti-isolated control region)
+\itee 
+\itee 
+
+Note the changes in the shape as a function of $\eta$.
+}
+
+
+\slide{ Anti-isolation $Iso^{cone20}/p_{T} > 0.1$ }
+{
+\centering
+
+\colb[T]
+\column{.5\textwidth}
+\centering
+Muon $\Wminus$ $|\eta|$ \\
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/qcdclosure/isofail0_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/qcdclosure/isofail4_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<3>{dates/20121119/figures/qcdclosure/isofail10_NEG.pdf}
+
+\column{.5\textwidth}
+\centering
+Muon $\Wplus$ $|\eta|$ \\
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/qcdclosure/isofail0_POS.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/qcdclosure/isofail4_POS.pdf}
+\includegraphics[width=1.0\textwidth]<3>{dates/20121119/figures/qcdclosure/isofail10_POS.pdf}
+\cole
+
+\only<1>{\footnotesize{ QCD = heavy-flavor MC  }}
+\only<2>{\footnotesize{ QCD = data anti-iso control region. Note \red{dramatic change in shape} }}
+\only<3>{\footnotesize{ QCD = MC, but in anti-iso control region. Now it looks quite similar to data }}
+
+}
+
+\slide{ Anti-isolation $Iso^{cone20}/p_{T} = [0.1 - 0.2]$ }
+{
+\centering
+
+\colb[T]
+\column{.5\textwidth}
+\centering
+Muon $\Wminus$ $|\eta|$ \\
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/qcdclosure/isowind0_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/qcdclosure/isowind4_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<3>{dates/20121119/figures/qcdclosure/isowind10_NEG.pdf}
+
+\column{.5\textwidth}
+\centering
+Muon $\Wplus$ $|\eta|$ \\
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/qcdclosure/isowind0_POS.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/qcdclosure/isowind4_POS.pdf}
+\includegraphics[width=1.0\textwidth]<3>{dates/20121119/figures/qcdclosure/isowind10_POS.pdf}
+\cole
+
+\only<1>{\footnotesize{ QCD = heavy-flavor MC  }}
+\only<2>{\footnotesize{ QCD = data anti-iso control region. Note \red{dramatic change in shape} }}
+\only<3>{\footnotesize{ QCD = MC, but in anti-iso control region. Now it looks quite similar to data }}
+
+}
+
+\slide{ Observations on QCD closure}
+{
+\iteb
+\item Anti-isolation control region appears to bias $\eta$ shape on the order of 2-3 \%
+\item The bias is more pronounced in inverted isolation case (vs a window cut)
+\item Never noticed these effects because ratio pad scale used to be set to $\pm 50\%$
+\item TODO: check what happens when QCD is normalized in each $\eta$ bin
+\itee 
+
+}
