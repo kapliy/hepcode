@@ -1,0 +1,44 @@
+\section{ Tau MC }
+
+\slide{Notes on tau MC}
+{
+$\Wboson \rightarrow \tau\nu$ and $\Zboson \rightarrow \tau\tau$ MC:
+\iteb
+\item Powheg+Pythia - low statistics, wrong tau polarization
+\item Pythia - high statistics, default for 2010, but only LO
+\item Alpgen+Jimmy - high statistics, but uses LO CTEQ 6.1
+\itee
+
+Do these differences even matter?
+}
+
+
+\slide{Effect of different tau MC }
+{
+\centering
+
+\only<1>{\footnotesize{ $\Wboson \rightarrow \tau\nu$ and $\Zboson \rightarrow \tau\tau$: \red{Pythia (LO)} }}
+\only<2>{\footnotesize{ $\Wboson \rightarrow \tau\nu$ and $\Zboson \rightarrow \tau\tau$: \red{Alpgen+Jimmy} }}
+\only<3>{\footnotesize{ $\Wboson \rightarrow \tau\nu$ and $\Zboson \rightarrow \tau\tau$: \red{Powheg+Pythia} }}
+
+\colb[T]
+\column{.5\textwidth}
+\centering
+Muon $\Wminus$ $|\eta|$ \\
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/wtaunu/pythia_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/wtaunu/alpgen_NEG.pdf}
+\includegraphics[width=1.0\textwidth]<3>{dates/20121119/figures/wtaunu/powheg_NEG.pdf}
+
+\column{.5\textwidth}
+\centering
+Muon $\Wplus$ $|\eta|$ \\
+\includegraphics[width=1.0\textwidth]<1>{dates/20121119/figures/wtaunu/pythia_POS.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121119/figures/wtaunu/alpgen_POS.pdf}
+\includegraphics[width=1.0\textwidth]<3>{dates/20121119/figures/wtaunu/powheg_POS.pdf}
+\cole
+
+\only<1>{\footnotesize{ -----------------------------------------------  }}
+\only<2>{\footnotesize{ Deviations in some bins on the order of 0.5\%, especially in $\Wminus$ }}
+\only<3>{\footnotesize{ Surprisingly Powheg+Pythia vs Alpgen+Herwig deviations are smaller }}
+
+}
