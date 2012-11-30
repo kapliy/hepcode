@@ -96,7 +96,12 @@ class SuSys:
                 i=2
             else:
                 i=1
-        return '(%s)*(%s)*(%s)' % (SuSys.QMAP[s.charge][2] , s.pre[i], s.weight)
+        if s.ntuple=='w':
+            return '(%s)*(%s)*(%s)' % (SuSys.QMAP[s.charge][2] , s.pre[i], s.weight)
+        elif s.ntuple=='z':
+            return '(%s)*(%s)' % (s.pre[i], s.weight)
+        else:
+            assert False,"Unknown ntuple type: %s"%(s.ntuple)
     def nt_prez(s,i=0,flags=None):
         assert False,'Not implemented'
         return '(%s)*(%s)' % ( s.pre, s.weight )
@@ -171,13 +176,14 @@ class SuSys:
         if len(s.basedir[2].split('/'))>1:  # nominal/lpt2025/tight
             basedir = '/' + '/'.join( s.basedir[2].split('/')[1:]) # lpt2025/tight
         # disable MET>25 or WMT>40 cut if we are actually fitting in MET/WMT
-        if s.qcd['var'][-3:]=='wmt':
+        var = s.qcd['var'].split(':')[0]
+        if var[-3:]=='wmt':
             basedir = s.qcd['wmtfit']+basedir   # wmtfit/lpt2025/tight [/POS/absetav_histo]
             s.basedir = [basedir]*3
-        elif s.qcd['var'][-6:]=='on_met': # lepton-met deltaPHI fit should be done BEFORE WMT cut
+        elif var[-6:]=='on_met': # lepton-met deltaPHI fit should be done BEFORE WMT cut
             basedir = s.qcd['wmtfit']+basedir   # wmtfit/lpt2025/tight [/POS/absetav_histo]
             s.basedir = [basedir]*3
-        elif s.qcd['var'][-3:]=='met':
+        elif var[-3:]=='met':
             basedir = s.qcd['metfit']+basedir   # metfit/lpt2025/tight [/POS/absetav_histo]
             s.basedir = [basedir]*3
         s.histo = s.qcd['var']
@@ -835,7 +841,7 @@ class SuSample:
         DEF3 = 'nevts'      # (mc+pu)
         DEF4 = 'nevts2_vtx' # (mc+pu+vtx) - old default
         DEF5 = 'nevts3_wz'  # (mc+pu+vtx+wz)
-        return DEF3
+        return DEF5
     def topdir(s,f):
         """ descend down the root file in case it's the output of single-file dgplot merge """
         topdir = 'dg'
@@ -900,7 +906,8 @@ class SuSample:
         from MC import mc
         mrun = mc.match_sample(s.name)
         assert mrun
-        xsec = mrun.xsec*mrun.filteff*(1.0 + SuSample.xsecerr*mrun.err)
+        err = mrun.errdown if SuSample.xsecerr<0 else mrun.errup
+        xsec = mrun.xsec*mrun.filteff*(1.0 + SuSample.xsecerr*err)
         nevents = s.nevt[s.path][evcnt]
         sample = mrun.sample
         flumi = nevents*1.0 / xsec
@@ -914,7 +921,8 @@ class SuSample:
         from MC import mc
         mrun = mc.match_sample(s.name)
         if mrun:
-            xsec = mrun.xsec*mrun.filteff*(1.0 + SuSample.xsecerr*mrun.err)
+            err = mrun.errdown if SuSample.xsecerr<0 else mrun.errup
+            xsec = mrun.xsec*mrun.filteff*(1.0 + SuSample.xsecerr*err)
             # Choose the right evcnt - depending on which scale factors were used (effw/trigw)
             nevents = s.nevt[s.path][evcnt]
             sample = mrun.sample
@@ -951,16 +959,16 @@ class SuSample:
         import array
         import binning
         bins = binning.absetabins
-        a = array.array('f',bins)
-        return ROOT.TH1F(name,name,len(a)-1,a)
+        a = array.array('d',bins)
+        return ROOT.TH1D(name,name,len(a)-1,a)
     @staticmethod
     def make_heta(name='heta_template'):
         """ makes an instance of abseta histogram with detector-motivated binning """
         import array
         import binning
         bins = binning.setabins
-        a = array.array('f',bins)
-        return ROOT.TH1F(name,name,len(a)-1,a)
+        a = array.array('d',bins)
+        return ROOT.TH1D(name,name,len(a)-1,a)
     def histo(s,hname,dall,rebin=1.0,unitize=False):
         """ A wrapper around histogram-based and ntuple-based histo accessors """
         if isinstance(dall,SuSys):  # QCD fits
@@ -983,8 +991,11 @@ class SuSample:
         """ retrieve a particular histogram from ntuple (with cache) """
         _HSPECIAL =  []   # special values of var and hsource
         _HSPECIAL += [('fabs(l_eta)','lepton_absetav')]
-        _HSPECIAL += [('fabs(l_eta)','lepton_absetav')]
+        _HSPECIAL += [('fabs(lP_eta)','leptonP_absetav')]
+        _HSPECIAL += [('fabs(lN_eta)','leptonN_absetav')]
         _HSPECIAL += [('l_eta','lepton_etav')]
+        _HSPECIAL += [('lP_eta','leptonP_etav')]
+        _HSPECIAL += [('lN_eta','leptonN_etav')]
         path = path if path else s.path
         key = None
         spair = (var,hsource)
@@ -1017,11 +1028,11 @@ class SuSample:
             #hname = hname + '_' + s.name
             usebin,xtra = True,''
             # special handling to create variable-bin eta histograms:
-            if spair == _HSPECIAL[0]:
+            if spair in _HSPECIAL[:3]:
                 s.habseta = s.make_habseta(hname2)
                 usebin = False
                 xtra = ' with special abseta binning'
-            elif spair == _HSPECIAL[1]:
+            elif spair in _HSPECIAL[-3:]:
                 s.heta = s.make_heta(hname2)
                 usebin = False
                 xtra = ' with special eta binning'
@@ -1080,7 +1091,6 @@ class SuSample:
                 s.missing[key] = True
             d.histo = hbase
             return None   # be careful, returning None is a recipe for not noticing problems
-        import SuCanvas
         #print 'DEBUG: ',res2d.GetName(),hbase
         res = getattr(res2d,'Projection'+haxis.upper())(res2d.GetName()+'_%s%d%d'%(haxis,imin,imax),imin,imax,'e')
         assert res,'Failed to perform 2d projection'
@@ -1091,10 +1101,54 @@ class SuSample:
         res.Sumw2()
         d.histo = hbase
         return res
+    def histo_h_3dproj(s,hname,d,rebin=1.0):
+        """ retrieves a particular 3d histogram and performs a 1d projection
+        based on instructions encoded in hname.
+        hname format :  d3_abseta_lpt_met:x:0:8:y:1:2
+        """
+        hbase = d.histo
+        assert len(hbase.split(':'))==7
+        horig = hbase.split(':')[0]  # d2_abseta_lpt
+        haxisA = hbase.split(':')[1]
+        haxisB = hbase.split(':')[4]
+        assert haxisA!=haxisB,'3D projection: both projection axes are the same'
+        haxisP = [z for z in ['x','y','z'] if z!=haxisA and z!=haxisB][0]
+        assert haxisA in ('x','y','z')
+        assert haxisB in ('x','y','z')
+        iminA,imaxA = [int(cc) for cc in hbase.split(':')[2:2+2]]
+        iminB,imaxB = [int(cc) for cc in hbase.split(':')[5:5+2]]
+        imin1,imax1 = (iminA,imaxA) if haxisA<haxisB else (iminB,imaxB)
+        imin2,imax2 = (iminA,imaxA) if haxisA>haxisB else (iminB,imaxB)
+        haxis1 = haxisA if haxisA<haxisB else haxisB
+        haxis2 = haxisA if haxisA>haxisB else haxisB
+        d.histo = horig
+        res3d = s.GetHisto(hname,d.h_path(flags=s.flags))
+        if not res3d:
+            if len(s.files)==0:
+                print 'WARNING: no files found for sample:',s.name
+            fname = os.path.basename(s.files[0].GetName())
+            key = horig + fname + d.h_path(flags=s.flags)
+            if key not in s.missing:
+                print 'WARNING: -> Missing 3d-proj histo:',horig, fname, d.h_path(flags=s.flags)
+                s.missing[key] = True
+            d.histo = hbase
+            return None   # be careful, returning None is a recipe for not noticing problems
+        nname = res3d.GetName()+'_%s_%d_%d__%s_%d_%d'%(haxis1,imin1,imax1,haxis2,imin2,imax2)
+        res = getattr(res3d,'Projection'+haxisP.upper())(nname,imin1,imax1,imin2,imax2,'e')
+        assert res,'Failed to perform 3d projection'
+        if s.lumi:
+            res.Scale(s.scale(evcnt = s.choose_evcount('')))
+        if rebin!=1:
+            res.Rebin(rebin)
+        res.Sumw2()
+        d.histo = hbase
+        return res
     def histo_h(s,hname,d,rebin=1.0):
         """ retrieve a particular histogram; path is re-built manually"""
         # in case we're asking for a projection from a 2d histogram
-        if len(d.histo.split(':'))==4:
+        if len(d.histo.split(':'))==7:
+            return s.histo_h_3dproj(hname,d,rebin)
+        elif len(d.histo.split(':'))==4:
             return s.histo_h_2dproj(hname,d,rebin)
         # or else, it's a regular 1d or 2d histogram
         res = s.GetHisto(hname,d.h_path(flags=s.flags))
@@ -1269,23 +1323,28 @@ class SuStack:
         """ Select signal sample, turning all others off """
         s.flagsum['S']=i
         return s.choose_flag('sig_'+MAP_BGSIG[i],'sig')
-    def choose_ewk(s,i):
-        """ Select all electroweak samples, turning all others off """
+    def choose_tau(s,i):
+        """ Select tau samples, turning all others off """
         s.choose_wtaunu(i)
-        s.choose_zmumu(i)
         s.choose_ztautau(i)
-    def choose_wtaunu(s,i):
-        """ Select signal sample, turning all others off """
-        s.flagsum['X']=i
-        return s.choose_flag('wtaunu_'+MAP_BGSIG[i],'wtaunu')
-    def choose_zmumu(s,i):
-        """ Select signal sample, turning all others off """
-        s.flagsum['Y']=i
-        return s.choose_flag('zmumu_'+MAP_BGSIG[i],'zmumu')
+    def choose_ewk(s,i,ntuple='w'):
+        """ Select electroweak (w or z) samples, turning all others off """
+        if ntuple=='w':
+            s.choose_zmumu(i)
+        elif ntuple=='z':
+            s.choose_wmunu(i)
     def choose_wmunu(s,i):
         """ Select signal sample, turning all others off """
         s.flagsum['V']=i
         return s.choose_flag('wmunu_'+MAP_BGSIG[i],'wmunu')
+    def choose_zmumu(s,i):
+        """ Select signal sample, turning all others off """
+        s.flagsum['X']=i
+        return s.choose_flag('zmumu_'+MAP_BGSIG[i],'zmumu')
+    def choose_wtaunu(s,i):
+        """ Select signal sample, turning all others off """
+        s.flagsum['Y']=i
+        return s.choose_flag('wtaunu_'+MAP_BGSIG[i],'wtaunu')
     def choose_ztautau(s,i):
         """ Select signal sample, turning all others off """
         s.flagsum['Z']=i
@@ -1462,6 +1521,7 @@ class SuStack:
             return [res[0],] + res + [res[-1],]
         elif d.is_histo_etabins():
             print 'INFO: creating QCD scales in eta bins using histo fits'
+            assert False,'Update me - no longer using bin_ subfolders'
             import binning
             echoice = d.is_histo_etabins()
             assert echoice in (1,2),'Unknown ntuple_etabins choice'
@@ -1761,6 +1821,7 @@ class SuStack:
             return s.histosum_apply(loop,hname,d,norm,weights)
         # histogram specified in several eta slices: we need to reconstruct & unfold in each eta slice, then re-build:
         if d.nominal().is_sliced_1d():
+            assert False,'FIXME: update bin_ stuff to 2d/3d histos'
             hspec = d.nominal().histo    # bin_%d/lpt:imin:imax
             assert len(hspec.split(':'))==3
             horig = hspec.split(':')[0]  # bin_%d/lpt
@@ -1796,6 +1857,7 @@ class SuStack:
             d.update_from_slices(ds,heta,imin,imax)
             return d
         elif d.nominal().is_sliced_2d():
+            assert False,'FIXME: update bin_ stuff to 2d/3d histos'
             hspec = d.nominal().histo    # d2_abseta_lpt:y:0:8
             assert len(hspec.split(':'))==4
             horig = hspec.split(':')[0]  # d2_abseta_lpt

@@ -1,13 +1,23 @@
-Muon: do both pt>25 and pt>20
+NOTE: fake lumi for qcd fits prevents bgqcd=4 from working correctly - we need to do bg subtraction
+with the proper lumi assumption!
+
+CHECK if muon reco corrections correct in phi
+Do MCP eff/reco corrections use pt scaling?
+TH1 phi - try fourier spectrum
+Check tau in lowest pt bin
+MEL: add cone40 anti-isolation window, too
+
+NOV28:
+* SLIDES wtaunu - any decision? Reweighting Alpgen to CT10 -> mean SF = 1.12!
+* show the change in inclusive W spectrum vs eta when using Alpgen vs Powheg+Pythia for tau MC.
+
 Compare version summing up sub-components
 Max: add sub-samples of larger vs smaller values of <mu> in single-differential histograms
 Max: add sub-samples of earlier vs later periods.
-Max: wpt reweighting - make sure we have a no-reweigting sub-sample
-
+Max: wpt reweighting - make sure we have a no-reweigting sub-sample (why?)
 
 
 Work on qcdsys2d: automatically save qcd inside make_total, too.
-Add qcd pileup term etc (two terms total) to systematics!
 
 DONE: Check Max's physics_Nominal - he does include all truth, so can be used for acceptance correction
       DONE: speed: stays the same
@@ -17,7 +27,10 @@ DONE: include some extra variables in unfolding to derive isFiducial on-the-fly
 DONE: implement Carl's eta/phi map for trigger efficiencies
 DONE: Implement cutflow tables by parsing OUT*root files
 DONE: slimmed ntuples fully work now. But sometimes they run super slowly, not sure why!
-
+DONE: replicas scheme - how to do it. For which scale factors.
+DONE: add 53.8 GeV cut to Powheg+Pythia Z samples to remove overlap with Drell-Yan
+DONE: check if pileup reweighting works better with my own, old pileup reweighting file (found bug in my pileup file!)
+DONE: add jes pileup term etc (two terms total) to systematics!
 
 QCD FITS:
 Convert to using 3d histograms
@@ -37,7 +50,7 @@ INCLUSIVE FITS:
 
 
 BAD BIN: switch to ntuple-based studies with un-normalized bb/cc MC
-     Look at muons in Z events (use QCD heavy flavor MC)
+     Look at muons in Z events (use QCD heavy flavor MC) - plot eta
      plot met without cutting met/wmt
      plot  pt without cutting pt
      plot wmt without cutting others

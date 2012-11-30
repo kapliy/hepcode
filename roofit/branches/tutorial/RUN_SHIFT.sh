@@ -7,7 +7,7 @@ flabel=NONE
 i=0
 
 # Specify the list of tags
-for flabel in v29G_08102012_MCP_OLD v29G_08102012_MCP_NEW; do
+for flabel in v29I_11212012_edboard_nophi; do
 antondb=out2011_${flabel}
 if [ "1" -eq "1" ]; then
     data="--root '/share/t3data3/antonk/ana/ana_${flabel}_stacoCB_MCPscale/data*/root_data*.root'"
@@ -15,8 +15,8 @@ if [ "1" -eq "1" ]; then
     ((i++))
     gput tags $i r17_powheg_pythia_m70110_staco     " --antondb ${antondb} ${data} --zmin 70 --zmax 110"
     ((i++))
-    gput tags $i r17_powheg_pythia_klu_staco        " --antondb ${antondb} ${data} --zmin 80 --zmax 100 --kluit"
-    ((i++))
+    #gput tags $i r17_powheg_pythia_klu_staco        " --antondb ${antondb} ${data} --zmin 80 --zmax 100 --kluit"
+    #((i++))
 fi;
 done
 
@@ -24,11 +24,10 @@ tts="cmb id exms"
 #regs="AA BB CC Bcc Baa FWC FWA MWC MWA" # "FWC0 FWC1 FWC2 FWC3 FWA0 FWA1 FWA2 FWA3"
 regs="`echo E{0..25}E`"
 regs="`echo T{0..13}T`"
-regs="`echo S{0..7}S`"
-regs="AA BB CC Bcc Baa" #2012
+regs="AA BB CC Bcc Baa"
 regs="`echo W{0..9}W`"
-regs="`echo V{0..21}V`"
 regs="`echo U{0..21}U`"
+regs="`echo S{0..7}S`"  #2011 published
 xtra="--template --ext eps --shift"
 i=0
 
@@ -57,7 +56,15 @@ for itag in `gkeys tags`; do
 	    cmd="./keysfit.py -b ${opts} --tt ${tt} --region ${reg} --tag ${tag} --ndata $nevt --nscan ${nscan} --scan ${frange} ${xtra}"
 	    echo $cmd
 	    echo $cmd >> $J
-	    qsub -l mem=3000mb -N SHT${i} -o ${LOG} -e ${ERR} ${J}
+	    jid=`qsub -l mem=3000mb -N SHT${i} -o ${LOG} -e ${ERR} ${J}`
+	    if [ "$jid" == "" ]; then
+		echo "Retrying submission: $i"
+		sleep 10
+		jid=`qsub -l mem=3000mb -N SHT${i} -o ${LOG} -e ${ERR} ${J}`
+		if [ "$jid" == "" ]; then
+		    echo "ERROR: submission ${i} failed"
+		fi
+	    fi
 	    ((i++))
 	done
     done

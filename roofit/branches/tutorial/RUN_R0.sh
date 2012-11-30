@@ -7,23 +7,16 @@ flabel=NONE
 i=0
 
 # Specify the list of tags
-for flabel in v29D_05222012_MCP2011; do
+for flabel in v29I_11212012_edboard_nophi; do
 antondb=out2011_${flabel}
 if [ "1" -eq "1" ]; then
     data="--root '/share/t3data3/antonk/ana/ana_${flabel}_stacoCB_MCPscale/data*/root_data*.root'"
-    gput tags $i r17_default_staco    " --antondb ${antondb} ${data} --zmin 80 --zmax 100"
+    gput tags $i r17_powheg_pythia_default_staco    " --antondb ${antondb} ${data} --zmin 80 --zmax 100"
     ((i++))
-    gput tags $i r17_m70110_staco     " --antondb ${antondb} ${data} --zmin 70 --zmax 110"
+    gput tags $i r17_powheg_pythia_m70110_staco     " --antondb ${antondb} ${data} --zmin 70 --zmax 110"
     ((i++))
-    gput tags $i r17_klu_staco        " --antondb ${antondb} ${data} --zmin 80 --zmax 100 --kluit"
-    ((i++))
-    data="--root '/share/t3data3/antonk/ana/ana_${flabel}_muidCB_MCPscale/data*/root_data*.root'"
-    gput tags $i r17_default_muid    " --antondb ${antondb} ${data} --zmin 80 --zmax 100"
-    ((i++))
-    gput tags $i r17_m70110_muid     " --antondb ${antondb} ${data} --zmin 70 --zmax 110"
-    ((i++))
-    gput tags $i r17_klu_muid        " --antondb ${antondb} ${data} --zmin 80 --zmax 100 --kluit"
-    ((i++))
+    #gput tags $i r17_powheg_pythia_klu_staco        " --antondb ${antondb} ${data} --zmin 80 --zmax 100 --kluit"
+    #((i++))
 fi;
 done
 
@@ -31,10 +24,10 @@ tts="cmb id exms"
 #regs="AA BB CC Bcc Baa FWC FWA MWC MWA" # "FWC0 FWC1 FWC2 FWC3 FWA0 FWA1 FWA2 FWA3"
 regs="`echo E{0..25}E`"
 regs="`echo T{0..13}T`"
-regs="`echo S{0..7}S`"
-regs="AA BB CC Bcc Baa" #2012
+regs="AA BB CC Bcc Baa"
 regs="`echo W{0..9}W`"
 regs="`echo U{0..21}U`"
+regs="`echo S{0..7}S`"  #2011 published
 xtra="--template --ext eps"
 i=0
 

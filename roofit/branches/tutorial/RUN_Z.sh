@@ -7,7 +7,7 @@ flabel=NONE
 i=0
 
 # Specify the list of tags
-for flabel in v29I_11022012_unfold; do
+for flabel in v29I_11212012_edboard_nophi; do
 antondb=out2011_${flabel}
 if [ "1" -eq "1" ]; then
     data="--rootdata '/share/t3data3/antonk/ana/ana_${flabel}_stacoCB_MCPscale/data*/root_data*.root'"
@@ -43,11 +43,10 @@ tts="cmb id exms"
 #regs="AA BB CC Bcc Baa FWC FWA MWC MWA" # "FWC0 FWC1 FWC2 FWC3 FWA0 FWA1 FWA2 FWA3"
 regs="`echo E{0..25}E`"
 regs="`echo T{0..13}T`"
-regs="`echo S{0..7}S`"
 regs="AA BB CC Bcc Baa" #2012
 regs="`echo W{0..9}W`"
-regs="`echo V{0..21}V`"
 regs="`echo U{0..21}U`"
+regs="`echo S{0..7}S`"  #2011 published
 xtra="--ext eps"
 i=0
 
@@ -70,11 +69,20 @@ for itag in `gkeys tags`; do
 	    echo "cd ${ROOTDIR}" >> $J
 	    nmc=200000
 	    ndata=200000
+	    nmc=500000
+	    ndata=500000
 	    cmd="./zpeak.py -b ${opts} --tt ${tt} --region ${reg} --tag ${tag} --ndata $ndata --nmc $nmc ${xtra}"
 	    echo $cmd
-	    exit 0
 	    echo $cmd >> $J
-	    qsub -l mem=3000mb -N Z${i} -o ${LOG} -e ${ERR} ${J}
+	    jid=`qsub -l mem=3000mb -N Z${i} -o ${LOG} -e ${ERR} ${J}`
+	    if [ "$jid" == "" ]; then
+		echo "Retrying submission: $i"
+		sleep 10
+		jid=`qsub -l mem=3000mb -N Z${i} -o ${LOG} -e ${ERR} ${J}`
+		if [ "$jid" == "" ]; then
+		    echo "ERROR: submission ${i} failed"
+		fi
+	    fi
 	    ((i++))
 	done
     done
