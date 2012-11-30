@@ -9,7 +9,7 @@ input=/share/t3data3/antonk/ana/ana_v29I_10212012_unfold_stacoCB_all  # renamed 
 # MAIN PLOTTER
 for q in 0 1; do
     for ii in ALL {1..7}; do
-	./stack2.py --input ${input} -q $q -b --hsource 'd2_eta_lpt:y:%d:%d' -o TEST -t UNF_Q${q}_${ii} -m unfold2d --bgsig 5 --bgewk 5 --bgqcd 0 --preNN ${ii} &> LOG.unf.Q${q}_${ii} &
+	./stack2.py --input ${input} -q $q -b --hsource 'd2_eta_lpt:y:%d:%d' -o TEST -t UNF_Q${q}_${ii} -m unfold2d --bgsig 5 --bgewk 5 --bgqcd 0 --ipt ${ii} &> LOG.unf.Q${q}_${ii} &
     done
 done
 

@@ -9,20 +9,44 @@ setabins    = [-zz for zz in absetabins[1:]]
 setabins.reverse()
 setabins += (absetabins)
 
+def EB(b,etamode=2):
+    """ Converts opts.ieta to a SuData/TH2::Project specifier (2:2)
+    Note that ieta counts from 1, following ROOT TH1 bin counting convention
+    """
+    etabins = absetabins if etamode==2 else setabins
+    if b=='ALL': return ':x:1:%d'%(len(etabins)-1)
+    elif b <= len(etabins)-1: return ':x:%d:%d'%(b,b)
+    assert False,'Unknown eta bin: %s'%b
+    return None
+def PB(b):
+    """ Converts opts.ipt to a SuData/TH2::Project specifier (2:2), merging neighboring pt bins
+    Note that ipt counts from 1, following ROOT TH1 bin counting convention
+    """
+    if b=='ALL': return ':y:1:%d'%(len(ptbins)-1)
+    elif b<=3: return ':y:%d:%d'%(b,b)   # 30 .. 35
+    elif b==4: return ':y:4:5'           # 35 .. 45
+    elif b==5: return ':y:6:7'           # 45 .. 120
+    assert False,'Unknown pt bin: %s'%b
+    return None
+
 # label maps
 LABELMAP = {}
 LABELMAP['lepton_etav'] = ['#eta',None]
+LABELMAP['leptonP_etav'] = ['#mu^{+} #eta',None]
+LABELMAP['leptonN_etav'] = ['#mu^{-} #eta',None]
 LABELMAP['l_eta'] = ['#eta',None]
 LABELMAP['lP_eta'] = ['#eta',None]
 LABELMAP['lN_eta'] = ['#eta',None]
 LABELMAP['lepton_etavHP'] = ['#eta',None]
 LABELMAP['lepton_absetav'] = ['|#eta|',None]
+LABELMAP['leptonP_absetav'] = ['#mu^{+} |#eta|',None]
+LABELMAP['leptonN_absetav'] = ['#mu^{-} |#eta|',None]
 LABELMAP['fabs(l_eta)'] = ['|#eta|',None]
 LABELMAP['fabs(lP_eta)'] = ['|#eta|',None]
 LABELMAP['fabs(lN_eta)'] = ['|#eta|',None]
 LABELMAP['wmt'] = ['m_{T}^{W}','GeV']
 LABELMAP['w_mt'] = LABELMAP['wmt']
-LABELMAP['Z_m'] = ['m^{Z}','GeV']
+LABELMAP['Z_m'] = ['m_{Z}','GeV']
 LABELMAP['z_m'] = LABELMAP['Z_m']
 LABELMAP['met'] = ['E_{T}^{Miss}','GeV']
 LABELMAP['lpt'] = ['p_{T}','GeV']
@@ -36,6 +60,8 @@ LABELMAP['Z_pt'] = LABELMAP['zpt']
 LABELMAP['nvtxs_all'] = ['Number of vertices',None]
 LABELMAP['lepton_phi'] = ['#phi',None]
 LABELMAP['l_phi'] = ['#phi',None]
+LABELMAP['lP_phi'] = ['#mu^{+} #phi',None]
+LABELMAP['lN_phi'] = ['#mu^{-} #phi',None]
 LABELMAP['vxz0'] = ['Reconstructed primary vertex z_{0}','mm']
 LABELMAP['vxz0_unw'] = LABELMAP['vxz0']
 LABELMAP['tr_vxz0'] = ['Truth primary vertex z_{0}','mm']

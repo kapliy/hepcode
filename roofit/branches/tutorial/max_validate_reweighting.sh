@@ -4,6 +4,8 @@
 #input=/share/t3data3/antonk/ana/ana_v29I_11172012_edboard_stacoCB_all
 input=/share/t3data3/antonk/ana/ana_v29I_11172012_edboard_nophi_stacoCB_all
 
+input=/share/t3data3/antonk/ana/ana_v29I_11282012_edboard_nophi_stacoCB_all/
+
 # Validate z vertex reweighting, <mu> reweighting, and nvtx reweighting
 
 refline="0.041,2.059"

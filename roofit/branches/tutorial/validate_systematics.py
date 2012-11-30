@@ -7,15 +7,14 @@ except ImportError:
     pass
 import ROOT
 ROOT.gROOT.SetBatch(1)
-ROOT.gROOT.ProcessLine('.L loader.C+')
 
 import sys
 
 Q = 'plus'
 
 fname = '/home/antonk/d3pd/SYS/ana_w%s.root'%(Q)
-fname='/home/antonk/TrigFTKAna/results/ana_wasym/max_w%s.dat/20121126.unfold.root'%(Q)
 fname = '/home/antonk/d3pd/SYS/AnalysisManager.Wmunu.mc11_7TeV.p833_v0115_%s_syst_powheg_pythia.root'%(Q)
+fname='/home/antonk/TrigFTKAna/results/ana_wasym/max_w%s.dat/20121129.unfold.root'%(Q)
 
 print 'Opening:',fname
 f = ROOT.TFile.Open(fname)
@@ -43,17 +42,18 @@ def run_tree(name):
     return N,h
 
 TREES = ['physics_Nominal',
-#         'physics_NominalWptSherpa',
-#         'physics_NominalWptPythiaMC10',
-#         'physics_NominalWptAlpgenMC11',
-#         'physics_NominalPdfCT10',
-#         'physics_NominalPdfMSTW',
-#         'physics_NominalPdfNNPDF',
-#         'physics_NominalPdfHERA',
+         'physics_WptSherpa',
+         'physics_WptPythiaMC10',
+         'physics_WptAlpgenMC11',
+         'physics_PdfCT10',
+         'physics_PdfMSTW',
+         'physics_PdfNNPDF',
+         'physics_PdfHERA',
          'physics_MuonRecoSFUp',
          'physics_MuonRecoSFDown',
          'physics_MuonTriggerSFUp',
          'physics_MuonTriggerSFDown',
+         'physics_MuonTriggerSFPhi',
          'physics_MuonIsoSFUp',
          'physics_MuonIsoSFDown',
          'physics_ResoSoftTermsUp_ptHard',
@@ -64,10 +64,10 @@ TREES = ['physics_Nominal',
          'physics_JetResolDown',
          'physics_JetScaleUp',
          'physics_JetScaleDown',
-#         'physics_JetNPVUp',
-#         'physics_JetNPVDown',
-#         'physics_JetMUUp',
-#         'physics_JetMUDown',
+         'physics_JetNPVUp',
+         'physics_JetNPVDown',
+         'physics_JetMUUp',
+         'physics_JetMUDown',
          'physics_MuonResMSUp',
          'physics_MuonResMSDown',
          'physics_MuonResIDUp',

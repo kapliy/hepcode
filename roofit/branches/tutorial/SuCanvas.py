@@ -39,7 +39,8 @@ class SuCanvas:
         s._ratioDrawn = False
         s._ratioName = "Data / MC"
         s.savename = SuCanvas.cleanse(name)
-        s._logy = False
+        s._mlogy = False
+        s._rlogy = False
         s._plotPad,s._coverPad,s._ratioPad,s._canvas = None,None,None,None
 
     def namebase(s):
@@ -86,7 +87,7 @@ class SuCanvas:
 
     def ConfigureAxisMain(s,stack,noratio=False):
         """ Configures the axis either for a stack or a histogram in the main pad """
-        logy = s._logy
+        logy = s._mlogy
         #stack.SetMinimum(1 if logy else 0) #CAREFUL: this was here before nov 22 2012
         obj = stack.GetHistogram() if stack.InheritsFrom('THStack') else stack
         obj.GetXaxis().SetLabelFont(SuCanvas.g_text_font)
@@ -99,7 +100,7 @@ class SuCanvas:
         stack.GetYaxis().SetLabelSize(SuCanvas.g_text_size)
         stack.GetYaxis().SetTitleFont(SuCanvas.g_text_font)
         stack.GetYaxis().SetTitleSize(SuCanvas.g_text_size)
-        stack.GetYaxis().SetTitleOffset(SuCanvas.g_loSuCanvas.g_main_y_title_offset if logy else SuCanvas.g_lin_main_y_title_offset);
+        stack.GetYaxis().SetTitleOffset(SuCanvas.g_log_main_y_title_offset if logy else SuCanvas.g_lin_main_y_title_offset);
         # avoid ticks covered by filled histograms
         if noratio==False:
             s._plotPad.RedrawAxis();
@@ -109,7 +110,7 @@ class SuCanvas:
     def ConfigureAxisRatio(s,h_ratio=None):
         """ Configures the axis either for a histogram in the ratio pad """
         if not h_ratio: return
-        logy = s._logy
+        logy = s._rlogy
         h_ratio.GetYaxis().SetLabelFont(SuCanvas.g_text_font)
         h_ratio.GetYaxis().SetLabelSize(SuCanvas.g_text_size)
         h_ratio.GetYaxis().SetTitleFont(SuCanvas.g_text_font)
@@ -118,7 +119,7 @@ class SuCanvas:
         h_ratio.GetXaxis().SetLabelSize(SuCanvas.g_text_size)
         h_ratio.GetXaxis().SetTitleFont(SuCanvas.g_text_font)
         h_ratio.GetXaxis().SetTitleSize(SuCanvas.g_text_size)
-        h_ratio.GetYaxis().SetTitleOffset(SuCanvas.g_loSuCanvas.g_ratio_y_title_offset if logy else SuCanvas.g_lin_ratio_y_title_offset);
+        h_ratio.GetYaxis().SetTitleOffset(SuCanvas.g_log_ratio_y_title_offset if logy else SuCanvas.g_lin_ratio_y_title_offset);
         h_ratio.GetXaxis().SetTitleOffset(SuCanvas.g_ratio_x_title_offset);
         # the factor is a guess
         h_ratio.GetXaxis().SetTickLength(h_ratio.GetXaxis().GetTickLength()*2.1);
@@ -434,11 +435,11 @@ class SuCanvas:
         s._ratioXtitleOffset = 1.;
         s._ratioYtitleOffset = 0.5;
  
-    def buildDefault(s,width=600,height=600,title=None,margin=0.05,logy=False):
+    def buildDefault(s,width=600,height=600,title=None,margin=0.05,mlogy=False):
         """ Sebastian version """
         if not title:
             title = rand_name()
-        s._logy = logy
+        s._mlogy = mlogy
         s._canvas = ROOT.TCanvas( 'canvasd'+title , 'canvasd'+title , width , height );
         main_frac = 1.0
         left_bottom_margin = 3*margin;
@@ -449,13 +450,14 @@ class SuCanvas:
         s._canvas.SetTopMargin(margin/main_frac);
         s._canvas.cd();
         if logy:
-            s._canvas.SetLogy(logy)
+            s._canvas.SetLogy(mlogy)
 
-    def buildRatio(s,width=600,height=600,title=None,margin=0.05,logy=False):
+    def buildRatio(s,width=600,height=600,title=None,margin=0.05,mlogy=False,rlogy=False):
         """ Sebastian version """
         if not title:
             title = rand_name()
-        s._logy = logy
+        s._mlogy = mlogy
+        s._rlogy = rlogy
         ratio_frac = SuCanvas.g_ratio_frac
         main_frac = 1-ratio_frac;
         s._canvas = ROOT.TCanvas( 'canvasm'+title , 'canvasm'+title , width , height );
@@ -478,8 +480,8 @@ class SuCanvas:
         s._canvas.cd();
         s._ratioPad.Draw();
         s._plotPad.cd();
-        if logy:
-            s._plotPad.SetLogy(logy)
+        if mlogy:
+            s._plotPad.SetLogy(mlogy)
             
     @staticmethod
     def cleanse(name2):
@@ -551,7 +553,8 @@ class SuCanvas:
 
     def plotAny(s,hplots,M=None,height=1.5,mode=0,
                 rebin=1.0,
-                xaxis_info=None):
+                xaxis_info=None,
+                mlogy=False,rlogy=False):
         """ A generic function to plot several SuPlot's.
         M is: a PlotOptions object describing formatting and colors
         Height is: Max*height. Or asym = 0..0.5
@@ -565,10 +568,10 @@ class SuCanvas:
             leg.SetHeader(M.title)
         s.data.append( (hplots,leg) )
         if M and M.any_ratios():
-            s.buildRatio()
+            s.buildRatio(mlogy=mlogy,rlogy=rlogy)
             s.cd_plotPad()
         else:
-            s.buildDefault()
+            s.buildDefault(mlogy=mlogy)
             s.cd_canvas();
         # plot actual histograms
         hs = []
@@ -654,12 +657,13 @@ class SuCanvas:
 
     def plotStack(s,hstack,hdata,leg=None,height=1.5,mode=0,pave=True,
                   rebin=1.0,
-                  xaxis_info=None):
+                  xaxis_info=None,
+                  mlogy=False,rlogy=False):
         """ Wrapper to make a complete plot of stack and data overlayed - SuData version
         mode=0 - nominal only
         mode=1 - apply systematics
         """
-        s.buildRatio();
+        s.buildRatio(mlogy=mlogy,rlogy=rlogy);
         s.cd_plotPad();
         stack = hstack.nominal().get_stack(rebin).Clone()
         data = hdata.nominal_h(rebin)
@@ -743,7 +747,7 @@ class SuCanvas:
             hsysr.Draw('A SAME E2')
             s.data.append(hsysr)
         # axis parameters
-        logy = s._logy
+        logy = s._mlogy
         stack.SetMaximum(stack.GetMaximum()*10*height if logy else stack.GetMaximum()*height)
         if xaxis_range!=None:
             hratio.GetXaxis().SetRange(*xaxis_range)

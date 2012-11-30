@@ -17,16 +17,19 @@ from optparse import OptionParser
 # SELECT dbname
 dbname = 'out1113mcpupdate' # published constants in MuonMomentumCorrections come from here
 dbname = 'out2011_v29D_05222012_MCP2011' # updated 2011 for full 2011 dataset + extra bin at 2.0 + powheg
-dbname = 'out2011_v29G_08102012_MCP_NEW'
+dbname = 'out2011_v29G_08102012_MCP_NEW' # attempt at extra fine bins
+dbname = 'out2011_v29I_11212012_edboard_nophi'  # regular 2011 bins, trying out mean-rms scheme for systematics
 
 # SELECT eta binning
 boundsP,codeP = [0.30,0.60,0.9,1.30,1.60,2.00,2.50],'T%dT'
-boundsP,codeP = [0.50,1.05,1.70,2.51],'S%dS'
 boundsP,codeP = [0.50,1.05,1.70,2.0,2.5],'W%dW'
 boundsP,codeP = [0.21,0.42,0.63,0.84,1.05,1.37,1.52,1.74,1.95,2.18,2.4],'V%dV'
+boundsP,codeP = [0.50,1.05,1.70,2.51],'S%dS'
 
 _DISABLE_KLU = False
 _DISABLE_CHI = False
+CDET = None
+CREG = None
 
 from optparse import OptionParser
 parser = OptionParser()
@@ -48,6 +51,9 @@ parser.add_option("-r", "--release",dest="rel",
 parser.add_option("--antondb",dest="antondb",
                   type="string", default=dbname,
                   help="Tag for antondb output container")
+parser.add_option("--avg",default=False,
+                  action="store_true",dest="avg",
+                  help="Take central value as the average of systematics?")
 (opts, args) = parser.parse_args()
 mode = opts.mode
 algo = opts.algo
@@ -71,6 +77,16 @@ latex_head = r"""
 latex_tail = r"""
 \end{document}"""
 
+def mean(y):
+    x = y
+    if len(x)==0: return 0
+    return sum(x)/len(x)
+def rms(y):
+    x = y
+    if len(x)==0: return 0
+    m = mean(x)*1.0
+    return math.sqrt( sum([ (xx-m)**2 for xx in x])/len(x) )
+
 class Document:
     latex_head = r"""
     \documentclass[a4paper]{article}
@@ -86,7 +102,7 @@ class Document:
     def add_node(s,node,det):
         s.dets.append(det)
         s.nodes.append(node)
-    def print_mcp(s,type='KC'):
+    def print_mcp(s,type='KC',avg=False):
         if len(s.nodes)==0: return
         node = s.nodes[0]
         if type=='KC':
@@ -97,7 +113,7 @@ class Document:
         for i,det in enumerate(s.dets):
             print det
             node = s.nodes[i]
-            node.print_mcp(type)
+            node.print_mcp(type,avg=avg)
     def print_txt(s):
         pass
     def print_latex(s):
@@ -129,11 +145,11 @@ class Table:
         s.C.append(C)
         s.kp.append(kp)
         s.km.append(km)
-    def print_mcp(s,type):
+    def print_mcp(s,type,avg=False):
         if type=='KC':
             assert(len(s.K)==len(s.C)==len(s.bins))
             for ibin,bin in enumerate(s.bins):
-                print s.K[ibin].string_mcp(),'\t',s.C[ibin].string_mcp()
+                print s.K[ibin].string_mcp(avg=avg),'\t',s.C[ibin].string_mcp(avg=avg)
         elif type=='kpkm':
             assert(len(s.kp)==len(s.km)==len(s.bins))
             for ibin,bin in enumerate(s.bins):
@@ -157,9 +173,9 @@ class Value:
         s.stat2 = None
         # list of systematics groups (correlated/anticorrelated)
         s.sysgroups = [ (1,) , (2,3,4) ] # only matters for kpkm case
-    def string_mcp(s):
+    def string_mcp(s,avg=False):
         if s.type=='KC':
-            return '%.2f\t%.2f\t%.2f'%(s.get_mean(), s.get_tot(), s.get_tot())
+            return '%.2f\t%.2f\t%.2f'%(s.get_mean(avg=avg), s.get_tot(avg=avg), s.get_tot(avg=avg))
         elif s.type=='kpkm':
             return '%.2f\t%.2f\t%.2f'%(s.get_mean(), s.get_tot1(), s.get_tot2())
     def add(s,mean,stat,stat1=None,stat2=None,key='default'):
@@ -214,9 +230,12 @@ class Value:
             ekm1,ekm2 = math.sqrt(emz**2 * 1/(mz0*math.sqrt(R))**2),math.sqrt(eR**2 * (mz/mz0)**2 / (4 * R**3))
             s.stat1 = ekm1*100.0
             s.stat2 = ekm2*100.0
-    def get_mean(s,key='default'):
-        i = s.keys.index(key)
-        return s.mean[i]
+    def get_mean(s,key='default',avg=False):
+        if avg==True:
+            return mean(s.mean)
+        else:
+            i = s.keys.index(key)
+            return s.mean[i]
     def get_stat(s,key='default'):
         i = s.keys.index(key)
         return s.stat[i]
@@ -226,10 +245,16 @@ class Value:
     def get_stat2(s):
         assert s.stat2, 'You need to set s.stat2 to use this'
         return s.stat2 if s.stat2 else 0
-    def get_sys(s):
-        r0 = s.mean[0]
-        rsys = s.mean[1:]
-        return math.sqrt( sum([(r-r0)**2 for r in rsys]) )
+    def get_sys(s,avg=False):
+        """ systematic error with respect to first aka nominal """
+        if avg==True:
+            r0 = s.get_mean(avg=True)
+            rsys = s.mean[:]
+            return math.sqrt( sum([(r-r0)**2 for r in rsys]) )
+        else:
+            r0 = s.mean[0]
+            rsys = s.mean[1:]
+            return math.sqrt( sum([(r-r0)**2 for r in rsys]) )
     def get_sys1(s):
         r0 = s.mean[0]
         rsys = [s.mean[i] for i in s.sysgroups[0]]
@@ -238,8 +263,8 @@ class Value:
         r0 = s.mean[0]
         rsys = [s.mean[i] for i in s.sysgroups[1]]
         return math.sqrt( sum([(r-r0)**2 for r in rsys]) )
-    def get_tot(s):
-        return math.sqrt(s.get_sys()**2 + s.get_stat()**2)
+    def get_tot(s,avg=False):
+        return math.sqrt(s.get_sys(avg=avg)**2 + s.get_stat()**2)
     def get_tot1(s):
         return math.sqrt(s.get_sys1()**2 + s.get_stat1()**2)
     def get_tot2(s):
@@ -882,13 +907,14 @@ if mode==10:
 t = Document()
 dets = ['cmb','exms','id']
 for det in dets:
+    CDET = det
     node = Table()
     for reg in regs:
+        CREG = reg
         v_kp,v_km = None,None
         v_K = Value()  # systematic variations on overall   scale K
         v_C = Value()  # systematic variations on curvature shift C
         Cdef = a.data['/keysfit/r%d_powheg_pythia_default_%s/%s/%s/SHIFT'%(rel,alg,det,reg)]
-        Cklu = a.data['/keysfit/r%d_powheg_pythia_klu_%s/%s/%s/SHIFT'%(rel,alg,det,reg)]  # deprecated!
         CR70 = a.data['/keysfit/r%d_powheg_pythia_m70110_%s/%s/%s/SHIFT'%(rel,alg,det,reg)]
         zft0 = a.data['/zpeak/r%d_powheg_pythia_default_%s/%s/%s/gaus0'%(rel,alg,det,reg)]
         zft3 = a.data['/zpeak/r%d_powheg_pythia_default_%s/%s/%s/egge3'%(rel,alg,det,reg)]
@@ -898,13 +924,14 @@ for det in dets:
         zft3p= a.data['/zpeak/r%d_pythia_default_%s/%s/%s/egge3'%(rel,alg,det,reg)]
         v_C.add_C(Cdef['ksf'], Cdef['chie'],key='default')
         v_C.add_C(Cdef['chif'],Cdef['chie'],key='chi2')
-        #v_C.add_C(Cklu['ksf'], Cklu['chie'],key='klu') #DEPRECATED
         v_C.add_C(CR70['ksf'], CR70['chie'],key='R70')
         v_K.add_K(zft0['data_mz'],zft0['data_emz'],zft0['mc_mz'],key='default')
         v_K.add_K(zft3['data_mz'],zft3['data_emz'],zft3['mc_mz'],key='egge')
         v_K.add_K(zft3h['data_mz'],zft0h['data_emz'],zft3h['mc_mz'],key='powheg_herwig')
         #v_K.add_K(zft3p['data_mz'],zft0p['data_emz'],zft3p['mc_mz'],key='powheg_pythia')
         if False: # DEPRECATED: kpkm version
+            #Cklu = a.data['/keysfit/r%d_powheg_pythia_klu_%s/%s/%s/SHIFT'%(rel,alg,det,reg)]  # deprecated!
+            #v_C.add_C(Cklu['ksf'], Cklu['chie'],key='klu') #DEPRECATED!
             keys = ['default','chi2','klu','R70','egge']
             Kdef = a.data['/keysfit/r%d_powheg_pythia_default_%s/%s/%s/R0'%(rel,alg,det,reg)]
             Kklu = a.data['/keysfit/r%d_powheg_pythia_klu_%s/%s/%s/R0'%(rel,alg,det,reg)]
@@ -925,6 +952,6 @@ for det in dets:
     t.add_node(node,det)
 
 if mode==15:
-    t.print_mcp(type='kpkm' if not opts.shift else 'KC')
+    t.print_mcp(type='kpkm' if not opts.shift else 'KC',avg=opts.avg)
 
 os.system('if [ -f %s ]; then pdflatex -output-directory latex/ %s &>%s.log; fi'%(fname,fname,fname))
