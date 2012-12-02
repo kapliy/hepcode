@@ -496,22 +496,27 @@ class SuPlot:
             add('MuonNoScale','MuonNoScale')
             next('MCP_SCALE')
         else:  # using my C/K variations
-            add('MuonScaleKUp','MuonScaleKUp')
-            add('MuonScaleKDown','MuonScaleKDown')
+            add('MuonKScaleUp','MuonKScaleUp')
+            add('MuonKScaleDown','MuonKScaleDown')
             next('MCP_KSCALE')
-            add('MuonScaleCUp','MuonScaleCUp')
-            add('MuonScaleCDown','MuonScaleCDown')
+            add('MuonCScaleUp','MuonCScaleUp')
+            add('MuonCScaleDown','MuonCScaleDown')
             next('MCP_CSCALE')
         # MCP efficiency
         if True:
-            add2('MuonRecoSFUp','st_w_efftotup','MuonRecoSFUp')
-            add2('MuonRecoSFDown','st_w_efftotdown','MuonRecoSFDown')
+            add2('MuonRecoSFUp','st_w_effsysup','MuonRecoSFUp')
+            add2('MuonRecoSFDown','st_w_effsysdown','MuonRecoSFDown')
             next('MCP_EFF')
+        # trigger systematic
+        if True:
+            add2('MuonTriggerSFPhi','st_w_trigphi','MuonTriggerSFUp')
+            next('MCP_TRIG')
+        else:
             add2('MuonTriggerSFUp','st_w_trigstatup','MuonTriggerSFUp')
             add2('MuonTriggerSFDown','st_w_trigstatdown','MuonTriggerSFDown')
             next('MCP_TRIG')
         # ISO efficiency
-        if False:
+        if True:
             add2('MuonIsoSFUp','st_w_isoup','MuonIsoSFUp')
             add2('MuonIsoSFDown','st_w_isodown','MuonIsoSFDown')
             next('MCP_ISO')
@@ -1583,7 +1588,7 @@ class SuStack:
         f.addFitVar( d2.qcd['var'], d2.qcd['min'] , d2.qcd['max'] , '%s (GeV)'%(d2.qcd['var']) );
         # get histograms
         hdata   = s.data('data',d2).h
-        hfree = s.qcd('bgfree',d2).h
+        hfree = s.qcd('bgfree',d2).h    # using correct lumi for bg subtraction here
         # use fake lumi to make sure the signal statistics is not scaled before entering TFractionFitter
         oldlumi = SuSample.lumi
         if SuStack.QCD_STAT_HACK:
@@ -1743,6 +1748,7 @@ class SuStack:
         NMAP['wtaunu_powheg_herwig'] = 'wtaunu'
         NMAP['wtaunu_mcnlo'] = 'wtaunu'
         NMAP['wtaunu_alpgen_herwig'] = 'wtaunu'
+        NMAP['wtaunu_pythia'] = 'wtaunu'
         NMAP['zmumu_powheg_pythia'] = 'zmumu'
         NMAP['zmumu_powheg_herwig'] = 'zmumu'
         NMAP['zmumu_mcnlo'] = 'zmumu'
@@ -1751,6 +1757,7 @@ class SuStack:
         NMAP['ztautau_powheg_herwig'] = 'ztautau'
         NMAP['ztautau_mcnlo'] = 'ztautau'
         NMAP['ztautau_alpgen_herwig'] = 'ztautau'
+        NMAP['ztautau_pythia'] = 'ztautau'
         NMAP['dyan_pythia'] = 'dyan'
         NMAP['dyan_mcnlo'] = 'dyan'
         NMAP['WW/WZ/ZZ'] = 'diboson'

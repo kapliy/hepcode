@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Re-coding QCD fits to use 3d histograms
+input=/share/t3data3/antonk/ana/ana_v29I_11192012_edboard_nophi_stacoCB_all
+
+input=/share/t3data3/antonk/ana/ana_v29I_11282012_edboard_nophi_stacoCB_all/
+
+for bgsig in 1 4 5; do
+    ./stack2.py --input ${input} -b --charge 0 --lvar d3_eta_lpt_wmt --lbin 50,40,70 --isofail IsoFail20 -o TEST -t isofail_met0to50 -m qcdfit_2d --bgsig ${bgsig} --bgewk 5 --bgqcd 3 --ieta 20 --ipt 2 --extra HISTO_DELETEME --var d3_eta_lpt_met --xsecerr 0 --etamode 1 --rebin 4
+done
+
+#./stack2.py --input ${input} -b --charge 0 --lvar d3_abseta_lpt_met --lbin 50,0,50 --isofail IsoFail20 -o TEST -t isofail_met0to50 -m qcdfit_2d --bgsig 1 --bgewk 5 --bgqcd 3 --ieta 1 --ipt 5 --extra HISTO_DELETEME --var d3_abseta_lpt_met --xsecerr 0 --etamode 2 --rebin 4
+

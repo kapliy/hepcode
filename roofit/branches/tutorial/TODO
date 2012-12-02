@@ -1,3 +1,5 @@
+Check jet calibration effect, especially in data - propagation to met.
+
 NOTE: fake lumi for qcd fits prevents bgqcd=4 from working correctly - we need to do bg subtraction
 with the proper lumi assumption!
 
@@ -34,6 +36,7 @@ DONE: add jes pileup term etc (two terms total) to systematics!
 
 QCD FITS:
 Convert to using 3d histograms
+Possibility of relaxing charge requirement on QCD to double stats
 check if last two-three pt bins have vastly different scale factors. If not, see if we can fit them all together (easy via 3d histos)
 This will reduce nfits by a lot, and will give us more statistics.
 LONG overdue: really need to understand difference in bgqcd=3 and bgqcd=4. Plot normalized templates on top of each other!

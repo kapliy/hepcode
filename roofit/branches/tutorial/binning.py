@@ -15,19 +15,33 @@ def EB(b,etamode=2):
     """
     etabins = absetabins if etamode==2 else setabins
     if b=='ALL': return ':x:1:%d'%(len(etabins)-1)
-    elif b <= len(etabins)-1: return ':x:%d:%d'%(b,b)
+    elif b>0 and b <= len(etabins)-1: return ':x:%d:%d'%(b,b)
     assert False,'Unknown eta bin: %s'%b
     return None
+def REB(b,etamode=2):
+    """ Reverse map of eta bins, where input b counts from 0
+    """
+    if b=='ALL': return b
+    return b+1
 def PB(b):
     """ Converts opts.ipt to a SuData/TH2::Project specifier (2:2), merging neighboring pt bins
     Note that ipt counts from 1, following ROOT TH1 bin counting convention
     """
     if b=='ALL': return ':y:1:%d'%(len(ptbins)-1)
-    elif b<=3: return ':y:%d:%d'%(b,b)   # 30 .. 35
+    elif b>0 and b<=3: return ':y:%d:%d'%(b,b)   # 30 .. 35
     elif b==4: return ':y:4:5'           # 35 .. 45
     elif b==5: return ':y:6:7'           # 45 .. 120
     assert False,'Unknown pt bin: %s'%b
     return None
+def RPB(b):
+    """ Reverse map of pt bins, where input b counts from 0
+    """
+    if b=='ALL': return b
+    elif b<=2: return b+1
+    elif b in (3,4): return 3+1
+    elif b in (5,6): return 4+1
+    assert False,'Unkown pt bin: %s'%b
+    return b
 
 # label maps
 LABELMAP = {}

@@ -30,16 +30,15 @@ source bashmap.sh
 SMART_KILLER="./smart_killer.sh"
 #SMART_KILLER=""
 
-antondb='HISTO_11282012_ALL.v1'
+antondb='HISTO_11282012_ALL.v3'
 mkdir -p ${antondb}
 input=/share/t3data3/antonk/ana/ana_v29I_11072012_unfold_stacoCB_all/
 input=/share/t3data3/antonk/ana/ana_v29I_11282012_edboard_nophi_stacoCB_all/
 
 ETAMODES="1 2" # 2=|eta| bins, 1=eta bins
 bgsigs="1 4 5"
-bgqcds="3 4" # 3=regular, 4=bgsub in qcd template
-bgtaus="2"
-var='d3_abseta_lpt_met'  # plotting var (not relevant for scale definition; only for fraction)
+bgqcds="4 3" # 3=regular, 4=bgsub in qcd template
+bgtaus="5 2 0"
 ipts=`echo {1..5} ALL`
 
 i=0
@@ -66,8 +65,10 @@ gput tagzs ${i} wmt40to80 "--lvar d3_abseta_lpt_wmt --lbin 50,40,80 "  ; ((i++))
 
 for ETAMODE in ${ETAMODES}; do
     ietas=`echo {1..11} ALL`
+    var='d3_abseta_lpt_met'  # plotting var (not relevant for scale definition; only for fraction)
     if [ "${ETAMODE}" == "1" ]; then
 	ietas=`echo {1..22} ALL`
+	var='d3_eta_lpt_met'
     fi
     for iq in 0 1; do
 	for bgqcd in $bgqcds; do
@@ -78,6 +79,9 @@ for ETAMODE in ${ETAMODES}; do
 		    for itagz in `gkeys tagzs`; do
 			tagz=`ggeta tagzs $itagz`
 			optsz=`ggetb tagzs $itagz`
+			if [ "${ETAMODE}" == "1" ]; then
+			    optsz=`echo ${optsz} | sed -e 's#abseta#eta#g'`
+			fi
 			for bgtau in $bgtaus; do
 			    for ieta in ${ietas}; do
 				for ipt in ${ipts}; do

@@ -922,13 +922,16 @@ for det in dets:
         zft3h= a.data['/zpeak/r%d_powheg_herwig_default_%s/%s/%s/egge3'%(rel,alg,det,reg)]
         zft0p= a.data['/zpeak/r%d_pythia_default_%s/%s/%s/gaus0'%(rel,alg,det,reg)]
         zft3p= a.data['/zpeak/r%d_pythia_default_%s/%s/%s/egge3'%(rel,alg,det,reg)]
+        #zft0r= a.data['/zpeak/r%d_powheg_pythia_m80100_%s/%s/%s/gaus0'%(rel,alg,det,reg)]
+        zft3r= a.data['/zpeak/r%d_powheg_pythia_m80100_%s/%s/%s/egge3'%(rel,alg,det,reg)]
         v_C.add_C(Cdef['ksf'], Cdef['chie'],key='default')
         v_C.add_C(Cdef['chif'],Cdef['chie'],key='chi2')
         v_C.add_C(CR70['ksf'], CR70['chie'],key='R70')
         v_K.add_K(zft0['data_mz'],zft0['data_emz'],zft0['mc_mz'],key='default')
         v_K.add_K(zft3['data_mz'],zft3['data_emz'],zft3['mc_mz'],key='egge')
-        v_K.add_K(zft3h['data_mz'],zft0h['data_emz'],zft3h['mc_mz'],key='powheg_herwig')
-        #v_K.add_K(zft3p['data_mz'],zft0p['data_emz'],zft3p['mc_mz'],key='powheg_pythia')
+        v_K.add_K(zft0h['data_mz'],zft0h['data_emz'],zft0h['mc_mz'],key='powheg_herwig')
+        #v_K.add_K(zft0p['data_mz'],zft0p['data_emz'],zft0p['mc_mz'],key='pythia')
+        v_K.add_K(zft3r['data_mz'],zft3r['data_emz'],zft3r['mc_mz'],key='m80100')
         if False: # DEPRECATED: kpkm version
             #Cklu = a.data['/keysfit/r%d_powheg_pythia_klu_%s/%s/%s/SHIFT'%(rel,alg,det,reg)]  # deprecated!
             #v_C.add_C(Cklu['ksf'], Cklu['chie'],key='klu') #DEPRECATED!
