@@ -4,7 +4,7 @@
 
 ntot=`./QCD_2D.sh | grep Max | awk '{print $3}'`
 nperblk=800 # njobs per block
-nsubmin=220 # resubmit when jobs fall below this
+nsubmin=300 # resubmit when jobs fall below this
 nblk=`expr ${ntot} / ${nperblk}` # total number of blocks
 nperlast=`expr ${ntot} % ${nperblk}` # njobs in last block
 
@@ -19,7 +19,8 @@ for iblk in `seq 0 ${nblk}`; do
     # keep waiting until there are enough job slots
     islp=0
     while [ "1" -eq "1" ]; do
-	nactive=`qstat -u $USER 2>/dev/null | grep -c $USER`
+	nactive=`qstat -u $USER 2>/dev/null | grep short | grep -c $USER`
+	#nactive=`qstat -u $USER 2>/dev/null | grep -c $USER`
 	if [ "${nactive}" -lt "${nsubmin}" ]; then
 	    break
 	fi

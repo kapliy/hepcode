@@ -21,27 +21,6 @@ Changes: UnfoldMCNLO etc variations use PowhegPythia zmumu,wtaunu,ztautau (not e
 import sys,os,re,math,copy
 import antondb
 
-# Define all systematics. Note that bgsig is NOT present here, since we save separate histograms for each bgsig
-#'/iq%d/X%d/bgqcd3/bgewk%d/bgsig%d/iso%s/ivar%s/ibin%s/ieta%d/ipt%s'%(iq,xsecerr,bgewk,bgsig,isofail,ivar,ibin,ieta,ipt)
-FITS = [ ('met','50,0,80'),('met','50,0,90'),('wmt','50,40,90'),('wmt','50,35,100') ] # anton's old fits
-FITS = [ ('met','50,0,60'),('met','50,0,50'),('wmt','50,40,70'),('wmt','50,35,80') ] # adrian lewis-inspired ranges
-msys = []
-for xsecerr in [ (0,) ]:
-    for bgewk in [ (5,),(2,) ]:
-        #for isofail in [ ('IsoFail20',),('IsoWind20',) ] [:] :
-        for isofail in [ ('IsoFail20',) ]:
-            for ivar in FITS:
-                msys.append( xsecerr+bgewk+isofail+ivar )
-msys_nom = (0,5,'IsoFail20')+FITS[0]
-bgsigs = [5,4,1][:]
-memo += 'FITS: ' + str(FITS)
-memo += 'MSYS: ' + str(msys)
-
-QMAP = {0:'mu+',1:'mu-',2:'both charges'}
-QMAPN = {0:'POS',1:'NEG',2:'ALL'}
-SIGMAP = { 1 : "MC@NLO", 2 : 'Alpgen+Her', 4 : "PowHeg+Herwig", 5 : "PowHeg+Pythia" }
-FQNAMES = { 0 : 'POS_sig5_ewk5', 1 : 'NEG_sig5_ewk5' }
-
 DIM = 2  # 2d fits in pt x eta
 if len(sys.argv)>=2 and sys.argv[1]=='1':
     DIM = 1  # 1d fits in eta only
@@ -51,6 +30,27 @@ if len(sys.argv)>=3 and sys.argv[2]=='1':
     ETAMODE = 1 # use eta
 print 'ETAMODE:',ETAMODE
 eword = 'eta' if ETAMODE==1 else 'abseta'
+
+# Define all systematics. Note that bgsig is NOT present here, since we save separate histograms for each bgsig
+FITS = [ ('d3_%s_lpt_met'%eword,'50,0,50'),
+         ('d3_%s_lpt_met'%eword,'50,5,60'),
+         ('d3_%s_lpt_wmt'%eword,'50,40,80') ]
+msys = []
+for xsecerr in [ (0,) ]:
+    for bgtau in [ (2,),(5,) ]:
+        #for isofail in [ ('IsoFail20',),('IsoWind20',) ] [:] :
+        for isofail in [ ('IsoWind20',) ]:
+            for ivar in FITS:
+                msys.append( xsecerr+bgtau+isofail+ivar )
+msys_nom = (0,2,'IsoWind20')+FITS[0]
+bgsigs = [5,4,1][:]
+memo += 'FITS: ' + str(FITS)
+memo += 'MSYS: ' + str(msys)
+
+QMAP = {0:'mu+',1:'mu-',2:'both charges'}
+QMAPN = {0:'POS',1:'NEG',2:'ALL'}
+SIGMAP = { 0: 'Pythia' , 1 : "MC@NLO", 2 : 'Alpgen+Her', 4 : "PowHeg+Herwig", 5 : "PowHeg+Pythia" }
+FQNAMES = { 0 : 'POS_sig5_tau2_ewk5', 1 : 'NEG_sig5_tau2_ewk5' }
 
 import binning
 etabins = binning.setabins if ETAMODE==1 else binning.absetabins # N=12
@@ -62,12 +62,12 @@ COLH = 150
 COLW = 95
 
 bgqcd = 3
-db_name = 'DB_11022012_ALL.v2'
-fin_name = 'IN_11022012_ALL.v1.%s.%dD.root'%(eword,DIM)
+db_name = 'DB_11282012_ALL.v2'
+fin_name = 'IN_11282012_ALL.v1.%s.%dD.root'%(eword,DIM)
 
 bgqcd = 4
-db_name = 'DB_11022012_ALL.v2'
-fin_name = 'IN_11022012_ALL.v2.%s.%dD.root'%(eword,DIM)
+db_name = 'DB_11282012_ALL.v2'
+fin_name = 'IN_11282012_ALL.v2.%s.%dD.root'%(eword,DIM)
 
 fout_name = re.sub('IN_','OUT_',fin_name)
 if os.path.exists(fin_name):
@@ -84,7 +84,9 @@ def rms(y):
     if len(x)==0: return 0
     m = mean(x)*1.0
     return math.sqrt( sum([ (xx-m)**2 for xx in x])/len(x) )
-def get(iq,bgsig,ieta,ipt):
+def get(iq,bgsig,ietaX,iptX):
+    ieta = binning.REB(ietaX)
+    ipt  = binning.RPB(iptX)
     idxs = []
     fracs = []
     scales = []
@@ -96,23 +98,24 @@ def get(iq,bgsig,ieta,ipt):
     idx = 0
     bla2=[]
     bla5=[]
-    for xsecerr,bgewk,isofail,ivar,ibin in msys:
-        key = '/iq%d/X%d/bgqcd%d/bgewk%d/bgsig%d/iso%s/ivar%s/ibin%s/%s%s/ipt%s'%(iq,xsecerr,bgqcd,bgewk,bgsig,isofail,ivar,ibin,'ieta' if ETAMODE==2 else 'iseta',ieta,ipt)
+    for xsecerr,bgtau,isofail,ivar,ibin in msys:
+        key = '/iq%d/X%d/bgqcd%d/bgtau%d/bgewk%d/bgsig%d/iso%s/lvar%s/lbin%s/%s%s/ipt%s'%(iq,xsecerr,bgqcd,bgtau,bgsig,bgsig,isofail,ivar,ibin,'ieta' if ETAMODE==2 else 'iseta',ieta,ipt)
         if key in R:
             fracs.append(R[key]['frac'])
             sc = R[key]['scales']
             scales.append(sc[0])
             scalesE.append(sc[1])
-            if isofail=='IsoFail20':
+            if isofail==msys_nom[2]:
                 scalesL.append(sc[0])
                 scalesLE.append(sc[1])
             chindfs.append( 1.0*sc[-3]/sc[-2] )
-            if bgewk==2: bla2.append(fracs[-1])
-            if bgewk==5: bla5.append(fracs[-1])
+            if bgtau==2: bla2.append(fracs[-1])
+            if bgtau==5: bla5.append(fracs[-1])
         else:
             print 'MISSING:',key
         idxs.append(idx)
         idx += 1
+    #print 'DEBUG:',ieta,ipt,'|',fracs,scales
     return idxs,fracs,scales,scalesE,chindfs,scalesL,scalesLE
 
 def scale_bin(h,ietabin,iptbin,v):
@@ -363,8 +366,8 @@ if __name__=='__main__':
                 # so in principle, we should use correlated ewk here, too (i.e. mcnlo or powheg-herwig)
                 # but unfortunately there is not enough statistics. We have to use alpgen instead???
                 # or: NLO reweighted to something else?
-                adir4 = fin.Get('%s_sig4_ewk5'%QMAPN[iq]); assert adir4
-                adir1 = fin.Get('%s_sig1_ewk5'%QMAPN[iq]); assert adir1
+                adir4 = fin.Get('%s_sig4_tau2_ewk4'%QMAPN[iq]); assert adir4
+                adir1 = fin.Get('%s_sig1_tau2_ewk1'%QMAPN[iq]); assert adir1
                 for system in systems: #including Nominal
                     allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
                     make_total(system,allsamples,fout_D[iq],system)
@@ -398,26 +401,26 @@ if __name__=='__main__':
                 QCD[14].Write(QCD[14].GetTitle(),ROOT.TObject.kOverwrite)
                 # generate histograms for alpgen bg subtraction
                 if True:
-                    bdir = fin.Get('%s_sig5_ewk2'%QMAPN[iq])
+                    bdir = fin.Get('%s_sig5_tau2_ewk5'%QMAPN[iq])
                     assert bdir
                     allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
                     make_total(system,allsamples,fout_D[iq],'Nominal_ewk_alpgen')
                     bdir.Get('wmunu_'+system).Write('wmunu_PowhegPythia_Nominal_ewk_alpgen',ROOT.TObject.kOverwrite)
                 # generate histograms for ewkbg xsec variations
                 if True:
-                    bdir = fin.Get('%s_sig5_ewk5_xsecup'%QMAPN[iq])
+                    bdir = fin.Get('%s_sig5_tau2_ewk5_xsecup'%QMAPN[iq])
                     assert bdir
                     allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
                     make_total(system,allsamples,fout_D[iq],'Nominal_ewk_xsecup')
                     bdir.Get('wmunu_'+system).Write('wmunu_PowhegPythia_Nominal_ewk_xsecup',ROOT.TObject.kOverwrite)
-                    bdir = fin.Get('%s_sig5_ewk5_xsecdown'%QMAPN[iq])
+                    bdir = fin.Get('%s_sig5_tau2_ewk5_xsecdown'%QMAPN[iq])
                     assert bdir
                     allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [QCD[0],]
                     make_total(system,allsamples,fout_D[iq],'Nominal_ewk_xsecdown')
                     bdir.Get('wmunu_'+system).Write('wmunu_PowhegPythia_Nominal_ewk_xsecdown',ROOT.TObject.kOverwrite)
                 # generate histograms for MC-based BG subtraction & global normalization
                 if True:
-                    bdir = fin.Get('%s_sig5_ewk5_qcdmc'%QMAPN[iq])
+                    bdir = fin.Get('%s_sig5_tau2_ewk5_qcdmc'%QMAPN[iq])
                     assert bdir
                     allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [bdir.Get('qcd').Clone(),]
                     make_total(system,allsamples,fout_D[iq],'Nominal_qcdmc')
