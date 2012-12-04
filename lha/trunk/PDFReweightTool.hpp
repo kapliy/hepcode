@@ -80,18 +80,13 @@ void PDFReweightTool::Info() const {
 
 void PDFReweightTool::AddDefaultPDFSets() {
   assert(!m_ready && "ERROR: PDFReweightTool::GetWeight must be called before PDFReweightTool::Initialize");
-  // these following 4 PDF sets will consume about 300 MB of RSS RAM and 3000 MB of VMEM
+  // the following PDF sets are recommended for 2011 W/Z paper
   AddPDFSet(10800,"CT10.LHgrid");
+  AddPDFSet(11000,"CT10nlo.LHgrid");
   AddPDFSet(21100,"MSTW2008nlo68cl.LHgrid");
-  AddPDFSet(192800,"NNPDF21_100.LHgrid");
   AddPDFSet(60700,"HERAPDF15NLO_EIG.LHgrid");
-  if(false) { // for reference:
-    AddPDFSet(21000,"MSTW2008lo68cl.LHgrid");
-    AddPDFSet(60500,"HERAPDF10_EIG.LHgrid");
-    AddPDFSet(10550,"cteq66.LHgrid");
-    AddPDFSet(10042,"cteq6ll.LHpdf");
-    AddPDFSet(20651,"MRSTMCal.LHgrid");
-  }
+  AddPDFSet(229800,"NNPDF23_nlo_as_0118.LHgrid");
+  AddPDFSet(42060,"abm11_5n_nlo.LHgrid");
 }
 
 double PDFReweightTool::GetEventWeight(int nset, int member,
@@ -132,7 +127,7 @@ double PDFReweightTool::GetEventWeight(int nset, int member,
   const double pnew = pdf1_new * pdf2_new;
   if(verbose) {
     std::streamsize oldp = std::cout.precision();
-    std::cout.precision(3);
+    std::cout.precision(4);
     std::cout << "PDFReweightTool: ORIGINAL   = " << pdf1 << " * " << pdf2 << " = " << porig << " | "
 	      << "Q=" << Q << " x1=" << x1 << " x2=" << x2 << " id1=" << id1 << " id2=" << id2 
 	      << std::endl
