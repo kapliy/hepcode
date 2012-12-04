@@ -3,18 +3,19 @@
 
 int main() {
   PDFReweightTool *rw = new PDFReweightTool();
-  if(false) {
+  if(true) {
     const std::string LHAPATH = "/share/ftkdata/software/pdfsets";
     std::cout << "Using custom $LHAPATH: " << LHAPATH << std::endl;
     rw->SetLHAPATH(LHAPATH);
+    rw->AddDefaultPDFSets();
   } else {
     std::cout << "Taking $LHAPATH from athena" << std::endl;
+    rw->AddPDFSet(10800,"CT10.LHgrid");
+    rw->AddPDFSet(21100,"MSTW2008nlo68cl.LHgrid");
+    rw->AddPDFSet(192800,"NNPDF21_100.LHgrid");
+    // HERA 1.5 is only available in recent versions of athena
+    // rw->AddPDFSet(60700,"HERAPDF15NLO_EIG.LHgrid");
   }
-  rw->AddPDFSet(10800,"CT10.LHgrid");
-  rw->AddPDFSet(21100,"MSTW2008nlo68cl.LHgrid");
-  rw->AddPDFSet(192800,"NNPDF21_100.LHgrid");
-  // HERA 1.5 is only available in recent versions of athena
-  // rw->AddPDFSet(60700,"HERAPDF15NLO_EIG.LHgrid");
   rw->Initialize();
 
   double mcevt_pdf_scale = 0;

@@ -6,10 +6,10 @@
 # Maximum number of *different* PDF families supported in a single linux process.
 # On 64-bit systems, LHANMAX cannot be more than 6. Otherwise, this error shows up:
 # wrapgjr.f:(.text+0x425): relocation truncated to fit: R_X86_64_PC32 against `.bss'
-export LHANMAX=4
+export LHANMAX=6
 # Enable only a subset of PDFs to conserve memory
 #PDFSETS="--enable-pdfsets=mrst,mrst06,mrst98,mrstqed,cteq,nnpdf,mstw,hera,alekhin"
-PDFSETS="--enable-pdfsets=cteq,nnpdf,mstw,hera"
+#PDFSETS="--enable-pdfsets=cteq,nnpdf,mstw,hera"
 # Without low-memory option, LHAPDF needs ~3GB of RAM to run
 # With low-memory, it can run with 300MB, but cannot process error variations
 LOWMEM="--enable-low-memory"
