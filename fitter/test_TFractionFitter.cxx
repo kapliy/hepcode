@@ -13,6 +13,8 @@
 #include <iostream>
 #include <utility>
 #include <cstdlib>
+#include <vector>
+#include <map>
 
 #include <TMath.h>
 #include <TH1D.h>
@@ -60,7 +62,7 @@ TH1D* data;
 TH1D* mc0;
 TH1D* mc1;
 
-TH1D* pull = new TH1D("pull","pull", 100, -5, 5);
+TH1D* pull = new TH1D("pull","pull", 200, -10, 10);
 
 // number of fits to perform
 UInt_t nfits;
@@ -98,11 +100,39 @@ void fillHistos(Bool_t fData=kTRUE, Bool_t fmc0=kTRUE, Bool_t fmc1=kTRUE) {
 
 }
 
+std::map<int,bool> _excluded;
+
+void include_all_bins() {
+  int nbins = data->GetNbinsX();
+  for(int ibin=0; ibin<=nbins; ibin++) {
+    if(_excluded.find(ibin)!=_excluded.end()) fit->IncludeBin(ibin);
+  }
+  _excluded.clear();
+}
+int exclude_some_bins(double limit=0) {
+  include_all_bins();
+  int nbins = data->GetNbinsX();
+  int nexcl=0;
+  for(int ibin=0; ibin<=nbins; ibin++) {
+    //    if( data->GetBinContent(ibin)<=limit || mc0->GetBinContent(ibin)<=limit || mc1->GetBinContent(ibin)<=limit ) {
+    if( data->GetBinContent(ibin)<=limit) {
+    //    if( mc0->GetBinContent(ibin)<=limit ) {
+      fit->ExcludeBin(ibin);
+      _excluded[ibin] = true;
+      nexcl++;
+    }
+  }
+  if(verbose) std::cout << "Excluded: " << nexcl << " bins" << std::endl;
+  return nexcl;
+}
+
 // performs the fraction fit with TFractionFitters,
 // returns fraction and error of mc1 contribution
 std::pair<Double_t, Double_t> tfractionfitter() {
-
+  
     fillHistos();
+
+    exclude_some_bins(0);
 
     fit->Constrain(0,0.0,1.0);
     fit->Constrain(1,0.0,1.0);
@@ -187,7 +217,7 @@ int main(int argc, char* argv[]) {
     std::cout << "verbose mode: " << std::boolalpha << verbose << std::endl;
     std::cout << std::endl;
 
-    gRandom = new TRandom3(0);
+    gRandom = new TRandom3(1);
 
     data = new TH1D("data", "data", nbins, xmin, xmax);
     mc0 = (TH1D*)(data->Clone("mc0"));
@@ -218,7 +248,7 @@ int main(int argc, char* argv[]) {
 
     for(UInt_t n=0; n != nfits; ++n) {
 
-        if(n % 100 == 0) {
+        if(n % 100 == 0 || verbose) {
 
             std::cout << "#fit: " << n << std::endl;
 
