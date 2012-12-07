@@ -49,6 +49,9 @@ parser.add_option("--lvar",dest="lvar",
 parser.add_option("--lbin",dest="lbin",
                   type="string", default='25,-2.5,2.5',
                   help="Binning for lvar")
+parser.add_option("--lbinp",dest="lbinp",
+                  type="string", default=None,
+                  help="Binning for lvar - plot range only")
 parser.add_option("--llog", default=False,
                   action="store_true",dest="llog",
                   help="If set to true, QCD fit in lvar is plotted on log scale")
@@ -285,7 +288,7 @@ if True:
     pw.adn(name='qcd_bb',label='QCD (bbmu15X)',samples=['mc_pythia_bbmu15x'],color=ROOT.kAzure-9,flags=['bg','mc','qcd'])
     pw.adn(name='qcd_JX',label='QCD (J0..J5)',samples=['mc_pythia_J%d'%v for v in xrange(5)],color=ROOT.kAzure-9,flags=['bg','mc','qcd'])
     pw.adn(name='qcd_driven',label='QCD (template)',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kAzure-9,flags=['bg','mc','qcd','driven'])
-    pw.adn(name='qcd_driven_sub',label='QCD (template)',samples=['data_period%s'%s for s in _DATA_PERIODS]+['mc_powheg_pythia_wminmunu','mc_powheg_pythia_wplusmunu'  ,  'mc_mcnlo_ttbar','mc_mcnlo_schan_munu','mc_mcnlo_tchan_munu','mc_mcnlo_wt'  ,  'mc_powheg_pythia_zmumu','mc_powheg_pythia_dyan'  ,  'mc_pythia_ztautau','mc_pythia_wtaunu'  ,  'mc_herwig_ww','mc_herwig_wz','mc_herwig_zz'],color=ROOT.kAzure-9,flags=['bg','mc','qcd','driven_sub'],sample_weights_bgsub=True)
+    pw.adn(name='qcd_driven_sub',label='QCD (template)',samples=['data_period%s'%s for s in _DATA_PERIODS]+['mc_powheg_pythia_wminmunu','mc_powheg_pythia_wplusmunu'  ,  'mc_mcnlo_ttbar','mc_mcnlo_schan_munu','mc_mcnlo_tchan_munu','mc_mcnlo_wt'  ,  'mc_powheg_pythia_zmumu','mc_powheg_pythia_dyan'] +  ['mc_alpgen_herwig_ztautau_np%d'%v for v in range(6)] + ['mc_alpgen_herwig_wtaunu_np%d'%v for v in range(6)]  +  ['mc_herwig_ww','mc_herwig_wz','mc_herwig_zz'],color=ROOT.kAzure-9,flags=['bg','mc','qcd','driven_sub'],sample_weights_bgsub=True)
     if opts.bgqcd in MAP_BGQCD.keys():
         pw.choose_qcd(opts.bgqcd)
     else:
@@ -414,18 +417,23 @@ q = opts.charge if opts.charge in (-1,0,1,2) else 0
 # Reco-level [histo]
 unfmethod = 'RooUnfoldBinByBin'
 #unfmethod = 'RooUnfoldBayes'
+Aplotrange=None
+if opts.lbinp:
+    Aplotrange = ( int(opts.lbinp.split(',')[1]) , int(opts.lbinp.split(',')[2]) )
 spR = SuPlot()
 if True:
     spR.bootstrap(do_unfold=False,
                   unfold={'sysdir':opts.sysdir,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
                   charge=q,var=opts.var,histo=opts.hsource,
                   sysdir=[opts.sysdir,opts.sysdir,opts.isofail],subdir=opts.subdir,basedir=opts.basedir,
-                  qcd={'var':'met','nbins':60,'min':0,'max':60,'metfit':'metfit','wmtfit':'wmtfit','forcenominal':False})
-    
+                  qcd={'var':'met','nbins':60,'min':0,'max':60,'metfit':'metfit','wmtfit':'wmtfit',
+                       'forcenominal':False,'plotrange':Aplotrange})
+
 SuStack.QCD_SYS_SCALES = opts.metallsys
-SuStack.QCD_STAT_HACK = True           # scale ewk template so that the signal Monte-Carlo reflects the true statistics
-SuStack.QCD_EXC_ZERO_BINS = 2          # exclude from fit all bins where any of the templates or data have less than X entries
+SuStack.QCD_STAT_HACK = 1              # 1=scale ewk template to signal Monte-Carlo stats; 2=scale to most-scarce MC stats (usually wtaunu)
+SuStack.QCD_EXC_ZERO_BINS = 0          # exclude from fit all bins where any of the templates or data have less than X entries
 SuStack.QCD_PLOT_MODIFIED_BINS = True  # if True, we plot templates varied within poisson stats for best fit agreement
+SuStack.QCD_USE_FITTER2 = True         # use a custom, patched version of TFractionFitter that prevents infinite loops?
 spR.enable_all()
 # Reco-level [ntuple]
 spRN = SuPlot()
@@ -433,7 +441,8 @@ spRN.bootstrap(ntuple=opts.ntuple,histo=opts.hsource,
                charge=q,var=opts.var,path=path_reco,bin=opts.bin,
                weight=opts.cut,pre=(opts.preNN,opts.preNN,opts.preNQ), #opts.pre,
                qcd={'var':'met','nbins':60,'min':0,'max':60,'metfit':'metfit','wmtfit':'wmtfit',
-                    'forcenominal':False,'descr':'default','pre':(opts.preFN,opts.preFN,opts.preFQ)})
+                    'forcenominal':False,'descr':'default','pre':(opts.preFN,opts.preFN,opts.preFQ),
+                    'plotrange':Aplotrange})
 spRN.enable_nominal()
 # Truth-level [histo]
 spT= SuPlot()
@@ -949,6 +958,37 @@ if mode=='qcdfit_2d':
     if True:
         a.add_root(skey,ROOTOUT)
 
+# comprehensive study of qcd fits in 2d: pt x eta bins, using histograms.
+# now also supports 1D and 0D (all-inclusive) fits
+if mode=='qcdfit_sys':
+    spR.enable_nominal()
+    iq = opts.charge
+    ieta = opts.ieta if opts.ieta=='ALL' else int(opts.ieta)
+    ipt  = opts.ipt if opts.ipt=='ALL' else int(opts.ipt)
+    bgqcd = opts.bgqcd
+    bgsig = opts.bgsig
+    bgewk = opts.bgewk
+    bgtau = opts.bgtau
+    lvar = opts.lvar + EB(ieta,opts.etamode) + PB(ipt)
+    pvar = opts.var + EB(ieta,opts.etamode) + PB(ipt)
+    lbin = opts.lbin
+    lmin = int(lbin.split(',')[1])
+    lmax = int(lbin.split(',')[2])
+    qcdadd={'var':lvar,'min':lmin,'max':lmax,'rebin':2}
+    hdata,hstack = plot_stack(spR.clone(qcdadd=qcdadd),var=pvar,q=iq,m=1,new_scales=True,pave=True,name=po.get_flagsum()+'_F'+lvar)
+    hfrac=hstack.nominal().stack_bg_frac()
+    key = po.scalekeys[-1]
+    scales = po.scales[key]
+    # save the results
+    skey = '/iq%d/X%d/bgqcd%d/bgtau%d/bgewk%d/bgsig%d/iso%s/lvar%s/lbin%s/%s%s/ipt%s'%(iq,opts.xsecerr,bgqcd,bgtau,bgewk,bgsig,opts.isofail,opts.lvar,lbin,'ieta' if opts.etamode==2 else 'iseta',ieta,ipt)
+    print 'Saving key:',skey
+    DATAOUT = { 'frac' : hfrac, 'scales' : scales }
+    ROOTOUT = [ OMAP[-1]._canvas , po.fits[key]._canvas ]
+    a = antondb.antondb(opts.extra)
+    a.add(skey,DATAOUT)
+    if True:
+        a.add_root(skey,ROOTOUT)
+
 # Study different MC weights.
 # Also can be used to perform stack comparison of TH1 and ntuple-based histograms
 if mode=='study_weights':
@@ -1045,128 +1085,7 @@ if mode=='qcdfit_1d_nt' or mode=='qcdfit_1d_nt_summary': # to study QCD fits
     weight = opts.cut
     #SuSample.GLOBAL_CACHE = None
     hdata,hstack = plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,bin=bin,q=opts.charge,m=0,name='ebin%d'%ebin+'_'+po.get_flagsum()+'_'+opts.lvar+'_'+opts.lbin)
-    # BIG LOOP TO SAVE ALL OBJECTS INTO A ROOT FILE:
-    if PLOT_ETA_NORMS:
-        ff = ROOT.TFile.Open("file_"+SuSys.QMAP[q][1]+".root","RECREATE")
-        ff.cd()
-        adir = ff.mkdir(SuSys.QMAP[q][1])
-        adir.cd()
-        hstack = hstack.nominal().stack ; hstack.SetTitle("stack")
-        hdata = hdata.nominal().h ; hdata.SetTitle("data")
-        hdata.Write("data",ROOT.TObject.kOverwrite)
-        # prepare an array containing statistical uncertainties on QCD fit in each |eta| bin
-        STATMAP = [-1.0]*(len(absetabins)-1)
-        for key,val in po.fits.iteritems():
-            savename = po.fitnames[key] # NEG_ebin99_eta0_Q3S5X5Y5Z5_met_0_0to120_0.png
-            etabin = [el for el in savename.split('_') if re.match('eta',el)]
-            assert len(etabin)==1
-            ieta = int(  re.sub('eta','',etabin[0])  )
-            assert ieta < len(STATMAP)
-            assert STATMAP[ieta]<0
-            STATMAP[ieta] = po.scales[key][1]/po.scales[key][0]
-        # save all backgrounds from the stack
-        NBG = hstack.GetStack().GetLast()
-        for i in xrange(0,NBG+1):
-            hh =  hstack.GetHists().At(i)  # TList::At(NBG) = top-most
-            if re.search('mc_data_period',hh.GetTitle()): hh.SetTitle('bg_QCD')
-            else:
-                newt = hh.GetTitle()
-                hh.SetTitle(re.sub('mc_mc_','bg_',newt))
-            if hh.GetTitle()=='bg_herwig_ww': hh.SetTitle('bg_herwig_diboson')
-            if hh.GetTitle()=='bg_pythia_dyan': hh.SetTitle('bg_pythia_DrellYan')
-            if hh.GetTitle()=='bg_powheg_pythia_wplustaunu': hh.SetTitle('bg_powheg_pythia_wtaunu')
-            if hh.GetTitle()=='bg_powheg_pythia_wmintaunu': hh.SetTitle('bg_powheg_pythia_wtaunu')
-            if hh.GetTitle()=='bg_powheg_pythia_wplusmunu': hh.SetTitle('bg_powheg_pythia_wmunu')
-            if hh.GetTitle()=='bg_powheg_pythia_wminmunu': hh.SetTitle('bg_powheg_pythia_wmunu')
-            hh.Write(hh.GetTitle(),ROOT.TObject.kOverwrite)
-            # save variations of QCD template: statup and statdown (reflecting stat. uncertainty on QCD fit)
-            if hh.GetTitle() == 'bg_QCD':
-                hup = hh.Clone('bg_QCD_statup')
-                hup.SetTitle('bg_QCD_statup')
-                hdown = hh.Clone('bg_QCD_statdown')
-                hdown.SetTitle('bg_QCD_statdown')
-                assert (hh.GetNbinsX() == len(STATMAP))
-                for ieta in xrange(0,hh.GetNbinsX()):
-                    assert STATMAP[ieta]>=0
-                    hup.SetBinContent(ieta+1 , hup.GetBinContent(ieta+1) * (1.0+STATMAP[ieta]))
-                    hup.SetBinError(ieta+1 , hup.GetBinError(ieta+1) * (1.0+STATMAP[ieta]))
-                    hdown.SetBinContent(ieta+1 , hdown.GetBinContent(ieta+1) * (1.0-STATMAP[ieta]))
-                    hdown.SetBinError(ieta+1 , hdown.GetBinError(ieta+1) * (1.0-STATMAP[ieta]))
-                hup.Write(hup.GetTitle(),ROOT.TObject.kOverwrite)
-                hdown.Write(hdown.GetTitle(),ROOT.TObject.kOverwrite)
-        OMAP[-1]._canvas.Write("canvas_stack",ROOT.TObject.kOverwrite)
-        hstack.Write("stack",ROOT.TObject.kOverwrite)
-        # QCD fits
-        for key,val in po.fits.iteritems():
-            savename = po.fitnames[key] #            NEG_ebin99_eta0_Q3S5X5Y5Z5_met_0_0to120_0.png
-            etabin = [el for el in savename.split('_') if re.match('eta',el)]
-            assert len(etabin)==1
-            val._canvas.Write('QCD_FIT_bin'+etabin[0],ROOT.TObject.kOverwrite)
-        ff.Close()
-        pass
-# DEPRECATED: NTUPLE VERSION AGAIN - TO POST-PROCESS RESULTS
-# to study QCD fit systematic due to fitting in different variables, in eta bins
-# this assumes that all ntuples have already been cached by running qcdfit action
-if mode=='qcdsys_1d_nt':
-    spR.enable_nominal()
-    SuStackElm.new_scales = True
-    #SuSample.debug = True
-    var = opts.var
-    bin = opts.bin
-    LVARS = [ ('met','50,0,120') , ('w_mt','50,40,120') , ('l_pt','50,20,70') ]
-    EXC = []
-    EXC.append( (POS,7,'met',1) )
-    RES = {}
-    eloop = range(0,len(absetabins)-1)  # 0 to 10
-    if opts.extra: eloop = [int(opts.extra),]
-    for charge in (0,1,2):
-        RES[charge] = {}
-        for ebin in eloop:
-            RES[charge][ebin] = {}
-            for lvpair in LVARS:
-                lvar = lvpair[0]
-                lbin = lvpair[1]
-                RES[charge][ebin][lvar] = {}
-                for bgsig in (1,4,5):
-                    # different MC
-                    po.choose_sig(bgsig)
-                    # QCD fit variable and range
-                    assert len(lbin.split(','))==3,'Wrong format of --lbin argument. Example: 100,-2.5,2.5'
-                    nbins = int(lbin.split(',')[0])
-                    lmin = float(lbin.split(',')[1])
-                    lmax = float(lbin.split(',')[2])
-                    lpre = '%s>=%.2f && %s<=%.2f'%(lvar,lmin,lvar,lmax)
-                    # restrict --pre string to a particular eta bin
-                    x = ''
-                    ie = ebin
-                    x = ' && fabs(l_eta)>=%.2f && fabs(l_eta)<=%.2f'%(absetabins[ie],absetabins[ie+1])
-                    # cut string for the ntuple
-                    preNN = opts.preNN + x   # regular cut
-                    if opts.preFN!=None:     # qcd cut
-                        preFN = opts.preFN + x
-                    else:
-                        preFN = prunesub(opts.preNN,lvar,lpre) + x
-                    preNQ = opts.preNQ + x   # regular cut (fit region)
-                    if opts.preFQ!=None:     # qcd cut (fit region)
-                        preFQ = opts.preFQ + x
-                    else:
-                        preFQ = prunesub(opts.preNQ,lvar,lpre) + x
-                    presN = (preNN,preNN,preNQ) # pre strings for normal plots   (e.g., nominal or anti-isolation)
-                    presF = (preFN,preFN,preFQ) # pre strings for QCD fit region (e.g., lowering MET cut to zero)
-                    qcdadd={'var':lvar,'nbins':nbins,'min':lmin,'max':lmax,'log':opts.llog,'descr':'ebin%d'%ebin,'pre':presF}
-                    weight = opts.cut
-                    #SuSample.GLOBAL_CACHE = None
-                    print '============ RUNNING: Q/ebin/lvar/bgsig =',charge,ebin,lvar,bgsig
-                    curex=(charge,ebin,lvar,bgsig)
-                    if curex in EXC:
-                        print 'WARNING: skipping',curex
-                        hfrac = -1
-                    else:
-                        hdata,hstack = plot_stack(spRN.clone(pre=presN,weight=weight,var=var,bin=bin,qcdadd=qcdadd),var,bin=bin,q=charge,m=0,name='ebin%d'%ebin+'_'+po.get_flagsum()+'_'+lvar+'_'+lbin)
-                        hfrac=hstack.nominal().stack_bg_frac()
-                    RES[charge][ebin][lvar][bgsig] = hfrac
-    import pickle
-    pickle.dump( RES, open( "save.pickle", "w" ) )
+
 
 # studying ABCD method (closure) on BB/CC monte-carlo
 if mode=='abcd_mc':

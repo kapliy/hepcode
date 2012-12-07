@@ -549,6 +549,23 @@ class SuPlot:
             add('ScaleSoftTermsUp_ptHard','ScaleSoftTermsUp_ptHard')
             add('ScaleSoftTermsDown_ptHard ','ScaleSoftTermsDown_ptHard')
             next('MET_SCALE')
+        # using fully calibrated jets for MET?
+        if True:
+            add('NominalCalJet','NominalCalJet')
+            next('MET_CALJET')
+        # W pT targets
+        if True:
+            add('WptSherpa','WptSherpa')
+            add('WptPythiaMC10','WptPythiaMC10')
+            next('WPT_REWEIGHT')
+        # PDF reweighting
+        if True:
+            add('PdfCT10nlo','PdfCT10nlo')
+            add('PdfMSTW','PdfMSTW')
+            add('PdfHERA','PdfHERA')
+            add('PdfNNPDF','PdfNNPDF')
+            add('PdfABM','PdfABM')
+            next('PDF')
         # QCD normalization
         if False:
             add3('qcdup',1.5,'Nominal')
@@ -810,6 +827,7 @@ class SuSample:
     cache = None
     rootpath = None
     lumi = None
+    lumifake = False
     xsecerr = 0
     debug = False
     def __init__(s,name):
@@ -835,7 +853,7 @@ class SuSample:
         s.nt[path] = ROOT.TChain(path,path)
         s.nevt[path] = {}
         s.path = path
-    def choose_evcount(s,cut):
+    def choose_evcount(s,cut=None):
         """ chooses the right nevents histogram depending on which scales were requested
         info: this should alwats be nevts - otherwise it would revert the scale correction
         """
@@ -905,7 +923,7 @@ class SuSample:
     def nentries(s,path=None):
         """ compute number of entries in TNtuple """
         return s.nt[path].GetEntries() if path else s.nt[s.path].GetEntries()
-    def get_preserving_lumi(s,evcnt='nevts'):
+    def get_preserving_lumi(s,evcnt):
         """ Special hack: returns fake s.lumi value that results in a lumi scale of 1.0 for this sample """
         assert re.match('mc',s.name)
         from MC import mc
@@ -919,7 +937,7 @@ class SuSample:
         scale = 1.0/nevents*flumi*xsec
         assert abs(scale)-1.0 < 1e-5
         return flumi
-    def scale(s,evcnt='nevts'):
+    def scale(s,evcnt):
         """ normalize MC histograms to luminosity """
         if not re.match('mc',s.name):
             return 1.0
@@ -933,7 +951,7 @@ class SuSample:
             sample = mrun.sample
             scale = 1.0/nevents*s.lumi*xsec
             if sample not in s.seen_samples:
-                print 'MC %s: \t xsec=%.1f (%.1f*%.1f) nb \t nevts=%d scale=%.8f'%(sample,xsec,mrun.xsec,mrun.filteff,nevents,scale)
+                print 'MC %s: \t xsec=%.1f (%.1f*%.1f) nb \t nevts=%d scale=%.8f%s'%(sample,xsec,mrun.xsec,mrun.filteff,nevents,scale,' (fakelumi)' if SuSample.lumifake==True else '')
                 s.seen_samples.append(sample)
             return scale
         print 'WARNING: unable to find scale for MC sample ',s.name
@@ -1266,8 +1284,9 @@ class SuStack:
     """
     QCD_SYS_SCALES = False
     QCD_TF_FITTER = True
-    QCD_STAT_HACK = True
+    QCD_STAT_HACK = 1
     QCD_EXC_ZERO_BINS = None
+    QCD_USE_FITTER2 = False
     def __init__(s):
         """ constructor """
         # stack elements
@@ -1591,24 +1610,44 @@ class SuStack:
         hfree = s.qcd('bgfree',d2).h    # using correct lumi for bg subtraction here
         # use fake lumi to make sure the signal statistics is not scaled before entering TFractionFitter
         oldlumi = SuSample.lumi
-        if SuStack.QCD_STAT_HACK:
-            loop = [e for e in s.elm if 'sig' in e.flags and 'no' not in e.flags]
-            assert len(loop)==1,'WARNING: QCD fitter assumes that your signal SuStackElm contains exactly one element'
-            samples = loop[0].samples
-            thesig = samples[0]
-            if d2.charge==0:
-                for sample in samples:
-                    if re.search('wplus',sample.name):
-                        thesig = sample
-                        break
-            if d2.charge==1:
-                for sample in samples:
-                    if re.search('wmin',sample.name):
-                        thesig = sample
-                        break
-            SuSample.lumi = thesig.get_preserving_lumi()
+        if SuStack.QCD_STAT_HACK>0:
+            thesig = None
+            # normalize to signal statistics
+            if SuStack.QCD_STAT_HACK==1:
+                loop = [e for e in s.elm if 'sig' in e.flags and 'no' not in e.flags]
+                assert len(loop)==1,'WARNING: QCD fitter assumes that your signal SuStackElm contains exactly one element'
+                samples = loop[0].samples
+                thesig = samples[0]
+                if d2.charge==0:
+                    for sample in samples:
+                        if re.search('wplus',sample.name):
+                            thesig = sample
+                            break
+                if d2.charge==1:
+                    for sample in samples:
+                        if re.search('wmin',sample.name):
+                            thesig = sample
+                            break
+            # normalize to lowest-statistics sample
+            elif SuStack.QCD_STAT_HACK==2:
+                loop = [e for e in s.elm if 'mc' in e.flags and 'no' not in e.flags and 'driven' not in e.flags and 'driven_sub' not in e.flags]
+                msample,mscale = None,-999
+                for lp in loop:
+                    for sample in lp.samples:
+                        cscale = sample.scale(evcnt = sample.choose_evcount())
+                        if cscale>=mscale:
+                            mscale=cscale
+                            msample = sample
+                assert msample
+                thesig = msample
+            else:
+                assert False,'Unknown values of SuStack.QCD_STAT_HACK: %d (possible values: 0,1,2)'%(SuStack.QCD_STAT_HACK)
+            assert thesig,'Failed to find a montecarlo target for stat hack normalization'
+            SuSample.lumi = thesig.get_preserving_lumi(evcnt = thesig.choose_evcount())
+            SuSample.lumifake = True
         hfixed = s.ewk('bgfixed',d2).h
         SuSample.lumi = oldlumi
+        SuSample.lumifake = False
         if not (hdata and hfree and hfixed):
             print 'WARNING: missing histogram for QCD normalization',hdata,hfree,hfixed
             return 1.0
@@ -1630,7 +1669,7 @@ class SuStack:
             f.blowUpErrors(0,100,inc=True)
         tmp = None
         logscale = 'log' in d2.qcd and d2.qcd['log']==True
-        f.doFitTF(SuStack.QCD_EXC_ZERO_BINS)
+        f.doFitTF(d2.qcd['plotrange'],SuStack.QCD_EXC_ZERO_BINS,SuStack.QCD_USE_FITTER2)
         tmp = f.drawFitsTF(key,logscale=logscale,modbins=SuStack.QCD_PLOT_MODIFIED_BINS)
         assert tmp
         s.fitnames[key] = fitname

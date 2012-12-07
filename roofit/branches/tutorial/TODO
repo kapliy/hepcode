@@ -1,9 +1,9 @@
+Compare by eye a few images of with/without bin exclusion.
+Finish making the "test" plots.
+
 Check jet calibration effect, especially in data - propagation to met.
+  - by adding it as a "systematic"
 
-NOTE: fake lumi for qcd fits prevents bgqcd=4 from working correctly - we need to do bg subtraction
-with the proper lumi assumption!
-
-CHECK if muon reco corrections correct in phi
 Do MCP eff/reco corrections use pt scaling?
 TH1 phi - try fourier spectrum
 Check tau in lowest pt bin
@@ -21,6 +21,7 @@ Max: wpt reweighting - make sure we have a no-reweigting sub-sample (why?)
 
 Work on qcdsys2d: automatically save qcd inside make_total, too.
 
+DONE: CHECK if muon reco corrections correct in phi - NO
 DONE: Check Max's physics_Nominal - he does include all truth, so can be used for acceptance correction
       DONE: speed: stays the same
 DONE: PDF REWEIGHTING:
@@ -33,12 +34,13 @@ DONE: replicas scheme - how to do it. For which scale factors.
 DONE: add 53.8 GeV cut to Powheg+Pythia Z samples to remove overlap with Drell-Yan
 DONE: check if pileup reweighting works better with my own, old pileup reweighting file (found bug in my pileup file!)
 DONE: add jes pileup term etc (two terms total) to systematics!
+DONE: fake lumi for qcd fits prevents bgqcd=4 from working correctly - we need to do bg subtraction - it's fine
+DONE: QCD fits from  3d histograms
+DONE: check if last two-three pt bins have vastly different scale factors. If not, see if we can fit them all together (easy via 3d histos)
 
 QCD FITS:
-Convert to using 3d histograms
 Possibility of relaxing charge requirement on QCD to double stats
-check if last two-three pt bins have vastly different scale factors. If not, see if we can fit them all together (easy via 3d histos)
-This will reduce nfits by a lot, and will give us more statistics.
+Lumi: some bins in ewk template appear to have extra large errors. WHY? low-stat backgrounds? Should all templates be normed to min.?
 LONG overdue: really need to understand difference in bgqcd=3 and bgqcd=4. Plot normalized templates on top of each other!
 
 INCLUSIVE FITS:
