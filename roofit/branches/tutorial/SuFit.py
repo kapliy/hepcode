@@ -92,14 +92,25 @@ class SuFit:
     return RooArgSet(s.w.var(s.vnames[0]))
 
   @staticmethod
-  def dump_plot(h,name='SYS'):
-    """ A generic mini-function to plot a collection of TObjects """
+  def dump_plot(h,name='SYS',titles=[]):
+    """ A generic mini-function to plot / save a collection of TObjects """
     o = []
     if isinstance(h,list) or isinstance(h,tuple):
       o = h
     else:
       o = [h,]
     assert len(o)>0
+    if len(titles)>0:
+      assert len(titles)==len(h)
+    else:
+      for oo in o:
+        titles.append(oo.GetTitle())
+    # save in ROOT
+    f = ROOT.TFile.Open(name+'.root','RECREATE')
+    f.cd()
+    [ oo.Write(titles[i]) for i,oo in enumerate(o) ]
+    f.Close()
+    # save as a plot
     c = ROOT.TCanvas(name,name,800,600)
     c.cd()
     [ oo.SetLineColor(i+1) for i,oo in enumerate(o) ]
@@ -121,31 +132,36 @@ class SuFit:
     return bmin
 
   @staticmethod
-  def exclude_zero_bins(f,hs=[],limit=0):
+  def exclude_zero_bins(f,fitmin,fitmax,hs=[],limit=0,sumall=False):
     """ f is a TFractionFitter object. hs[] is a collection of histograms
     This function modifies the TFractionFitter object to exclude bins
-    where at least one of the hs[] have no entries (or negative entries)
+    where at least one of the hs[] has fewer than [limit] entries
     """
     if len(hs)==0:
       return
-    nbins = hs[0].GetNbinsX() + 1
+    nbins = fitmax - fitmin + 1
     nexcl = 0
-    for ibin in xrange(0,nbins):
-      if any( [h.GetBinContent(ibin)<=limit for h in hs] ):
+    for ibin in xrange(fitmin,fitmax+1):
+      do_exc = any( [h.GetBinContent(ibin)<limit for h in hs] ) if sumall==False else (sum([h.GetBinContent(ibin) for h in hs])<limit)
+      if do_exc:
         f.ExcludeBin(ibin)
         nexcl += 1
     if nexcl>0:
-      print 'WARNING: TFractionFitter excluded %d out of %d bins due to low statistics (nentries<=%d)'%(nexcl,nbins,limit)
+      print 'WARNING: TFractionFitter excluded %d out of %d bins due to low statistics (nentries<%d)'%(nexcl,nbins,limit)
     else:
       print 'INFO: TFractionFitter does not need to exclude any bins'
     return True
 
-  def doFitTF(s,EXCLUDE_ZERO_BINS=None):
+  def doFitTF(s,plotrange=None,EXCLUDE_ZERO_BINS=None,QCD_USE_FITTER2=False):
     """ A version of doFit using TFractionFitter
     This is supposed to take into account uncertainties on the model (but doesn't)
     Note: EWK contribution is allowed to float, too
     """
     assert s.data and s.fixed and len(s.free)==1, 'SuFit has not been supplied with all required input histograms'
+    TFractionFitter = ROOT.TFractionFitter
+    if QCD_USE_FITTER2:
+      ROOT.gROOT.ProcessLine('.L TFractionFitter2.h+')
+      TFractionFitter = ROOT.TFractionFitter2
     # clear results from previous fit
     s.fractions = []
     s.scales = []
@@ -157,18 +173,23 @@ class SuFit:
     mc = ROOT.TObjArray(2) # MC histograms are put into this array
     mc.Add(s.fixed.Clone())
     [mc.Add(ff.Clone()) for ff in s.free]
-    s.fit = fit = ROOT.TFractionFitter(data, mc);  # initialise
+    s.fit = fit = TFractionFitter(data, mc) ;  # initialise
     var = s.w.var(s.vnames[0])
     s.fitmin,s.fitmax = s.data.FindFixBin(var.getMin()) , s.data.FindFixBin(var.getMax())
-    s.plotmin,s.plotmax = s.fitmin,s.fitmax
-    s.fitmin = SuFit.first_nonzero_bin(data,s.fitmin)
+    s.plotmin = s.fitmin if plotrange is None else plotrange[0]
+    s.plotmax = s.fitmax if plotrange is None else plotrange[1]
+    if s.plotmin<0: s.plotmin = 0
+    if s.plotmax>s.data.GetNbinsX()+1: s.plotmax = s.data.GetNbinsX()+1
+    #s.fitmin = SuFit.first_nonzero_bin(data,s.fitmin)
     print 'INFO: SuFit::doFitTF fit range:',s.vnames[0],s.fitmin,s.fitmax
+    print 'INFO: SuFit::doFitTF plot range:',s.vnames[0],s.plotmin,s.plotmax
     sys.stdout.flush()
     fit.SetRangeX(s.fitmin,s.fitmax) # choose MET fit range
     if EXCLUDE_ZERO_BINS!=None:
-      SuFit.exclude_zero_bins( fit , [s.fixed,s.free[0],s.data] , EXCLUDE_ZERO_BINS )
+      #SuFit.exclude_zero_bins( fit , s.fitmin, s.fitmax, [s.data,] , limit=EXCLUDE_ZERO_BINS )
+      SuFit.exclude_zero_bins( fit , s.fitmin, s.fitmax, [s.fixed,s.free[0]] , limit=EXCLUDE_ZERO_BINS )
     if False: # debugging
-      s.dump_plot([data,s.fixed,s.free[0]])
+      s.dump_plot([data,s.fixed,s.free[0]],name='SYS',titles=['data','ewk','qcd'])
     # set up extra parameters. frac0 = EWK (fixed), frac1 = QCD (free)
     assert fit.GetFitter()
     if False:
@@ -198,19 +219,19 @@ class SuFit:
     s.status = fit.Fit()      # perform the fit
     s.nfits += 1
     if s.status!=0:
-      print 'WARNING: repeating (N=2) the QCD normalization fit'
+      print 'WARNING: repeating (N=2) the QCD normalization fit (prev=%s)'%s.status
       sys.stdout.flush()
       s.status = fit.Fit()
       s.nfits += 1
       if s.status!=0:
-        print 'WARNING: repeating (N=3) the QCD normalization fit; resetting starting point to (0.5,0.5)'
+        print 'WARNING: repeating (N=3) the QCD normalization fit; resetting starting point to (0.5,0.5) (prev=%s)'%s.status
         sys.stdout.flush()
         fit.GetFitter().SetParameter(0,"ewkfrac",0.5,0.01,0.0,1.0);
         fit.GetFitter().SetParameter(1,"qcdfrac",0.5,0.01,0.0,1.0);
         s.status = fit.Fit()
         s.nfits += 1
         if s.status!=0:
-          print 'WARNING: repeating (N=4) the QCD normalization fit'
+          print 'WARNING: repeating (N=4) the QCD normalization fit (prev=%s)'%s.status
           sys.stdout.flush()
           s.status = fit.Fit()
           s.nfits += 1
@@ -218,7 +239,7 @@ class SuFit:
           if True and s.status!=0:
             for ewkfrac in [ 0.05 * xx for xx in xrange(3,18) ]:
               qcdfrac = 1.0-ewkfrac
-              print 'WARNING: SCANNING FIT (N=%d) with ewkfrac=%.2f'%(s.nfits+1,ewkfrac)
+              print 'WARNING: SCANNING FIT (N=%d) with ewkfrac=%.2f (prev=%s)'%(s.nfits+1,ewkfrac,s.status)
               fit.GetFitter().SetParameter(0,"ewkfrac",ewkfrac,0.01,0.0,1.0);
               fit.GetFitter().SetParameter(1,"qcdfrac",qcdfrac,0.01,0.0,1.0);
               s.status = fit.Fit()
@@ -236,11 +257,11 @@ class SuFit:
       s.WscalesE.append( 0 )
       s.chi2.append(0)
       s.ndf.append(0)
-      print 'ERROR: fit failed to converge'
+      print 'ERROR: fit failed to converge despite multiple attempts'
       sys.stdout.flush()
-      return
+      os._exit(1)
     else:
-      print 'INFO: fit converged after',s.nfits,'iterations'
+      print 'INFO: fit converged after',s.nfits,'iteration(s)'
       sys.stdout.flush()
     # save all templates
     s.hfixed = fit.GetMCPrediction(0).Clone()

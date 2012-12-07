@@ -30,22 +30,24 @@ source bashmap.sh
 SMART_KILLER="./smart_killer.sh"
 #SMART_KILLER=""
 
-antondb='HISTO_11282012_ALL.v3'
+antondb='HISTO_12042012_NOMCEXC.v2'
 mkdir -p ${antondb}
-input=/share/t3data3/antonk/ana/ana_v29I_11072012_unfold_stacoCB_all/
-input=/share/t3data3/antonk/ana/ana_v29I_11282012_edboard_nophi_stacoCB_all/
+input=/share/t3data3/antonk/ana/ana_v29I_12042012_edboard_stacoCB_all
 
 ETAMODES="1 2" # 2=|eta| bins, 1=eta bins
 bgsigs="1 4 5"
-bgqcds="4 3" # 3=regular, 4=bgsub in qcd template
-bgtaus="5 2 0"
+bgqcds="4" # 3=regular, 4=bgsub in qcd template
+bgtaus="5 2"
 ipts=`echo {1..5} ALL`
 
 i=0
 irun=0
 
-gput tagis ${i} isofail "--isofail IsoFail20 " ; ((i++))
-gput tagis ${i} isowind "--isofail IsoWind20 " ; ((i++))
+gput tagis ${i} isofail20  "--isofail IsoFail20 "  ; ((i++))
+gput tagis ${i} isofail40  "--isofail IsoFail40 "  ; ((i++))
+gput tagis ${i} isowind20  "--isofail IsoWind20 "  ; ((i++))
+gput tagis ${i} isowind20m "--isofail IsoWind20m " ; ((i++))
+gput tagis ${i} isowind40  "--isofail IsoWind40 "  ; ((i++))
 
 if [ "0" == "1" ]; then # old (now disabled) binning. in particular, this utilizes the badly modeled high-tail
     gput tagzs ${i} met0to80 "--lvar met --lbin 50,0,80 " ; ((i++))
