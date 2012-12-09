@@ -965,6 +965,7 @@ if mode=='qcdfit_sys':
     iq = opts.charge
     ieta = opts.ieta if opts.ieta=='ALL' else int(opts.ieta)
     ipt  = opts.ipt if opts.ipt=='ALL' else int(opts.ipt)
+    is_2d = ieta!='ALL' and ipt!='ALL'
     bgqcd = opts.bgqcd
     bgsig = opts.bgsig
     bgewk = opts.bgewk
@@ -979,15 +980,32 @@ if mode=='qcdfit_sys':
     hfrac=hstack.nominal().stack_bg_frac()
     key = po.scalekeys[-1]
     scales = po.scales[key]
+
+    var = None
+    if opts.etamode==2: # |eta| bins
+        var = 'd2_abseta_lpt' if is_2d else 'lepton_absetav'
+    elif opts.etamode==1:
+        var = 'd2_eta_lpt' if is_2d else 'lepton_etav'
+    assert var
+    hqcd = po.qcd('qcd',spR.clone(qcdadd=qcdadd,histo=var)).nominal_h()
+    import SuFit
+    SuFit.SuFit.dump_plot(hqcd,'CRAP',opts='LEGO2')
+
+    print ieta,ipt
+    nqcd = hqcd.GetBinContent( ieta,ipt )
+    nqcd0 = hstack.nominal().stack_bg_events()
+    print nqcd, nqcd0
+    os._exit(0)
+    assert hqcd
+
     # save the results
     skey = '/iq%d/X%d/bgqcd%d/bgtau%d/bgewk%d/bgsig%d/iso%s/lvar%s/lbin%s/%s%s/ipt%s'%(iq,opts.xsecerr,bgqcd,bgtau,bgewk,bgsig,opts.isofail,opts.lvar,lbin,'ieta' if opts.etamode==2 else 'iseta',ieta,ipt)
     print 'Saving key:',skey
     DATAOUT = { 'frac' : hfrac, 'scales' : scales }
     ROOTOUT = [ OMAP[-1]._canvas , po.fits[key]._canvas ]
-    a = antondb.antondb(opts.extra)
-    a.add(skey,DATAOUT)
-    if True:
-        a.add_root(skey,ROOTOUT)
+    #a = antondb.antondb(opts.extra)
+    #a.add(skey,DATAOUT)
+    
 
 # Study different MC weights.
 # Also can be used to perform stack comparison of TH1 and ntuple-based histograms
