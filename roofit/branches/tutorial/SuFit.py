@@ -92,7 +92,7 @@ class SuFit:
     return RooArgSet(s.w.var(s.vnames[0]))
 
   @staticmethod
-  def dump_plot(h,name='SYS',titles=[]):
+  def dump_plot(h,name='SYS',titles=[],opts=''):
     """ A generic mini-function to plot / save a collection of TObjects """
     o = []
     if isinstance(h,list) or isinstance(h,tuple):
@@ -114,8 +114,8 @@ class SuFit:
     c = ROOT.TCanvas(name,name,800,600)
     c.cd()
     [ oo.SetLineColor(i+1) for i,oo in enumerate(o) ]
-    o[0].Draw()
-    [ oo.Draw('A SAME') for oo in o[1:] ]
+    o[0].Draw(opts)
+    [ oo.Draw('A SAME %s'%opts) for oo in o[1:] ]
     maxh = max([htmp.GetMaximum() for htmp in o])*1.3
     o[0].GetYaxis().SetRangeUser(0,maxh)
     c.SaveAs(name+'.png')

@@ -1,3 +1,6 @@
+Check QCD template shapes in mu+ and mu-: both in signal and control regions
+Make sure the toy variations are actually used in Plot.C
+
 Compare by eye a few images of with/without bin exclusion.
 Finish making the "test" plots.
 

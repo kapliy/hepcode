@@ -260,13 +260,22 @@ class SuSys:
         # other
         if slice!=None: res.slice = slice
         return res
-    def stack_bg_frac(s,iback=1):
+    def stack_bg_frac(s,iback=1,overflow=True):
         """ Returns integral fraction of background NBG-iback (NBG corresponds to wmunu) """
         NBG = s.stack.GetStack().GetLast()
-        totevts = s.stack.GetStack().Last().Integral()
-        qcdevts = s.stack.GetHists().At(NBG - iback).Integral()  # TList::At(NBG) = signal
-        qcdfrac = qcdevts / totevts
+        h = s.stack.GetStack().Last()
+        totevts = h.Integral(0,h.GetNbinsX()+1) if overflow else h.Integral()
+        h = s.stack.GetHists().At(NBG - iback)   # TList::At(NBG) = signal
+        qcdevts = h.Integral(0,h.GetNbinsX()+1) if overflow else h.Integral()
+        qcdfrac = 1.0*qcdevts / totevts
         return qcdfrac
+    def stack_bg_events(s,iback=1,overflow=True):
+        """ Returns integral fraction of background NBG-iback (NBG corresponds to wmunu) """
+        NBG = s.stack.GetStack().GetLast()
+        h = s.stack.GetHists().At(NBG - iback)   # TList::At(NBG) = signal
+        # include overflow? E.g., met>200
+        qcdevts = h.Integral(0,h.GetNbinsX()+1) if overflow else h.Integral()
+        return qcdevts
     def update_var(s,histo,bin=None):
         """ Updates histogram name and ntuple-expression (aka variable)
         In reality, only one of these applies for a given SuData instance.
