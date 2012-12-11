@@ -73,7 +73,7 @@ bgqcd=4
 iz=0
 for q in 0 1; do
     for bgsig in $bgsig ; do
-	for var in "--var l_eta --bin 10,-2.5,2.5 --hsource lepton_etav" "--var l_pt --bin 95,25,120 --hsource l_pt" "--var met --bin 100,0,100 --hsource met" "--var w_mt --bin 80,40,120 --hsource wmt" "--var w_pt --bin 120,0,120 --hsource wpt"; do
+	for var in "--var l_eta --bin 10,-2.5,2.5 --hsource lepton_etav" "--var l_pt --bin 95,25,120 --hsource l_pt" "--var met --bin 100,0,100 --hsource met" "--var w_mt --bin 80,40,120 --hsource wmt" "--var w_pt --bin 120,0,120 --hsource wpt"  "--var l_phi --bin 31,-3.14,3.14 --hsource l_phi"; do
 	    echo "CHARGE $q BGSIG ${bgsig} : [${var}]"
 	    vname=`echo ${var} | awk '{print $2}'`
 	    if [ "0" == "Wc/W paper" ]; then

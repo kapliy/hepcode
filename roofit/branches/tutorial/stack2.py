@@ -975,15 +975,16 @@ if mode=='qcdfit_2d':
     if True:
         a.add_root(skey,ROOTOUT)
 
-def qcdfit(spR2,err=False,name=None):
+def qcdfit(spR2,name=None):
     """ Performs a single QCD fit """
     hdata,hstack = plot_stack(spR2.clone(),q=opts.charge,m=1,new_scales=True,pave=True,name=name if name else po.get_flagsum())
     hfrac=hstack.nominal().stack_bg_frac()
     key = po.scalekeys[-1]
     scales = po.scales[key]
+    chi2,ndf = scales[8],scales[9]
     serr = scales[1]/scales[0]
     nqcd = hstack.nominal().stack_bg_events()
-    return (nqcd,nqcd*serr) if err else nqcd
+    return nqcd,nqcd*serr,chi2,ndf
 
 def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
     """ Performs a full set of systematic QCD fits in a given eta x pt slice """
@@ -1011,6 +1012,7 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
 
     spL = spL2.clone(q=iq, histo = opts.var + ltail , qcdadd = qcdadd)
     MQCD = {}  # map of raw qcd counts
+    FQCD = {}  # map of fit quality parameters
     NQCD = []
     SVAL,SABS,SREL,SLAB = [],[],[],[]
     NOM,DEN = None,None
@@ -1025,61 +1027,69 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
         print 'SAVING QCD %d : %s : %.1f  %.3f%%'%( len(SLAB),SLAB[-1],SVAL[-1],SREL[-1])
 
     # nominal
-    nqcd,nqcde = qcdfit(spL.clone(),True,name='Nominal')
+    nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(),name='Nominal')
     NOM = nqcd
     MQCD['Nominal'] = nqcd
+    FQCD['Nominal'] = (CHI2,NDF)
     # get the expected number of W events (to convert absolute qcd uncertainty into relative)
     hdsub = po.data_sub('dsub',spL.clone())
     DEN = hdsub.nominal().histo_total_events()
     add(nqcd+nqcde,'Statistical fit error')
 
     if nomonly:
-        return (SVAL,SABS,SREL,SLAB , MQCD)
+        return (SVAL,SABS,SREL,SLAB , MQCD,FQCD)
     
     # fit range
     if True:
-        nqcd = qcdfit(spL.clone(qcdadd=qcdadd_range),name='fit_range')
+        nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(qcdadd=qcdadd_range),name='fit_range')
+        MQCD['fit_range'] = nqcd
+        FQCD['fit_range'] = (CHI2,NDF)
         add(nqcd,'Fit range')
 
     # fit variable [careful - big swings]
     if False:
-        nqcd = qcdfit(spL.clone(qcdadd=qcdadd_var),name='fit_var')
+        nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(qcdadd=qcdadd_var),name='fit_var')
+        MQCD['fit_var'] = nqcd
+        FQCD['fit_var'] = (CHI2,NDF)
         add(nqcd,'Fit variable (M_{T}^{W})')
 
     # tau backgrounds [ careful - low statistics, saw a big swing ]
     if False:
         po.choose_tau(5)
-        nqcd = qcdfit(spL.clone(),name='tau')
+        nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(),name='tau')
+        MQCD['tau'] = nqcd
+        FQCD['tau'] = (CHI2,NDF)
         add(nqcd,'#tau backgrounds')
         nom()
 
     # MC modeling:
     if True:
         po.choose_sig(4)
-        nqcd4 = qcdfit(spL.clone(),name='PowhegJimmy')
+        nqcd4,nqcde,CHI2,NDF = qcdfit(spL.clone(),name='PowhegJimmy')
         MQCD['Nominal_PowhegJimmy'] = nqcd4
+        FQCD['Nominal_PowhegJimmy'] = (CHI2,NDF)
+        add(nqcd4,'MC parton shower',hnom=NOM)
         po.choose_sig(1)
-        nqcd1 = qcdfit(spL.clone(),name='MCNLO')
+        nqcd1,nqcde,CHI2,NDF = qcdfit(spL.clone(),name='MCNLO')
         MQCD['Nominal_MCNLO'] = nqcd1
-        if False:
-            nqcd = nqcd4 if abs(nqcd4-NOM)>abs(nqcd1-NOM) else nqcd1
-            add(nqcd,'Signal MC')
-        else:
-            add(nqcd4,'MC parton shower',hnom=NOM)
-            add(nqcd1,'MC matrix element',hnom=nqcd4)
+        FQCD['Nominal_MCNLO'] = (CHI2,NDF)
+        add(nqcd1,'MC matrix element',hnom=nqcd4)
         nom()
 
     # pt reweighting target
     if True:
-        nqcd = qcdfit(spL.clone(sysdir_mc='WptSherpa'),name='WptSherpa')
+        nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(sysdir_mc='WptSherpa'),name='WptSherpa')
+        MQCD['WptSherpa'] = nqcd
+        FQCD['WptSherpa'] = (CHI2,NDF)
         add(nqcd,'p_{T}^{W} reweighting')
 
     # type of anti-isolation
     if True:
         NQCD_x,NQCD_xd = [],[]
-        #for x in ['IsoWind20m','IsoWind40','IsoFail20']:
         for x in ['IsoWind20m','IsoWind40']:
-            nqcd = qcdfit(spL.clone(sysdir_qcd=x),name=x)
+            nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(sysdir_qcd=x),name=x)
+            MQCD[x] = nqcd
+            FQCD[x] = (CHI2,NDF)
             NQCD_x.append(nqcd)
             NQCD_xd.append( abs(nqcd-NOM) )
         nqcd = NQCD_x[ NQCD_xd.index(max(NQCD_xd)) ] # find max deviation
@@ -1089,8 +1099,9 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
     if True:
         NQCD_x,NQCD_xd = [],[]
         for x in ['PdfMSTW','PdfHERA','PdfNNPDF','PdfABM']:
-            nqcd = qcdfit(spL.clone(sysdir_mc=x),name=x)
+            nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(sysdir_mc=x),name=x)
             MQCD[x] = nqcd
+            FQCD[x] = (CHI2,NDF)
             NQCD_x.append(nqcd)
             NQCD_xd.append( abs(nqcd-NOM) )
         nqcd = NQCD_x[ NQCD_xd.index(max(NQCD_xd)) ] # find max deviation
@@ -1100,8 +1111,9 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
     if True:
         NQCD_x,NQCD_xd = [],[]
         for x in ['ScaleSoftTermsUp_ptHard','ScaleSoftTermsDown_ptHard']:
-            nqcd = qcdfit(spL.clone(sysdir_mc=x),name=x)
+            nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(sysdir_mc=x),name=x)
             MQCD[x] = nqcd
+            FQCD[x] = (CHI2,NDF)
             NQCD_x.append(nqcd)
             NQCD_xd.append( abs(nqcd-NOM) )
         nqcd = NQCD_x[ NQCD_xd.index(max(NQCD_xd)) ] # find max deviation
@@ -1111,8 +1123,9 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
     if True:
         NQCD_x,NQCD_xd = [],[]
         for x in ['ResoSoftTermsUp_ptHard','ResoSoftTermsDown_ptHard']:
-            nqcd = qcdfit(spL.clone(sysdir_mc=x),name=x)
+            nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(sysdir_mc=x),name=x)
             MQCD[x] = nqcd
+            FQCD[x] = (CHI2,NDF)
             NQCD_x.append(nqcd)
             NQCD_xd.append( abs(nqcd-NOM) )
         nqcd = NQCD_x[ NQCD_xd.index(max(NQCD_xd)) ] # find max deviation
@@ -1122,8 +1135,9 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
     if True:
         NQCD_x,NQCD_xd = [],[]
         for x in ['MuonKScaleUp','MuonKScaleDown','MuonCScaleUp','MuonCScaleDown']:
-            nqcd = qcdfit(spL.clone(sysdir_mc=x),name=x)
+            nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(sysdir_mc=x),name=x)
             MQCD[x] = nqcd
+            FQCD[x] = (CHI2,NDF)
             NQCD_x.append(nqcd)
             NQCD_xd.append( abs(nqcd-NOM) )
         nqcd = NQCD_x[ NQCD_xd.index(max(NQCD_xd)) ] # find max deviation
@@ -1133,8 +1147,9 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
     if True:
         NQCD_x,NQCD_xd = [],[]
         for x in ['MuonResMSUp','MuonResMSDown','MuonResIDUp','MuonResIDDown']:
-            nqcd = qcdfit(spL.clone(sysdir_mc=x),name=x)
+            nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(sysdir_mc=x),name=x)
             MQCD[x] = nqcd
+            FQCD[x] = (CHI2,NDF)
             NQCD_x.append(nqcd)
             NQCD_xd.append( abs(nqcd-NOM) )
         nqcd = NQCD_x[ NQCD_xd.index(max(NQCD_xd)) ] # find max deviation
@@ -1144,8 +1159,9 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
     if True:
         NQCD_x,NQCD_xd = [],[]
         for x in ['JetScaleUp','JetScaleDown','JetNPVUp','JetNPVDown','JetMUUp','JetMUDown']:
-            nqcd = qcdfit(spL.clone(sysdir_mc=x),name=x)
+            nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(sysdir_mc=x),name=x)
             MQCD[x] = nqcd
+            FQCD[x] = (CHI2,NDF)
             NQCD_x.append(nqcd)
             NQCD_xd.append( abs(nqcd-NOM) )
         nqcd = NQCD_x[ NQCD_xd.index(max(NQCD_xd)) ] # find max deviation
@@ -1153,16 +1169,17 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
     if True:
         NQCD_x,NQCD_xd = [],[]
         for x in ['JetResolUp','JetResolDown']:
-            nqcd = qcdfit(spL.clone(sysdir_mc=x),name=x)
+            nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(sysdir_mc=x),name=x)
             MQCD[x] = nqcd
+            FQCD[x] = (CHI2,NDF)
             NQCD_x.append(nqcd)
             NQCD_xd.append( abs(nqcd-NOM) )
         nqcd = NQCD_x[ NQCD_xd.index(max(NQCD_xd)) ] # find max deviation
         add(nqcd,'Jet energy resolution')
 
     if a:
-        a.add(key, {'data':(SVAL,SABS,SREL,SLAB , MQCD)} )
-    return (SVAL,SABS,SREL,SLAB , MQCD)
+        a.add(key, {'data':(SVAL,SABS,SREL,SLAB, MQCD,FQCD)} )
+    return (SVAL,SABS,SREL,SLAB , MQCD,FQCD)        
 
 # comprehensive study of qcd fits in 2d: pt x eta bins, using histograms.
 # now also supports 1D and 0D (all-inclusive) fits
@@ -1189,7 +1206,7 @@ if mode=='qcdfit_sys':
     do_init = True
     do_tot = True
     for ieta in etas:
-        SVAL,SABS,SREL,SLAB , MQCD = qcdfit_slice(spR.clone() , iq,opts.etamode,ieta,ipt , nomonly=opts.nomonly)
+        SVAL,SABS,SREL,SLAB, MQCD,FQCD = qcdfit_slice(spR.clone() , iq,opts.etamode,ieta,ipt , nomonly=opts.nomonly)
         if do_init and do_tot:
             M.ad('Total',style=20,color=ROOT.kBlack)
             h = SuSample.make_habseta('h'+'Total') if opts.etamode==2 else SuSample.make_heta('h'+'Total')
