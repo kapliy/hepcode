@@ -2,16 +2,15 @@
 
 # Control plot stacks
 
-input=/share/t3data3/antonk/ana/ana_v29I_10212012_unfold_stacoCB_all  # max's trigger SF
-input=/share/t3data3/antonk/ana/ana_v29I_10292012_unfold_newTrigWZPTnoPol_stacoCB_all # new trigger SF
-input=/share/t3data3/antonk/ana/ana_v29I_11022012_unfold_stacoCB_all # adding met muon term plots and additional 2d histos. adding pt slices. adding phi plot.
 input=/share/t3data3/antonk/ana/ana_v29I_11072012_unfold_stacoCB_all/
+input=/share/t3data3/antonk/ana/ana_v29I_12042012_edboard_stacoCB_all
 
-#OUTPR="OUT_11022012_ALL.v1" ; bgqcd=3
-OUTPR="OUT_11022012_ALL.v2" ; bgqcd=4
+bgqcd=4
+OUTPR=OUT_12042012_ALL.v2
+OUTPR=OUT_12102012_ALL.v2
 
 # eta plots for different MC
-if [ "1" == "1" ]; then
+if [ "1" == "0" ]; then
     ./stack2.py -b --input ${input} --hsource "lepton_etav" -o CONTROL -t PowhegPythia -m control_stack --bgsig 5 --bgewk 5 --bgqcd ${bgqcd} --refline 0.94,1.06 --qcdsource "${OUTPR}.eta.1D.root:qcd_MCAverage" &
     #./stack2.py -b --input ${input} --hsource "lepton_etav" -o CONTROL -t PowhegHerwig -m control_stack --bgsig 4 --bgewk 5 --bgqcd ${bgqcd} --refline 0.94,1.06 --qcdsource "${OUTPR}.eta.1D.root:qcd_MCAverage" &
     #./stack2.py -b --input ${input} --hsource "lepton_etav" -o CONTROL -t McAtNlo -m control_stack --bgsig 1 --bgewk 5 --bgqcd ${bgqcd} --refline 0.94,1.06 --qcdsource "${OUTPR}.eta.1D.root:qcd_MCAverage" &
@@ -21,10 +20,12 @@ if [ "0" == "1" ]; then # double ratio
 fi
 
 # abseta plots for different MC
-if [ "0" == "1" ]; then
-    ./stack2.py -b --input ${input} --hsource "lepton_absetav" -o CONTROL -t PowhegPythia -m control_stack --bgsig 5 --bgewk 5 --bgqcd ${bgqcd} --refline 0.94,1.06 --qcdsource "${OUTPR}.abseta.1D.root:qcd_MCAverage" &
-    ./stack2.py -b --input ${input} --hsource "lepton_absetav" -o CONTROL -t PowhegHerwig -m control_stack --bgsig 4 --bgewk 5 --bgqcd ${bgqcd} --refline 0.94,1.06 --qcdsource "${OUTPR}.abseta.1D.root:qcd_MCAverage" &
-    ./stack2.py -b --input ${input} --hsource "lepton_absetav" -o CONTROL -t McAtNlo -m control_stack --bgsig 1 --bgewk 5 --bgqcd ${bgqcd} --refline 0.94,1.06 --qcdsource "${OUTPR}.abseta.1D.root:qcd_MCAverage" &
+if [ "1" == "1" ]; then
+    ./stack2.py -b --input ${input} --hsource "lepton_absetav" -o CONTROL -t PowhegPythia -m control_stack --bgsig 5 --bgewk 5 --bgqcd ${bgqcd} --refline 0.94,1.06 --qcdsource "${OUTPR}.abseta.1D.root:qcd_Nominal"
+    #./stack2.py -b --input ${input} --hsource "lepton_absetav" -o CONTROL -t PowhegPythia -m control_stack --bgsig 5 --bgewk 5 --bgqcd ${bgqcd} --refline 0.94,1.06 --qcdsource "${OUTPR}.abseta.1D.root:qcd_MCAverage"
+    
+    #./stack2.py -b --input ${input} --hsource "lepton_absetav" -o CONTROL -t PowhegHerwig -m control_stack --bgsig 4 --bgewk 5 --bgqcd ${bgqcd} --refline 0.94,1.06 --qcdsource "${OUTPR}.abseta.1D.root:qcd_MCAverage" &
+    #./stack2.py -b --input ${input} --hsource "lepton_absetav" -o CONTROL -t McAtNlo -m control_stack --bgsig 1 --bgewk 5 --bgqcd ${bgqcd} --refline 0.94,1.06 --qcdsource "${OUTPR}.abseta.1D.root:qcd_MCAverage" &
 fi
 
 # W kinematic variables [ nominal ]

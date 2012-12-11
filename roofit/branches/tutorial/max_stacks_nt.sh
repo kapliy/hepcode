@@ -19,6 +19,7 @@ cp -a plot_l_eta_5_stack_lepton_etav_POS.pdf $dest/stack_Wplus_eta.pdf
 """
 
 input=/share/t3data3/antonk/ana/ana_v29I_11072012_unfold_stacoCB_all/
+input=/share/t3data3/antonk/ana/ana_v29I_12042012_edboard_stacoCB_all
 
 bgsig=5
 bgewk=5
@@ -57,7 +58,7 @@ out="STACKNT_mcnlo"
 
 bgsig=5
 bgewk=5
-cut="mcw*puw*wzptw*vxw*ls1w*ls2w*effw*isow*trigw"
+cut="mcw*puw*wzptw*vxw*ls1w*ls2w*znlow*alpy*effw*isow*trigw"
 out="STACKNT"
 
 # refline axis range
@@ -72,7 +73,7 @@ bgqcd=4
 iz=0
 for q in 0 1; do
     for bgsig in $bgsig ; do
-	for var in "--var l_eta --bin 10,0.0,2.5 --hsource lepton_etav" "--var l_pt --bin 95,25,120 --hsource l_pt" "--var met --bin 100,0,100 --hsource met" "--var w_mt --bin 80,40,120 --hsource wmt" "--var w_pt --bin 120,0,120 --hsource wpt"; do
+	for var in "--var l_eta --bin 10,-2.5,2.5 --hsource lepton_etav" "--var l_pt --bin 95,25,120 --hsource l_pt" "--var met --bin 100,0,100 --hsource met" "--var w_mt --bin 80,40,120 --hsource wmt" "--var w_pt --bin 120,0,120 --hsource wpt"; do
 	    echo "CHARGE $q BGSIG ${bgsig} : [${var}]"
 	    vname=`echo ${var} | awk '{print $2}'`
 	    if [ "0" == "Wc/W paper" ]; then

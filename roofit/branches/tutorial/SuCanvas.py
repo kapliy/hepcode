@@ -17,6 +17,8 @@ class SuCanvas:
     g_ratio_x_title_offset = 3.4;
     g_text_size = 21; # in pixel
     g_text_font = 43; # force font style 4 and size specification in pixels (font%10==3)
+    g_text_size_legend = None; # in pixel
+    g_text_size_pave = None; # in pixel
     g_marker_size = 1;
     # should have no influence because of fixed text and symbol size
     g_legend_width = 0.2;
@@ -53,7 +55,7 @@ class SuCanvas:
         if text_y2==None: text_y2 = SuCanvas.g_legend_y2_ndc
         text_x2 = text_x1 + SuCanvas.g_legend_width;
         text_y1 = text_y2 - SuCanvas.g_legend_height_per_entry*fractext.GetSize();
-        print 'INFO: TPaveText coordinates: x=[%.2f..%.2f] y=[%.2f..%.2f]'%(text_x1,text_x2,text_y1,text_y2)
+        #print 'INFO: TPaveText coordinates: x=[%.2f..%.2f] y=[%.2f..%.2f]'%(text_x1,text_x2,text_y1,text_y2)
         fractext.SetX1NDC(text_x1);
         fractext.SetX2NDC(text_x2);
         fractext.SetY1NDC(text_y1);
@@ -63,7 +65,7 @@ class SuCanvas:
         fractext.SetMargin( 0 )
         fractext.SetTextAlign(12);
         fractext.SetTextFont(SuCanvas.g_text_font);
-        fractext.SetTextSize(SuCanvas.g_text_size);
+        fractext.SetTextSize(SuCanvas.g_text_size_pave if SuCanvas.g_text_size_pave else SuCanvas.g_text_size);
 
     @staticmethod
     def ConfigureLegend(legend, legend_x1=None, legend_y2=None):
@@ -72,7 +74,7 @@ class SuCanvas:
         if legend_y2==None: legend_y2 = SuCanvas.g_legend_y2_ndc
         legend_x2 = legend_x1 + SuCanvas.g_legend_width;
         legend_y1 = legend_y2 - SuCanvas.g_legend_height_per_entry*legend.GetNRows();
-        print 'INFO: TLegend coordinates: x=[%.2f..%.2f] y=[%.2f..%.2f]'%(legend_x1,legend_x2,legend_y1,legend_y2)
+        #print 'INFO: TLegend coordinates: x=[%.2f..%.2f] y=[%.2f..%.2f]'%(legend_x1,legend_x2,legend_y1,legend_y2)
         legend.SetX1NDC(legend_x1);
         legend.SetX2NDC(legend_x2);
         legend.SetY1NDC(legend_y1);
@@ -80,7 +82,7 @@ class SuCanvas:
         legend.SetTextAlign(12);
         legend.SetMargin(SuCanvas.g_legend_symbol_width/SuCanvas.g_legend_width);
         legend.SetTextFont(SuCanvas.g_text_font);
-        legend.SetTextSize(SuCanvas.g_text_size);
+        legend.SetTextSize(SuCanvas.g_text_size_legend if SuCanvas.g_text_size_legend else SuCanvas.g_text_size);
         legend.SetFillStyle(0);
         #legend.SetFillColor(10)
         legend.SetBorderSize(0);
@@ -443,13 +445,13 @@ class SuCanvas:
         s._canvas = ROOT.TCanvas( 'canvasd'+title , 'canvasd'+title , width , height );
         main_frac = 1.0
         left_bottom_margin = 3*margin;
-        # no gap between main and ratio pad
-        s._canvas.SetBottomMargin(0.02);
+        # since default canvas has no ratio pad, we need a bottom margin
+        #s._canvas.SetBottomMargin(0.02);
         s._canvas.SetRightMargin(margin);
         s._canvas.SetLeftMargin(left_bottom_margin);
         s._canvas.SetTopMargin(margin/main_frac);
         s._canvas.cd();
-        if logy:
+        if mlogy:
             s._canvas.SetLogy(mlogy)
 
     def buildRatio(s,width=600,height=600,title=None,margin=0.05,mlogy=False,rlogy=False):
@@ -552,9 +554,10 @@ class SuCanvas:
         return 1. - float( s._canvas.GetRightMargin() ) - 0.01;
 
     def plotAny(s,hplots,M=None,height=1.5,mode=0,
-                rebin=1.0,
+                rebin=1.0,drawopt='',
                 xaxis_info=None,
-                mlogy=False,rlogy=False):
+                mlogy=False,rlogy=False,
+                pave=None):
         """ A generic function to plot several SuPlot's.
         M is: a PlotOptions object describing formatting and colors
         Height is: Max*height. Or asym = 0..0.5
@@ -606,10 +609,10 @@ class SuCanvas:
                 else:
                     #h.SetLineColor( PlotOptions.autocolor(i) )
                     if i==0:
-                        h.Draw()
+                        h.Draw(drawopt)
                         hdraw = h
                     else:
-                        h.Draw('A SAME')
+                        h.Draw('A SAME '+drawopt)
             if htot:
                 htot.Draw('A same E2')
         # axis labeling
@@ -617,12 +620,19 @@ class SuCanvas:
         if xaxis_info!=None:
             assert len(xaxis_info)>=2,'Incorrect format of xaxis_info: [xaxis_label , xaxis_units , ...]'
             xaxis_label,xaxis_units = xaxis_info[0],xaxis_info[1]
+            if xaxis_label:
+                hdraw.GetXaxis().SetTitle( xaxis_label )
             if xaxis_units==None:
                 hdraw.GetYaxis().SetTitle( "Entries" )
             else:
                 bin_width = hdraw.GetXaxis().GetBinWidth(1)
                 hdraw.GetYaxis().SetTitle( "Entries / %.1f %s" % (bin_width,xaxis_units) )
                 xaxis_label += ' [%s]'%xaxis_units
+            if len(xaxis_info)>=4: # y axis information
+                if xaxis_info[3]==None:
+                    hdraw.GetYaxis().SetTitle( xaxis_info[2] )
+                else:
+                    hdraw.GetYaxis().SetTitle( xaxis_info[2] + ' [%s]'%xaxis_info[3])
         # axis ranges
         maxh = max([h.GetMaximum() for h in hs])
         if type(height)==type([]):
@@ -638,6 +648,13 @@ class SuCanvas:
         # legend
         s.ConfigureLegend(leg)
         leg.Draw("same")
+        if pave:
+            assert type(pave)==type([]),'ERROR: pave must be given as a python list of lines'
+            s.pavetext = pavetext = ROOT.TPaveText()
+            for ltext in pave:
+                pavetext.AddText( ltext )
+            s.ConfigureText(pavetext,text_x1 = leg.GetX2NDC()+0.2)
+            pavetext.Draw()
         # draw ratios with respect to the first histogram
         hdrawratio = None
         if M and M.any_ratios():
@@ -858,6 +875,8 @@ class PlotOptions:
       s.cuts = []
       s.ratios = []
       s.errors = []
+      s.icolor = 0
+      s.istyle = 0
     def ntot(s):
       assert s.n == len(s.cuts)
       return s.n
@@ -865,16 +884,23 @@ class PlotOptions:
       return any(s.ratios)
     def disable_ratios(s):
       s.ratios = [False]*len(s.ratios)
-    def add(s,name,label,color=None,size=0.7,style=20,cut=None,ratio=None,err=0):
-      """ Add one sample """
+    def ad(s,label,color=None,size=0.7,style=None,cut=None,ratio=None,err=0):
+      """ Add one sample.
+      NOTE: previously, this had the following default: style=20 """
+      return s.add(label,label,color,size,style,cut,ratio,err)
+    def add(s,name,label,color=None,size=0.7,style=None,cut=None,ratio=None,err=0):
+      """ Add one sample.
+      NOTE: previously, this had the following default: style=20 """
       s.names.append(name)
       s.labels.append(label)
-      s.colors.append( color if color else s.autocolor(len(s.cuts)) )
+      s.colors.append( color if color else s.autocolor(s.icolor) )
       s.sizes.append(size*s.msize)
-      s.styles.append( style if style else s.autostyle(len(s.cuts)) )
+      s.styles.append( style if style else s.autostyle(s.istyle) )
       s.cuts.append(cut)
       s.ratios.append(ratio)
       s.errors.append(err)
+      if color==None: s.icolor+=1
+      if style==None: s.istyle+=1
       s.n+=1
     def prefill_data(s,err=0):
       """ if we also plan to overlay the data """
@@ -892,12 +918,15 @@ class PlotOptions:
     @staticmethod
     def autocolor(i):
       """ choose a reasonable sequence of colors """
-      colorlist = [2,3,4,5,6,20,28,41,46]
+      colorlist = [2,8,4,ROOT.kOrange,6,20,28,41,46]
+      colorlist+= [2,8,4,ROOT.kOrange,6,20,28,41,46]
+      colorlist+= [2,8,4,ROOT.kOrange,6,20,28,41,46]
       return colorlist[i] if i<len(colorlist) else (1 if i==11 else i)
     @staticmethod
     def autostyle(i):
       """ choose a reasonable sequence of styles """
-      style = [20,21,22,23,33,34]
+      #style = [20,21,22,23,33,34]
+      style = range(24,28+1) + [30,31,32] + [21,22,23]
       style += style
       style += style
       return style[i] if i<len(style) else (1 if i==11 else i)

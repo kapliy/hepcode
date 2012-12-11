@@ -71,6 +71,7 @@ class SuSys:
         if rebin==1.0:
             return s.stack
         else:
+            # FIXME TODO: do not Clone - this screws up garbage collector. Re-create from histograms instead!
             h = s.stack.Clone()
             NBG = h.GetHists().GetSize()
             for ii in xrange(0,NBG):
@@ -177,7 +178,10 @@ class SuSys:
             basedir = '/' + '/'.join( s.basedir[2].split('/')[1:]) # lpt2025/tight
         # disable MET>25 or WMT>40 cut if we are actually fitting in MET/WMT
         var = s.qcd['var'].split(':')[0]
-        if var[-3:]=='wmt':
+        if False: # playing with extended MET fit region
+            basedir = s.qcd['anyfit']+basedir
+            s.basedir = [basedir]*3
+        elif var[-3:]=='wmt':
             basedir = s.qcd['wmtfit']+basedir   # wmtfit/lpt2025/tight [/POS/absetav_histo]
             s.basedir = [basedir]*3
         elif var[-6:]=='on_met': # lepton-met deltaPHI fit should be done BEFORE WMT cut
@@ -217,7 +221,9 @@ class SuSys:
         if (not s.use_ntuple()) and 'absetabins' in s.qcd and s.qcd['absetabins']==True:
             return 2
         return False
-    def clone(s,sysdir=None,sysdir_mc=None,subdir=None,subdir_mc=None,basedir=None,
+    def clone(s,
+              sysdir=None,sysdir_mc=None,sysdir_qcd=None,
+              subdir=None,subdir_mc=None,basedir=None,
               qcderr=None,qcdadd=None,name=None,q=None,histo=None,sliced_1d=None,sliced_2d=None,
               unfold=None,unfdir=None,unfhisto=None,
               ntuple=None,path=None,var=None,bin=None,pre=None,weight=None,
@@ -227,8 +233,9 @@ class SuSys:
         res =  copy.copy(s)
         # do not clone the actual histograms
         #res.h,res.stack = None,None
-        # only replace in MC
+        # only replace in MC or in QCD anti-isolation
         if sysdir_mc!=None: res.sysdir = s.qlist([res.sysdir[0],sysdir_mc,res.sysdir[2]])
+        if sysdir_qcd!=None: res.sysdir = s.qlist([res.sysdir[0],res.sysdir[1],sysdir_qcd])
         if subdir_mc!=None: res.subdir = s.qlist([res.subdir[0],subdir_mc,res.subdir[2]])
         # other replacements
         if sysdir!=None: res.sysdir = s.qlist(sysdir)
@@ -262,15 +269,19 @@ class SuSys:
         return res
     def stack_bg_frac(s,iback=1,overflow=True):
         """ Returns integral fraction of background NBG-iback (NBG corresponds to wmunu) """
-        NBG = s.stack.GetStack().GetLast()
+        return s.stack_bg_events(iback,overflow) / s.stack_total_events(overflow)
+    def stack_total_events(s,overflow=True):
+        """ Returns integral of total stack """
         h = s.stack.GetStack().Last()
         totevts = h.Integral(0,h.GetNbinsX()+1) if overflow else h.Integral()
-        h = s.stack.GetHists().At(NBG - iback)   # TList::At(NBG) = signal
-        qcdevts = h.Integral(0,h.GetNbinsX()+1) if overflow else h.Integral()
-        qcdfrac = 1.0*qcdevts / totevts
-        return qcdfrac
+        return totevts
+    def histo_total_events(s,overflow=True):
+        """ Returns integral of histo """
+        h = s.h
+        totevts = h.Integral(0,h.GetNbinsX()+1) if overflow else h.Integral()
+        return totevts
     def stack_bg_events(s,iback=1,overflow=True):
-        """ Returns integral fraction of background NBG-iback (NBG corresponds to wmunu) """
+        """ Returns integral of background NBG-iback (NBG corresponds to wmunu) """
         NBG = s.stack.GetStack().GetLast()
         h = s.stack.GetHists().At(NBG - iback)   # TList::At(NBG) = signal
         # include overflow? E.g., met>200
@@ -538,6 +549,12 @@ class SuPlot:
             add('JetScaleUp','JetScaleUp')
             add('JetScaleDown','JetScaleDown')
             next('JES')
+            add('JetNPVUp','JetNPVUp')
+            add('JetNPVDown','JetNPVDown')
+            next('JES_NPV')
+            add('JetMUUp','JetMUUp')
+            add('JetMUDown','JetMUDown')
+            next('JES_MU')
         # MET
         if False:
             assert False
@@ -565,7 +582,7 @@ class SuPlot:
         # W pT targets
         if True:
             add('WptSherpa','WptSherpa')
-            add('WptPythiaMC10','WptPythiaMC10')
+            #add('WptPythiaMC10','WptPythiaMC10')
             next('WPT_REWEIGHT')
         # PDF reweighting
         if True:
@@ -805,7 +822,7 @@ class SuPlot:
             if i in s.enable:
                 o.update_var(histo,bin)
     def clone(s,q=None,enable=None,histo=None,do_unfold=None,unfhisto=None,qcdadd=None,
-              sysdir=None,
+              sysdir=None,sysdir_mc=None,sysdir_qcd=None,
               sliced_1d=None,sliced_2d=None,slice=None,
               ntuple=None,path=None,var=None,bin=None,pre=None,weight=None):
         """ Clones an entire SuPlot.
@@ -821,7 +838,7 @@ class SuPlot:
         for sgroups in s.sys:
             bla = []
             for sinst in sgroups:
-                bla.append(sinst.clone(q=q,histo=histo,unfhisto=unfhisto,qcdadd=qcdadd,sysdir=sysdir,ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight,sliced_1d=sliced_1d,sliced_2d=sliced_2d,slice=slice))
+                bla.append(sinst.clone(q=q,histo=histo,unfhisto=unfhisto,qcdadd=qcdadd,sysdir=sysdir,sysdir_mc=sysdir_mc,sysdir_qcd=sysdir_qcd,ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight,sliced_1d=sliced_1d,sliced_2d=sliced_2d,slice=slice))
                 res.flat.append(bla[-1])
             res.sys.append( bla )
         return res
@@ -1260,13 +1277,26 @@ class SuStackElm:
         for ih,h in enumerate(s.samples[1:]):
             htmp = h.histo(hname,d.clone(),rebin=rebin)
             res.Add(htmp,s.sample_weights[ih+1])
+        # special trick: merge mu+ and mu- data QCD templates (for better statistics)
+        # for actual qcd contribution in signal region:
+        if SuStack.QCD_MIX_CHARGE and 'qcd' in s.flags and ('driven' in s.flags or 'driven_sub' in s.flags) and isinstance(d,SuPlot) and d.nominal().charge in (0,1):
+            otherq = 0 if d.nominal().charge==1 else 0
+            for ih,h in enumerate(s.samples[0:]):
+                htmp = h.histo(hname,d.clone(q=otherq),rebin=rebin)
+                res.Add(htmp,s.sample_weights[ih])
+        # for qcd template in qcd fits
+        if SuStack.QCD_MIX_CHARGE and 'qcd' in s.flags and ('driven' in s.flags or 'driven_sub' in s.flags)and isinstance(d,SuSys) and d.charge in (0,1):
+            otherq = 0 if d.charge==1 else 0
+            for ih,h in enumerate(s.samples[0:]):
+                htmp = h.histo(hname,d.clone(q=otherq),rebin=rebin)
+                res.Add(htmp,s.sample_weights[ih])
         if res:
             res.SetLineColor(ROOT.kBlack)
             res.SetFillColor(s.color)
             #res.SetMarkerSize(0)
-            # special scaling: for QCD
             if unitize:
                 res.Unitize()
+            # special scaling: for QCD
             elif SuStackElm.new_scales==True and 'qcd' in s.flags and (isinstance(d,SuPlot) and d.status==0):
                 if s.qcdscale!=None:
                     res.ScaleOne(s.qcdscale)
@@ -1615,8 +1645,12 @@ class SuStack:
         f = SuFit.SuFit()
         f.addFitVar( d2.qcd['var'], d2.qcd['min'] , d2.qcd['max'] , '%s (GeV)'%(d2.qcd['var']) );
         # get histograms
-        hdata   = s.data('data',d2).h
-        hfree = s.qcd('bgfree',d2).h    # using correct lumi for bg subtraction here
+        hdata   = s.data('data',d2.clone()).h
+        hfree = s.qcd('bgfree',d2.clone()).h    # using correct lumi for bg subtraction here
+        if False and SuStack.QCD_MIX_CHARGE and d2.charge in (0,1): #FIXMEAK
+            otherq = 0 if d2.charge==1 else 0
+            hfree2 = s.qcd('bgfree2',d2.clone(q=otherq)).h
+            hfree.Add(hfree2)
         # use fake lumi to make sure the signal statistics is not scaled before entering TFractionFitter
         oldlumi = SuSample.lumi
         if SuStack.QCD_STAT_HACK>0:
@@ -1654,7 +1688,7 @@ class SuStack:
             assert thesig,'Failed to find a montecarlo target for stat hack normalization'
             SuSample.lumi = thesig.get_preserving_lumi(evcnt = thesig.choose_evcount())
             SuSample.lumifake = True
-        hfixed = s.ewk('bgfixed',d2).h
+        hfixed = s.ewk('bgfixed',d2.clone()).h
         SuSample.lumi = oldlumi
         SuSample.lumifake = False
         if not (hdata and hfree and hfixed):
