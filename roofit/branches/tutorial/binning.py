@@ -87,6 +87,24 @@ LABELMAP['avgmu_unw'] = LABELMAP['avgmu']
 LABELMAP['nvtx_grltrig'] = ['Number of vertices',None]
 LABELMAP['nvtx_grltrig_unw'] = LABELMAP['nvtx_grltrig']
 
+# cut maps
+CUTMAP = {}
+CUTMAP['passes_e_grl'] = 'GRL'
+CUTMAP['passes_e_lar_cleaning'] = 'LAr error'
+CUTMAP['passes_e_primary_vertex'] = 'Primary vertex'
+CUTMAP['passes_e_trigger'] = 'Trigger'
+CUTMAP['passes_w_qual'] = 'Combined muon + quality cuts'
+CUTMAP['passes_w_pt'] = '$p_T > 20$\,\GeV'
+CUTMAP['passes_w_eta'] = '$|\eta| < 2.4$'
+CUTMAP['passes_w_iso'] = 'Isolation'
+CUTMAP['passes_w_nmuons'] = 'Exactly one muon'
+CUTMAP['passes_w_metclean'] = '$E_T^{Miss}$ cleaning'
+CUTMAP['passes_w_larhole'] = 'LAr hole jet veto'
+CUTMAP['passes_w_met'] = '$E_T^{Miss} > 25$\,\GeV'
+CUTMAP['passes_w_mt'] = '$m_T > 40$\,\GeV '
+CUTMAP['passes_w_pos'] = '$W^{+} \\rightarrow \mu^{+} \\nu$'
+CUTMAP['passes_w_neg'] = '$W^{-} \\rightarrow \mu^{-} \\nu$'
+
 if __name__ == '__main__':
     print len(absetabins)
     print absetabins

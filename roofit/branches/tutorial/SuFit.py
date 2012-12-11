@@ -370,7 +370,8 @@ class SuFit:
     obj = stack
     if obj:
       obj.GetXaxis().SetRange(s.plotmin,s.plotmax)
-      obj.GetXaxis().SetTitle( s.w.var(s.vnames[ivar]).GetName() )
+      xname = s.w.var(s.vnames[ivar]).GetName()
+      obj.GetXaxis().SetTitle( xname  ) # over-ridden in ratio plot
       bin_width = data.GetXaxis().GetBinWidth(1)
       obj.GetYaxis().SetTitle( "Events / %.2f GeV" % bin_width )
     
@@ -421,13 +422,17 @@ class SuFit:
       TMAP = {}
       TMAP['met'] = 'E_{T}^{miss}'
       TMAP['d3_eta_lpt_met'] = TMAP['met']
+      TMAP['d3_abseta_lpt_met'] = TMAP['met']
       TMAP['wmt'] = 'm_{T}^{W}'
       TMAP['w_mt'] = TMAP['wmt']
       TMAP['d3_eta_lpt_wmt'] = TMAP['wmt']
+      TMAP['d3_abseta_lpt_wmt'] = TMAP['wmt']
       vname = s.w.var(s.vnames[ivar]).GetName()
       xtitle = TMAP[vname] if vname in TMAP else vname
       if vname[:14] in TMAP:
         xtitle = TMAP[vname[:14]]
+      if vname[:17] in TMAP:
+        xtitle = TMAP[vname[:17]]
       s.hratio.GetXaxis().SetTitle( xtitle )
 
     # finalize

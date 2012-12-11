@@ -1,3 +1,10 @@
+TABLES:
+- cutflow in data
+- cutflow in MC
+- QCD uncertainties in table form
+- Plot QCD chi2/ndf for different systematics
+- data, EWK, QCD event counts
+
 Check QCD template shapes in mu+ and mu-: both in signal and control regions
 Make sure the toy variations are actually used in Plot.C
 
