@@ -173,7 +173,7 @@ class SuFit:
     mc = ROOT.TObjArray(2) # MC histograms are put into this array
     mc.Add(s.fixed.Clone())
     [mc.Add(ff.Clone()) for ff in s.free]
-    s.fit = fit = TFractionFitter(data, mc) ;  # initialise
+    s.fit = fit = TFractionFitter(data, mc, 'Q') ;  # initialise
     var = s.w.var(s.vnames[0])
     s.fitmin,s.fitmax = s.data.FindFixBin(var.getMin()) , s.data.FindFixBin(var.getMax())
     s.plotmin = s.fitmin if plotrange is None else plotrange[0]
@@ -182,11 +182,11 @@ class SuFit:
     if s.plotmax>s.data.GetNbinsX()+1: s.plotmax = s.data.GetNbinsX()+1
     #s.fitmin = SuFit.first_nonzero_bin(data,s.fitmin)
     print 'INFO: SuFit::doFitTF fit range:',s.vnames[0],s.fitmin,s.fitmax
-    print 'INFO: SuFit::doFitTF plot range:',s.vnames[0],s.plotmin,s.plotmax
+    if False:
+      print 'INFO: SuFit::doFitTF plot range:',s.vnames[0],s.plotmin,s.plotmax
     sys.stdout.flush()
     fit.SetRangeX(s.fitmin,s.fitmax) # choose MET fit range
     if EXCLUDE_ZERO_BINS!=None:
-      #SuFit.exclude_zero_bins( fit , s.fitmin, s.fitmax, [s.data,] , limit=EXCLUDE_ZERO_BINS )
       SuFit.exclude_zero_bins( fit , s.fitmin, s.fitmax, [s.fixed,s.free[0]] , limit=EXCLUDE_ZERO_BINS )
     if False: # debugging
       s.dump_plot([data,s.fixed,s.free[0]],name='SYS',titles=['data','ewk','qcd'])
@@ -231,13 +231,17 @@ class SuFit:
         s.status = fit.Fit()
         s.nfits += 1
         if s.status!=0:
-          print 'WARNING: repeating (N=4) the QCD normalization fit (prev=%s)'%s.status
+          print 'WARNING: repeating (N=4) the QCD normalization fit, using new exclusion limit (prev=%s)'%s.status
+          if EXCLUDE_ZERO_BINS==None:
+            SuFit.exclude_zero_bins( fit , s.fitmin, s.fitmax, [s.fixed,s.free[0]] , limit=1)
+          else:
+            SuFit.exclude_zero_bins( fit , s.fitmin, s.fitmax, [s.fixed,s.free[0]] , limit=EXCLUDE_ZERO_BINS+1)
           sys.stdout.flush()
           s.status = fit.Fit()
           s.nfits += 1
           # last-ditch attempt: do a full scan with starting point ewkfrac = [0.15..0.85], step 0.05
           if True and s.status!=0:
-            for ewkfrac in [ 0.05 * xx for xx in xrange(3,18) ]:
+            for ewkfrac in [ 0.05 * xx for xx in xrange(2,19) ]:
               qcdfrac = 1.0-ewkfrac
               print 'WARNING: SCANNING FIT (N=%d) with ewkfrac=%.2f (prev=%s)'%(s.nfits+1,ewkfrac,s.status)
               fit.GetFitter().SetParameter(0,"ewkfrac",ewkfrac,0.01,0.0,1.0);
@@ -299,8 +303,7 @@ class SuFit:
     s.chi2.append( fit.GetChisquare() )
     #s.chi2.append( data.Chi2Test( s.fit.GetPlot(), "UW CHI2" )  )
     s.ndf.append( fit.GetNDF() )
-    print 'INFO: EWK frac = %.2f  QCD frac = %.2f'%(s.fractions[-1],s.Wfractions[-1])
-    print 'INFO: Chi2 =','%8f'%s.chi2[-1],' NDF =',s.ndf[-1]
+    print 'INFO: EWK frac = %.2f  QCD frac = %.2f'%(s.fractions[-1],s.Wfractions[-1]),'INFO: Chi2 =','%8f'%s.chi2[-1],' NDF =',s.ndf[-1]
     sys.stdout.flush()
 
   def drawFitsTF(s,title='random',logscale=False,modbins=True):
@@ -417,10 +420,14 @@ class SuFit:
       s.hratio.GetXaxis().SetRange(s.plotmin,s.plotmax)
       TMAP = {}
       TMAP['met'] = 'E_{T}^{miss}'
+      TMAP['d3_eta_lpt_met'] = TMAP['met']
       TMAP['wmt'] = 'm_{T}^{W}'
       TMAP['w_mt'] = TMAP['wmt']
+      TMAP['d3_eta_lpt_wmt'] = TMAP['wmt']
       vname = s.w.var(s.vnames[ivar]).GetName()
       xtitle = TMAP[vname] if vname in TMAP else vname
+      if vname[:14] in TMAP:
+        xtitle = TMAP[vname[:14]]
       s.hratio.GetXaxis().SetTitle( xtitle )
 
     # finalize

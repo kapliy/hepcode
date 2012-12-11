@@ -30,9 +30,12 @@ class antondb:
         f.close()
     def load(s):
         """ non-locking """
-        f = open(s.fname,'r')
-        s.data = pickle.load(f)
-        f.close()
+        if os.path.isfile(s.fname):
+            f = open(s.fname,'r')
+            s.data = pickle.load(f)
+            f.close()
+            return True
+        return False
     def ls(s,path='/'):
         """ trivial ls() """
         keys = s.data.keys()

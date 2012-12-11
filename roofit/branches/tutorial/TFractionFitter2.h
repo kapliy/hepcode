@@ -648,6 +648,8 @@ Int_t TFractionFitter2::Fit() {
    // Perform the fit with the default UP value.
    // The value returned is the minimisation status.
 
+  fFitInfinite = false; // reset
+
    Double_t plist[1];
    plist[0] = 0.5;
    // set the UP value to 0.5

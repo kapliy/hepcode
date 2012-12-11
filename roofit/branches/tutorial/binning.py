@@ -16,7 +16,7 @@ def EB(b,etamode=2):
     etabins = absetabins if etamode==2 else setabins
     if b=='ALL': return ':x:1:%d'%(len(etabins)-1)
     elif b>0 and b <= len(etabins)-1: return ':x:%d:%d'%(b,b)
-    assert False,'Unknown eta bin: %s'%b
+    assert False,'Unknown eta bin: %s (max=%s)'%(b,len(etabins)-1)
     return None
 def REB(b,etamode=2):
     """ Reverse map of eta bins, where input b counts from 0
@@ -28,15 +28,17 @@ def PB(b):
     Note that ipt counts from 1, following ROOT TH1 bin counting convention
     """
     if b=='ALL': return ':y:1:%d'%(len(ptbins)-1)
+    elif b>0 and b<=len(ptbins)-1: return ':y:%d:%d'%(b,b) # FIXME: do not merge bins
     elif b>0 and b<=3: return ':y:%d:%d'%(b,b)   # 30 .. 35
     elif b==4: return ':y:4:5'           # 35 .. 45
     elif b==5: return ':y:6:7'           # 45 .. 120
-    assert False,'Unknown pt bin: %s'%b
+    assert False,'Unknown pt bin: %s (max=%s)'%(b,len(ptbins)-1)
     return None
 def RPB(b):
     """ Reverse map of pt bins, where input b counts from 0
     """
     if b=='ALL': return b
+    elif b<=10: return b+1 # FIXME: do not merge bins
     elif b<=2: return b+1
     elif b in (3,4): return 3+1
     elif b in (5,6): return 4+1

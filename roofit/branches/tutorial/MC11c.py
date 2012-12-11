@@ -136,17 +136,17 @@ mc.append(MCR(126007,'mc_powheg_herwig_zmumu',m_xsec["Zll53"]/1000.0,err=0.05))
 mc.append(MCR(129809,'mc_powheg_herwig_dyan',m_xsec["DrellYan53"]/1000.0,err=0.05))
 
 # Herwig diboson
-mc.append(MCR(105985,'mc_herwig_ww',m_xsec["WW"]/1000.0,err=0.0))
-mc.append(MCR(105987,'mc_herwig_wz',m_xsec["WZ"]/1000.0,err=0.0))
-mc.append(MCR(105986,'mc_herwig_zz',m_xsec["ZZ"]/1000.0,err=0.0))
+mc.append(MCR(105985,'mc_herwig_ww',m_xsec["WW"]/1000.0,err=0.07))
+mc.append(MCR(105987,'mc_herwig_wz',m_xsec["WZ"]/1000.0,err=0.07))
+mc.append(MCR(105986,'mc_herwig_zz',m_xsec["ZZ"]/1000.0,err=0.07))
 
 # ttbar
-mc.append(MCR(105200,'mc_mcnlo_ttbar',m_xsec["TTbar"]/1000.0,err=[0.1,0.07])) # -10% / +7%
+mc.append(MCR(105200,'mc_mcnlo_ttbar',m_xsec["TTbar"]/1000.0,err=[0.1,0.07])) # -10% / +7% # OR: 6% per Adrian
 
 # single top mc@nlo
-mc.append(MCR(108346,'mc_mcnlo_wt',14.59/1000.0,err=[0.1,0.07]))
-mc.append(MCR(108344,'mc_mcnlo_schan_munu',0.47/1000.0,err=[0.1,0.07]))
-mc.append(MCR(108341,'mc_mcnlo_tchan_munu',7.12/1000.0,err=[0.1,0.07]))
+mc.append(MCR(108346,'mc_mcnlo_wt',14.59/1000.0,err=[0.1,0.12]))
+mc.append(MCR(108344,'mc_mcnlo_schan_munu',0.47/1000.0,err=[0.1,0.12]))
+mc.append(MCR(108341,'mc_mcnlo_tchan_munu',7.12/1000.0,err=[0.1,0.12]))
 
 # W/Z + jets samples:
 # https://svnweb.cern.ch/trac/atlasgrp/browser/Physics/StandardModel/Common/Winter2012/mc11c_p833_info.txt
@@ -235,11 +235,11 @@ mc.append(MCR(105927,'mc_mcnlo_WpWm_taunutaunu',0.50377/1000.0))
 mc.append(MCR(105928,'mc_mcnlo_WpWm_taunuenu',0.50377/1000.0))
 mc.append(MCR(105929,'mc_mcnlo_WpWm_taunumunu',0.50377/1000.0))
 # single top acer (mc11c_p833_info.txt) - deprecated!
-mc.append(MCR(105500,'mc_acer_wt',15.74/1000.0,err=[0.1,0.07]))
-mc.append(MCR(117361,'mc_acer_tchan_munu',6.83/1000.0,err=[0.1,0.07]))
-mc.append(MCR(117362,'mc_acer_tchan_taunu',7.26/1000.0,err=[0.1,0.07]))
-mc.append(MCR(117364,'mc_acer_schan_munu',0.498/1000.0,err=[0.1,0.07]))
-mc.append(MCR(117365,'mc_acer_schan_taunu',0.498/1000.0,err=[0.1,0.07]))
+mc.append(MCR(105500,'mc_acer_wt',15.74/1000.0,err=[0.1,0.12]))
+mc.append(MCR(117361,'mc_acer_tchan_munu',6.83/1000.0,err=[0.1,0.12]))
+mc.append(MCR(117362,'mc_acer_tchan_taunu',7.26/1000.0,err=[0.1,0.12]))
+mc.append(MCR(117364,'mc_acer_schan_munu',0.498/1000.0,err=[0.1,0.12]))
+mc.append(MCR(117365,'mc_acer_schan_taunu',0.498/1000.0,err=[0.1,0.12]))
 # Sherpa (CTEQ 6L1)
 mc.append(MCR(114612,'mc_sherpa_wmunu',9.09,err=0.05))
 mc.append(MCR(114610,'mc_sherpa_zmumu',899.72/1000.0,err=0.05))
