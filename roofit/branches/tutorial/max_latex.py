@@ -173,6 +173,67 @@ def printDataBgsubSig(py=None):
         lineXYZ(i,data,bgsub,sig,py)
 
 def printEventComposition(py=None):
+    """ Adrian version: one huge table """
+    HLINES = []
+    samples = ['qcd_Nominal' , 'all/zmumu_Nominal' , 'all/wtaunu_Nominal' , 'all/ttbar_stop_Nominal' , 'all/ztautau_Nominal' , 'all/diboson_Nominal']
+    snames = ['QCD','$Z \\rightarrow \mu\mu$ + DrellYan','$W \\rightarrow \\tau \\tau$','$t \\bar{t}$ + single-top','$Z \\rightarrow \\tau \\tau$','Dibosons']
+    hs = [ get(sample,py) for sample in samples]
+    HLINES.append( len(hs)-1 )
+    # sum of bg
+    hbg = hs[0].Clone('bgtotal')
+    [hbg.Add(h) for h in hs[1:]]
+    hs.append(hbg)
+    snames.append('All Backgrounds')
+    # signal
+    hsig = get('wmunu_PowhegPythia_Nominal',py)
+    hs.append(hsig)
+    snames.append('$W \\rightarrow \mu \\nu$ (Signal)')
+    # total
+    htot = hbg.Clone('bgtotalsig')
+    htot.Add(hsig)
+    hs.append(htot)
+    snames.append('Signal + Backgrounds')
+    HLINES.append( len(hs)-1 )
+    # data
+    hsig = get('data',py)
+    hs.append(hsig)
+    snames.append('Data')
+    ntotal = hs[0].GetNbinsX()
+    #print '\\clearpage'
+    print '\\begin{sidewaystable}'
+    print r'\begin{center}'
+    if True:
+        nbins = ntotal
+        binloop = xrange( 1 , ntotal+1)
+        print '\\begin{tabular}{%s}'%('c'*(nbins+1))
+        #/        &  0.00--0.20  &  0.20--0.40  &  0.40--0.60  &  0.60--0.80  &  1.00--1.20  \\
+        print '\hline'
+        print '\hline'
+        print 'Process / $|\eta|$    ',
+        for ibin in binloop:
+            low = '%.2f'%(hs[0].GetBinLowEdge(ibin))
+            high = '%.2f'%(hs[0].GetBinLowEdge(ibin)+hs[0].GetBinWidth(ibin))
+            print '&   %s-%s   '%(low,high),
+        print '\\\\'
+        print '\hline'
+        for i,h in enumerate(hs):
+            z = [ snames[i] ]
+            for ibin in binloop:
+                z.append( '%d'%h.GetBinContent(ibin) if i==0 else '%.1f'%h.GetBinContent(ibin) )
+            print '  &  '.join(z) + '   \\\\'
+            if i in HLINES:
+                print '\hline'
+        print '\hline'
+        print '\hline'
+        print '\end{tabular}'
+    print '\label{tab:Wmunu_bgcomp_%s_%s}'%(qs,py)
+    print '\caption{Estimated backgrounds in \Wmunu%s\ channel in bins of $|\eta|$, '%('m' if qs=='NEG' else 'p'),
+    print ptword(py) + '}'
+    print r'\end{center}'
+    print r'\end{sidewaystable}'
+
+def printEventComposition_x2(py=None):
+    """ A version split across two tables """
     HLINES = []
     samples = ['qcd_Nominal' , 'all/zmumu_Nominal' , 'all/wtaunu_Nominal' , 'all/ttbar_stop_Nominal' , 'all/ztautau_Nominal' , 'all/diboson_Nominal']
     snames = ['QCD','$Z \\rightarrow \mu\mu$ + DrellYan','$W \\rightarrow \\tau \\tau$','$t \\bar{t}$ + single-top','$Z \\rightarrow \\tau \\tau$','Dibosons']
@@ -208,11 +269,13 @@ def printEventComposition(py=None):
         binloop = xrange( 1 if isub==0 else nfirst+1 , nbins+1 if isub==0 else ntotal+1)
         print '\\begin{tabular}{%s}'%('c'*(nbins+1))
         #/        &  0.00--0.20  &  0.20--0.40  &  0.40--0.60  &  0.60--0.80  &  1.00--1.20  \\
-        print 'Sample/$|\eta|$    ',
+        print '\hline'
+        print '\hline'
+        print 'Process / $|\eta|$    ',
         for ibin in binloop:
             low = '%.2f'%(hs[0].GetBinLowEdge(ibin))
             high = '%.2f'%(hs[0].GetBinLowEdge(ibin)+hs[0].GetBinWidth(ibin))
-            print '&   %s--%s   '%(low,high),
+            print '&   %s-%s   '%(low,high),
         print '\\\\'
         print '\hline'
         for i,h in enumerate(hs):
@@ -222,10 +285,13 @@ def printEventComposition(py=None):
             print '  &  '.join(z) + '   \\\\'
             if i in HLINES:
                 print '\hline'
+        print '\hline'
+        print '\hline'
         print '\end{tabular}'
+        # this separates the lower table from the upper one
         if isub==0:
-            print '\hrule'
-            print '\hrule'
+            for ibr in range(4):
+                print r'\linebreak'
     print '\label{tab:Wmunu_bgcomp_%s_%s}'%(qs,py)
     print '\caption{Estimated backgrounds in \Wmunu%s\ channel in $|\eta|$ bins, '%('m' if qs=='NEG' else 'p'),
     print ptword(py) + '}'
@@ -244,9 +310,9 @@ if __name__ == '__main__' and True:
     if DIM==1:
         print ''
         print ''
-        printEventComposition()
+        printEventComposition_x2()
     else:
         for ipt in xrange(1,len(ptbins)):
             print ''
             print ''
-            printEventComposition(ipt)
+            printEventComposition_x2(ipt)

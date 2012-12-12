@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 
 """
+# RUNNING CUTFLOW
+out=bla.tex
+out=/home/antonk/SupportingDocument/Wmunu/WmunuCutflow.tex
+./max_cutflow.py 1 > ${out} && ./max_cutflow.py 0 POS >> ${out} && ./max_cutflow.py 0 NEG >> ${out} && echo OK
+
 # INSTRUCTIONS ON HOW TO PREPARE A COMPLETE DATA CUTFLOW FILE
 bdir=/share/t3data3/antonk/ana/ana_v29I_12042012_edboard_stacoCB_all
 cd ${bdir}
@@ -15,7 +20,9 @@ charge = 0
 if len(sys.argv)>=2:
     is_data = int(sys.argv[1])
 if len(sys.argv)>=3:
-    charge = int( sys.argv[2])
+    charge = sys.argv[2]
+    assert charge in ('POS','NEG')
+    charge = 0 if charge=='POS' else 1
 
 datadir = '/share/t3data3/antonk/ana/ana_v29I_12042012_edboard_stacoCB_all'
 data = None
@@ -25,7 +32,7 @@ if is_data:
 else:
     data = datadir + '/' + 'mc_powheg_pythia_w%smunu/mc_powheg_pythia_w%smunu.root'%(qword,qword)
     
-print 'SETTINGS: ',is_data,charge,data
+print >>sys.stderr, 'SETTINGS: ',is_data,charge,data
 
 import os,subprocess
 import binning
