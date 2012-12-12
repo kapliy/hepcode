@@ -8,19 +8,25 @@ eta_range   data \pm err   ew \pm err   qcd \pm err    [CW - not included yet!]
 import os,sys,re,math
 
 fname = 'OUT_11022012_ALL.v2.abseta.1D.root'
+fname = 'OUT_12102012_ALL.v2.abseta.%sD.root'
 
 import common
 import ROOT
 import binning
-bins = binning.absetabins
+etabins = binning.absetabins
+ptbins = binning.ptbins
+
+DIM = 1
+if len(sys.argv)>1:
+    DIM = int(sys.argv[1])
+assert DIM in (1,2)
+fname = fname%DIM
 
 qs='POS'
-if len(sys.argv)>1:
-    qs = sys.argv[1]
+if len(sys.argv)>2:
+    qs = sys.argv[2]
 assert qs in ('POS','NEG')
 
-if len(sys.argv)>2:
-    fname = sys.argv[2]
 
 NDATA = 'data'
 NQCD = 'qcd'
@@ -40,38 +46,51 @@ EWK.append( ['MuonResIDUp','MuonResIDDown'] )
 EWK.append( ['MuonScaleKUp','MuonScaleKDown' ] )
 EWK.append( ['MuonScaleCUp','MuonScaleCDown' ] )
 EWK.append( ['MuonRecoSFUp','MuonRecoSFDown'] )
-EWK.append( ['MuonTriggerSFUp','MuonTriggerSFDown'] )
+EWK.append( ['MuonIsoSFUp','MuonIsoSFDown'] )
+EWK.append( ['MuonTriggerSFPhi',] )
 EWK.append( ['MuonIsoSFUp','MuonIsoSFDown'] )
 EWK.append( ['JetResolUp','JetResolDown'] )
 EWK.append( ['JetScaleUp','JetScaleDown'] )
+EWK.append( ['JetNPVUp','JetNPVDown'] )
+EWK.append( ['JetMUUp','JetMUDown'] )
 EWK.append( ['ResoSoftTermsUp_ptHard','ResoSoftTermsDown_ptHard'] )
 EWK.append( ['ScaleSoftTermsUp_ptHard','ScaleSoftTermsDown_ptHard'] )
+EWK.append( ['WptSherpa',] )
+EWK.append( ['PdfMSTW','PdfHERA','PdfNNPDF','PdfABM'] )
 EWK.append( ['Nominal_ewk_xsecdown','Nominal_ewk_xsecup'] )
 EWK.append( ['Nominal_unfoldPowhegJimmy', 'Nominal_unfoldMCNLO'] ) # caveat: ewk=5 (same)
-#TODO: substitute the following with Powheg+Pythia with PDF reweighting?
-# or if we use alpgen, should we reweigh it to CT10 PDF?
+# we use alpgen, reweighted to CT10 PDF, so no need to consider it separately.
 #EWK.append( ['Nominal_ewk_alpgen'] )
 
-# SIG systematics list. Include difference between three NLO generators? For now, just use Pythia. Also exclude EWK xsec uncertainy from Pythia
+# SIG systematics list. Include difference between three NLO generators? For now, just use Powheg+Pythia in the tables.
+# Note that we also exclude EWK xsec uncertainy for the SIG numbers
 SIG=EWK[:-2]
 
 # QCD systematics list (no need to correlate them here!)
 QCD = []
-QCD.append( ['MCAverage'] ) # average of 3 generators!
-QCD.append( ['PowhegPythia','PowhegHerwig','McAtNlo'] )
+QCD = EWK[:-2]
+QCD.append( ['Nominal_qcd_up','Nominal_qcd_down'])
+#QCD.append( ['PowhegPythia'] ) # average of 3 generators!
+#QCD.append( ['PowhegHerwig','McAtNlo'] )
 
-def get(x):
+def get(x,py=None):
     """ retrieves one histogram and makes sure it is valid """
     nm = '%s/%s'%(qs,x)
     tmp = f.Get(nm)
     if not tmp:
         print 'ERROR: cannot find histogram',nm
         os._exit(0)
+    if py!=None:
+        assert DIM==2,'Projection only works in 2D'
+        # d2_abseta_lpt  x=abseta, y=lpt
+        ipy = int(py)
+        tmp2 = tmp.ProjectionX(tmp.GetName()+'_px_%d'%py,py,py,'e')
+        return tmp2
     return tmp
 
-def getStatSys(NSYS,SYS):
+def getStatSys(NSYS,SYS,py=None):
     """ returns both statistical and systematic histograms """
-    nom = get(NSYS + '_' + SYS[0][0])
+    nom = get(NSYS + '_' + SYS[0][0],py)
     sys = nom.Clone(nom.GetName()+'_sys')
     # zero out stat. error in sys, since it will contain systematic ONLY
     [sys.SetBinError(ii,0) for ii in xrange(0,sys.GetNbinsX()+2)]
@@ -79,7 +98,7 @@ def getStatSys(NSYS,SYS):
         bdiffs = [[] for z in xrange(0,sys.GetNbinsX()+2)]
         # loop over systematics in this group
         for hs in hss:
-            h = get(NSYS + '_' + hs)
+            h = get(NSYS + '_' + hs,py)
             for ibin in xrange(0,sys.GetNbinsX()+2):
                 bdiffs[ibin].append ( abs(nom.GetBinContent(ibin)-h.GetBinContent(ibin)) )
         # loop over bins and add new error (max. deviation) in quadrature
@@ -100,7 +119,14 @@ def pho(c,m):
     npho = ml - cl if ml>cl else 0
     return phox*npho + ' '
 
-def lineXYZ(i,data,ewk,qcd):
+def ptword(py=None):
+    res = ''
+    if py==None: res += 'inclusive $p_{T}$'
+    elif py==7: res+= '$p_{T} > %.2f$\, GeV'%(ptbins[py-1])
+    else: res+= '$%d < p_{T} < %d$\, GeV'%(ptbins[py-1],ptbins[py])
+    return res
+
+def lineXYZ(i,data,ewk,qcd,py=None):
     """
     $0.00..0.21$       & $11663 \pm 108$       & $420.7 \pm 8.4 \pm 22.0$      & $250.6 \pm 17.0 \pm 33.5$     & $0.6830 \pm 0.0069 \pm 0.0143$\\
     """
@@ -126,32 +152,34 @@ def lineXYZ(i,data,ewk,qcd):
     print '$%s'%f(qcd[0].GetBinContent(i),maxq),'\pm','%s'%f(qcd[0].GetBinError(i),maxq1),'\pm','%s$'%f(qcd[1].GetBinError(i),maxq2),
     print '\\\\'
 
-def printDataEwkQcd():
-    data = get(NDATA)
-    ewk = getStatSys(NEWK,EWK)
-    qcd = getStatSys(NQCD,QCD)
+def printDataEwkQcd(py=None):
+    data = get(NDATA,py)
+    ewk = getStatSys(NEWK,EWK,py)
+    qcd = getStatSys(NQCD,QCD,py)
     for i in xrange(1,data.GetNbinsX()+1):
-        lineXYZ(i,data,ewk,qcd)
+        lineXYZ(i,data,ewk,qcd,py)
 
-def printDataBgsubSig():
-    data = get(NDATA)
-    ewk = getStatSys(NEWK,EWK)
-    qcd = getStatSys(NQCD,QCD)
-    sig = getStatSys(NSIG,SIG)
+def printDataBgsubSig(py=None):
+    data = get(NDATA,py)
+    ewk = getStatSys(NEWK,EWK,py)
+    qcd = getStatSys(NQCD,QCD,py)
+    sig = getStatSys(NSIG,SIG,py)
     bgsub = [ data.Clone('bgsub_stat') , data.Clone('bgsub_sys') ]
     for i in xrange(2):
         bgsub[i].Add(ewk[i],-1)
         bgsub[i].Add(qcd[i],-1)
     for i in xrange(1,data.GetNbinsX()+1):
-        lineXYZ(i,data,bgsub,sig)
+        lineXYZ(i,data,bgsub,sig,py)
 
-def printEventComposition():
-    samples = ['data' , 'wmunu_PowhegPythia_Nominal' , 'qcd_PowhegPythia' , 'all/zmumu_Nominal' , 'all/wtaunu_Nominal' , 'all/ttbar_stop_Nominal' , 'all/ztautau_Nominal' , 'all/diboson_Nominal']
+def printEventComposition(py=None):
+    samples = ['data' , 'wmunu_PowhegPythia_Nominal' , 'qcd_Nominal' , 'all/zmumu_Nominal' , 'all/wtaunu_Nominal' , 'all/ttbar_stop_Nominal' , 'all/ztautau_Nominal' , 'all/diboson_Nominal']
     snames = ['Data','Signal','QCD','zmumu+DrellYan','wtaunu','ttbar+stop','ztautau','dibosons']
-    hs = [ get(sample) for sample in samples]
+    hs = [ get(sample,py) for sample in samples]
     ntotal = hs[0].GetNbinsX()
     nfirst = int(ntotal/2)
     nsecond = ntotal - nfirst
+    print '\\begin{table}'
+    print '\\centering'
     for isub in (0,1):
         nbins = nfirst if isub == 0 else nsecond
         binloop = xrange( 1 if isub==0 else nfirst+1 , nbins+1 if isub==0 else ntotal+1)
@@ -172,15 +200,28 @@ def printEventComposition():
         print '\end{tabular}'
         if isub==0:
             print '\hrule'
+    print '\label{tab:Wmunu_bgcomp_%s_%s}'%(qs,py)
+    print '\caption{Estimated backgrounds in \Wmunu%s\ channel in $|\eta|$ bins, '%('m' if qs=='NEG' else 'p'),
+    print ptword(py) + '}'
+    print '\\end{table}'
 
 if __name__ == '__main__' and False:
-    print '======== DATA-EWK-QCD table ========'
+    #print '======== DATA-EWK-QCD table ========'
+    print ''
     printDataEwkQcd()
-    print '======== DATA-BGSUB-SIG table ========'
+    #print '======== DATA-BGSUB-SIG table ========'
+    print ''
     printDataBgsubSig()
 
 if __name__ == '__main__' and True:
-    print '======== Event composition ========'
-    printEventComposition()
+    #print '======== Event composition ========'
+    if DIM==1:
+        print ''
+        print ''
+        printEventComposition()
+    else:
+        for ipt in xrange(1,len(ptbins)):
+            print ''
+            print ''
+            printEventComposition(ipt)
 
-os._exit(0)

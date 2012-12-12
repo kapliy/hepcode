@@ -1197,9 +1197,11 @@ if mode=='qcdfit_sys':
         etas = [ int(opts.ieta) ]
     # prepare a canvas with a summary of systematics
     c = SuCanvas('qcd_syst_pt%s_eta%s'%(opts.ipt,opts.ieta))
-    if True:
-        SuCanvas.g_lin_ratio_y_title_offset = 1.8
-        SuCanvas.g_lin_main_y_title_offset = 1.8
+    if opts.nomonly:
+        SuCanvas.g_text_size = 17
+        SuCanvas.g_legend_x1_ndc = 0.20
+        SuCanvas.g_lin_ratio_y_title_offset = 2.0
+        SuCanvas.g_lin_main_y_title_offset = 2.0
     M = PlotOptions()
     hs = []
     # perform fits
