@@ -306,14 +306,14 @@ class SuFit:
     print 'INFO: EWK frac = %.2f  QCD frac = %.2f'%(s.fractions[-1],s.Wfractions[-1]),'INFO: Chi2 =','%8f'%s.chi2[-1],' NDF =',s.ndf[-1]
     sys.stdout.flush()
 
-  def drawFitsTF(s,title='random',logscale=False,modbins=True):
+  def drawFitsTF(s,title=None,logscale=False,modbins=True):
     """ Draw fits in all variables - using the TFractionFitter version """
     res = []
     for ivar in xrange(len(s.vnames)):
       res += s.drawFitTF(ivar,title,logscale=logscale,modbins=modbins)
     return res
 
-  def drawFitTF(s,ivar,title='random',logscale=False,modbins=True):
+  def drawFitTF(s,ivar,title=None,logscale=False,modbins=True):
     """ Draw the fit for ivar's variable - TFractionFitter version
     if modbins==True, it uses modified templates where each bin is allowed to float within Poisson stats
     Otherwise, it uses the original out-of-the-box templates
@@ -387,10 +387,13 @@ class SuFit:
 
     s.fractext = fractext = ROOT.TPaveText()
     for ift,frac in enumerate(s.fractions):
+      if title:
+        fractext.AddText(title)
+        fractext.AddText('')
       if s.fractions[ift]!=0 and s.scales[ift]!=0:
         fractext.AddText( '%s Frac. = %.3f #pm %.2f%%'%(s.free[ift].getLegendName(),s.fractions[ift],s.fractionsE[ift]/s.fractions[ift]*100.0 if abs(s.fractions[ift])>1e-6 else 0) )
         fractext.AddText( '%s Scale = %.3f #pm %.2f%%'%(s.free[ift].getLegendName(),s.scales[ift],s.scalesE[ift]/s.scales[ift]*100.0 if abs(s.scales[ift])>1e-6 else 0) )
-      if s.Wfractions[ift]!=0 and s.Wscales[ift]!=0:
+      if s.Wfractions[ift]!=0 and s.Wscales[ift]!=0 and False:
         fractext.AddText( '%s Frac. = %.3f #pm %.2f%%'%('EWK',s.Wfractions[ift],s.WfractionsE[ift]/s.Wfractions[ift]*100.0 if s.Wfractions[ift]!=0 else 0) )
         fractext.AddText( '%s Scale = %.3f #pm %.2f%%'%('EWK',s.Wscales[ift],s.WscalesE[ift]/s.Wscales[ift]*100.0 if s.Wscales[ift]!=0 else 0) )
       if s.ndf[ift]!=0:
