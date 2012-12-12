@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 """
-Makes a latex table of:
-eta_range   data \pm err   ew \pm err   qcd \pm err    [CW - not included yet!]
+out=bla.tex
+out=/home/antonk/SupportingDocument/Wmunu/WmunuBackgroundTables.tex
+./max_latex.py 1 POS >  ${out} && ./max_latex.py 1 NEG >> ${out} && ./max_latex.py 2 POS >> ${out} && ./max_latex.py 2 NEG >> ${out} && echo DONE
 """
 
 import os,sys,re,math
@@ -172,9 +173,31 @@ def printDataBgsubSig(py=None):
         lineXYZ(i,data,bgsub,sig,py)
 
 def printEventComposition(py=None):
-    samples = ['data' , 'wmunu_PowhegPythia_Nominal' , 'qcd_Nominal' , 'all/zmumu_Nominal' , 'all/wtaunu_Nominal' , 'all/ttbar_stop_Nominal' , 'all/ztautau_Nominal' , 'all/diboson_Nominal']
-    snames = ['Data','Signal','QCD','zmumu+DrellYan','wtaunu','ttbar+stop','ztautau','dibosons']
+    HLINES = []
+    samples = ['qcd_Nominal' , 'all/zmumu_Nominal' , 'all/wtaunu_Nominal' , 'all/ttbar_stop_Nominal' , 'all/ztautau_Nominal' , 'all/diboson_Nominal']
+    snames = ['QCD','$Z \\rightarrow \mu\mu$ + DrellYan','$W \\rightarrow \\tau \\tau$','$t \\bar{t}$ + single-top','$Z \\rightarrow \\tau \\tau$','Dibosons']
     hs = [ get(sample,py) for sample in samples]
+    HLINES.append( len(hs)-1 )
+    # sum of bg
+    hbg = hs[0].Clone('bgtotal')
+    [hbg.Add(h) for h in hs[1:]]
+    hs.append(hbg)
+    snames.append('All Backgrounds')
+    # signal
+    hsig = get('wmunu_PowhegPythia_Nominal',py)
+    hs.append(hsig)
+    snames.append('$W \\rightarrow \mu \\nu$ (Signal)')
+    # total
+    htot = hbg.Clone('bgtotalsig')
+    htot.Add(hsig)
+    hs.append(htot)
+    snames.append('Signal + Backgrounds')
+    HLINES.append( len(hs)-1 )
+    # data
+    hsig = get('data',py)
+    hs.append(hsig)
+    snames.append('Data')
+
     ntotal = hs[0].GetNbinsX()
     nfirst = int(ntotal/2)
     nsecond = ntotal - nfirst
@@ -197,8 +220,11 @@ def printEventComposition(py=None):
             for ibin in binloop:
                 z.append( '%d'%h.GetBinContent(ibin) if i==0 else '%.1f'%h.GetBinContent(ibin) )
             print '  &  '.join(z) + '   \\\\'
+            if i in HLINES:
+                print '\hline'
         print '\end{tabular}'
         if isub==0:
+            print '\hrule'
             print '\hrule'
     print '\label{tab:Wmunu_bgcomp_%s_%s}'%(qs,py)
     print '\caption{Estimated backgrounds in \Wmunu%s\ channel in $|\eta|$ bins, '%('m' if qs=='NEG' else 'p'),
@@ -224,4 +250,3 @@ if __name__ == '__main__' and True:
             print ''
             print ''
             printEventComposition(ipt)
-
