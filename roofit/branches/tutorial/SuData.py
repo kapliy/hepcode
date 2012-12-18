@@ -114,7 +114,7 @@ class SuSys:
     def histo_pteta(s):
         """ Converts d3_abseta_lpt_met:x:0:8:y:1:2 to human-readable form
         """
-        res = ''
+        res = ['','']
         hbase = s.histo
         if not len(hbase.split(':'))==7:
             return res
@@ -127,14 +127,17 @@ class SuSys:
         assert haxisB in ('x','y','z')
         iminA,imaxA = [int(cc) for cc in hbase.split(':')[2:2+2]]
         iminB,imaxB = [int(cc) for cc in hbase.split(':')[5:5+2]]
+        # eta
         etabins = binning.absetabins if re.search('abseta',horig) else binning.setabins
+        if iminA==1 and imaxA==len(etabins)-1: res[0] = 'inclusive \eta'
+        else: res[0] = '%.2f < %s < %.2f'%(etabins[iminA-1],'|\eta|' if re.search('abseta',horig) else '\eta',etabins[imaxA])
+        # pt
+        pad = ' '*len('W+ : '+'    ')
         ptbins = binning.ptbins
-        if iminB==1 and imaxB==len(ptbins)-1: res+= 'inclusive p_{T}'
-        elif iminB==7 and imaxB==7: res+= 'p_{T} > %d'%(ptbins[iminB-1])
-        else: res+= '%d < p_{T} < %d'%(ptbins[iminB-1],ptbins[imaxB])
-        res += ' & '
-        if iminA==1 and imaxA==len(etabins)-1: res+= 'inclusive \eta'
-        else: res+= '%.2f < %s < %.2f'%(etabins[iminA-1],'|\eta|' if re.search('abseta',horig) else '\eta',etabins[imaxA])
+        if iminB==1 and imaxB==len(ptbins)-1: res[1] = pad+'p_{T} > 20'
+        elif iminB==2 and imaxB==len(ptbins)-1: res[1] = pad+'p_{T} > 25'
+        elif iminB==7 and imaxB==7: res[1] = pad+'p_{T} > %d'%(ptbins[iminB-1])
+        else: res[1] = pad+'%d < p_{T} < %d'%(ptbins[iminB-1],ptbins[imaxB])
         return res
     def use_ntuple(s):
         """ True or False """
@@ -1779,7 +1782,9 @@ class SuStack:
         f.doFitTF(d2.qcd['plotrange'],SuStack.QCD_EXC_ZERO_BINS,SuStack.QCD_USE_FITTER2)
         ftitle=SuSys.QMAP[d2.charge][4]
         if not d2.use_ntuple():
-            ftitle+=' : '+d2.histo_pteta()
+            pteta = d2.histo_pteta()
+            assert type(pteta)==type([]) and len(pteta)==2
+            ftitle = [ SuSys.QMAP[d2.charge][4]+' : '+pteta[0]   ,   pteta[1]   ]
         tmp = f.drawFitsTF(ftitle,logscale=logscale,modbins=SuStack.QCD_PLOT_MODIFIED_BINS)
         assert tmp
         s.fitnames[key] = fitname
