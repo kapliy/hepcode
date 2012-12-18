@@ -46,8 +46,12 @@ db_name = 'DB_11282012_ALL.v2'
 fin_name = 'IN_11282012_ALL.v1.%s.%dD.root'%(eword,DIM)
 
 bgqcd = 4
-db_name = 'DB_12102012_ALL.v1'
-fin_name = 'IN_12102012_ALL.v2.%s.%dD.root'%(eword,DIM)
+db_name = 'DB_12042012_ALL.v1'
+fin_name = 'IN_12042012_ALL.v2.%s.%dD.root'%(eword,DIM)
+
+# bgqcd = 4
+# db_name = 'DB_12102012_PT25.v1'
+# fin_name = 'IN_12102012_PT25.v2.%s.%dD.root'%(eword,DIM)
 
 fout_name = re.sub('IN_','OUT_',fin_name)
 if os.path.exists(fin_name):
@@ -57,7 +61,9 @@ if os.path.exists(fin_name):
     
 def get(ieta,ipt):
     key = '%s_%s_%s_%s'%(iq,ETAMODE,ieta,ipt)
-    assert key in R,'Missing key: %s'%key
+    if key not in R:
+        print 'Missing key: %s'%key
+        return [None,]*6
     return R[key]['data']
     
 def scale_bin(h,ietabin,iptbin,v):
@@ -79,23 +85,24 @@ def make_qcd(name):
     ietas = range(1,len(etabins))
     for ipt in ipts:
         for ieta in ietas:
-            SVAL,SABS,SREL,SLAB , MQCD = get(ieta,ipt)
+            SVAL,SABS,SREL,SLAB , MQCD,FQCD = get(ieta,ipt)
             v = 0
-            # if requesting a particular systematic, just take it directly
-            if name in MQCD:
-                v = MQCD[name]
-            elif name in ('qcd_up','qcd_down'):
-                nom = MQCD['Nominal']
-                # hardcoded list of indices that are not automatically propagated in EWUnfold (so we need to propagate them)
-                PROPi = [0,1]    # fit error; met fit range
-                err = math.sqrt( sum([ (SABS[i]*SABS[i]) for i in PROPi ]) )
-                v = nom+err if name=='qcd_up' else nom-err
-                if v<0:
-                    print 'WARNING: negative qcd contribution:',ipt,ieta,nom,err
-            else:
-                if ipt==ipts[0] and ieta==ietas[0]:
-                    print 'Falling back to Nominal for systematic:',name
-                v = MQCD['Nominal']  # fall back to Nominal
+            if MQCD:
+                # if requesting a particular systematic, just take it directly
+                if name in MQCD:
+                    v = MQCD[name]
+                elif name in ('qcd_up','qcd_down'):
+                    nom = MQCD['Nominal']
+                    # hardcoded list of indices that are not automatically propagated in EWUnfold (so we need to propagate them)
+                    PROPi = [0,1]    # fit error; met fit range
+                    err = math.sqrt( sum([ (SABS[i]*SABS[i]) for i in PROPi ]) )
+                    v = nom+err if name=='qcd_up' else nom-err
+                    if v<0:
+                        print 'WARNING: negative qcd contribution:',ipt,ieta,nom,err
+                else:
+                    if ipt==ipts[0] and ieta==ietas[0]:
+                        print 'Falling back to Nominal for systematic:',name
+                    v = MQCD['Nominal']  # fall back to Nominal
             if DIM==1:
                 out.SetBinContent(ieta,v)
             elif DIM==2:

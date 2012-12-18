@@ -83,7 +83,7 @@ parser.add_option("--isofail",dest="isofail",
                   type="string", default='IsoWind20', #IsoFail20
                   help="QCD fits: QCD template anti-isolation")
 parser.add_option("--cut",dest="cut",
-                  type="string", default='mcw*puw*wzptw*vxw*ls1w*ls2w*effw*isow*trigw',
+                  type="string", default='mcw*puw*wzptw*vxw*ls1w*ls2w*znlow*alpy*effw*isow*trigw',
                   help="Additional cut to select events")
 parser.add_option("--hsource",dest="hsource",
                   type="string", default='%s/st_%s_final/%s',
@@ -423,6 +423,7 @@ if False:
 
 gbg = []
 q = opts.charge if opts.charge in (-1,0,1,2) else 0
+otherq = 1 if q==0 else 0
 
 # Reco-level [histo]
 unfmethod = 'RooUnfoldBinByBin'
@@ -431,12 +432,15 @@ Aplotrange=None
 if opts.lbinp:
     Aplotrange = ( int(opts.lbinp.split(',')[1]) , int(opts.lbinp.split(',')[2]) )
 spR = SuPlot()
+metfit='metfit'
+wmtfit='wmtfit'
+metfit='anyfit' #FIXMEAK
 if True:
     spR.bootstrap(do_unfold=False,
                   unfold={'sysdir':opts.sysdir,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
                   charge=q,var=opts.var,histo=opts.hsource,
                   sysdir=[opts.sysdir,opts.sysdir,opts.isofail],subdir=opts.subdir,basedir=opts.basedir,
-                  qcd={'var':'met','nbins':60,'min':0,'max':60,'metfit':'metfit','wmtfit':'wmtfit','anyfit':'anyfit',
+                  qcd={'var':'met','nbins':60,'min':0,'max':60,'metfit':metfit,'wmtfit':wmtfit,'anyfit':'anyfit',
                        'forcenominal':False,'plotrange':Aplotrange})
 
 SuStack.QCD_SYS_SCALES = opts.metallsys
@@ -454,7 +458,7 @@ spRN = SuPlot()
 spRN.bootstrap(ntuple=opts.ntuple,histo=opts.hsource,
                charge=q,var=opts.var,path=path_reco,bin=opts.bin,
                weight=opts.cut,pre=(opts.preNN,opts.preNN,opts.preNQ), #opts.pre,
-               qcd={'var':'met','nbins':60,'min':0,'max':60,'metfit':'metfit','wmtfit':'wmtfit','anyfit':'anyfit',
+               qcd={'var':'met','nbins':60,'min':0,'max':60,'metfit':metfit,'wmtfit':wmtfit,'anyfit':'anyfit',
                     'forcenominal':False,'descr':'default','pre':(opts.preFN,opts.preFN,opts.preFQ),
                     'plotrange':Aplotrange})
 spRN.enable_nominal()
@@ -756,8 +760,8 @@ if mode=='ALL' or mode=='all':
         spR.enable_nominal()
         c = SuCanvas('TEST')
         M = PlotOptions('Ntuple-Histo comparison')
-        M.add('hh','histo',ratio=1,size=1.0)
-        M.add('nt','ntuple',ratio=1,size=0.7)
+        M.add('hh','histo',r=1,size=1.0)
+        M.add('nt','ntuple',r=1,size=0.7)
         h = []
         #SuSample.debug = True
         #SuSample.GLOBAL_CACHE = None
@@ -1253,12 +1257,11 @@ if mode=='qcdfit_sys':
     if iq==0 and ipt==1: maxh=16.0
     if iq==0 and ipt==7: maxh=6.0
     if iq==1 and ipt==1: maxh=16.0
-    #if iq==1 and ipt==2: maxh=8.0
-    #if iq==1 and ipt==5: maxh=8.0
     if iq==1 and ipt==6: maxh=8.0
     if iq==1 and ipt==7: maxh=6.0
-    c.plotAny(hs,M=M,height=[0,maxh],drawopt='LP',xaxis_info=xaxis_info,pave=pave)
-    c.SaveSelf()
+    if opts.ieta=='LOOP': # only plot if we are looping over all eta
+        c.plotAny(hs,M=M,height=[0,maxh],drawopt='LP',xaxis_info=xaxis_info,pave=pave)
+        c.SaveSelf()
     if opts.exit: os._exit(0)
 
 # Study different MC weights.
@@ -1411,34 +1414,65 @@ if mode=='abcd_mc':
 if mode=='qcd_isolation':
     SuStackElm.new_scales = False
     iq = opts.charge
-    ieta = int(opts.ieta)
-    ipt  = int(opts.ipt)
-    bgsig = opts.bgsig
-    po.choose_sig(bgsig)
-    bgewk = opts.bgewk
-    po.choose_ewk(bgewk)
+    ieta = int(opts.ieta) if opts.ieta else None
+    ipt  = int(opts.ipt) if opts.ipt else None
     pre = opts.pre
+    met = opts.lvar
+    assert met in ('met','w_mt')
     def make_H(a):
-        v = prunesub(a,['met','ptiso40/l_pt'],'ptiso40/l_pt<0.1')
+        v = prunesub(a,[met,'ptiso40/l_pt'],'IsoNominal')
         print 'H:',v
         return v
-    def make_A(a):
-        v = prunesub(a,['nmuons','met','ptiso40/l_pt'],'ptiso20/l_pt>0.1 && nmuons<2')
-        print 'A:',v
+    def make_F(a):
+        v = prunesub(a,['nmuons',met,'ptiso40/l_pt'],'IsoFail20 && nmuons<2')
+        print 'F:',v
         return v
-    #x =  ' && fabs(l_eta)>=%.2f && fabs(l_eta)<=%.2f'%(absetabins[ieta],absetabins[ieta+1])
-    #x += ' && l_pt>=%.2f && l_pt<=%.2f'%(ptbins[ipt],ptbins[ipt+1])
+    def make_W(a,i=0):
+        v=None
+        if i==0:
+            v = prunesub(a,['nmuons',met,'ptiso40/l_pt'],'IsoWind20 && nmuons<2')
+        elif i==1:
+            v = prunesub(a,['nmuons',met,'ptiso40/l_pt'],'IsoWind40 && nmuons<2')
+        elif i==2:
+            v = prunesub(a,['nmuons',met,'ptiso40/l_pt'],'IsoWind20m && nmuons<2')
+        print 'W%d:'%i,v
+        return v
     x=' '
-    hH = po.qcd('default',spRN.clone(pre = make_H(pre)+x))
-    hA = po.qcd('inverted',spRN.clone(pre = make_A(pre)+x))
-    hH.Unitize()
-    hA.Unitize()
+    if ieta:
+        x += ' && fabs(l_eta)>=%.2f && fabs(l_eta)<=%.2f'%(absetabins[ieta],absetabins[ieta+1])
+    if ipt:
+        x += ' && l_pt>=%.2f && l_pt<=%.2f'%(ptbins[ipt],ptbins[ipt+1])
+    hs = []
+    hs.append( po.qcd('a',spRN.clone(pre = make_H(pre)+x)) )
+    hs.append( po.qcd('otherq',spRN.clone(q=otherq,pre = make_W(pre,2)+x)) )
+    hs.append( po.qcd('b',spRN.clone(pre = make_W(pre,0)+x)) )
+    hs.append( po.qcd('c',spRN.clone(pre = make_W(pre,1)+x)) )
+    hs.append( po.qcd('d',spRN.clone(pre = make_W(pre,2)+x)) )
+    hs.append( po.sig('sig',spRN.clone(pre = make_H(pre)+x)) ) #signal shape for comparison
+    if opts.extra:
+        print 'Unitizing all histograms...'
+        [h.Unitize() for h in hs]
     c = SuCanvas('MET_SHAPE')
+    c._ratioName = 'Anti-Iso / Nom.'
     M = PlotOptions()
-    M.add('h','Signal-region MET',color=1,ratio=True)
-    M.add('hA','Anti-isolated region MET',color=2)
-    hs = [hH,hA]
-    c.plotAny(hs,M=M)
+    M.msize = 1.0
+    M.add('h','QCD: p_{T}^{cone20} / p_{T} < 0.1',color=1,r=0)
+    M.add('h','QCD: p_{T}^{cone20} / p_{T} < 0.1 , opposite charge',r=1)
+    M.add('h','QCD: 0.1 < p_{T}^{cone20} / p_{T} < 0.2',r=1)
+    M.add('h','QCD: 0.1 < p_{T}^{cone40} / p_{T} < 0.2',r=1)
+    M.add('h','QCD: 0.12 < p_{T}^{cone20} / p_{T} < 0.25',r=1)
+    M.add('h','Signal: p_{T}^{cone20} / p_{T} < 0.1',r=0)
+    xaxis_info = [ 'E_{T}^{Miss}' if met=='met' else 'M_{T}^{W}','GeV' ]
+    if opts.bin and len(opts.bin.split(','))==3:
+        sbin = opts.bin.split(',')
+        xaxis_range = [float(sbin[1]),float(sbin[2])]
+        xaxis_info.append (xaxis_range)
+    if True:
+        SuCanvas.g_text_size = 16
+        SuCanvas.g_legend_y2_ndc = 0.9
+        SuCanvas.g_legend_x1_ndc = 0.2
+        SuCanvas.g_legend_height_per_entry = 0.06
+    c.plotAny(hs,M=M,xaxis_info=xaxis_info,rebin=opts.rebin,height=1.9)
     OMAP.append(c)
 
 if mode=='manual':
@@ -1452,7 +1486,7 @@ if mode=='manual':
     assert s2
     h2 = s2.histo('s2',spR.clone())
     M = PlotOptions()
-    M.add('s1','Full sim',color=2,size=1.0,ratio=True)
+    M.add('s1','Full sim',color=2,size=1.0,r=True)
     M.add('s2','Fast sim',color=3,size=0.5)
     hs = [h1,h2]
     c = SuCanvas('FASTSIM_'+QMAP[q][1]+'_'+opts.hsource)
@@ -1492,7 +1526,7 @@ if mode == 'plot_z0':
     M = PlotOptions()
     M.msize = 1.1
     size = SuCanvas.g_marker_size
-    M.add('data','2011 data',color=1,ratio=True,size=size,style=None)
+    M.add('data','2011 data',color=1,r=1,size=size,style=None)
     M.add('sig_powheg_pythia','Powheg+Pythia Wmunu',color=11,size=size,style=None)
     M.add('zmumu_powheg_pythia','Powheg+Pythia Zmumu',color=ROOT.kRed,size=size,style=None)
     M.add('wtaunu_powheg_pythia','Powheg+Pythia Wtaunu',color=ROOT.kYellow-9,size=size,style=None)

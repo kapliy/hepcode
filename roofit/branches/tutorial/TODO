@@ -1,6 +1,27 @@
+MAX SESSION:
+- Only W+ and W- single and double diff.
+  For integrated, need C_W combined, too. How? sum up unfolding W+ and W-. Sum up numerator and denominator separately.
+  OR: just use TTrees!
+- systematic bands at detector level
+  no PDF/theory because those affect both reco and truth levels
+- tables of bg composition:
+  integrated - with errors
+  single/double diff. - no errors
+- QCD: variable bin width
+  Fix only below; show full range.
+- Purity/stability
+  Produce purity plots and save them somewhere
+- Main body of the note: pt=25 
+  lower priority in appendix: pt=20
+  2d: plot the lowest pt bin 
+- d0sig < 3.5
+
+TODO: put QCD_3D on the pbs
+TODO: try to make MC@NLO and Powheg+Herwig QCD entry as the "average"
+
 TABLES:
-- cutflow in data
-- cutflow in MC
+- DONE cutflow in data
+- DONE cutflow in MC
 - QCD uncertainties in table form
 - Plot QCD chi2/ndf for different systematics
 - data, EWK, QCD event counts
