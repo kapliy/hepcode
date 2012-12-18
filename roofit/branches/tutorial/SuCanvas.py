@@ -19,7 +19,7 @@ class SuCanvas:
     g_text_font = 43; # force font style 4 and size specification in pixels (font%10==3)
     g_text_size_legend = None; # in pixel
     g_text_size_pave = None; # in pixel
-    g_marker_size = 1;
+    g_marker_size = 0.8
     # should have no influence because of fixed text and symbol size
     g_legend_width = 0.2;
     # same symbol width and height for legends with different number of entries
@@ -212,13 +212,17 @@ class SuCanvas:
         obj.SetLineStyle( 2 );
         obj.SetLineWidth( 2 );
 
-    def drawRatio(s,hratio,same=False):
+    def drawRatio(s,hratio,same=False,yrange=None):
         if same:
             hratio.Draw("pe A SAME")
         else:
             hratio.Draw("pe")
             hratio.GetYaxis().SetNdivisions(6,0,0)
-            hratio.GetYaxis().SetRangeUser(s._refLineMin,s._refLineMax)
+            if yrange:
+                assert type(yrange)==type([]) and len(yrange)==2, 'ERROR: drawRatio yrange must be a list [min,max]'
+                hratio.GetYaxis().SetRangeUser(yrange[0],yrange[1])
+            else:
+                hratio.GetYaxis().SetRangeUser(s._refLineMin,s._refLineMax)
             hratio.GetYaxis().SetTitle(s._ratioName)
         
     def drawRatioHash(s,ratio,hash=True,mstyle=2):

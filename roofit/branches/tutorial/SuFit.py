@@ -50,6 +50,19 @@ class SuFit:
     s.dataHist = None
     s.rebin = 1
 
+    # style/colors
+    s.PlotModel = False
+    s.RatioRange = [0.85,1.15]
+    s.StackMaximum = 2.1
+    s.StackMaximum = 1.0
+    s.LineColor_model = 46
+    s.LineColor_qcd = ROOT.kBlack
+    s.LineColor_ewk = ROOT.kBlack
+    s.FillColor_qcd = ROOT.kAzure-9
+    s.FillColor_ewk = ROOT.kWhite
+    s.FillStyle_qcd = 1001
+    s.FillStyle_ewk = 1001 #3001
+
   def create(s,data,fixed,free):
     s.data = data
     s.fixed = fixed
@@ -181,7 +194,7 @@ class SuFit:
     if s.plotmin<0: s.plotmin = 0
     if s.plotmax>s.data.GetNbinsX()+1: s.plotmax = s.data.GetNbinsX()+1
     #s.fitmin = SuFit.first_nonzero_bin(data,s.fitmin)
-    print 'INFO: SuFit::doFitTF fit range:',s.vnames[0],s.fitmin,s.fitmax
+    print 'INFO: SuFit::doFitTF | fit range:',s.vnames[0],s.fitmin,s.fitmax, '| plot range:',s.plotmin,s.plotmax
     if False:
       print 'INFO: SuFit::doFitTF plot range:',s.vnames[0],s.plotmin,s.plotmax
     sys.stdout.flush()
@@ -329,21 +342,21 @@ class SuFit:
     stack,fixed,free = None,None,None
     assert s.status==0,'Fit failed or not performed yet'
     if s.status==0:
-      # fixed - must be scaled
-      ipattern = 3001
+      # fixed (EWK) - must be scaled
       fixed = s.hfixed if modbins==True else s.fixed.Clone()
-      fixed.SetLineColor(8)
-      fixed.SetFillColor(8)
-      fixed.SetFillStyle(ipattern)
+      fixed.SetLineColor(s.LineColor_ewk)
+      fixed.SetFillColor(s.FillColor_ewk)
+      fixed.SetFillStyle(s.FillStyle_ewk)
       fixed.Scale(s.Wscales[0])
       #fixed.Draw('A SAME H')
       # free (qcd) - must be scaled
       ift = 0
-      ipattern=1001
       free = s.hfree if modbins==True else s.free[0].Clone()
-      free.SetFillColor(s.free[ift].GetFillColor())
-      free.SetLineColor(s.free[ift].GetFillColor())
-      free.SetFillStyle(ipattern)
+      #free.SetFillColor(s.free[ift].GetFillColor())
+      #free.SetLineColor(s.free[ift].GetFillColor())
+      free.SetLineColor(s.LineColor_qcd)
+      free.SetFillColor(s.FillColor_qcd)
+      free.SetFillStyle(s.FillStyle_qcd)
       free.Scale(s.scales[0])
       #free.Draw('A SAME H')
       # make a stack
@@ -352,19 +365,22 @@ class SuFit:
       stack.Add(free)
       stack.Draw('HIST')
       # model - already scaled to expectation
-      model = s.hmodel
-      model.SetLineColor(46)
-      model.SetFillStyle(0)
-      model.Draw('A SAME')
+      if s.PlotModel:
+        model = s.hmodel
+        model.SetLineColor(s.LineColor_model)
+        model.SetFillStyle(0)
+        model.Draw('A SAME')
     # data
     s.hdata = data = s.data.Clone()
-    data.SetMarkerStyle(8)
+    #data.SetMarkerStyle(8)
+    data.SetMarkerStyle(20)
+    data.SetMarkerSize(0.8)
     data.SetFillStyle(0)
     data.Draw('X0 A SAME')
 
     # y axis
     canvas.cd_plotPad()
-    stack.SetMaximum(stack.GetMaximum()*2.1)
+    stack.SetMaximum(stack.GetMaximum()*s.StackMaximum)
 
     # prettify
     obj = stack
@@ -377,10 +393,11 @@ class SuFit:
     
     #s.key = key = ROOT.TLegend(0.6, canvas.getY2()-(0.03*(3+len(s.free))) , canvas.getX2() , canvas.getY2() )
     s.key = key = ROOT.TLegend()
-    key.AddEntry( data ,"data","pe")
-    key.AddEntry( model , "fit model" , "l" )
-    key.AddEntry( fixed , "EWK" , "f" )
-    key.AddEntry( free , s.free[ift].getLegendName() , "f" )
+    key.AddEntry( data ,"data 2011 (#sqrt{s} = 7 TeV) ","pe")
+    if s.PlotModel:
+      key.AddEntry( model , "fit range" , "l" )
+    key.AddEntry( free , 'QCD (template)' , "f" )
+    key.AddEntry( fixed , 'EWK + tops' , "f" )
     canvas.ConfigureLegend(key)
     key.Draw("9");
     canvas.update()
@@ -392,7 +409,7 @@ class SuFit:
         fractext.AddText('')
       if s.fractions[ift]!=0 and s.scales[ift]!=0:
         fractext.AddText( '%s Frac. = %.3f #pm %.2f%%'%(s.free[ift].getLegendName(),s.fractions[ift],s.fractionsE[ift]/s.fractions[ift]*100.0 if abs(s.fractions[ift])>1e-6 else 0) )
-        fractext.AddText( '%s Scale = %.3f #pm %.2f%%'%(s.free[ift].getLegendName(),s.scales[ift],s.scalesE[ift]/s.scales[ift]*100.0 if abs(s.scales[ift])>1e-6 else 0) )
+        fractext.AddText( '%s SF = %.3f #pm %.2f%%'%(s.free[ift].getLegendName(),s.scales[ift],s.scalesE[ift]/s.scales[ift]*100.0 if abs(s.scales[ift])>1e-6 else 0) )
       if s.Wfractions[ift]!=0 and s.Wscales[ift]!=0 and False:
         fractext.AddText( '%s Frac. = %.3f #pm %.2f%%'%('EWK',s.Wfractions[ift],s.WfractionsE[ift]/s.Wfractions[ift]*100.0 if s.Wfractions[ift]!=0 else 0) )
         fractext.AddText( '%s Scale = %.3f #pm %.2f%%'%('EWK',s.Wscales[ift],s.WscalesE[ift]/s.Wscales[ift]*100.0 if s.Wscales[ift]!=0 else 0) )
@@ -419,14 +436,14 @@ class SuFit:
       #hmodel.Scale( scalefactor ); # scale model to actual data integral (not needed!)
       s.hratio = data.Clone('hratio')
       s.hratio.Divide(hmodel)
-      canvas.drawRatio(s.hratio)
+      canvas.drawRatio(s.hratio,yrange=s.RatioRange)
       canvas.ConfigureAxis(stack, s.hratio)
       s.hratio.GetXaxis().SetRange(s.plotmin,s.plotmax)
       TMAP = {}
-      TMAP['met'] = 'E_{T}^{miss}'
+      TMAP['met'] = 'E_{T}^{miss} [GeV]'
       TMAP['d3_eta_lpt_met'] = TMAP['met']
       TMAP['d3_abseta_lpt_met'] = TMAP['met']
-      TMAP['wmt'] = 'm_{T}^{W}'
+      TMAP['wmt'] = 'm_{T}^{W} [GeV]'
       TMAP['w_mt'] = TMAP['wmt']
       TMAP['d3_eta_lpt_wmt'] = TMAP['wmt']
       TMAP['d3_abseta_lpt_wmt'] = TMAP['wmt']
