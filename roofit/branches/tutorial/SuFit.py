@@ -53,6 +53,7 @@ class SuFit:
     # style/colors
     s.PlotModel = False
     s.RatioRange = [0.85,1.15]
+    s.RatioRange = [0.85,1.175]
     s.StackMaximum = 2.1
     s.StackMaximum = 1.0
     s.LineColor_model = 46
@@ -389,7 +390,7 @@ class SuFit:
       xname = s.w.var(s.vnames[ivar]).GetName()
       obj.GetXaxis().SetTitle( xname  ) # over-ridden in ratio plot
       bin_width = data.GetXaxis().GetBinWidth(1)
-      obj.GetYaxis().SetTitle( "Events / %.2f GeV" % bin_width )
+      obj.GetYaxis().SetTitle( "Entries / %.2f GeV" % bin_width )
     
     #s.key = key = ROOT.TLegend(0.6, canvas.getY2()-(0.03*(3+len(s.free))) , canvas.getX2() , canvas.getY2() )
     s.key = key = ROOT.TLegend()
@@ -405,8 +406,11 @@ class SuFit:
     s.fractext = fractext = ROOT.TPaveText()
     for ift,frac in enumerate(s.fractions):
       if title:
-        fractext.AddText(title)
-        fractext.AddText('')
+        if type(title)==type([]):
+          [fractext.AddText(zz) for zz in title]
+        else:
+          fractext.AddText(title)
+          fractext.AddText('')
       if s.fractions[ift]!=0 and s.scales[ift]!=0:
         fractext.AddText( '%s Frac. = %.3f #pm %.2f%%'%(s.free[ift].getLegendName(),s.fractions[ift],s.fractionsE[ift]/s.fractions[ift]*100.0 if abs(s.fractions[ift])>1e-6 else 0) )
         fractext.AddText( '%s SF = %.3f #pm %.2f%%'%(s.free[ift].getLegendName(),s.scales[ift],s.scalesE[ift]/s.scales[ift]*100.0 if abs(s.scales[ift])>1e-6 else 0) )
@@ -414,8 +418,8 @@ class SuFit:
         fractext.AddText( '%s Frac. = %.3f #pm %.2f%%'%('EWK',s.Wfractions[ift],s.WfractionsE[ift]/s.Wfractions[ift]*100.0 if s.Wfractions[ift]!=0 else 0) )
         fractext.AddText( '%s Scale = %.3f #pm %.2f%%'%('EWK',s.Wscales[ift],s.WscalesE[ift]/s.Wscales[ift]*100.0 if s.Wscales[ift]!=0 else 0) )
       if s.ndf[ift]!=0:
-        fractext.AddText( 'CHI2=%.1f  CHI2/NDF=%.1f'%(s.chi2[ift],s.chi2[ift]/s.ndf[ift]) )
-    canvas.ConfigureText(fractext,text_y2 = key.GetY1NDC()-0.05)
+        fractext.AddText( '#chi^{2}=%.1f   #chi^{2}/NDF=%.1f'%(s.chi2[ift],s.chi2[ift]/s.ndf[ift]) )
+    canvas.ConfigureText(fractext,text_y2 = key.GetY1NDC()-0.03)
     fractext.Draw("9");
     canvas.update()
     
@@ -438,6 +442,7 @@ class SuFit:
       s.hratio.Divide(hmodel)
       canvas.drawRatio(s.hratio,yrange=s.RatioRange)
       canvas.ConfigureAxis(stack, s.hratio)
+      s.hratio.GetYaxis().SetNdivisions(10,5,0);
       s.hratio.GetXaxis().SetRange(s.plotmin,s.plotmax)
       TMAP = {}
       TMAP['met'] = 'E_{T}^{miss} [GeV]'

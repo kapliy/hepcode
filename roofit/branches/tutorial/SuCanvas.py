@@ -10,21 +10,22 @@ class SuCanvas:
 
     cgStyle = None
     g_ratio_frac = 0.3;
-    g_lin_main_y_title_offset = 1.7;
+    g_lin_main_y_title_offset = 1.5;
+    g_lin_ratio_y_title_offset = 1.5;
     g_log_main_y_title_offset = 1.3;
-    g_lin_ratio_y_title_offset = 1.2;
-    g_log_ratio_y_title_offset = 1.2;
+    g_log_ratio_y_title_offset = g_lin_ratio_y_title_offset;
     g_ratio_x_title_offset = 3.4;
     g_text_size = 21; # in pixel
+    g_smaller_text_size = g_text_size*0.85; # in pixel
     g_text_font = 43; # force font style 4 and size specification in pixels (font%10==3)
-    g_text_size_legend = None; # in pixel
-    g_text_size_pave = None; # in pixel
+    g_text_size_legend = None; # over-ride (in pixel)
+    g_text_size_pave = None;   # over-rise (in pixel)
     g_marker_size = 0.8
     # should have no influence because of fixed text and symbol size
     g_legend_width = 0.2;
     # same symbol width and height for legends with different number of entries
     g_legend_height_per_entry = 0.1;
-    g_legend_symbol_width = 0.1;
+    g_legend_symbol_width = 0.05;
     # default location for TLegend left-top corner
     g_legend_x1_ndc = 0.5
     g_legend_y2_ndc = 0.9
@@ -65,7 +66,7 @@ class SuCanvas:
         fractext.SetMargin( 0 )
         fractext.SetTextAlign(12);
         fractext.SetTextFont(SuCanvas.g_text_font);
-        fractext.SetTextSize(SuCanvas.g_text_size_pave if SuCanvas.g_text_size_pave else SuCanvas.g_text_size);
+        fractext.SetTextSize(SuCanvas.g_text_size_pave if SuCanvas.g_text_size_pave else SuCanvas.g_smaller_text_size);
 
     @staticmethod
     def ConfigureLegend(legend, legend_x1=None, legend_y2=None):
@@ -82,7 +83,7 @@ class SuCanvas:
         legend.SetTextAlign(12);
         legend.SetMargin(SuCanvas.g_legend_symbol_width/SuCanvas.g_legend_width);
         legend.SetTextFont(SuCanvas.g_text_font);
-        legend.SetTextSize(SuCanvas.g_text_size_legend if SuCanvas.g_text_size_legend else SuCanvas.g_text_size);
+        legend.SetTextSize(SuCanvas.g_text_size_legend if SuCanvas.g_text_size_legend else SuCanvas.g_smaller_text_size);
         legend.SetFillStyle(0);
         #legend.SetFillColor(10)
         legend.SetBorderSize(0);
@@ -90,7 +91,8 @@ class SuCanvas:
     def ConfigureAxisMain(s,stack,noratio=False):
         """ Configures the axis either for a stack or a histogram in the main pad """
         logy = s._mlogy
-        #stack.SetMinimum(1 if logy else 0) #CAREFUL: this was here before nov 22 2012
+        if stack.InheritsFrom('THStack'):
+            stack.SetMinimum(1 if logy else 0) # this was gone Nov22 - Dec20
         obj = stack.GetHistogram() if stack.InheritsFrom('THStack') else stack
         obj.GetXaxis().SetLabelFont(SuCanvas.g_text_font)
         obj.GetXaxis().SetLabelSize(SuCanvas.g_text_size)
@@ -103,11 +105,13 @@ class SuCanvas:
         stack.GetYaxis().SetTitleFont(SuCanvas.g_text_font)
         stack.GetYaxis().SetTitleSize(SuCanvas.g_text_size)
         stack.GetYaxis().SetTitleOffset(SuCanvas.g_log_main_y_title_offset if logy else SuCanvas.g_lin_main_y_title_offset);
+        # modify divisions
+        #stack.GetYaxis().SetNdivisions(6,0,0);
         # avoid ticks covered by filled histograms
         if noratio==False:
-            s._plotPad.RedrawAxis();
+            s._plotPad.RedrawAxis('g');
         else:
-            s._canvas.RedrawAxis();
+            s._canvas.RedrawAxis('g');
 
     def ConfigureAxisRatio(s,h_ratio=None):
         """ Configures the axis either for a histogram in the ratio pad """
@@ -121,12 +125,16 @@ class SuCanvas:
         h_ratio.GetXaxis().SetLabelSize(SuCanvas.g_text_size)
         h_ratio.GetXaxis().SetTitleFont(SuCanvas.g_text_font)
         h_ratio.GetXaxis().SetTitleSize(SuCanvas.g_text_size)
+        h_ratio.GetYaxis().CenterTitle(ROOT.kTRUE);
         h_ratio.GetYaxis().SetTitleOffset(SuCanvas.g_log_ratio_y_title_offset if logy else SuCanvas.g_lin_ratio_y_title_offset);
         h_ratio.GetXaxis().SetTitleOffset(SuCanvas.g_ratio_x_title_offset);
         # the factor is a guess
         h_ratio.GetXaxis().SetTickLength(h_ratio.GetXaxis().GetTickLength()*2.1);
+        # modify divisions
+        #h_ratio.GetYaxis().SetNdivisions(6,0,0);
         # avoid ticks covered by filled histograms
-        s._ratioPad.RedrawAxis();
+        s._plotPad.RedrawAxis('g');
+        s._ratioPad.RedrawAxis('g');
 
     def ConfigureAxis(s,stack, h_ratio=None):
         noratio = (h_ratio==None)
@@ -212,6 +220,16 @@ class SuCanvas:
         obj.SetLineStyle( 2 );
         obj.SetLineWidth( 2 );
 
+    def drawLuminosity(s,x,y):
+        lumi = ROOT.TString("4.7 fb^{-1}")
+        prefix=ROOT.TString(r"#lower[-0.2]{#scale[0.6]{#int}}Ldt = ")
+        s.tex = tex = ROOT.TLatex(x, y, prefix+lumi);
+        tex.SetNDC();
+        tex.SetTextFont(g_text_font);
+        tex.SetTextSize(g_smaller_text_size);
+        tex.SetLineWidth(0);
+        tex.Draw();
+
     def drawRatio(s,hratio,same=False,yrange=None):
         if same:
             hratio.Draw("pe A SAME")
@@ -224,6 +242,49 @@ class SuCanvas:
             else:
                 hratio.GetYaxis().SetRangeUser(s._refLineMin,s._refLineMax)
             hratio.GetYaxis().SetTitle(s._ratioName)
+
+    def DrawUBand(s):
+        """ Draw statistical and systematic uncertainty bands """
+        cur = ROOT.gDirectory;
+        s._ratioPad.cd();
+
+        xmin = 0.1;
+        width = 0.2;
+        xmax = xmin + width;
+
+        ymin = 0.1;
+        height = 0.1;
+        ymax = ymin + height;
+
+        offset = 1.2*width;
+
+        align = 11;
+
+        s.band1 = band1 = ROOT.TLegend(xmin, ymin, xmax, ymax);
+        band1.SetFillColor(0);
+        band1.SetFillStyle(0);
+        band1.SetBorderSize(0);
+        band1.SetLineColor(0);
+        band1.SetTextFont(s.g_text_font);
+        band1.SetTextSize(s.g_smaller_text_size);
+        s.bandh1 = h1 = ROOT.TH1F("h1_"+s.namebase(),"",1,0,1);
+        h1.SetFillColor(ROOT.kYellow);
+        h1.SetLineColor(ROOT.kYellow);
+        band1.AddEntry(h1," MC Stat. Unc.", "F").SetTextAlign(align);
+        band1.Draw();
+        band2 = ROOT.TLegend(xmin+offset, ymin, xmax+offset, ymax);
+        band2.SetFillColor(0);
+        band2.SetFillStyle(0);
+        band2.SetBorderSize(0);
+        band2.SetLineColor(0);
+        band2.SetTextFont(s.g_text_font);
+        band2.SetTextSize(s.g_smaller_text_size);
+        s.bandh2 = h2 = ROOT.TH1F("h2_"+s.namebase(),"",1,0,1);
+        h2.SetFillColor(ROOT.kGreen);
+        h2.SetLineColor(ROOT.kGreen);
+        band2.AddEntry(h2," MC Stat. #oplus Syst. Unc.", "F").SetTextAlign(align);
+        band2.Draw();
+        cur.cd();
         
     def drawRatioHash(s,ratio,hash=True,mstyle=2):
         """ Draws a ratio histogram """
@@ -470,7 +531,7 @@ class SuCanvas:
         s._plotPad = ROOT.TPad( title+"plotPad" , title+"plotPad" , 0 , ratio_frac , 1 , 1 );
         s._ratioPad = ROOT.TPad( title+"ratioPad" , title+"ratioPad" , 0 , 0 , 1 , ratio_frac );
         s._coverPad = None
-        left_bottom_margin = 3*margin;
+        left_bottom_margin = 2.1*margin;
         # no gap between main and ratio pad
         s._plotPad.SetBottomMargin(0.02);
         s._ratioPad.SetTopMargin(0);

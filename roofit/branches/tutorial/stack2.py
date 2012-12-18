@@ -8,7 +8,7 @@ _PRE_MAX = "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt
 _BEF = 'lX_idhits==1 && fabs(lP_z0)<10. && fabs(lX_eta)<2.4 && lX_pt>10.0 && lY_idhits==1 && fabs(lN_z0)<10. && fabs(lY_eta)<2.4 && lY_pt>10.0 && Z_m>81.0 && Z_m<101.0 && (lP_q*lN_q)<0 && fabs(lP_z0-lN_z0)<3 && fabs(lP_d0-lN_d0)<2 && fabs(lP_phi-lN_phi)>2.0 && lX_ptiso40<2.0 && lX_etiso40<2.0'
 _AFT = _BEF + ' && ' + 'lY_etiso40<2.0'
 
-import sys,re,os,math
+import sys,re,os,math,signal
 from hashlib import md5
 from optparse import OptionParser
 import antondb
@@ -196,6 +196,7 @@ from binning import *
 #ROOT.TH1.AddDirectory(ROOT.kFALSE)    # ensure that we own all the histograms
 ROOT.SetSignalPolicy(ROOT.kSignalFast)
 ROOT.gROOT.SetBatch(opts.batch)
+ROOT.TGaxis.SetMaxDigits(3)
 ROOT.TH1.SetDefaultSumw2()
 #ROOT.gStyle.SetOptFit(1111)
 
@@ -219,12 +220,14 @@ if False:
     SuCanvas.g_legend_x1_ndc = 0.55
     SuCanvas.g_text_size = 20
     SuCanvas.g_legend_height_per_entry = 0.04
-else:  # optimized for pdfs
+elif False:  # optimized for pdfs
     SuCanvas.g_lin_ratio_y_title_offset = 1.7
     SuCanvas.g_marker_size = 0.9
     SuCanvas.g_legend_x1_ndc = 0.50
     SuCanvas.g_text_size = 18
     SuCanvas.g_legend_height_per_entry = 0.043
+else:
+    SuCanvas.g_legend_height_per_entry = 0.06
 # Apply plot style
 SuCanvas.cgStyle = SuCanvas.ControlPlotStyle()
 
@@ -675,6 +678,8 @@ def study_jet_calibration_effects():
             c.plotAny(h,M=M,height=1.7,xtitle=VARMAP[var])
             OMAP.append(c)
 
+signal.signal(signal.SIGUSR1, handle_pdb)
+
 # combined plots
 if mode=='ALL' or mode=='all':
     if True:
@@ -986,6 +991,7 @@ if mode=='qcdfit_2d':
 def qcdfit(spR2,name=None):
     """ Performs a single QCD fit """
     hdata,hstack = plot_stack(spR2.clone(),q=opts.charge,m=1,new_scales=True,pave=True,name=name if name else po.get_flagsum())
+    global gbg
     gbg.append( (hdata,hstack) )
     hfrac=hstack.nominal().stack_bg_frac()
     key = po.scalekeys[-1]
@@ -1207,10 +1213,7 @@ if mode=='qcdfit_sys':
     # prepare a canvas with a summary of systematics
     c = SuCanvas('qcd_syst_pt%s_eta%s'%(opts.ipt,opts.ieta))
     if opts.nomonly:
-        SuCanvas.g_text_size = 17
-        SuCanvas.g_legend_x1_ndc = 0.20
-        SuCanvas.g_lin_ratio_y_title_offset = 2.0
-        SuCanvas.g_lin_main_y_title_offset = 2.0
+        SuCanvas.g_legend_x1_ndc = 0.55
     M = PlotOptions()
     hs = []
     # perform fits
@@ -1254,9 +1257,14 @@ if mode=='qcdfit_sys':
         SuCanvas.g_legend_height_per_entry = 0.023
     M.msize = SuCanvas.g_marker_size
     sgn = '+' if iq==0 else '-'
-    pave = ['W^{%s} #rightarrow #mu^{%s} #nu'%(sgn,sgn) ,
-            '',
-            'Inclusive p_{T}' if ipt=='ALL' else '%d < p_{T} < %d'%(ptbins[ipt-1],ptbins[ipt])]
+    ptinfo = ''
+    if ipt in ('ALL','ALL25'):
+        ptinfo = 'p_${T} > %d'%(20 if ipt=='ALL' else 25)
+    elif ipt==len(ptbins)-1:
+        ptinfo = 'p_{T} > %d'%(ptbins[ipt])
+    else:
+        ptinfo = '%d < p_{T} < %d'%(ptbins[ipt-1],ptbins[ipt])
+    pave = ['W^{%s} #rightarrow #mu^{%s} #nu'%(sgn,sgn),'',ptinfo]
     xaxis_info = [ '#eta' if opts.etamode==1 else '|#eta|',None  , 'QCD Unc. / N_{W}^{expected} (%)' , None]
     maxh = 3.0
     if iq==0 and ipt==1: maxh=16.0

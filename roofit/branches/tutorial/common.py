@@ -15,6 +15,10 @@ def dump_pickle(data,name='data.pkl'):
         pickle.dump(data,output)
         output.close()
 
+def handle_pdb(sig, frame):
+        import pdb
+        pdb.Pdb().set_trace(frame)
+
 def xflatten(seq):
     """a generator to flatten a nested list"""
     for x in seq:
