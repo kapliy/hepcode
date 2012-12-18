@@ -50,7 +50,7 @@ parser.add_option("--lbin",dest="lbin",
                   type="string", default='25,-2.5,2.5',
                   help="Binning for lvar")
 parser.add_option("--lbinp",dest="lbinp",
-                  type="string", default=None,
+                  type="string", default='120,0,120',
                   help="Binning for lvar - plot range only")
 parser.add_option("--llog", default=False,
                   action="store_true",dest="llog",
@@ -103,6 +103,12 @@ parser.add_option("--basedir",dest="basedir",
 parser.add_option("--metallsys", default=False,
                   action="store_true",dest="metallsys",
                   help="If set to true, re-fits QCD for each systematic")
+parser.add_option("--metfit",dest="metfit",
+                  type="string", default='metfit',
+                  help="Name of default metfit directory: metfit or anyfit")
+parser.add_option("--wmtfit",dest="wmtfit",
+                  type="string", default='wmtfit',
+                  help="Name of default wmtfit directory: wmtfit or anyfit")
 parser.add_option("--nomonly", default=False,
                   action="store_true",dest="nomonly",
                   help="Only run nominal (used in QCD fits)")
@@ -170,7 +176,7 @@ parser.add_option("--xsecerr",dest="xsecerr",
                   help="Cross-section uncertainty. 0=nominal, +/-1 = one sigma variations")
 parser.add_option('-f',"--func",dest="func",
                   type="string", default='gaus',
-                  help="func = {gaus,egge,voig,voigbg,bw,bwfull}{0=none;1=gaus;2=double-gaus;3=crystal-ball}")
+                  help="func = {gaus,egge,voig,voigbgbw,bwfull}{0=none;1=gaus;2=double-gaus;3=crystal-ball}")
 parser.add_option("--exit", default=False,
                   action="store_true",dest="exit",
                   help="For modes that support it, exit right away without letting stack.py to save plots?")
@@ -421,7 +427,6 @@ else:
 if False:
     po.print_counts()
 
-gbg = []
 q = opts.charge if opts.charge in (-1,0,1,2) else 0
 otherq = 1 if q==0 else 0
 
@@ -432,15 +437,14 @@ Aplotrange=None
 if opts.lbinp:
     Aplotrange = ( int(opts.lbinp.split(',')[1]) , int(opts.lbinp.split(',')[2]) )
 spR = SuPlot()
-metfit='metfit'
-wmtfit='wmtfit'
-metfit='anyfit' #FIXMEAK
+metfit=opts.metfit
+wmtfit=opts.wmtfit
 if True:
     spR.bootstrap(do_unfold=False,
                   unfold={'sysdir':opts.sysdir,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
                   charge=q,var=opts.var,histo=opts.hsource,
                   sysdir=[opts.sysdir,opts.sysdir,opts.isofail],subdir=opts.subdir,basedir=opts.basedir,
-                  qcd={'var':'met','nbins':60,'min':0,'max':60,'metfit':metfit,'wmtfit':wmtfit,'anyfit':'anyfit',
+                  qcd={'var':'met','nbins':60,'min':0,'max':60,'rebin':2,'metfit':metfit,'wmtfit':wmtfit,'anyfit':'anyfit',
                        'forcenominal':False,'plotrange':Aplotrange})
 
 SuStack.QCD_SYS_SCALES = opts.metallsys
@@ -982,6 +986,7 @@ if mode=='qcdfit_2d':
 def qcdfit(spR2,name=None):
     """ Performs a single QCD fit """
     hdata,hstack = plot_stack(spR2.clone(),q=opts.charge,m=1,new_scales=True,pave=True,name=name if name else po.get_flagsum())
+    gbg.append( (hdata,hstack) )
     hfrac=hstack.nominal().stack_bg_frac()
     key = po.scalekeys[-1]
     scales = po.scales[key]
@@ -1191,7 +1196,7 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
 if mode=='qcdfit_sys':
     spR.enable_nominal()
     iq = opts.charge
-    ipt  = opts.ipt if opts.ipt=='ALL' else int(opts.ipt)
+    ipt  = opts.ipt if opts.ipt in ('ALL','ALL25') else int(opts.ipt)
     etas = []
     if opts.ieta=='ALL':
         etas = ['ALL',]
