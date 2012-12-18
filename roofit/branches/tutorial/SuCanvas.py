@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import re,math
+import re,math,os
 from common import rand_name
 import ROOT
 
@@ -131,7 +131,7 @@ class SuCanvas:
         # the factor is a guess
         h_ratio.GetXaxis().SetTickLength(h_ratio.GetXaxis().GetTickLength()*2.1);
         # modify divisions
-        #h_ratio.GetYaxis().SetNdivisions(6,0,0);
+        h_ratio.GetYaxis().SetNdivisions(10,5,0);
         # avoid ticks covered by filled histograms
         s._plotPad.RedrawAxis('g');
         s._ratioPad.RedrawAxis('g');
@@ -740,17 +740,18 @@ class SuCanvas:
         s.update()
 
     def plotStack(s,hstack,hdata,leg=None,height=1.5,mode=0,pave=True,
-                  rebin=1.0,
+                  rebin=1.0,norm=False,
                   xaxis_info=None,
                   mlogy=False,rlogy=False):
         """ Wrapper to make a complete plot of stack and data overlayed - SuData version
+        if norm==True, the stack is rescaled to Nominal data counts
         mode=0 - nominal only
         mode=1 - apply systematics
         """
         s.buildRatio(mlogy=mlogy,rlogy=rlogy);
         s.cd_plotPad();
-        stack = hstack.nominal().get_stack(rebin).Clone()
         data = hdata.nominal_h(rebin)
+        stack = hstack.nominal().get_stack(rebin, data if norm==True else None).Clone()
         # create the legend from the legend specifier
         if leg!=None:
             alleg = leg[:]

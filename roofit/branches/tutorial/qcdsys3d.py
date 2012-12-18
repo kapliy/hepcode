@@ -41,17 +41,9 @@ PM = '&plusmn;'
 COLH = 150
 COLW = 95
 
-bgqcd = 3
-db_name = 'DB_11282012_ALL.v2'
-fin_name = 'IN_11282012_ALL.v1.%s.%dD.root'%(eword,DIM)
-
 bgqcd = 4
 db_name = 'DB_12042012_ALL.v1'
 fin_name = 'IN_12042012_ALL.v2.%s.%dD.root'%(eword,DIM)
-
-# bgqcd = 4
-# db_name = 'DB_12102012_PT25.v1'
-# fin_name = 'IN_12102012_PT25.v2.%s.%dD.root'%(eword,DIM)
 
 fout_name = re.sub('IN_','OUT_',fin_name)
 if os.path.exists(fin_name):

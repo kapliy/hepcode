@@ -10,7 +10,7 @@ nperlast=`expr ${ntot} % ${nperblk}` # njobs in last block
 
 echo "Total: ${ntot} Blocks: ${nblk}"
 
-source QCD_3D_config.sh
+source config.sh
 #rm -f ${DB}.db
 
 for iblk in `seq 0 ${nblk}`; do

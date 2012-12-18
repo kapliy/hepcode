@@ -88,6 +88,28 @@ LABELMAP['avgmu'] = ['Number of interactions, <mu>',None]
 LABELMAP['avgmu_unw'] = LABELMAP['avgmu']
 LABELMAP['nvtx_grltrig'] = ['Number of vertices',None]
 LABELMAP['nvtx_grltrig_unw'] = LABELMAP['nvtx_grltrig']
+# 3d plots
+LABELMAP['d3_eta_lpt_met'] = LABELMAP['met']
+LABELMAP['d3_abseta_lpt_met'] = LABELMAP['met']
+LABELMAP['d3_eta_lpt_wmt'] = LABELMAP['wmt']
+LABELMAP['d3_abseta_lpt_wmt'] = LABELMAP['wmt']
+LABELMAP['d3_eta_lpt_wpt'] = LABELMAP['wpt']
+LABELMAP['d3_abseta_lpt_wpt'] = LABELMAP['wpt']
+LABELMAP['d3_eta_lpt_lpt'] = LABELMAP['lpt']
+LABELMAP['d3_abseta_lpt_lpt'] = LABELMAP['lpt']
+LABELMAP['d3_eta_lpt_phi'] = LABELMAP['l_phi']
+LABELMAP['d3_abseta_lpt_phi'] = LABELMAP['l_phi']
+LABELMAP['d3_eta_lpt_eta'] = LABELMAP['l_eta']
+LABELMAP['d3_abseta_lpt_eta'] = LABELMAP['l_eta']
+
+def match_labelmap(x):
+    if x in LABELMAP:
+        return LABELMAP[x][:]
+    elif x[:14] in LABELMAP:
+        return LABELMAP[x[:14]]
+    elif x[:17] in LABELMAP:
+        return LABELMAP[x[:17]]
+    return None
 
 # cut maps
 CUTMAP = {}

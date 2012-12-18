@@ -4,11 +4,12 @@ MAX SESSION:
   OR: just use TTrees!
 - systematic bands at detector level
   no PDF/theory because those affect both reco and truth levels
+  But: may include it for better bands to cover differences
 - tables of bg composition:
   integrated - with errors
   single/double diff. - no errors
-- QCD: variable bin width
-  Fix only below; show full range.
+- DONE QCD: variable bin width - nope, just extend range
+  DONE Fix only below; show full range.
 - Purity/stability
   Produce purity plots and save them somewhere
 - Main body of the note: pt=25 
@@ -16,7 +17,7 @@ MAX SESSION:
   2d: plot the lowest pt bin 
 - d0sig < 3.5
 
-TODO: put QCD_3D on the pbs
+DONE: put QCD_3D on the pbs
 TODO: try to make MC@NLO and Powheg+Herwig QCD entry as the "average"
 
 TABLES:
