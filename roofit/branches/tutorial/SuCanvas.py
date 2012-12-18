@@ -660,15 +660,17 @@ class SuCanvas:
         if M and M.any_ratios():
             s.cd_ratioPad();
             for i,h in enumerate(hs):
-                hratio,href = hs[i].Clone("hratio"),hs[i].Clone("href")
+                print 'Working on:',i,h.GetName()
+                hratio,href = h.Clone("hratio"),h.Clone("href")
                 hratio.Divide(hs[0])
-                [hratio.SetBinError(ii,0) for ii in xrange(0,hratio.GetNbinsX()+2)]
-                s.drawRatio(hratio , i!=0 )
-                if i==0:
+                s.data.append( (hratio,href) )
+                if not M.ratios[i]: continue
+                #[hratio.SetBinError(ii,0) for ii in xrange(0,hratio.GetNbinsX()+2)]
+                s.drawRatio(hratio , hdrawratio!=None )
+                if not hdrawratio:
                     hdrawratio = hratio
                     if xaxis_label:
                         hratio.GetXaxis().SetTitle( xaxis_label )
-                s.data.append( (hratio,href) )
         s.ConfigureAxis(hdraw, hdrawratio)
         s.update()
 
@@ -884,11 +886,11 @@ class PlotOptions:
       return any(s.ratios)
     def disable_ratios(s):
       s.ratios = [False]*len(s.ratios)
-    def ad(s,label,color=None,size=0.7,style=None,cut=None,ratio=None,err=0):
+    def ad(s,label,color=None,size=0.7,style=None,cut=None,r=None,err=0):
       """ Add one sample.
       NOTE: previously, this had the following default: style=20 """
-      return s.add(label,label,color,size,style,cut,ratio,err)
-    def add(s,name,label,color=None,size=0.7,style=None,cut=None,ratio=None,err=0):
+      return s.add(label,label,color,size,style,cut,r,err)
+    def add(s,name,label,color=None,size=0.7,style=None,cut=None,r=None,err=0):
       """ Add one sample.
       NOTE: previously, this had the following default: style=20 """
       s.names.append(name)
@@ -897,7 +899,7 @@ class PlotOptions:
       s.sizes.append(size*s.msize)
       s.styles.append( style if style else s.autostyle(s.istyle) )
       s.cuts.append(cut)
-      s.ratios.append(ratio)
+      s.ratios.append(r)
       s.errors.append(err)
       if color==None: s.icolor+=1
       if style==None: s.istyle+=1

@@ -60,23 +60,56 @@ class SuSys:
         s.sysdir = s.qlist(sysdir)
         s.subdir = s.qlist(subdir)
         s.basedir = s.qlist(basedir)
+    def gpre(s,i=None):
+        """ a wrap around s.pre that searches and substitutes special shortcuts
+        (hardcoded here) """
+        SMAP = []
+        SMAP.append(['IsoWind20m','ptiso20/l_pt>=0.12 && ptiso20/l_pt<=0.25'])
+        SMAP.append(['IsoNominal','ptiso40/l_pt<0.1'])
+        SMAP.append(['IsoFail20','ptiso20/l_pt>=0.1'])
+        SMAP.append(['IsoFail40','ptiso40/l_pt>=0.1'])
+        SMAP.append(['IsoWind20','ptiso20/l_pt>=0.1 && ptiso20/l_pt<=0.2'])
+        SMAP.append(['IsoWind40','ptiso40/l_pt>=0.1 && ptiso40/l_pt<=0.2'])
+        def dosub(x):
+            for V in SMAP:
+                x = re.sub(V[0],V[1],x)
+            return x
+        assert len(s.pre)==3
+        res = [dosub(pre) for pre in s.pre]
+        if i!=None:
+            assert i in (0,1,2)
+            return res[i]
+        return res
     def get_h(s,rebin=1.0):
+        """ histogram accessor with rebinning option """
         if rebin==1.0:
             return s.h
         else:
             h = s.h.Clone()
             h.Rebin(rebin)
             return h
-    def get_stack(s,rebin=1.0):
-        if rebin==1.0:
+    def get_stack(s,rebin=1):
+        """ stack accessor with rebinning option """
+        if rebin==1:
             return s.stack
-        else:
-            # FIXME TODO: do not Clone - this screws up garbage collector. Re-create from histograms instead!
+        elif False:
+            #note: cannot Clone stacks - this screws up garbage collector
             h = s.stack.Clone()
             NBG = h.GetHists().GetSize()
             for ii in xrange(0,NBG):
                 htmp = h.GetHists().At(ii)
                 htmp.Rebin(rebin)
+            return h
+        else:
+            # an alternative version that makes a new stack
+            n = s.stack.GetName()+'_cl'
+            h = ROOT.THStack(n,n)
+            NBG = s.stack.GetHists().GetSize()
+            for ii in xrange(0,NBG):
+                htmp2 = s.stack.GetHists().At(ii)
+                htmp = htmp2.Clone(htmp2.GetName()+'_rebin%s'%rebin)
+                htmp.Rebin(rebin)
+                h.Add(htmp,'hist')
             return h
     def histo_pteta(s):
         """ Converts d3_abseta_lpt_met:x:0:8:y:1:2 to human-readable form
@@ -123,14 +156,15 @@ class SuSys:
             else:
                 i=1
         if s.ntuple=='w':
-            return '(%s)*(%s)*(%s)' % (SuSys.QMAP[s.charge][2] , s.pre[i], s.weight)
+            print s.gpre(i)
+            return '(%s)*(%s)*(%s)' % (SuSys.QMAP[s.charge][2] , s.gpre(i), s.weight)
         elif s.ntuple=='z':
-            return '(%s)*(%s)' % (s.pre[i], s.weight)
+            return '(%s)*(%s)' % (s.gpre(i), s.weight)
         else:
             assert False,"Unknown ntuple type: %s"%(s.ntuple)
     def nt_prez(s,i=0,flags=None):
         assert False,'Not implemented'
-        return '(%s)*(%s)' % ( s.pre, s.weight )
+        return '(%s)*(%s)' % ( s.gpre(0), s.weight )
     def h_path_folder(s,i=0,flags=None):
         """ Returns the folder-path to the histogram. Index i has the following meaning:
         i=0 - data
@@ -450,6 +484,10 @@ class SuPlot:
             h = s.nominal().h.Clone()
             h.Rebin(rebin)
             return h
+    def nominal_h_name(s,exc='_Nominal'):
+        """ Returns the name of nominal histogram """
+        res = s.nominal_h().GetName()
+        return re.sub('_'+s.flat[0].name,'',res)
     def enable_name(s,name):
         return s.enable_names([name,])
     def enable_names(s,names):
@@ -1305,13 +1343,14 @@ class SuStackElm:
         # special trick: merge mu+ and mu- data QCD templates (for better statistics)
         # for actual qcd contribution in signal region:
         if SuStack.QCD_MIX_CHARGE and 'qcd' in s.flags and ('driven' in s.flags or 'driven_sub' in s.flags) and isinstance(d,SuPlot) and d.nominal().charge in (0,1):
-            otherq = 0 if d.nominal().charge==1 else 0
+            print 'INFO: combining charges for a data-driven QCD histogram'
+            otherq = 0 if d.nominal().charge==1 else 1
             for ih,h in enumerate(s.samples[0:]):
                 htmp = h.histo(hname,d.clone(q=otherq),rebin=rebin)
                 res.Add(htmp,s.sample_weights[ih])
         # for qcd template in qcd fits
         if SuStack.QCD_MIX_CHARGE and 'qcd' in s.flags and ('driven' in s.flags or 'driven_sub' in s.flags)and isinstance(d,SuSys) and d.charge in (0,1):
-            otherq = 0 if d.charge==1 else 0
+            otherq = 0 if d.charge==1 else 1
             for ih,h in enumerate(s.samples[0:]):
                 htmp = h.histo(hname,d.clone(q=otherq),rebin=rebin)
                 res.Add(htmp,s.sample_weights[ih])

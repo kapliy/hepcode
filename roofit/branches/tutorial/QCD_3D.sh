@@ -12,23 +12,33 @@ if [ "0" == "1" ]; then
 fi
 
 
-input=/share/t3data3/antonk/ana/ana_v29I_12042012_edboard_stacoCB_all
-DB=DB_12112012_ALL.v1
+#input=/share/t3data3/antonk/ana/ana_v29I_12042012_edboard_stacoCB_all
+#DB=DB_12042012_ALL.v1
+#out=QCD20
+# input=/share/t3data3/antonk/ana/ana_v29I_12052012_edboard_25GeV_stacoCB_all
+# DB=DB_12102012_PT25.v1
+# out=QCD25
+# input=/share/t3data3/antonk/ana/ana_v29I_12052012_edboard_25GeV_anywmt20_stacoCB_all
+# DB=DB_12102012_PT25ANY.v1
+# out=QCD25_ANY
+
+input=/share/t3data3/antonk/ana/ana_v29I_12052012_edboard_anywmt20_stacoCB_all
+DB=DB_12052012_ALL.v1
+out=QCD20
 
 iq=1
 bgsig=5
-
 if [ "0" == "1" ]; then
     ./stack2.py --nomonly --input ${input} -b --charge ${iq} --lvar d3_abseta_lpt_met --lbin 50,0,40 --isofail IsoWind20 -o TEST -t Q${iq} -m qcdfit_sys --bgsig ${bgsig} --bgewk 5 --bgtau 2 --bgqcd 4 --ieta 1 --ipt ALL --var d3_abseta_lpt_met --xsecerr 0 --etamode 2 --rebin 4
 fi
 
-nomonly=" --nomonly"
-#nomonly=" --extra ${DB} --exit"
+#nomonly=" --nomonly"
+nomonly=" --extra ${DB} --exit"
 for iq in 0 1; do 
     for ipt in {1..7} ALL; do
-	./stack2.py ${nomonly} --input ${input} -b --charge ${iq} --lvar d3_abseta_lpt_met --lbin 50,0,40 --isofail IsoWind20 -o TEST -t Q${iq} -m qcdfit_sys --bgsig ${bgsig} --bgewk 5 --bgtau 2 --bgqcd 4  --ipt ${ipt} --var d3_abseta_lpt_met --xsecerr 0 --etamode 2 --rebin 4 --ieta LOOP &> LOG.abseta.q${iq}.pt${ipt} &
+	./stack2.py ${nomonly} --input ${input} -b --charge ${iq} --lvar d3_abseta_lpt_met --lbin 50,0,40 --isofail IsoWind20 -o ${out} -t Q${iq} -m qcdfit_sys --bgsig ${bgsig} --bgewk 5 --bgtau 2 --bgqcd 4  --ipt ${ipt} --var d3_abseta_lpt_met --xsecerr 0 --etamode 2 --rebin 4 --ieta LOOP &> LOG.abseta.q${iq}.pt${ipt} &
     done
-    ./stack2.py ${nomonly} --input ${input} -b --charge ${iq} --lvar d3_abseta_lpt_met --lbin 50,0,40 --isofail IsoWind20 -o TEST -t Q${iq} -m qcdfit_sys --bgsig ${bgsig} --bgewk 5 --bgtau 2 --bgqcd 4  --ipt ALL --var d3_abseta_lpt_met --xsecerr 0 --etamode 2 --rebin 4 --ieta ALL  &> LOG.abseta.q${iq}.inclusive &
+    ./stack2.py ${nomonly} --input ${input} -b --charge ${iq} --lvar d3_abseta_lpt_met --lbin 50,0,40 --isofail IsoWind20 -o ${out} -t Q${iq} -m qcdfit_sys --bgsig ${bgsig} --bgewk 5 --bgtau 2 --bgqcd 4  --ipt ALL --var d3_abseta_lpt_met --xsecerr 0 --etamode 2 --rebin 4 --ieta ALL  &> LOG.abseta.q${iq}.inclusive &
 done
 
 echo "Please wait..."

@@ -5,6 +5,7 @@
 #PBS -m e
 #qsub -v id=$i -N QCD2D${i} -o /home/antonk/roofit/logs/log.${i}.stdout -e /home/antonk/roofit/logs/log.${i}.stderr QCD_2D.sh
 
+# THIS IS BEING DEPRECATED IN FAVOR OF QCD_3D.sh, WHICH RUNS LOCALLY!
 # Submits 2D and 1D QCD systematic histogram-based plots
 
 mkdir -p /home/antonk/roofit/logs/
