@@ -8,7 +8,7 @@
 # PBS submitter for QCD_3D. For now, only coded with ETAMODE=2 (abseta)
 
 cd /home/antonk/roofit/
-source QCD_3D_config.sh
+source config.sh
 
 mkdir -p /home/antonk/roofit/logs/
 if [ -z "$SITEROOT" ]; then

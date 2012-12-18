@@ -83,32 +83,36 @@ class SuSys:
     def get_h(s,rebin=1.0):
         """ histogram accessor with rebinning option """
         if rebin==1.0:
-            return s.h
+            return s.h.Clone()
         else:
             h = s.h.Clone()
             h.Rebin(rebin)
             return h
-    def get_stack(s,rebin=1):
-        """ stack accessor with rebinning option """
-        if rebin==1:
-            return s.stack
-        elif False:
-            #note: cannot Clone stacks - this screws up garbage collector
-            h = s.stack.Clone()
-            NBG = h.GetHists().GetSize()
-            for ii in xrange(0,NBG):
-                htmp = h.GetHists().At(ii)
-                htmp.Rebin(rebin)
-            return h
-        else:
+    def get_stack(s,rebin=1,normto=None):
+        """ stack accessor with rebinning/rescaling option """
+        if True:
             # an alternative version that makes a new stack
             n = s.stack.GetName()+'_cl'
             h = ROOT.THStack(n,n)
             NBG = s.stack.GetHists().GetSize()
+            scale = 1
+            if normto: # let's use visible range here
+                htot_i = s.stack.GetHists().At(0)
+                htot  = htot_i.Clone( htot_i.GetName() + '_totrenorm' )   # TList::At(NBG) = signal
+                [ htot.Add( s.stack.GetHists().At(i) ) for i in xrange(1,NBG) ]
+                htot.Rebin(rebin)
+                normsrc = normto
+                if hasattr(normto,'nominal'):
+                    normsrc = normto.nominal_h()
+                assert htot.GetNbinsX() == normsrc.GetNbinsX(),'Different nbins: %d and %d'%(htot.GetNbinsX(),normsrc.GetNbinsX())
+                scale = normsrc.Integral() / htot.Integral()
+                print 'get_stacks: rescaling stack',s.name,' with SF=%.3f'%scale
             for ii in xrange(0,NBG):
                 htmp2 = s.stack.GetHists().At(ii)
                 htmp = htmp2.Clone(htmp2.GetName()+'_rebin%s'%rebin)
                 htmp.Rebin(rebin)
+                if scale!=1:
+                    htmp.Scale( normsrc.Integral() / htot.Integral() )
                 h.Add(htmp,'hist')
             return h
     def histo_pteta(s):
@@ -129,12 +133,12 @@ class SuSys:
         iminB,imaxB = [int(cc) for cc in hbase.split(':')[5:5+2]]
         # eta
         etabins = binning.absetabins if re.search('abseta',horig) else binning.setabins
-        if iminA==1 and imaxA==len(etabins)-1: res[0] = 'inclusive \eta'
+        if iminA in (0,1) and imaxA in (-1,len(etabins)-1): res[0] = 'inclusive \eta'
         else: res[0] = '%.2f < %s < %.2f'%(etabins[iminA-1],'|\eta|' if re.search('abseta',horig) else '\eta',etabins[imaxA])
         # pt
         pad = ' '*len('W+ : '+'    ')
         ptbins = binning.ptbins
-        if iminB==1 and imaxB==len(ptbins)-1: res[1] = pad+'p_{T} > 20'
+        if iminB in (0,1) and imaxB in (-1,len(ptbins)-1): res[1] = pad+'p_{T} > 20'
         elif iminB==2 and imaxB==len(ptbins)-1: res[1] = pad+'p_{T} > 25'
         elif iminB==7 and imaxB==7: res[1] = pad+'p_{T} > %d'%(ptbins[iminB-1])
         else: res[1] = pad+'%d < p_{T} < %d'%(ptbins[iminB-1],ptbins[imaxB])

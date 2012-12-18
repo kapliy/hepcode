@@ -442,10 +442,9 @@ class SuFit:
       s.hratio.Divide(hmodel)
       canvas.drawRatio(s.hratio,yrange=s.RatioRange)
       canvas.ConfigureAxis(stack, s.hratio)
-      s.hratio.GetYaxis().SetNdivisions(10,5,0);
       s.hratio.GetXaxis().SetRange(s.plotmin,s.plotmax)
       TMAP = {}
-      TMAP['met'] = 'E_{T}^{miss} [GeV]'
+      TMAP['met'] = 'E_{T}^{Miss} [GeV]'
       TMAP['d3_eta_lpt_met'] = TMAP['met']
       TMAP['d3_abseta_lpt_met'] = TMAP['met']
       TMAP['wmt'] = 'm_{T}^{W} [GeV]'

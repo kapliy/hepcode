@@ -18,23 +18,7 @@ cp -a plot_l_pt_5_stack_l_pt_POS.pdf $dest/stack_Wplus_lpt.pdf
 cp -a plot_l_eta_5_stack_lepton_etav_POS.pdf $dest/stack_Wplus_eta.pdf
 """
 
-input=/share/t3data3/antonk/ana/ana_v29I_11072012_unfold_stacoCB_all/
-input=/share/t3data3/antonk/ana/ana_v29I_12042012_edboard_stacoCB_all
-
-bgsig=2
-bgewk=2
-cut="mcw*puw*wzptw*vxw*ls1w*ls2w*effw*isow*trigw"
-out="STACKNT_alpgen"
-
-bgsig=4
-bgewk=5
-cut="mcw*puw*wzptw*vxw*ls1w*ls2w*effw*isow*trigw"
-out="STACKNT_powhegherwig"
-
-bgsig=1
-bgewk=5
-cut="mcw*puw*wzptw*vxw*ls1w*ls2w*effw*isow*trigw"
-out="STACKNT_mcnlo"
+source config.sh
 
 isofail=IsoWind20
 isofail=IsoFail20

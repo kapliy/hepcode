@@ -44,14 +44,17 @@ parser.add_option("--ipt",dest="ipt",
                   type="string", default=None,
                   help="Select pt bin")
 parser.add_option("--lvar",dest="lvar",
-                  type="string", default='lY_eta',
-                  help="Variable that (1) slices the dataset in Z studies, or (2) used to fit QCD")
+                  type="string", default='met',
+                  help="Variable used to fit QCD")
 parser.add_option("--lbin",dest="lbin",
-                  type="string", default='25,-2.5,2.5',
+                  type="string", default='40,0,40',
                   help="Binning for lvar")
 parser.add_option("--lbinp",dest="lbinp",
                   type="string", default='120,0,120',
                   help="Binning for lvar - plot range only")
+parser.add_option("--lrebin",dest="lrebin",
+                  type="int", default=1,
+                  help="Rebin QCD fit histograms")
 parser.add_option("--llog", default=False,
                   action="store_true",dest="llog",
                   help="If set to true, QCD fit in lvar is plotted on log scale")
@@ -436,6 +439,7 @@ otherq = 1 if q==0 else 0
 # Reco-level [histo]
 unfmethod = 'RooUnfoldBinByBin'
 #unfmethod = 'RooUnfoldBayes'
+Afitrange = ( int(opts.lbin.split(',')[1]) , int(opts.lbin.split(',')[2]) , int(opts.lbin.split(',')[0]))
 Aplotrange=None
 if opts.lbinp:
     Aplotrange = ( int(opts.lbinp.split(',')[1]) , int(opts.lbinp.split(',')[2]) )
@@ -447,7 +451,8 @@ if True:
                   unfold={'sysdir':opts.sysdir,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
                   charge=q,var=opts.var,histo=opts.hsource,
                   sysdir=[opts.sysdir,opts.sysdir,opts.isofail],subdir=opts.subdir,basedir=opts.basedir,
-                  qcd={'var':'met','nbins':60,'min':0,'max':60,'rebin':2,'metfit':metfit,'wmtfit':wmtfit,'anyfit':'anyfit',
+                  qcd={'var':opts.lvar,'nbins':Afitrange[2],'min':Afitrange[0],'max':Afitrange[1],'rebin':opts.lrebin,
+                       'metfit':metfit,'wmtfit':wmtfit,'anyfit':'anyfit',
                        'forcenominal':False,'plotrange':Aplotrange})
 
 SuStack.QCD_SYS_SCALES = opts.metallsys
@@ -465,7 +470,8 @@ spRN = SuPlot()
 spRN.bootstrap(ntuple=opts.ntuple,histo=opts.hsource,
                charge=q,var=opts.var,path=path_reco,bin=opts.bin,
                weight=opts.cut,pre=(opts.preNN,opts.preNN,opts.preNQ), #opts.pre,
-               qcd={'var':'met','nbins':60,'min':0,'max':60,'metfit':metfit,'wmtfit':wmtfit,'anyfit':'anyfit',
+               qcd={'var':opts.lvar,'nbins':Afitrange[2],'min':Afitrange[0],'max':Afitrange[1],
+                    'metfit':metfit,'wmtfit':wmtfit,'anyfit':'anyfit',
                     'forcenominal':False,'descr':'default','pre':(opts.preFN,opts.preFN,opts.preFQ),
                     'plotrange':Aplotrange})
 spRN.enable_nominal()
@@ -532,7 +538,7 @@ def plot_any(spR2,spT2=None,m=2,var='lepton_absetav',do_errorsDA=False,do_errors
     OMAP.append(c)
     return h[-1]
 
-def plot_stack(spR2,var=None,bin=None,q=2,m=0,new_scales=None,pave=False,xaxis_range=None,name=''):
+def plot_stack(spR2,var=None,bin=None,q=2,m=0,new_scales=None,norm=False,pave=False,xaxis_range=None,name=''):
     if new_scales!=None: SuStackElm.new_scales = new_scales
     if var!=None:
         spR2.update_var( var , bin )
@@ -542,19 +548,19 @@ def plot_stack(spR2,var=None,bin=None,q=2,m=0,new_scales=None,pave=False,xaxis_r
     leg = []
     hstack = po.stack('mc',spR2.clone(q=q),leg=leg)
     hdata = po.data('data',spR2.clone(q=q),leg=leg)
-    xaxis_info = LABELMAP[var][:] if var in LABELMAP else None
+    xaxis_info = match_labelmap(var)
     if xaxis_info and xaxis_range:
         xaxis_info.append( xaxis_range )
     print 'AXIS_INFO: ',var,xaxis_info
-    c.plotStack(hstack,hdata,mode=m,leg=leg,height=2.0,pave=pave,rebin=opts.rebin,xaxis_info=xaxis_info,mlogy=opts.mlogy,rlogy=opts.rlogy)
+    c.plotStack(hstack,hdata,mode=m,leg=leg,height=2.0,pave=pave,rebin=opts.rebin,norm=norm,xaxis_info=xaxis_info,mlogy=opts.mlogy,rlogy=opts.rlogy)
     OMAP.append(c)
     return hdata,hstack
 
-def plot_stacks(spR2,histos,bin=None,m=0,new_scales=None,pave=False,name='',xaxis_range=None,qs=(0,1,2)):
+def plot_stacks(spR2,histos,bin=None,m=0,new_scales=None,norm=False,pave=False,name='',xaxis_range=None,qs=(0,1,2)):
     """ A wrapper to make multiple stack plots for variables listed in histos[] array """
     for q in qs:
         for var in histos:
-            plot_stack(spR2,var,bin=None,q=q,m=m,new_scales=new_scales,pave=pave,xaxis_range=xaxis_range,name=name)
+            plot_stack(spR2,var,bin=None,q=q,m=m,new_scales=new_scales,norm=norm,pave=pave,xaxis_range=xaxis_range,name=name)
 
 def test_unfolding(spR2,spT2,asym=True,name='test_unfolding'):
     """ tests unfolding on one signal monte-carlo """
@@ -1580,7 +1586,14 @@ if mode=='unfold2d':
 if mode=='control_stack':
     spR.enable_nominal()
     plots = [opts.hsource,]
-    plot_stacks(spR.clone(),plots,m=1,qs=(0,1))
+    charges = [opts.charge,]
+    if opts.charge=='BOTH':
+        charges = (0,1)
+    xaxis_range=None
+    if opts.bin and len(opts.bin.split(','))==3:
+        sbin = opts.bin.split(',')
+        xaxis_range = [float(sbin[1]),float(sbin[2])]
+    plot_stacks(spR.clone(),plots,m=1,qs=charges,xaxis_range=xaxis_range,norm=True)
 
 if mode=='control_stack_dratio':
     spR.enable_nominal()
