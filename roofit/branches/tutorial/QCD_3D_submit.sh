@@ -11,7 +11,7 @@ nperlast=`expr ${ntot} % ${nperblk}` # njobs in last block
 echo "Total: ${ntot} Blocks: ${nblk}"
 
 source config.sh
-#rm -f ${DB}.db
+rm -f ${DB}.db
 
 for iblk in `seq 0 ${nblk}`; do
     ijmin=`expr ${iblk} \* ${nperblk}`

@@ -13,6 +13,14 @@ from FileLock import FileLock
 MAP_BGSIG = {0:'pythia',1:'mcnlo',2:'alpgen_herwig',3:'alpgen_pythia',4:'powheg_herwig',5:'powheg_pythia'}
 # this is used to select specific monte-carlos for signal/qcd/etc
 MAP_BGQCD = {0:'mc',1:'bb',2:'JX',3:'driven',4:'driven_sub',10:'mc_driven'}
+# this is used to do generator systematics
+MCMAP = {}
+MCMAP['mc_powheg_pythia_wminmunu'] = { 1 : 'mc_mcnlo_wminmunu' , 4 : 'mc_powheg_herwig_wminmunu' }
+MCMAP['mc_powheg_pythia_wplusmunu'] = { 1 : 'mc_mcnlo_wplusmunu' , 4 : 'mc_powheg_herwig_wplusmunu' }
+MCMAP['mc_powheg_herwig_wminmunu'] = { 1 : 'mc_mcnlo_wminmunu' , 5 : 'mc_powheg_pythia_wminmunu' }
+MCMAP['mc_powheg_herwig_wplusmunu'] = { 1 : 'mc_mcnlo_wplusmunu' , 5 : 'mc_powheg_pythia_wplusmunu' }
+MCMAP['mc_mcnlo_wminmunu'] = { 4 : 'mc_powheg_herwig_wminmunu' , 5 : 'mc_powheg_pythia_wminmunu' }
+MCMAP['mc_mcnlo_wplusmunu'] = { 4 : 'mc_powheg_herwig_wplusmunu' , 5 : 'mc_powheg_pythia_wplusmunu' }
 
 class SuSys:
     """ Generic class that describes where to get the data for one histogram (systematic).
@@ -30,7 +38,8 @@ class SuSys:
             return [v]*3
     def __init__(s,name='Nominal',charge=2,qcd = {}, unfold={},qcderr='NOM',slice=None,
                  ntuple=None,path=None,var=None,bin=None,pre='',weight="mcw*puw*effw*trigw",
-                 histo=None,sliced_1d=False,sliced_2d=False,sysdir=None,subdir=None,basedir=None ):
+                 histo=None,sliced_1d=False,sliced_2d=False,sysdir=None,subdir=None,basedir=None,
+                 bgsig=None):
         # actual histograms
         s.h = None
         s.stack = None
@@ -45,6 +54,8 @@ class SuSys:
         s.qcd = qcd       # special map to place ourselves into a QCD-region (e.g, anti-isolation)
         s.qcderr = qcderr # controls QCD scale uncertainty: 'NOM','UP','DOWN',<float> - scale factor on nominal (e.g, 0.5 for 50%)
         s.slice = slice   # if not None, this says this SuSys refers to a particular |eta| slice
+        # Experimental common resources
+        s.bgsig = bgsig
         # Ntuple-based resources:
         s.ntuple = ntuple # w or z
         s.path = path
@@ -112,9 +123,9 @@ class SuSys:
                 htmp = htmp2.Clone(htmp2.GetName()+'_rebin%s'%rebin)
                 htmp.Rebin(rebin)
                 if scale!=1:
-                    htmp.Scale( normsrc.Integral() / htot.Integral() )
+                    htmp.Scale( scale )
                 h.Add(htmp,'hist')
-            return h
+            return h,scale
     def histo_pteta(s):
         """ Converts d3_abseta_lpt_met:x:0:8:y:1:2 to human-readable form
         """
@@ -158,7 +169,7 @@ class SuSys:
         if flags:
             if 'data' in flags:
                 i=0
-            elif 'driven' in flags or 'driven_sub' in flags:
+            elif 'driven' in flags:
                 i=2
             else:
                 i=1
@@ -186,7 +197,7 @@ class SuSys:
         if flags:
             if 'data' in flags:
                 i=0
-            elif 'driven' in flags or 'driven_sub' in flags:                
+            elif 'driven' in flags:
                 i=2
             else:
                 i=1
@@ -214,7 +225,7 @@ class SuSys:
         if flags:
             if 'data' in flags:
                 i=0
-            elif 'driven' in flags or 'driven_sub' in flags:                
+            elif 'driven' in flags:
                 i=2
             else:
                 i=1
@@ -293,7 +304,7 @@ class SuSys:
               qcderr=None,qcdadd=None,name=None,q=None,histo=None,sliced_1d=None,sliced_2d=None,
               unfold=None,unfdir=None,unfhisto=None,
               ntuple=None,path=None,var=None,bin=None,pre=None,weight=None,
-              slice=None):
+              slice=None,bgsig=None):
         """ deep copy, also allowing to update some members on-the-fly (useful to spawn systematics) """
         import copy
         res =  copy.copy(s)
@@ -332,10 +343,15 @@ class SuSys:
         if weight!=None: res.weight = weight
         # other
         if slice!=None: res.slice = slice
+        if bgsig!=None: res.bgsig = bgsig
         return res
     def stack_bg_frac(s,iback=1,overflow=True):
         """ Returns integral fraction of background NBG-iback (NBG corresponds to wmunu) """
         return s.stack_bg_events(iback,overflow) / s.stack_total_events(overflow)
+    def stack_qcd_frac(s,overflow=True):
+        return s.stack_qcd_events(overflow) / s.stack_total_events(overflow)
+    def stack_ewknosig_frac(s,overflow=True):
+        return s.stack_ewknosig_events(overflow) / s.stack_total_events(overflow)
     def stack_total_events(s,overflow=True):
         """ Returns integral of total stack """
         h = s.stack.GetStack().Last()
@@ -353,6 +369,13 @@ class SuSys:
         # include overflow? E.g., met>200
         qcdevts = h.Integral(0,h.GetNbinsX()+1) if overflow else h.Integral()
         return qcdevts
+    def stack_qcd_events(s,overflow=True):
+        return s.stack_bg_events(1,overflow)
+    def stack_ewknosig_events(s,overflow=True):
+        """ number of electroweak background events, excluding signal """
+        NBG = s.stack.GetStack().GetLast()
+        bglist = range(0,NBG-1)
+        return sum( [ s.stack_bg_events(ibg,overflow) for ibg in bglist ] )
     def update_var(s,histo,bin=None):
         """ Updates histogram name and ntuple-expression (aka variable)
         In reality, only one of these applies for a given SuData instance.
@@ -550,135 +573,122 @@ class SuPlot:
             return
         # systematic variations
         res = []
-        def add(n,ss,unfss=None,qcdadd=None):
+        def add(n,ss,unfss=None,xadd=None):
             """ Clones sysdir """
-            res.append(nom.clone(name=n,sysdir_mc=ss,qcdadd=qcdadd,unfdir=unfss if unfss!=None else ss))
+            res.append(nom.clone(name=n,sysdir_mc=ss,qcdadd=xadd,unfdir=unfss if unfss!=None else ss))
             s.flat.append(res[-1])
-        def add2(n,ss,unfss=None):
+        def add2(n,ss,unfss=None,xadd=None):
             """ Clones subdir (e.g., for efficiencies) """
-            res.append(nom.clone(name=n,subdir_mc=ss,unfdir=unfss if unfss!=None else ss))
+            res.append(nom.clone(name=n,subdir_mc=ss,qcdadd=xadd,unfdir=unfss if unfss!=None else ss))
             s.flat.append(res[-1])
-        def add3(n,ss,unfss):
+        def add3(n,ss,unfss,xadd=None):
             """ Clones qcd normalization """
-            res.append(nom.clone(name=n,qcderr=ss,unfdir=unfss))
+            res.append(nom.clone(name=n,qcderr=ss,unfdir=unfss,qcdadd=xadd))
             s.flat.append(res[-1])
-        def add4(n,ss,unfss):
+        def add4(n,ss,unfss,bgsig,xadd=None):
             """ Clones with different MC unfolding matrix """
             if ss in nom.unfold['mc']: return
-            res.append(nom.clone(name=n,unfdir=unfss))
+            res.append(nom.clone(name=n,unfdir=unfss,bgsig=bgsig,qcdadd=xadd))
             res[-1].unfold['mc'] = ss
             s.flat.append(res[-1])
         def next(nn):
             s.sys.append(res[:])
             s.groups.append(nn)
             del res[:]
-        qcdadd = {'forcenominal':True}
+        qcdadd = {'forcenominal':False}
         # MCP smearing UP
-        add('MuonResMSUp','MuonResMSUp')
-        add('MuonResMSDown','MuonResMSDown')
+        add('MuonResMSUp','MuonResMSUp',xadd=qcdadd)
+        add('MuonResMSDown','MuonResMSDown',xadd=qcdadd)
         next('MCP_MS_RES')
         # MCP smearing DOWN
-        add('MuonResIDUp','MuonResIDUp')
-        add('MuonResIDDown','MuonResIDDown')
+        add('MuonResIDUp','MuonResIDUp',xadd=qcdadd)
+        add('MuonResIDDown','MuonResIDDown',xadd=qcdadd)
         next('MCP_ID_RES')
         # MCP scale
         if False: # old MCP scale recommendation: on/off
-            add('MuonNoScale','MuonNoScale')
+            add('MuonNoScale','MuonNoScale',xadd=qcdadd)
             next('MCP_SCALE')
         else:  # using my C/K variations
-            add('MuonKScaleUp','MuonKScaleUp')
-            add('MuonKScaleDown','MuonKScaleDown')
+            add('MuonKScaleUp','MuonKScaleUp',xadd=qcdadd)
+            add('MuonKScaleDown','MuonKScaleDown',xadd=qcdadd)
             next('MCP_KSCALE')
-            add('MuonCScaleUp','MuonCScaleUp')
-            add('MuonCScaleDown','MuonCScaleDown')
+            add('MuonCScaleUp','MuonCScaleUp',xadd=qcdadd)
+            add('MuonCScaleDown','MuonCScaleDown',xadd=qcdadd)
             next('MCP_CSCALE')
         # MCP efficiency
         if True:
-            add2('MuonRecoSFUp','st_w_effsysup','MuonRecoSFUp')
-            add2('MuonRecoSFDown','st_w_effsysdown','MuonRecoSFDown')
+            add2('MuonRecoSFUp','st_w_effsysup','MuonRecoSFUp',xadd=qcdadd)
+            add2('MuonRecoSFDown','st_w_effsysdown','MuonRecoSFDown',xadd=qcdadd)
             next('MCP_EFF')
         # trigger systematic
         if True:
-            add2('MuonTriggerSFPhi','st_w_trigphi','MuonTriggerSFUp')
+            add2('MuonTriggerSFPhi','st_w_trigphi','MuonTriggerSFUp',xadd=qcdadd)
             next('MCP_TRIG')
         else:
-            add2('MuonTriggerSFUp','st_w_trigstatup','MuonTriggerSFUp')
-            add2('MuonTriggerSFDown','st_w_trigstatdown','MuonTriggerSFDown')
+            add2('MuonTriggerSFUp','st_w_trigstatup','MuonTriggerSFUp',xadd=qcdadd)
+            add2('MuonTriggerSFDown','st_w_trigstatdown','MuonTriggerSFDown',xadd=qcdadd)
             next('MCP_TRIG')
         # ISO efficiency
         if True:
-            add2('MuonIsoSFUp','st_w_isoup','MuonIsoSFUp')
-            add2('MuonIsoSFDown','st_w_isodown','MuonIsoSFDown')
+            add2('MuonIsoSFUp','st_w_isoup','MuonIsoSFUp',xadd=qcdadd)
+            add2('MuonIsoSFDown','st_w_isodown','MuonIsoSFDown',xadd=qcdadd)
             next('MCP_ISO')
         # JET
         if True:
-            #add('jet_jer',prep+'jet_jer',qcdadd=qcdadd)
-            add('JetResolUp','JetResolUp')
-            add('JetResolDown','JetResolDown')
+            add('JetResolUp','JetResolUp',xadd=qcdadd)
+            add('JetResolDown','JetResolDown',xadd=qcdadd)
             next('JER')
-            add('JetScaleUp','JetScaleUp')
-            add('JetScaleDown','JetScaleDown')
+            add('JetScaleUp','JetScaleUp',xadd=qcdadd)
+            add('JetScaleDown','JetScaleDown',xadd=qcdadd)
             next('JES')
-            add('JetNPVUp','JetNPVUp')
-            add('JetNPVDown','JetNPVDown')
+            add('JetNPVUp','JetNPVUp',xadd=qcdadd)
+            add('JetNPVDown','JetNPVDown',xadd=qcdadd)
             next('JES_NPV')
-            add('JetMUUp','JetMUUp')
-            add('JetMUDown','JetMUDown')
+            add('JetMUUp','JetMUUp',xadd=qcdadd)
+            add('JetMUDown','JetMUDown',xadd=qcdadd)
             next('JES_MU')
         # MET
-        if False:
-            assert False
-            add('met_resosoftup',prep+'met_resosoftup')
-            add('met_resosoftdown',prep+'met_resosoftdown')
+        if True:  # new recommended MET systematic
+            add('ResoSoftTermsUp_ptHard','ResoSoftTermsUp_ptHard',xadd=qcdadd)
+            add('ResoSoftTermsDown_ptHard','ResoSoftTermsDown_ptHard',xadd=qcdadd)
             next('MET_RESO')
-            add('met_scalesoftup',prep+'met_scalesoftup')
-            add('met_scalesoftdown',prep+'met_scalesoftdown')
-            next('MET_SCALE')
-        else:  # new recommended MET systematic
-            add('ResoSoftTermsUp_ptHard','ResoSoftTermsUp_ptHard')
-            add('ResoSoftTermsDown_ptHard','ResoSoftTermsDown_ptHard')
-            next('MET_RESO_COR')
-            if False:
-                add('ResoSoftTermsUpDown_ptHard','ResoSoftTermsUpDown_ptHard')
-                add('ResoSoftTermsDownUp_ptHard','ResoSoftTermsDownUp_ptHard')
-                next('MET_RESO_ACOR')
-            add('ScaleSoftTermsUp_ptHard','ScaleSoftTermsUp_ptHard')
-            add('ScaleSoftTermsDown_ptHard ','ScaleSoftTermsDown_ptHard')
+            add('ScaleSoftTermsUp_ptHard','ScaleSoftTermsUp_ptHard',xadd=qcdadd)
+            add('ScaleSoftTermsDown_ptHard ','ScaleSoftTermsDown_ptHard',xadd=qcdadd)
             next('MET_SCALE')
         # using fully calibrated jets for MET?
-        if True:
-            add('NominalCalJet','NominalCalJet')
+        if False:
+            add('NominalCalJet','NominalCalJet',xadd=qcdadd)
             next('MET_CALJET')
         # W pT targets
         if True:
-            add('WptSherpa','WptSherpa')
+            add('WptSherpa','WptSherpa',xadd=qcdadd)
             #add('WptPythiaMC10','WptPythiaMC10')
             next('WPT_REWEIGHT')
         # PDF reweighting
         if True:
-            add('PdfCT10nlo','PdfCT10nlo')
-            add('PdfMSTW','PdfMSTW')
-            add('PdfHERA','PdfHERA')
-            add('PdfNNPDF','PdfNNPDF')
-            add('PdfABM','PdfABM')
+            add('PdfCT10nlo','PdfCT10nlo',xadd=qcdadd)
+            add('PdfMSTW','PdfMSTW',xadd=qcdadd)
+            add('PdfHERA','PdfHERA',xadd=qcdadd)
+            add('PdfNNPDF','PdfNNPDF',xadd=qcdadd)
+            add('PdfABM','PdfABM',xadd=qcdadd)
             next('PDF')
         # QCD normalization
-        if False:
-            add3('qcdup',1.5,'Nominal')
-            add3('qcddown',0.5,'Nominal')
+        if True:
+            add3('qcdup',1.5,'Nominal',xadd=qcdadd)
+            add3('qcddown',0.5,'Nominal',xadd=qcdadd)
             next('QCD_FRAC')
-        # unfolding systematic
-        if 'mc' in nom.unfold:
-            #add4('unfold_pythia','pythia','Nominal')
-            #add4('unfold_alpgen_herwig','alpgen_herwig','Nominal')
-            add4('unfold_mcnlo','mcnlo','Nominal')
-            add4('unfold_powheg_pythia','powheg_pythia','Nominal')
-            add4('unfold_powheg_herwig','powheg_herwig','Nominal')
+        # Signal MC systematic (previously: unfolding systematic)
+        if True and 'mc' in nom.unfold:
+            add4('Signal_MCNLO','mcnlo','Nominal',1,xadd=qcdadd)
+            add4('Signal_PowhegJimmy','powheg_herwig','Nominal',4,xadd=qcdadd)
+            add4('Signal_PowhegPythia','powheg_pythia','Nominal',5,xadd=qcdadd)
             next('UNFOLDING')
         assert len(s.sys)==len(s.groups)
         print 'Created systematic variations: N =',len(s.sys)
-    def update_errors(s,sysonly=False,force=False,rebin=1.0):
-        """ folds systematic variations into total TH1 error. TODO: independent two-sided variations (non-symmetrized)  """
+    def update_errors(s,sysonly=False,force=False,rebin=1,scale=1,renorm=False):
+        """ folds systematic variations into total TH1 error.
+        If renorm is true, scale holds the data normalization
+        Possible upgrade: independent two-sided variations (non-symmetrized) """
         if s.hsys and sysonly==True and not force: return s.hsys
         if s.htot and sysonly==False and not force: return s.htot
         stack_mode = False
@@ -687,6 +697,10 @@ class SuPlot:
             stack_mode = True
         s.htot = s.sys[0][0].stack.GetStack().Last().Clone() if stack_mode else s.sys[0][0].h.Clone()
         s.htot.Sumw2()
+        if renorm:
+            s.htot.Scale( scale / s.htot.Integral() )
+        elif scale!=1:
+            s.htot.Scale(scale)
         s.hsys = s.htot.Clone()
         [s.hsys.SetBinError(ii,0) for ii in xrange(0,s.hsys.GetNbinsX()+2)]
         i = len(s.sys[0])
@@ -696,7 +710,11 @@ class SuPlot:
                 if not i in s.enable:
                     i+=1
                     continue
-                h = hs.stack.GetStack().Last() if stack_mode else hs.h
+                h = hs.stack.GetStack().Last().Clone() if stack_mode else hs.h.Clone()
+                if renorm:
+                    h.Scale( scale / h.Integral() )
+                elif scale!=1:
+                    h.Scale(scale)
                 for ibin in xrange(0,s.hsys.GetNbinsX()+2):
                     bdiffs[ibin].append ( abs(s.hsys.GetBinContent(ibin)-h.GetBinContent(ibin)) )
                 i+=1
@@ -710,7 +728,7 @@ class SuPlot:
                 # htot
                 olderr = s.htot.GetBinError(ibin)
                 s.htot.SetBinError(ibin,1.0*math.sqrt(olderr*olderr + 1.0*newerr*newerr))
-        if rebin!=1.0:
+        if rebin!=1:
             s.hsys.Rebin(rebin)
             s.htot.Rebin(rebin)
         return s.hsys if sysonly else s.htot
@@ -893,7 +911,7 @@ class SuPlot:
                 o.update_var(histo,bin)
     def clone(s,q=None,enable=None,histo=None,do_unfold=None,unfhisto=None,qcdadd=None,
               sysdir=None,sysdir_mc=None,sysdir_qcd=None,
-              sliced_1d=None,sliced_2d=None,slice=None,
+              sliced_1d=None,sliced_2d=None,slice=None,bgsig=None,
               ntuple=None,path=None,var=None,bin=None,pre=None,weight=None):
         """ Clones an entire SuPlot.
         Each SuSys is cloned individually to avoid soft pointer links
@@ -908,7 +926,7 @@ class SuPlot:
         for sgroups in s.sys:
             bla = []
             for sinst in sgroups:
-                bla.append(sinst.clone(q=q,histo=histo,unfhisto=unfhisto,qcdadd=qcdadd,sysdir=sysdir,sysdir_mc=sysdir_mc,sysdir_qcd=sysdir_qcd,ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight,sliced_1d=sliced_1d,sliced_2d=sliced_2d,slice=slice))
+                bla.append(sinst.clone(q=q,histo=histo,unfhisto=unfhisto,qcdadd=qcdadd,sysdir=sysdir,sysdir_mc=sysdir_mc,sysdir_qcd=sysdir_qcd,ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight,sliced_1d=sliced_1d,sliced_2d=sliced_2d,slice=slice,bgsig=bgsig))
                 res.flat.append(bla[-1])
             res.sys.append( bla )
         return res
@@ -926,7 +944,7 @@ class SuSample:
     lumifake = False
     xsecerr = 0
     debug = False
-    def __init__(s,name):
+    def __init__(s,name,po=None,flags=None,table=None):
         """ constructor """
         s.name = name
         # data sources
@@ -942,6 +960,10 @@ class SuSample:
         # fast histogram cache
         s.data = {}
         s.missing = {} # keep track of missing histo printouts
+        # back-navigation to total stack and the parent StackElm
+        s.po = po
+        s.flags = flags
+        s.table = table
     def addchain(s,path='st_w_final/ntuple'):
         """ add one of the TNtuples
         path excludes dg/
@@ -1046,9 +1068,9 @@ class SuSample:
             nevents = s.nevt[s.path][evcnt]
             sample = mrun.sample
             scale = 1.0/nevents*s.lumi*xsec
-            if sample not in s.seen_samples:
+            if ((s.lumi,sample) not in s.seen_samples) or SuSample.debug:
                 print 'MC %s: \t xsec=%.1f (%.1f*%.1f) nb \t nevts=%d scale=%.8f%s'%(sample,xsec,mrun.xsec,mrun.filteff,nevents,scale,' (fakelumi)' if SuSample.lumifake==True else '')
-                s.seen_samples.append(sample)
+                s.seen_samples.append((s.lumi,sample))
             return scale
         print 'WARNING: unable to find scale for MC sample ',s.name
         return 1.0
@@ -1060,13 +1082,16 @@ class SuSample:
             assert f.IsOpen()
             if not h:
                 if SuSample.debug:
-                    print 'GetHisto:: %s \t\t %s/%s'%(os.path.basename(f.GetName()),s.topdir(f),hpath)
+                    print 'GetHisto:: %s \t %s/%s'%(os.path.basename(f.GetName()),s.topdir(f),hpath),
                 if not  f.Get('%s/%s'%(s.topdir(f),hpath)):
+                    if SuSample.debug: print ''
                     return None
                 fpath = '%s/%s'%(s.topdir(f),hpath)
                 fname = re.sub(r'[^\w]', '_',s.name+'_'+hname+'_'+fpath+'_'+common.rand_name())
                 h = f.Get(fpath).Clone(fname)
                 h.Sumw2()
+                if SuSample.debug:
+                    print ' Int: %.1f'%(h.Integral())
             else:
                 h.Add( f.Get('%s/%s'%(s.topdir(f),hpath)) )
         if h:
@@ -1090,21 +1115,38 @@ class SuSample:
         return ROOT.TH1D(name,name,len(a)-1,a)
     def histo(s,hname,dall,rebin=1.0,unitize=False):
         """ A wrapper around histogram-based and ntuple-based histo accessors """
-        if isinstance(dall,SuSys):  # QCD fits
-            d = dall
-            if d.use_ntuple():
-                d.h = s.histo_nt(hname,d.var,d.bin,d.nt_prew(flags=s.flags),path=d.path,rebin=rebin,hsource=d.histo)
+        # ok this is tricky. sometimes, a particular systematic variation calls for a different signal MC
+        # if that is the case, the actual histogram is NOT pulled from self, but from a dynamically substituted signal MC
+        # HOWEVER: we do not do that for QCD bg subtraction (that's fixed to be Powheg+Pythia)
+        sh = s
+        def get_sh(d):
+            if d.bgsig!= None and s.name in MCMAP and 'driven' not in s.flags:
+                assert d.bgsig in MCMAP[s.name]
+                sh = s.po.find_sample( MCMAP[s.name][d.bgsig] , gname='sig_'+MAP_BGSIG[d.bgsig] )
+                assert sh,'ERROR: unable to change signal sample to a different generator'
+                if SuSample.debug:
+                    print 'INFO: QCD  generator systematic (%s): switching'%d.name,s.name,'to',MCMAP[s.name][d.bgsig]
+                    print '      flags: %s -> %s'%(s.flags,sh.flags)
+                return sh
             else:
-                d.h = s.histo_h(hname,d,rebin)
+                return s
+        if isinstance(dall,SuSys):  # used in SuFit to produce QCD and ewk templates
+            d = dall
+            sh = get_sh(d)
+            if d.use_ntuple():
+                d.h = sh.histo_nt(hname,d.var,d.bin,d.nt_prew(flags=sh.flags),path=d.path,rebin=rebin,hsource=d.histo)
+            else:
+                d.h = sh.histo_h(hname,d,rebin)
             return dall
         # This is where d splits into per-systematic loop
         # and calls histo_nt or histo_h on a particular SuSys
         for i,d in enumerate(dall.flat):
             if not i in dall.enable: continue
+            sh = get_sh(d)
             if d.use_ntuple():
-                d.h = s.histo_nt(hname,d.var,d.bin,d.nt_prew(flags=s.flags),path=d.path,rebin=rebin,hsource=d.histo)
+                d.h = sh.histo_nt(hname,d.var,d.bin,d.nt_prew(flags=sh.flags),path=d.path,rebin=rebin,hsource=d.histo)
             else:
-                d.h = s.histo_h(hname,d,rebin)
+                d.h = sh.histo_h(hname,d,rebin)
         return dall
     def histo_nt(s,hname,var,bin,cut,path=None,hsource=None,rebin=1.0):
         """ retrieve a particular histogram from ntuple (with cache) """
@@ -1344,19 +1386,21 @@ class SuStackElm:
             return dout
         # otherwise retrieve the histogram from the main ntuples
         res = s.samples[0].histo(hname,d,rebin=rebin)
+        assert s.sample_weights[0] == 1
         for ih,h in enumerate(s.samples[1:]):
             htmp = h.histo(hname,d.clone(),rebin=rebin)
             res.Add(htmp,s.sample_weights[ih+1])
         # special trick: merge mu+ and mu- data QCD templates (for better statistics)
         # for actual qcd contribution in signal region:
-        if SuStack.QCD_MIX_CHARGE and 'qcd' in s.flags and ('driven' in s.flags or 'driven_sub' in s.flags) and isinstance(d,SuPlot) and d.nominal().charge in (0,1):
-            print 'INFO: combining charges for a data-driven QCD histogram'
+        if SuStack.QCD_MIX_CHARGE and 'qcd' in s.flags and 'driven' in s.flags and isinstance(d,SuPlot) and d.nominal().charge in (0,1):
+            print 'INFO: combining charges for a data-driven QCD histogram (in signal region)'
             otherq = 0 if d.nominal().charge==1 else 1
             for ih,h in enumerate(s.samples[0:]):
                 htmp = h.histo(hname,d.clone(q=otherq),rebin=rebin)
                 res.Add(htmp,s.sample_weights[ih])
         # for qcd template in qcd fits
-        if SuStack.QCD_MIX_CHARGE and 'qcd' in s.flags and ('driven' in s.flags or 'driven_sub' in s.flags)and isinstance(d,SuSys) and d.charge in (0,1):
+        if SuStack.QCD_MIX_CHARGE and 'qcd' in s.flags and 'driven' in s.flags and isinstance(d,SuSys) and d.charge in (0,1):
+            print 'INFO: combining charges for a data-driven QCD histogram (in qcd fit control region)'
             otherq = 0 if d.charge==1 else 1
             for ih,h in enumerate(s.samples[0:]):
                 htmp = h.histo(hname,d.clone(q=otherq),rebin=rebin)
@@ -1453,6 +1497,8 @@ class SuStack:
         """ Select QCD sample, turning all others off """
         s.flagsum['Q']=i
         return s.choose_flag('qcd_'+MAP_BGQCD[i],'qcd')
+    def which_sig(s):
+        return s.flagsum['S']
     def choose_sig(s,i):
         """ Select signal sample, turning all others off """
         s.flagsum['S']=i
@@ -1591,7 +1637,8 @@ class SuStack:
             if i not in d.enable: continue
             # special treatment for systematics for which we choose NOT to redo QCD fits
             if 'forcenominal' in o.qcd and o.qcd['forcenominal']==True:
-                print 'INFO: forcing *nominal* QCD fit for sytematic %d (%s)'%(i,o.name)
+                if o.name != 'Nominal':
+                    print 'INFO: forcing *nominal* QCD fit for sytematic %d (%s)'%(i,o.name)
                 res.append(s.get_scale_wrap(d.nominal()))
             else:
                 res.append(s.get_scale_wrap(o))
@@ -1707,6 +1754,8 @@ class SuStack:
             fitname = SuSys.QMAP[d2.charge][1]+'_'+d2.qcd['descr']+fitsfx+'_'+s.get_flagsum()+'_'+d2.qcd['var']+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max'])
         else:
             key = s.get_flagsum()+'_'+d2.h_path_fname()+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max'])
+            if d2.bgsig != None:
+                key = 'S%d_'%(d2.bgsig)+key
             fitname = key
         assert key
         if key in s.scales:
@@ -1716,12 +1765,12 @@ class SuStack:
         f = SuFit.SuFit()
         f.addFitVar( d2.qcd['var'], d2.qcd['min'] , d2.qcd['max'] , '%s (GeV)'%(d2.qcd['var']) );
         # get histograms
+        if SuSample.debug: print 'SuData::get_scale(SuFit): 0 making data'
         hdata   = s.data('data',d2.clone()).h
+        assert hdata.Integral()>0,'data template is empty for systematic: %s'%d.name
+        if SuSample.debug: print 'SuData::get_scale(SuFit): 0 making qcd'
         hfree = s.qcd('bgfree',d2.clone()).h    # using correct lumi for bg subtraction here
-        if False and SuStack.QCD_MIX_CHARGE and d2.charge in (0,1): #FIXMEAK
-            otherq = 0 if d2.charge==1 else 0
-            hfree2 = s.qcd('bgfree2',d2.clone(q=otherq)).h
-            hfree.Add(hfree2)
+        assert hfree.Integral()>0,'qcd template is empty (%.3f) for systematic: %s'%(hfree.Integral(),d.name)
         # use fake lumi to make sure the signal statistics is not scaled before entering TFractionFitter
         oldlumi = SuSample.lumi
         if SuStack.QCD_STAT_HACK>0:
@@ -1742,9 +1791,13 @@ class SuStack:
                         if re.search('wmin',sample.name):
                             thesig = sample
                             break
+                # changing signal sample to a different generator (e.g., for certain systematics)
+                if d2.bgsig != None:
+                    signame = thesig.name
+                    thesig = s.find_sample( MCMAP[signame][d.bgsig] )
             # normalize to lowest-statistics sample
             elif SuStack.QCD_STAT_HACK==2:
-                loop = [e for e in s.elm if 'mc' in e.flags and 'no' not in e.flags and 'driven' not in e.flags and 'driven_sub' not in e.flags]
+                loop = [e for e in s.elm if 'mc' in e.flags and 'no' not in e.flags and 'driven' not in e.flags]
                 msample,mscale = None,-999
                 for lp in loop:
                     for sample in lp.samples:
@@ -1759,7 +1812,11 @@ class SuStack:
             assert thesig,'Failed to find a montecarlo target for stat hack normalization'
             SuSample.lumi = thesig.get_preserving_lumi(evcnt = thesig.choose_evcount())
             SuSample.lumifake = True
+            if SuSample.debug:
+                print 'QCD ewk lumi: fake lumi = %.2f, based on this sample: %s'%(SuSample.lumi,thesig.name)
+        if SuSample.debug: print 'SuData::get_scale(SuFit): 0 making ewk'
         hfixed = s.ewk('bgfixed',d2.clone()).h
+        assert hfixed.Integral()>0,'ewk template is empty for systematic: %s'%d.name
         SuSample.lumi = oldlumi
         SuSample.lumifake = False
         if not (hdata and hfree and hfixed):
@@ -1774,6 +1831,8 @@ class SuStack:
             hdata  = hdata.Rebin(d2.qcd['rebin'])
             hfixed = hfixed.Rebin(d2.qcd['rebin'])
             hfree  = hfree.Rebin(d2.qcd['rebin'])
+        if SuSample.debug:
+            print 'QCD: input integrals for data/ewk/qcd = %.1f / %.1f / %.1f'%(hdata.Integral(),hfixed.Integral(),hfree.Integral())
         # run SuFit
         hdata.getLegendName = lambda : 'DATA'
         hfixed.getLegendName = lambda : 'EWK backgrounds'
@@ -1797,8 +1856,9 @@ class SuStack:
         s.scales[key] = (f.scales[0],f.scalesE[0], f.fractions[0],f.fractionsE[0], f.Wscales[0],f.WscalesE[0], f.Wfractions[0],f.WfractionsE[0], f.chi2[0],f.ndf[0] , f.nfits)
         s.scalekeys.append(key)
         return s.scale_sys(key,d)
-    def find_sample(s,name):
+    def find_sample(s,name,gname=None):
         for grp in s.elm:
+            if gname!=None and grp.name!=gname: continue
             for sam in grp.samples:
                 if sam.name==name:
                     return sam
@@ -1967,7 +2027,7 @@ class SuStack:
         [ h.Write(h.GetTitle(),ROOT.TObject.kOverwrite) for h in hs ]
         fout.Close()
     def stack(s,hname,d,flags=['mc'],leg=[]):
-        """ MC histogram stack (legacy, ntuple-based)"""
+        """ MC histogram stack """
         # prepare containers for results
         res = d
         res.MakeStacks(hname)
@@ -1986,7 +2046,7 @@ class SuStack:
             return s.histosum_apply(loop,hname,d,norm,weights)
         # histogram specified in several eta slices: we need to reconstruct & unfold in each eta slice, then re-build:
         if d.nominal().is_sliced_1d():
-            assert False,'FIXME: update bin_ stuff to 2d/3d histos'
+            assert False,'ERROR: need to update bin_ stuff to 2d/3d histos'
             hspec = d.nominal().histo    # bin_%d/lpt:imin:imax
             assert len(hspec.split(':'))==3
             horig = hspec.split(':')[0]  # bin_%d/lpt
@@ -2022,7 +2082,7 @@ class SuStack:
             d.update_from_slices(ds,heta,imin,imax)
             return d
         elif d.nominal().is_sliced_2d():
-            assert False,'FIXME: update bin_ stuff to 2d/3d histos'
+            assert False,'ERROR: need to update bin_ stuff to 2d/3d histos'
             hspec = d.nominal().histo    # d2_abseta_lpt:y:0:8
             assert len(hspec.split(':'))==4
             horig = hspec.split(':')[0]  # d2_abseta_lpt
@@ -2076,8 +2136,6 @@ class SuStack:
                 res = htmp
         if res:
             res.SetName(hname)
-            #res.SetMarkerSize(0)
             if norm:
                 res.Unitize()
-                #res.Scale(1/res.GetSumOfWeights())
         return s.run_unfolding(res)

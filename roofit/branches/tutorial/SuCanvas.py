@@ -208,15 +208,17 @@ class SuCanvas:
         return cgStyle;
 
     @staticmethod
-    def set_uncert_style(obj,dored=True):
+    def set_uncert_style(obj,color=None):
         """ set style for uncertainties """
         if not obj: return
-        obj.SetFillColor( ROOT.kYellow );
-        obj.SetFillStyle( 3001 );
+        obj.SetFillColor( color );
         obj.SetMarkerSize( 0 );
-        if dored:
-            obj.SetLineColor( ROOT.kRed );
-            obj.SetMarkerColor( ROOT.kRed );
+        obj.SetLineWidth( 0 );
+        return
+        obj.SetFillStyle( 3001 );
+        if False:
+            obj.SetLineColor( color );
+            obj.SetMarkerColor( color );
         obj.SetLineStyle( 2 );
         obj.SetLineWidth( 2 );
 
@@ -243,7 +245,7 @@ class SuCanvas:
                 hratio.GetYaxis().SetRangeUser(s._refLineMin,s._refLineMax)
             hratio.GetYaxis().SetTitle(s._ratioName)
 
-    def DrawUBand(s):
+    def drawUBand(s):
         """ Draw statistical and systematic uncertainty bands """
         cur = ROOT.gDirectory;
         s._ratioPad.cd();
@@ -272,7 +274,7 @@ class SuCanvas:
         h1.SetLineColor(ROOT.kYellow);
         band1.AddEntry(h1," MC Stat. Unc.", "F").SetTextAlign(align);
         band1.Draw();
-        band2 = ROOT.TLegend(xmin+offset, ymin, xmax+offset, ymax);
+        s.band2 = band2 = ROOT.TLegend(xmin+offset, ymin, xmax+offset, ymax);
         band2.SetFillColor(0);
         band2.SetFillStyle(0);
         band2.SetBorderSize(0);
@@ -740,18 +742,20 @@ class SuCanvas:
         s.update()
 
     def plotStack(s,hstack,hdata,leg=None,height=1.5,mode=0,pave=True,
-                  rebin=1.0,norm=False,
+                  rebin=1.0,norm=False,norm_sys_from_nominal=False,
                   xaxis_info=None,
                   mlogy=False,rlogy=False):
         """ Wrapper to make a complete plot of stack and data overlayed - SuData version
         if norm==True, the stack is rescaled to Nominal data counts
+        if norm_sys_from_nominal=True,  systematics normalized to nominal (rather than to data)
         mode=0 - nominal only
-        mode=1 - apply systematics
+        mode=1 - nominal + systematic bands
         """
         s.buildRatio(mlogy=mlogy,rlogy=rlogy);
         s.cd_plotPad();
         data = hdata.nominal_h(rebin)
-        stack = hstack.nominal().get_stack(rebin, data if norm==True else None).Clone()
+        stack , stackScale  =  hstack.nominal().get_stack(rebin, data if norm==True else None)
+        stackH = stack.GetStack().Last()
         # create the legend from the legend specifier
         if leg!=None:
             alleg = leg[:]
@@ -771,7 +775,6 @@ class SuCanvas:
                 htmp = stack.GetHists().At(ii)
                 leg.AddEntry(htmp,mcleg[ii][1],mcleg[ii][2])
         s.data.append((stack,data,leg))
-        hsys = None
         # mc
         stack.Draw() # "HIST"
         xaxis_label = None
@@ -792,16 +795,28 @@ class SuCanvas:
                 xaxis_range = [ stack.GetHistogram().FindFixBin(xaxis_range[0]) , stack.GetHistogram().FindFixBin(xaxis_range[1]) ]
         if xaxis_range!=None:
             stack.GetXaxis().SetRange(*xaxis_range)
-        # systematics
+        # systematics and special variations
+        HDATA = [ data.Clone(), ] # no-error
+        [HDATA[0].SetBinError(ii,0) for ii in xrange(0,HDATA[0].GetNbinsX()+2)]
+        HMC = [stackH.Clone(),None,None]    # no-error , MC stat error , MC tot error
+        [HMC[0].SetBinError(ii,0) for ii in xrange(0,HMC[0].GetNbinsX()+2)]
         if mode==1 and hstack.has_systematics():
-            s.htot = htot = hstack.update_errors(rebin=rebin)
-            s.hsys = hsys = hstack.update_errors(sysonly=True,rebin=rebin)
-            s.set_uncert_style(htot)
-            htot.Draw('A SAME E2')
-            s.data.append((htot,hsys))
+            if norm_sys_from_nominal:     # systematics normalized to nominal scale factor
+                s.hsys = HMC[1] = hstack.update_errors(sysonly=True,rebin=rebin,scale=stackScale)
+                s.htot = HMC[2] = hstack.update_errors(rebin=rebin,scale=stackScale)
+            else:       # systematics normalized to data every time (i.e., only consider shape differences)
+                if norm:
+                    dint = data.Integral()
+                    s.hsys = HMC[1] = hstack.update_errors(sysonly=True,rebin=rebin,scale=dint,renorm=True)
+                    s.htot = HMC[2] = hstack.update_errors(rebin=rebin,scale=dint,renorm=True)
+                else:
+                    assert False,'Why are you trying to run this?'
+                    s.hsys = HMC[1] = hstack.update_errors(sysonly=True,rebin=rebin,scale=1)
+                    s.htot = HMC[2] = hstack.update_errors(rebin=rebin,scale=1)
+        s.data.append((HDATA,HMC))
         # data
         data.Draw("pe same")
-        # calculate QCD fraction
+        # configure legend and QCD fraction pavebox
         if leg:
             s.cd_plotPad();
             s.ConfigureLegend(leg)
@@ -819,18 +834,31 @@ class SuCanvas:
         # ratio
         s.cd_ratioPad();
         hratio = s.hratio = data.Clone("hratio")
-        hratio.Divide(stack.GetStack().Last())
+        if mode==0:
+            hratio.Divide(stackH) # stat error data/MC combined
+        else:
+            hratio.Divide(HMC[0]) # stat data error only
         s.drawRatio(hratio)
         if xaxis_label:
             hratio.GetXaxis().SetTitle( xaxis_label )
-        if mode==1 and hstack.has_systematics() and False:
-            s.hsysr = hsysr = data.Clone("hratio_sys")
-            hsysr.Divide(s.hsys)
-            s.set_uncert_style(hsysr,dored=False)
-            # symmetrize the systematic error around ratio=1.0
-            [hsysr.SetBinContent(ii,1.0) for ii in xrange(0,hsysr.GetNbinsX()+2)]
-            hsysr.Draw('A SAME E2')
-            s.data.append(hsysr)
+        if mode==1 and hstack.has_systematics():
+            # stat MC error only
+            s.hyellow = hyellow = HDATA[0].Clone("hratio_yellow")
+            hyellow.Divide(stackH)
+            [hyellow.SetBinContent(ii,1.0) for ii in xrange(0,hyellow.GetNbinsX()+2)]
+            s.set_uncert_style(hyellow,color=ROOT.kYellow)
+            # stat MC error + systematics
+            s.hgreen = hgreen = HDATA[0].Clone("hratio_green")
+            hgreen.Divide(HMC[2])
+            [hgreen.SetBinContent(ii,1.0) for ii in xrange(0,hgreen.GetNbinsX()+2)]
+            s.set_uncert_style(hgreen,color=ROOT.kGreen)
+            # draw
+            hgreen.Draw('A SAME E2')
+            hyellow.Draw('A SAME E2')
+            s.drawRatio(hratio,same=True)
+            s.data.append( (hyellow,hgreen) )
+            # draw systematic legend
+            s.drawUBand()
         # axis parameters
         logy = s._mlogy
         stack.SetMaximum(stack.GetMaximum()*10*height if logy else stack.GetMaximum()*height)
