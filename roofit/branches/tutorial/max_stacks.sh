@@ -13,17 +13,21 @@ if [ "0" == "1" ]; then
 fi
 
 # Standard stacks
-common="-b --input ${input} --lvar 'd3_abseta_lpt_met:x:0:-1:y:0:-1' --lbin 100,0,40 --lrebin 2 -o CONTROL -t P -m control_stack --charge BOTH --bgqcd ${bgqcd}"
+fiducial="x:0:-1:y:0:-1" # 20 GeV
+fiducial="x:0:-1:y:2:-1" # 25 GeV
+common="-b --input ${input} --lvar d3_abseta_lpt_met:${fiducial} --lbin 100,0,40 --lrebin 2 -o CONTROL -t P -m control_stack --charge 3 --bgqcd ${bgqcd} --metallsys"
 if [ "0" == "1" ]; then
-    ./stack2.py --hsource "lepton_etav" --bin 10,-2.5,2.5 --refline 0.92,1.095 ${common} &
-    ./stack2.py --hsource "lepton_phi" --bin 10,-3.14,3.14 --rebin 2 --refline 0.92,1.095 ${common} &
-    ./stack2.py --hsource "wmt" --bin 100,40,120 --rebin 2 --refline 0.85,1.175 ${common} &
-    ./stack2.py --hsource "wpt" --bin 100,0,120  --rebin 2 --refline 0.85,1.175 ${common} &
-    ./stack2.py --hsource "met" --bin 100,25,120 --rebin 2 --refline 0.85,1.175 ${common} &
-    ./stack2.py --hsource "lpt" --bin 100,0,120  --rebin 2 --refline 0.85,1.175 ${common} &
+    # 0.92,1.095
+    ./stack2.py --hsource "d3_eta_lpt_met:y:2:-1:z:0:-1" --bin 10,-2.5,2.5 --refline 0.85,1.175 ${common} &> LOG.stacks.eta &
+    #./stack2.py --hsource "d3_abseta_lpt_eta:${fiducial}" --bin 10,-2.5,2.5 --rebin 2 --refline 0.85,1.175 ${common} &> LOG.stacks.eta &
+    ./stack2.py --hsource "d3_abseta_lpt_phi:${fiducial}" --bin 10,-3.14,3.14 --rebin 4 --refline 0.85,1.175 ${common} &> LOG.stacks.phi &
+    ./stack2.py --hsource "d3_abseta_lpt_wmt:${fiducial}" --bin 100,40,120 --rebin 2 --refline 0.85,1.175 ${common} &> LOG.stacks.wmt &
+    ./stack2.py --hsource "d3_abseta_lpt_wpt:${fiducial}" --bin 100,0,120  --rebin 2 --refline 0.85,1.175 ${common} &> LOG.stacks.wpt &
+    ./stack2.py --hsource "d3_abseta_lpt_met:${fiducial}" --bin 100,25,120 --rebin 2 --refline 0.85,1.175 ${common} &> LOG.stacks.met &
+    ./stack2.py --hsource "lpt" --bin 100,25,120  --rebin 2 --refline 0.85,1.175 ${common} &> LOG.stacks.lpt &
 fi
 
-./stack2.py -b --input ${input} --hsource "d3_abseta_lpt_met:x:0:-1:y:0:-1" --bin 100,25,120  --rebin 2 --refline 0.85,1.175 -o CONTROL -t D -m control_stack --charge 0 --bgqcd ${bgqcd} --lvar "d3_abseta_lpt_met:x:0:-1:y:0:-1" --lbin 100,0,40 --lrebin 2
+./stack2.py -b --input ${input} --hsource d3_abseta_lpt_met:${fiducial} --bin 100,25,120  --rebin 2 --refline 0.85,1.175 -o CONTROL -t D -m control_stack --charge 0 --bgqcd ${bgqcd} --lvar d3_abseta_lpt_met:${fiducial} --lbin 100,0,40 --lrebin 2 --metallsys  # --nomonly
 
 echo "Please wait..."
 wait

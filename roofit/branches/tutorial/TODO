@@ -1,3 +1,9 @@
+QCD updates:
+- DONE: absolute uncertainy on qcd (NOM=delta, DEN = bg-subtracted data, ~ signal)
+- : relative uncertainty on qcd (NOM=delta, DEN = nqcd)
+- : qcd and ewk (non-signal) frac (NOM = qcd , DEN = data counts)
+
+
 MAX SESSION:
 - Only W+ and W- single and double diff.
   For integrated, need C_W combined, too. How? sum up unfolding W+ and W-. Sum up numerator and denominator separately.

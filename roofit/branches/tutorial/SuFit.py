@@ -353,8 +353,6 @@ class SuFit:
       # free (qcd) - must be scaled
       ift = 0
       free = s.hfree if modbins==True else s.free[0].Clone()
-      #free.SetFillColor(s.free[ift].GetFillColor())
-      #free.SetLineColor(s.free[ift].GetFillColor())
       free.SetLineColor(s.LineColor_qcd)
       free.SetFillColor(s.FillColor_qcd)
       free.SetFillStyle(s.FillStyle_qcd)

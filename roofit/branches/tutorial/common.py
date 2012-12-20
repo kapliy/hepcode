@@ -15,6 +15,10 @@ def dump_pickle(data,name='data.pkl'):
         pickle.dump(data,output)
         output.close()
 
+def dexit(v=0):
+    sys.stdout.flush()
+    os._exit(v)
+
 def handle_pdb(sig, frame):
         import pdb
         pdb.Pdb().set_trace(frame)
