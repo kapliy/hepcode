@@ -48,6 +48,39 @@ class SuCanvas:
 
     def namebase(s):
         return s.savename
+    @staticmethod
+    def best_legend_and_height(h,default_height=2.15):
+        """ returns legend x1 and y2, along with histogram SetMaximum scale """
+        nbins = h.GetNbinsX()
+        frange = range(1,nbins)
+        lrange = range(1,nbins/2)
+        rrange = range(nbins/2,nbins)
+        maxbin = h.GetMaximumBin()
+        avgmax = sum([ h.GetBinContent(i) for i in xrange(1,h.GetNbinsX()) ])/h.GetNbinsX()
+        avgmaxL = sum([ h.GetBinContent(i) for i in lrange ])/len(lrange)
+        avgmaxR = sum([ h.GetBinContent(i) for i in rrange ])/len(rrange)
+        fullmax = h.GetMaximum()
+        halfmax = fullmax*0.5
+        fullmin = h.GetMinimum()
+        leftmin = min([ h.GetBinContent(i) for i in lrange ])
+        rightmin = min([ h.GetBinContent(i) for i in rrange ])
+        leftmax = max([ h.GetBinContent(i) for i in lrange ])
+        rightmax = max([ h.GetBinContent(i) for i in rrange ])
+        if all( [ h.GetBinContent(i)<halfmax for i in lrange ] ):
+            print 'LegendFinder: Found histogram mostly on right side'
+            return 0.12,None,1
+        elif all( [ h.GetBinContent(i)<halfmax for i in rrange ] ):
+            print 'LegendFinder: Found histogram mostly on left side'
+            return 0.55,None,1
+        elif abs(fullmax - fullmin) < avgmax*0.3 or True:
+            if all( [ abs(h.GetBinContent(i)-avgmaxR)<avgmaxR*0.3 for i in rrange ] ):
+                print 'LegendFinder: Found histogram that evenly fills right half of the canvas:'
+                return 0.55,0.65,1
+            elif all( [ abs(h.GetBinContent(i)-avgmaxL)<avgmaxL*0.3 for i in lrange ] ):
+                print 'LegendFinder: Found histogram that evenly fills left half of the canvas:'
+                return 0.12,0.65,1
+        print 'LegendFinder: Found histogram that precludes smart placement of the legend'
+        return 0.55,None,default_height
 
     @staticmethod
     def ConfigureText(fractext, text_x1=None, text_y2=None):
@@ -743,7 +776,7 @@ class SuCanvas:
 
     def plotStack(s,hstack,hdata,leg=None,height=1.5,mode=0,pave=True,
                   rebin=1.0,norm=False,norm_sys_from_nominal=False,
-                  xaxis_info=None,
+                  xaxis_info=None,leg_x1=None,leg_y2=None,
                   mlogy=False,rlogy=False):
         """ Wrapper to make a complete plot of stack and data overlayed - SuData version
         if norm==True, the stack is rescaled to Nominal data counts
@@ -819,7 +852,7 @@ class SuCanvas:
         # configure legend and QCD fraction pavebox
         if leg:
             s.cd_plotPad();
-            s.ConfigureLegend(leg)
+            s.ConfigureLegend(leg,leg_x1,leg_y2)
             leg.Draw()
             qcdfrac = hstack.nominal().stack_bg_frac()
             if pave and qcdfrac!=None:
@@ -829,7 +862,7 @@ class SuCanvas:
                 except:
                     staterr = 0
                 fractext.AddText( 'QCD Frac. = %.3f #pm %.2f%%'%(qcdfrac,staterr*100.0) )
-                s.ConfigureText(fractext,text_y2 = leg.GetY1NDC()-0.02)
+                s.ConfigureText(fractext,text_x1=leg_x1,text_y2 = leg.GetY1NDC()-0.02)
                 fractext.Draw()
         # ratio
         s.cd_ratioPad();

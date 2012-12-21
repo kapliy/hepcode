@@ -89,26 +89,28 @@ LABELMAP['avgmu_unw'] = LABELMAP['avgmu']
 LABELMAP['nvtx_grltrig'] = ['Number of vertices',None]
 LABELMAP['nvtx_grltrig_unw'] = LABELMAP['nvtx_grltrig']
 # 3d plots
-LABELMAP['d3_eta_lpt_met'] = LABELMAP['met']
-LABELMAP['d3_abseta_lpt_met'] = LABELMAP['met']
-LABELMAP['d3_eta_lpt_wmt'] = LABELMAP['wmt']
-LABELMAP['d3_abseta_lpt_wmt'] = LABELMAP['wmt']
-LABELMAP['d3_eta_lpt_wpt'] = LABELMAP['wpt']
-LABELMAP['d3_abseta_lpt_wpt'] = LABELMAP['wpt']
-LABELMAP['d3_eta_lpt_lpt'] = LABELMAP['lpt']
-LABELMAP['d3_abseta_lpt_lpt'] = LABELMAP['lpt']
-LABELMAP['d3_eta_lpt_phi'] = LABELMAP['l_phi']
-LABELMAP['d3_abseta_lpt_phi'] = LABELMAP['l_phi']
-LABELMAP['d3_eta_lpt_eta'] = LABELMAP['l_eta']
-LABELMAP['d3_abseta_lpt_eta'] = LABELMAP['l_eta']
+LABELMAP['d3_eta_lpt_met:x'] = LABELMAP['met']
+LABELMAP['d3_abseta_lpt_met:x'] = LABELMAP['met']
+LABELMAP['d3_eta_lpt_met:y'] = LABELMAP['l_eta']
+LABELMAP['d3_abseta_lpt_met:y'] = LABELMAP['l_eta']
+LABELMAP['d3_eta_lpt_wmt:x'] = LABELMAP['wmt']
+LABELMAP['d3_abseta_lpt_wmt:x'] = LABELMAP['wmt']
+LABELMAP['d3_eta_lpt_wpt:x'] = LABELMAP['wpt']
+LABELMAP['d3_abseta_lpt_wpt:x'] = LABELMAP['wpt']
+LABELMAP['d3_eta_lpt_lpt:x'] = LABELMAP['lpt']
+LABELMAP['d3_abseta_lpt_lpt:x'] = LABELMAP['lpt']
+LABELMAP['d3_eta_lpt_phi:x'] = LABELMAP['l_phi']
+LABELMAP['d3_abseta_lpt_phi:x'] = LABELMAP['l_phi']
+LABELMAP['d3_eta_lpt_eta:x'] = LABELMAP['l_eta']
+LABELMAP['d3_abseta_lpt_eta:x'] = LABELMAP['l_eta']
 
 def match_labelmap(x):
     if x in LABELMAP:
         return LABELMAP[x][:]
-    elif x[:14] in LABELMAP:
-        return LABELMAP[x[:14]]
-    elif x[:17] in LABELMAP:
-        return LABELMAP[x[:17]]
+    elif x[:14+2] in LABELMAP:
+        return LABELMAP[x[:14+2]]
+    elif x[:17+2] in LABELMAP:
+        return LABELMAP[x[:17+2]]
     return None
 
 # cut maps

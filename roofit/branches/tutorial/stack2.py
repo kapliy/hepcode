@@ -552,7 +552,14 @@ def plot_stack(spR2,var=None,bin=None,q=2,m=0,new_scales=None,norm=False,pave=Fa
     if xaxis_info and xaxis_range:
         xaxis_info.append( xaxis_range )
     print 'AXIS_INFO: ',var,xaxis_info
-    c.plotStack(hstack,hdata,mode=m,leg=leg,height=2.0,pave=pave,rebin=opts.rebin,norm=norm,xaxis_info=xaxis_info,mlogy=opts.mlogy,rlogy=opts.rlogy)
+    # try to auto-adjust the histogram height and legend location
+    height = 2
+    leg_x1 = None
+    leg_y2 = None
+    if True and xaxis_info:
+        pass
+    leg_x1,leg_y2,height = SuCanvas.best_legend_and_height(hdata.nominal_h())
+    c.plotStack(hstack,hdata,mode=m,leg=leg,height=height,leg_x1=leg_x1,leg_y2=leg_y2,pave=pave,rebin=opts.rebin,norm=norm,xaxis_info=xaxis_info,mlogy=opts.mlogy,rlogy=opts.rlogy)
     OMAP.append(c)
     return hdata,hstack
 
