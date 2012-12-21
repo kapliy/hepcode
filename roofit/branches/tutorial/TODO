@@ -1,3 +1,4 @@
+STACKS: add eta plots in pt bins
 QCD updates:
 - DONE: absolute uncertainy on qcd (NOM=delta, DEN = bg-subtracted data, ~ signal)
 - : relative uncertainty on qcd (NOM=delta, DEN = nqcd)
