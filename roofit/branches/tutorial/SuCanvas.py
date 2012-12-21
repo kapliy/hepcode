@@ -27,7 +27,7 @@ class SuCanvas:
     g_legend_height_per_entry = 0.1;
     g_legend_symbol_width = 0.05;
     # default location for TLegend left-top corner
-    g_legend_x1_ndc = 0.5
+    g_legend_x1_ndc = 0.55
     g_legend_y2_ndc = 0.9
     
     _refLineMin = 0.81
@@ -164,7 +164,10 @@ class SuCanvas:
         # the factor is a guess
         h_ratio.GetXaxis().SetTickLength(h_ratio.GetXaxis().GetTickLength()*2.1);
         # modify divisions
-        h_ratio.GetYaxis().SetNdivisions(10,5,0);
+        if abs(h_ratio.range[0] - 0.9)<0.01 and abs(h_ratio.range[1]- 1.12)<0.01:
+            h_ratio.GetYaxis().SetNdivisions(8,5,0)
+        else:
+            h_ratio.GetYaxis().SetNdivisions(10,5,0);
         # avoid ticks covered by filled histograms
         s._plotPad.RedrawAxis('g');
         s._ratioPad.RedrawAxis('g');
@@ -256,12 +259,12 @@ class SuCanvas:
         obj.SetLineWidth( 2 );
 
     def drawLuminosity(s,x,y):
-        lumi = ROOT.TString("4.7 fb^{-1}")
+        lumi = ROOT.TString("4.6 fb^{-1}")
         prefix=ROOT.TString(r"#lower[-0.2]{#scale[0.6]{#int}}Ldt = ")
-        s.tex = tex = ROOT.TLatex(x, y, prefix+lumi);
+        s.tex = tex = ROOT.TLatex(x, y, (prefix+lumi).Data());
         tex.SetNDC();
-        tex.SetTextFont(g_text_font);
-        tex.SetTextSize(g_smaller_text_size);
+        tex.SetTextFont(SuCanvas.g_text_font);
+        tex.SetTextSize(SuCanvas.g_smaller_text_size);
         tex.SetLineWidth(0);
         tex.Draw();
 
@@ -274,8 +277,10 @@ class SuCanvas:
             if yrange:
                 assert type(yrange)==type([]) and len(yrange)==2, 'ERROR: drawRatio yrange must be a list [min,max]'
                 hratio.GetYaxis().SetRangeUser(yrange[0],yrange[1])
+                hratio.range = (yrange[0],yrange[1])
             else:
                 hratio.GetYaxis().SetRangeUser(s._refLineMin,s._refLineMax)
+                hratio.range = (s._refLineMin,s._refLineMax)
             hratio.GetYaxis().SetTitle(s._ratioName)
 
     def drawUBand(s):
@@ -776,7 +781,9 @@ class SuCanvas:
 
     def plotStack(s,hstack,hdata,leg=None,height=1.5,mode=0,pave=True,
                   rebin=1.0,norm=False,norm_sys_from_nominal=False,
-                  xaxis_info=None,leg_x1=None,leg_y2=None,
+                  xaxis_info=None,
+                  leg_x1=None,leg_y2=None,
+                  lumi_x=None,lumi_y=None,
                   mlogy=False,rlogy=False):
         """ Wrapper to make a complete plot of stack and data overlayed - SuData version
         if norm==True, the stack is rescaled to Nominal data counts
@@ -864,6 +871,12 @@ class SuCanvas:
                 fractext.AddText( 'QCD Frac. = %.3f #pm %.2f%%'%(qcdfrac,staterr*100.0) )
                 s.ConfigureText(fractext,text_x1=leg_x1,text_y2 = leg.GetY1NDC()-0.02)
                 fractext.Draw()
+        # configure legend
+        #if not lumi_x: lumi_x = leg.GetX1NDC() - 0.2
+        #if not lumi_y: lumi_y = leg.GetY2NDC() - SuCanvas.g_legend_height_per_entry
+        if not lumi_x: lumi_x = leg.GetX1NDC() + 0.2
+        if not lumi_y: lumi_y = leg.GetY1NDC() + 0.02
+        s.drawLuminosity(lumi_x,lumi_y)
         # ratio
         s.cd_ratioPad();
         hratio = s.hratio = data.Clone("hratio")

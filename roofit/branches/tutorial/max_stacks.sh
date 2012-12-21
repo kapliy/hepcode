@@ -18,7 +18,7 @@ function run() {
     # 0.92,1.095
     PB=2
     if [ "${PT}" == "20" ]; then PB=0; fi
-    ./stack2.py -o ${out} --hsource "d3_eta_lpt_met:y:${PB}:-1:z:0:-1" --bin 10,-2.5,2.5 --refline 0.90,1.11 ${common} &> ${log}.eta &
+    ./stack2.py -o ${out} --hsource "d3_eta_lpt_met:y:${PB}:-1:z:0:-1" --bin 10,-2.5,2.5 --refline 0.90,1.12 ${common} &> ${log}.eta &
     #./stack2.py -o ${out} --hsource "d3_abseta_lpt_eta:${fiducial}" --bin 10,-2.5,2.5 --rebin 2 --refline 0.85,1.175 ${common} &> ${log}.eta &
     ./stack2.py -o ${out} --hsource "d3_abseta_lpt_phi:${fiducial}" --bin 10,-3.14,3.14 --rebin 4 --refline 0.85,1.175 ${common} &> ${log}.phi &
     ./stack2.py -o ${out} --hsource "d3_abseta_lpt_wmt:${fiducial}" --bin 100,40,120 --rebin 2 --refline 0.85,1.175 ${common} &> ${log}.wmt &

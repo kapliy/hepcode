@@ -230,7 +230,7 @@ elif False:  # optimized for pdfs
     SuCanvas.g_text_size = 18
     SuCanvas.g_legend_height_per_entry = 0.043
 else:
-    SuCanvas.g_legend_height_per_entry = 0.06
+    SuCanvas.g_legend_height_per_entry = 0.05
 # Apply plot style
 SuCanvas.cgStyle = SuCanvas.ControlPlotStyle()
 
@@ -1401,7 +1401,7 @@ if mode=='abcd_mc':
     c.plotAny(hs,M=M)
     OMAP.append(c)
 
-if mode=='qcd_isolation':
+if mode in ('qcd_isolation','qcd_charge'):
     SuStackElm.new_scales = False
     iq = opts.charge
     ieta = int(opts.ieta) if opts.ieta else None
@@ -1434,31 +1434,34 @@ if mode=='qcd_isolation':
         x += ' && l_pt>=%.2f && l_pt<=%.2f'%(ptbins[ipt],ptbins[ipt+1])
     hs = []
     hs.append( po.qcd('a',spRN.clone(pre = make_H(pre)+x)) )
-    hs.append( po.qcd('otherq',spRN.clone(q=otherq,pre = make_W(pre,2)+x)) )
-    hs.append( po.qcd('b',spRN.clone(pre = make_W(pre,0)+x)) )
-    hs.append( po.qcd('c',spRN.clone(pre = make_W(pre,1)+x)) )
-    hs.append( po.qcd('d',spRN.clone(pre = make_W(pre,2)+x)) )
+    if mode=='qcd_charge':
+        hs.append( po.qcd('otherq',spRN.clone(q=otherq,pre = make_W(pre,2)+x)) )
+    else:
+        hs.append( po.qcd('b',spRN.clone(pre = make_W(pre,0)+x)) )
+        hs.append( po.qcd('c',spRN.clone(pre = make_W(pre,1)+x)) )
+        hs.append( po.qcd('d',spRN.clone(pre = make_W(pre,2)+x)) )
     hs.append( po.sig('sig',spRN.clone(pre = make_H(pre)+x)) ) #signal shape for comparison
     if opts.extra:
         print 'Unitizing all histograms...'
         [h.Unitize() for h in hs]
     c = SuCanvas('MET_SHAPE')
-    c._ratioName = 'Anti-Iso / Nom.'
+    c._ratioName = '#mu^{+} / #mu^{-}' if mode=='qcd_charge' else 'Anti-Iso / Nom.'
     M = PlotOptions()
-    M.msize = 1.0
+    M.msize = 1.3
     M.add('h','QCD: p_{T}^{cone20} / p_{T} < 0.1',color=1,r=0)
-    M.add('h','QCD: p_{T}^{cone20} / p_{T} < 0.1 , opposite charge',r=1)
-    M.add('h','QCD: 0.1 < p_{T}^{cone20} / p_{T} < 0.2',r=1)
-    M.add('h','QCD: 0.1 < p_{T}^{cone40} / p_{T} < 0.2',r=1)
-    M.add('h','QCD: 0.12 < p_{T}^{cone20} / p_{T} < 0.25',r=1)
-    M.add('h','Signal: p_{T}^{cone20} / p_{T} < 0.1',r=0)
+    if mode=='qcd_charge':
+        M.add('h','QCD: p_{T}^{cone20} / p_{T} < 0.1 , opposite charge',r=1)
+    else:
+        M.add('h','QCD: 0.1 < p_{T}^{cone20} / p_{T} < 0.2',r=1)
+        M.add('h','QCD: 0.1 < p_{T}^{cone40} / p_{T} < 0.2',r=1)
+        M.add('h','QCD: 0.12 < p_{T}^{cone20} / p_{T} < 0.25',r=1)
+    M.add('h','Signal: p_{T}^{cone20} / p_{T} < 0.1',r=0,color=46,style=22)
     xaxis_info = [ 'E_{T}^{Miss}' if met=='met' else 'M_{T}^{W}','GeV' ]
     if opts.bin and len(opts.bin.split(','))==3:
         sbin = opts.bin.split(',')
         xaxis_range = [float(sbin[1]),float(sbin[2])]
         xaxis_info.append (xaxis_range)
     if True:
-        SuCanvas.g_text_size = 16
         SuCanvas.g_legend_y2_ndc = 0.9
         SuCanvas.g_legend_x1_ndc = 0.2
         SuCanvas.g_legend_height_per_entry = 0.06
