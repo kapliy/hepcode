@@ -58,6 +58,9 @@ parser.add_option("--lrebin",dest="lrebin",
 parser.add_option("--llog", default=False,
                   action="store_true",dest="llog",
                   help="If set to true, QCD fit in lvar is plotted on log scale")
+parser.add_option("--lnofits", default=False,
+                  action="store_true",dest="lnofits",
+                  help="If set to true, QCD fits are performed but not saved in the end")
 parser.add_option("--extra",dest="extra",
                   type="string", default=None,
                   help="General-purpose extra parameter")
@@ -920,7 +923,8 @@ if mode=='prepare_qcd_1d' or mode=='prepare_qcd_2d':
     po.choose_qcd(opts.bgqcd)
     DONE = []
     # variation of ewk subtraction
-    for sig in (5,4,2,1):
+    for sig in (5,4,1):
+        ewklist = (5,4,1) if sig==5 else (5,)
         for ewk in (5,4,2,1):
             for tau in (0,2,5):
                 po.choose_sig(sig)
@@ -979,9 +983,12 @@ def qcdfit(spR2,name=None):
     key = po.scalekeys[-1]
     scales = po.scales[key]
     chi2,ndf = scales[8],scales[9]
-    serr = scales[1]/scales[0] # absolute to relative
+    relerr = scales[1]/scales[0]
     nqcd = hstack.nominal().stack_bg_events()
-    return nqcd,nqcd*serr,chi2,ndf
+    ndata = hdata.histo_total_events()
+    newk = hstack.stack_ewknosig_events()
+    ntot =  hstack.stack_total_events()
+    return ndata,ntot,newk,  nqcd,nqcd*relerr, chi2,ndf
 
 def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
     """ Performs a full set of systematic QCD fits in a given eta x pt slice """
@@ -1010,7 +1017,6 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
     spL = spL2.clone(q=iq, histo = opts.var + ltail , qcdadd = qcdadd)
     # map of individual systematic histograms & fits: (nqcd,CHI2,NDF)
     MQCD = {}
-    assert False,' FIXMEAK: work in progress'
     # map of systematic groups (worst deviation in a group):
     #   (label,nqcd,delta_qcd,delta_qcd/Nw*100,delta_qcd/nqcd_nom*100.0,)
     # old scheme: SVAL,SABS,SREL,SLAB = [],[],[],[]
@@ -2036,7 +2042,8 @@ sys.stdout.flush()
 for key,val in po.fits.iteritems():
     print 'Adding a normalization fit:',po.fitnames[key]
     val.savename = po.fitnames[key]
-    OMAP.append(val)
+    if not opts.lnofits:
+        OMAP.append(val)
 
 # save images
 if not opts.antondb:
