@@ -8,6 +8,27 @@ if not 'libPyRoot' in sys.modules: #hack to get rid of TenvRec warnings
     gErrorIgnoreLevel=ROOT.kInfo
     sys.modules['libPyROOT'].gROOT.GetListOfGlobals().FindObject('gErrorAbortLevel').GetAddress().__setitem__(0,5001)
 
+# a few functions to manipulate QCD fit results saved via antondb in the MSYS/MGROUPS format
+def qcdfit_sys_deviations(MSYS,MGROUPS,idx=6):
+    """ Returns an array of systematic deviations from nominal
+    If idx=6, this computes deviations for QCD, and thus includes a special fit error category
+    [0]    [1]     [2]       [3]  [4]  [5] [6]       [7]        [8] [9]    [10]
+    [name,  ndata,ndatasub,  ntot,nsig,newk,nqcd,  nqcd*relerr, chi2,ndf,   iref]
+    """
+    res = []
+    assert len(MSYS[0])==1
+    # loop over all groups, beyond Nominal
+    for IGRP in MSYS[1:]:
+        devs = []
+        for INAME,ISYS in IGRP.iteritems():
+            idx_nom = ISYS[-1] # normaly this is zero, except for PS/ME error
+            NOM = MSYS[idx_nom].values()[0]
+            devs.append( abs(   ISYS[idx]-NOM[idx]   ) )
+        res.append(  max(devs)  )
+    assert len(MGROUPS)-1 == len(res)
+    return res
+
+# other stuff
 def dump_pickle(data,name='data.pkl'):
     import pickle,FileLock
     with FileLock.FileLock(name):

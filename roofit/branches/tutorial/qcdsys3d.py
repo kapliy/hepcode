@@ -86,7 +86,7 @@ def make_qcd(name):
                 elif name in ('qcd_up','qcd_down'):
                     nom = MQCD['Nominal']
                     # hardcoded list of indices that are not automatically propagated in EWUnfold (so we need to propagate them)
-                    PROPi = [0,1]    # fit error; met fit range
+                    PROPi = [0,1]    # fit error; met fit range #TODO: missing choice of anti-isolation
                     err = math.sqrt( sum([ (SABS[i]*SABS[i]) for i in PROPi ]) )
                     v = nom+err if name=='qcd_up' else nom-err
                     if v<0:

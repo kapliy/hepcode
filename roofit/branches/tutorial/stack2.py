@@ -902,58 +902,41 @@ if mode=='ALL' or mode=='all':
 # saves a collection of 2D or 1D histograms to be used as input into Max's unfolding
 if mode=='prepare_qcd_1d' or mode=='prepare_qcd_2d':
     var = None
+    iptmin = 2 if opts.ipt=='25' else 1
     if opts.etamode==2: # |eta| bins
-        var = 'd2_abseta_lpt' if mode=='prepare_qcd_2d' else 'lepton_absetav'
+        var = 'd2_abseta_lpt' if mode=='prepare_qcd_2d' else 'd2_abseta_lpt:y:%s:-1'%iptmin
     elif opts.etamode==1:
-        var = 'd2_eta_lpt' if mode=='prepare_qcd_2d' else 'lepton_etav'
+        var = 'd2_eta_lpt' if mode=='prepare_qcd_2d' else 'd2_eta_lpt:y:%s:-1'%iptmin
     assert var
     # disable QCD scaling since here we are just dumping histograms
     SuStackElm.new_scales = False
+    assert opts.bgqcd in (3,4), 'Possible error: prepare_qcd should operate on bgqcd = 3 (anti-iso) or 4 (anti-iso + bg subtraction)'
     assert opts.extra
     fname = opts.extra
     itot = 0
     # prepare for nominal
-    sig=5
-    tau=2
-    ewk=5
-    po.choose_sig(sig)
-    po.choose_tau(tau)
-    po.choose_ewk(ewk)
-    assert opts.bgqcd in (3,4), 'Possible error: prepare_qcd should operate on bgqcd = 3 (anti-iso) or 4 (anti-iso + bg subtraction)'
-    po.choose_qcd(opts.bgqcd)
-    DONE = []
-    # variation of ewk subtraction
-    for sig in (5,4,1):
-        ewklist = (5,4,1) if sig==5 else (5,)
-        for ewk in (5,4,2,1):
-            for tau in (0,2,5):
-                po.choose_sig(sig)
-                po.choose_tau(tau)
-                po.choose_ewk(ewk)
-                if (sig,ewk,tau) not in DONE:
-                    po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),mode='RECREATE' if itot==0 else 'UPDATE',dname='POS_sig%d_tau%d_ewk%d'%(sig,tau,ewk)); itot+=1
-                    po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_sig%d_tau%d_ewk%d'%(sig,tau,ewk));  itot+=1
-                DONE.append( (sig,ewk,tau) )
-    # variation of qcd template shape (iso-window instead of iso-reversion)
-    if False:
-        sig=5
-        tau=2
-        ewk=5
+    sig,tau,ewk = None,None,None
+    def nom(sig=5,tau=2,ewk=5,qcd=opts.bgqcd):
+        sig=5; tau=2; ewk=5
         po.choose_sig(sig)
         po.choose_tau(tau)
         po.choose_ewk(ewk)
-        sysdir_wind=['Nominal','Nominal','IsoWind20']
-        po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var,sysdir=sysdir_wind),dname='POS_sig%d_tau%d_ewk%d_qcdwind'%(sig,tau,ewk)); itot+=1
-        po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var,sysdir=sysdir_wind),dname='NEG_sig%d_tau%d_ewk%d_qcdwind'%(sig,tau,ewk)); itot+=1
+        po.choose_qcd(qcd)
+        return sig,tau,ewk,qcd
+    sig,tau,ewk,qcd = nom()
+    # variation of ewk subtraction
+    ewklist = (5,4,1)  # not used right now: Z statistics too low for these variations!
+    ewklist = (5,)
+    for ewk in ewklist:
+        for tau in (2,):
+            po.choose_tau(tau)
+            po.choose_ewk(ewk)
+            po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),mode='RECREATE' if itot==0 else 'UPDATE',dname='POS_sig%d_tau%d_ewk%d'%(sig,tau,ewk)); itot+=1
+            po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_sig%d_tau%d_ewk%d'%(sig,tau,ewk));  itot+=1
     # variation of qcd template shape: monte-carlo-driven template. This is automatically pre-normalized!
     if True:
         SuStackElm.new_scales = True
-        sig=5
-        tau=2
-        ewk=5
-        po.choose_sig(sig)
-        po.choose_tau(tau)
-        po.choose_ewk(ewk)
+        sig,tau,ewk,qcd = nom()
         po.choose_qcd(0)
         po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),dname='POS_sig%d_tau%d_ewk%d_qcdmc'%(sig,tau,ewk)); itot+=1
         po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_sig%d_tau%d_ewk%d_qcdmc'%(sig,tau,ewk)); itot+=1
@@ -961,12 +944,7 @@ if mode=='prepare_qcd_1d' or mode=='prepare_qcd_2d':
         po.choose_qcd(opts.bgqcd)
     # variation of electroweak normalization
     if True:
-        ewk=5
-        tau=2
-        sig=5
-        po.choose_sig(sig)
-        po.choose_tau(tau)
-        po.choose_ewk(ewk)
+        sig,tau,ewk,qcd = nom()
         SuSample.xsecerr = 1
         po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),dname='POS_sig%d_tau%d_ewk%d_xsecup'%(sig,tau,ewk)); itot+=1
         po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_sig%d_tau%d_ewk%d_xsecup'%(sig,tau,ewk));  itot+=1
@@ -974,24 +952,38 @@ if mode=='prepare_qcd_1d' or mode=='prepare_qcd_2d':
         po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),dname='POS_sig%d_tau%d_ewk%d_xsecdown'%(sig,tau,ewk)); itot+=1
         po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_sig%d_tau%d_ewk%d_xsecdown'%(sig,tau,ewk));  itot+=1
 
-def qcdfit(spR2,name=None):
-    """ Performs a single QCD fit """
-    hdata,hstack = plot_stack(spR2.clone(),q=opts.charge,m=1,new_scales=True,pave=True,name=name if name else po.get_flagsum())
+def qcdfit(name,spR2,iref=0,apply_stat=False):
+    """ Performs a single QCD fit and returns the data, breakdown of stack numbers, and fit quality
+    apply_stat==True modifies nqcd by adjusting it up up by 1 fit error
+    iref is the reference index to qcdfit() wrt to which this variation is considered
+    (e.g., mc@nlo and powheg_herwig variations are wrt each other)
+    """
+    hdata,hstack = plot_stack(spR2.clone(),q=opts.charge,m=1,new_scales=True,pave=True,name=name)
     global gbg
     gbg.append( (hdata,hstack) )
     hfrac=hstack.nominal().stack_bg_frac()
     key = po.scalekeys[-1]
     scales = po.scales[key]
     chi2,ndf = scales[8],scales[9]
-    relerr = scales[1]/scales[0]
-    nqcd = hstack.nominal().stack_bg_events()
-    ndata = hdata.histo_total_events()
-    newk = hstack.stack_ewknosig_events()
-    ntot =  hstack.stack_total_events()
-    return ndata,ntot,newk,  nqcd,nqcd*relerr, chi2,ndf
+    relerr = scales[1]/scales[0]   # relerr = 0.02, or 2%
+    nqcd = hstack.nominal().stack_qcd_events()
+    ndata = hdata.nominal().histo_total_events()
+    newk = hstack.nominal().stack_ewknosig_events()
+    nsig = hstack.nominal().stack_sig_events()
+    ntot =  hstack.nominal().stack_total_events()
+    ndatasub = ndata - newk - nqcd
+    assert ntot - (newk + nsig + nqcd) < 1.0, "FATAL: numbers don't add up in a stack"
+    delqcd = nqcd*relerr # absolute delta-qcd counts
+    if apply_stat:
+        nqcdnew = nqcd + delqcd
+        ntot = ntot - nqcd + nqcdnew
+        nqcd = nqcdnew
+    #       [0]    [1]     [2]       [3]  [4]  [5] [6]       [7]        [8] [9]    [10]
+    return [name,  ndata,ndatasub,  ntot,nsig,newk,nqcd,   delqcd     , chi2,ndf,   iref]
 
 def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
     """ Performs a full set of systematic QCD fits in a given eta x pt slice """
+    MC_SIMPLE = True # if False, obtain the average of several sig=1 and sig=4 variations
     # cache results
     import antondb
     key = '%s_%s_%s_%s'%(iq,etamode,ieta,ipt)
@@ -999,7 +991,7 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
     if opts.extra:
         a = antondb.antondb(opts.extra)
         if a.load() and key in a.data:
-            return a.data[key]['data']
+            return a.data[key]['MSYS'],a.data[key]['MGROUPS']
     # set defaults for nominal case
     eword = 'eta' if etamode==1 else 'abseta'
     opts.lvar = opts.var = 'd3_%s_lpt_met'%(eword)
@@ -1007,179 +999,161 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
     opts.bgewk = 5
     opts.bgtau = 2
     def nom():
+        """ reverts stack settings to nominal """
         po.choose_sig(opts.bgsig); po.choose_ewk(opts.bgewk); po.choose_tau(opts.bgtau)
+        return
     # prepare fit-related systematics
     ltail = EB(ieta,etamode) + PB(ipt)
     qcdadd={'var':'d3_%s_lpt_met'%(eword)+ltail,'min':0,'max':40,'rebin':2} # adrian nominal
     qcdadd_range={'var':'d3_%s_lpt_met'%(eword)+ltail,'min':5,'max':50,'rebin':2}
     qcdadd_var={'var':'d3_%s_lpt_wmt'%(eword)+ltail,'min':50,'max':85,'rebin':2}
-
+    # clone the stack maker
     spL = spL2.clone(q=iq, histo = opts.var + ltail , qcdadd = qcdadd)
-    # map of individual systematic histograms & fits: (nqcd,CHI2,NDF)
-    MQCD = {}
-    # map of systematic groups (worst deviation in a group):
-    #   (label,nqcd,delta_qcd,delta_qcd/Nw*100,delta_qcd/nqcd_nom*100.0,)
-    # old scheme: SVAL,SABS,SREL,SLAB = [],[],[],[]
-    SALL = []
-    
-    NOM,DEN = None,None
-    def add(hcur,label,hnom=None):
-        """ Add a batch of QCD information for a given systematic group
-        note: we multiply v by 100 """
-        if hnom==None:
-            assert NOM!=None
-            hnom=NOM
-        SALL.append(( label , hcur , hcur-hnom , 100.0*(hcur-hnom)/DEN , 100.0*(hcur-hnom)/NOM ))
-        SLAB.append(label)
-        SVAL.append(hcur)
-        SABS.append(hcur-hnom)
-        SREL.append( 100.0*(hcur-hnom)/DEN )
-        print 'SAVING QCD %d : %s : %.1f  %.3f%%'%( len(SLAB),SLAB[-1],SVAL[-1],SREL[-1])
 
+    # functions to save results
+    res = {}       # systematic variations within a group
+    MSYS = []      # order-preserving list of systematic groups
+    MGROUPS = []   # names of groups
+    def next(nn):
+        MSYS.append(res.copy())
+        MGROUPS.append(nn)
+        res.clear()
+    def add(fitresult):
+        nn = fitresult[0]
+        res[nn] = fitresult
+        
     # nominal
-    nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(),name='Nominal')
-    NOM = nqcd
-    MQCD['Nominal'] = (nqcd,CHI2,NDF)
-    # get the expected number of W events (to convert absolute qcd uncertainty into relative)
-    hdsub = po.data_sub('dsub',spL.clone())
-    DEN = hdsub.nominal().histo_total_events()
-    add(nqcd+nqcde,'Statistical fit error')
+    add( qcdfit('Nominal',spL.clone()) )
+    next('Nominal')
 
     if nomonly:
-        return (SALL , MQCD)
-    
+        return (MSYS,MGROUPS)
+
+    # fit error
+    add( qcdfit('fit_error',spL.clone(),apply_stat=True) )
+    next('Fit error')
+
     # fit range
     if True:
-        nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(qcdadd=qcdadd_range),name='fit_range')
-        MQCD['fit_range'] = (nqcd,CHI2,NDF)
-        add(nqcd,'Fit range')
+        add(qcdfit('met_range',spL.clone(qcdadd=qcdadd_range)))
+        next('Fit range')
 
     # fit variable [careful - big swings]
     if False:
-        nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(qcdadd=qcdadd_var),name='fit_var')
-        MQCD['fit_var'] = (nqcd,CHI2,NDF)
-        add(nqcd,'Fit variable (M_{T}^{W})')
+        add(qcdfit('wmt',spL.clone(qcdadd=qcdadd_var) ))
+        next('Fit variable')
 
     # tau backgrounds [ careful - low statistics, saw a big swing ]
     if False:
         po.choose_tau(5)
-        nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(),name='tau')
-        MQCD['tau'] = (nqcd,CHI2,NDF)
-        add(nqcd,'#tau backgrounds')
+        add(qcdfit('tau_powheg_pythia',spL.clone()))
+        next('#tau backgrounds')
         nom()
 
     # MC modeling:
-    if True:
+    if MC_SIMPLE:
         po.choose_sig(4)
-        nqcd4,nqcde,CHI2,NDF = qcdfit(spL.clone(),name='PowhegJimmy')
-        MQCD['Nominal_PowhegJimmy'] = (nqcd4,CHI2,NDF)
-        add(nqcd4,'MC parton shower',hnom=NOM)
+        add(qcdfit('Nominal_PowhegJimmy',spL.clone()))
+        next('MC parton shower')
         po.choose_sig(1)
-        nqcd1,nqcde,CHI2,NDF = qcdfit(spL.clone(),name='MCNLO')
-        MQCD['Nominal_MCNLO'] = (nqcd1,CHI2,NDF)
-        add(nqcd1,'MC matrix element',hnom=nqcd4)
+        # mcnlo is computed wrt PowhegJimmy
+        add(qcdfit('Nominal_MCNLO',spL.clone() , iref=len(MGROUPS) - 1) )
+        next('MC matrix element')
+        nom()
+    else:
+        mcdirs = ['WptSherpa','IsoWind20m','IsoWind40','PdfMSTW','PdfHERA','PdfNNPDF','PdfABM','ScaleSoftTermsUp_ptHard','ScaleSoftTermsDown_ptHard','ResoSoftTermsUp_ptHard','ResoSoftTermsDown_ptHard','MuonKScaleUp','MuonKScaleDown','MuonCScaleUp','MuonCScaleDown','JetScaleUp','JetScaleDown','JetNPVUp','JetNPVDown','JetMUUp','JetMUDown']
+        def avg_sys(x):
+            """ x = res4 - list of lists. A subset of entries is averaged; others are taken from nominal """
+            out = []
+            out.append( x[0][0] )  # name from Nominal
+            for i in xrange(1,10):
+                xl = [x[z][i] for z in xrange(len(x))]
+                out.append( sum(xl)/len(xl) )
+            out.append( x[0][10] ) # iref from Nominal
+            return out
+        po.choose_sig(4)
+        res4 = []
+        res4.append( qcdfit('Nominal_PowhegJimmy',spL.clone())  )
+        res4.append( qcdfit('Nominal_PowhegJimmy_x1',spL.clone(qcdadd=qcdadd_range))  )
+        res4.append( qcdfit('Nominal_PowhegJimmy_x2',spL.clone(sysdir_qcd='IsoWind20m'))  )
+        res4.append( qcdfit('Nominal_PowhegJimmy_x3',spL.clone(sysdir_qcd='IsoWind40'))  )
+        for i,mcdir in enumerate(mcdirs):
+            res4.append( qcdfit('Nominal_PowhegJimmy_y%d'%i,spL.clone(sysdir_mc=mcdir))  )
+        add( avg_sys(res4) )
+        next('MC parton shower')
+        po.choose_sig(1)
+        res1 = []
+        # mcnlo is computed wrt PowhegJimmy
+        res1.append(qcdfit('Nominal_MCNLO',spL.clone() , iref=len(MGROUPS) - 1) )
+        res1.append( qcdfit('Nominal_MCNLO_x1',spL.clone(qcdadd=qcdadd_range))  )
+        res1.append( qcdfit('Nominal_MCNLO_x2',spL.clone(sysdir_qcd='IsoWind20m'))  )
+        res1.append( qcdfit('Nominal_MCNLO_x3',spL.clone(sysdir_qcd='IsoWind40'))  )
+        for i,mcdir in enumerate(mcdirs):
+            res1.append( qcdfit('Nominal_MCNLO_y%d'%i,spL.clone(sysdir_mc=mcdir))  )
+        add( avg_sys(res1) )
+        next('MC matrix element')
         nom()
 
     # pt reweighting target
     if True:
-        nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(sysdir_mc='WptSherpa'),name='WptSherpa')
-        MQCD['WptSherpa'] = (nqcd,CHI2,NDF)
-        add(nqcd,'p_{T}^{W} reweighting')
+        add(qcdfit('WptSherpa',spL.clone(sysdir_mc='WptSherpa')))
+        next('p_{T}^{W} reweighting')
 
     # type of anti-isolation
     if True:
-        NQCD_x,NQCD_xd = [],[]
         for x in ['IsoWind20m','IsoWind40']:
-            nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(sysdir_qcd=x),name=x)
-            MQCD[x] = (nqcd,CHI2,NDF)
-            NQCD_x.append(nqcd)
-            NQCD_xd.append( abs(nqcd-NOM) )
-        nqcd = NQCD_x[ NQCD_xd.index(max(NQCD_xd)) ] # find max deviation
-        add(nqcd,'Type of anti-isolation')
+            add(qcdfit(x,spL.clone(sysdir_qcd=x)))
+        next('Type of anti-isolation')
 
     # PDF
     if True:
-        NQCD_x,NQCD_xd = [],[]
         for x in ['PdfMSTW','PdfHERA','PdfNNPDF','PdfABM']:
-            nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(sysdir_mc=x),name=x)
-            MQCD[x] = (nqcd,CHI2,NDF)
-            NQCD_x.append(nqcd)
-            NQCD_xd.append( abs(nqcd-NOM) )
-        nqcd = NQCD_x[ NQCD_xd.index(max(NQCD_xd)) ] # find max deviation
-        add(nqcd,'PDF')
+            add(qcdfit(x,spL.clone(sysdir_mc=x)))
+        next('PDF')
 
     # MET scale
     if True:
-        NQCD_x,NQCD_xd = [],[]
         for x in ['ScaleSoftTermsUp_ptHard','ScaleSoftTermsDown_ptHard']:
-            nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(sysdir_mc=x),name=x)
-            MQCD[x] = (nqcd,CHI2,NDF)
-            NQCD_x.append(nqcd)
-            NQCD_xd.append( abs(nqcd-NOM) )
-        nqcd = NQCD_x[ NQCD_xd.index(max(NQCD_xd)) ] # find max deviation
-        add(nqcd,'MET soft scale')
+            add(qcdfit(x,spL.clone(sysdir_mc=x)))
+        next('MET soft scale')
 
     # MET reso
     if True:
-        NQCD_x,NQCD_xd = [],[]
         for x in ['ResoSoftTermsUp_ptHard','ResoSoftTermsDown_ptHard']:
-            nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(sysdir_mc=x),name=x)
-            MQCD[x] = (nqcd,CHI2,NDF)
-            NQCD_x.append(nqcd)
-            NQCD_xd.append( abs(nqcd-NOM) )
-        nqcd = NQCD_x[ NQCD_xd.index(max(NQCD_xd)) ] # find max deviation
-        add(nqcd,'MET soft resolution')
+            add(qcdfit(x,spL.clone(sysdir_mc=x)))
+        next('MET soft resolution')
 
     # muon momentum scale
     if True:
-        NQCD_x,NQCD_xd = [],[]
         for x in ['MuonKScaleUp','MuonKScaleDown','MuonCScaleUp','MuonCScaleDown']:
-            nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(sysdir_mc=x),name=x)
-            MQCD[x] = (nqcd,CHI2,NDF)
-            NQCD_x.append(nqcd)
-            NQCD_xd.append( abs(nqcd-NOM) )
-        nqcd = NQCD_x[ NQCD_xd.index(max(NQCD_xd)) ] # find max deviation
-        add(nqcd,'Muon momentum scale')
+            add(qcdfit(x,spL.clone(sysdir_mc=x)))
+        next('Muon momentum scale')
 
     # muon resolution
     if True:
-        NQCD_x,NQCD_xd = [],[]
         for x in ['MuonResMSUp','MuonResMSDown','MuonResIDUp','MuonResIDDown']:
-            nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(sysdir_mc=x),name=x)
-            MQCD[x] = (nqcd,CHI2,NDF)
-            NQCD_x.append(nqcd)
-            NQCD_xd.append( abs(nqcd-NOM) )
-        nqcd = NQCD_x[ NQCD_xd.index(max(NQCD_xd)) ] # find max deviation
-        add(nqcd,'Muon momentum resolution')
+            add(qcdfit(x,spL.clone(sysdir_mc=x)))
+        next('Muon momentum reso')
 
     # jet energy scale & resolution
     if True:
-        NQCD_x,NQCD_xd = [],[]
         for x in ['JetScaleUp','JetScaleDown','JetNPVUp','JetNPVDown','JetMUUp','JetMUDown']:
-            nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(sysdir_mc=x),name=x)
-            MQCD[x] = (nqcd,CHI2,NDF)
-            NQCD_x.append(nqcd)
-            NQCD_xd.append( abs(nqcd-NOM) )
-        nqcd = NQCD_x[ NQCD_xd.index(max(NQCD_xd)) ] # find max deviation
-        add(nqcd,'Jet energy scale')
+            add(qcdfit(x,spL.clone(sysdir_mc=x)))
+        next('Jet energy scale')
+
     if True:
-        NQCD_x,NQCD_xd = [],[]
         for x in ['JetResolUp','JetResolDown']:
-            nqcd,nqcde,CHI2,NDF = qcdfit(spL.clone(sysdir_mc=x),name=x)
-            MQCD[x] = (nqcd,CHI2,NDF)
-            NQCD_x.append(nqcd)
-            NQCD_xd.append( abs(nqcd-NOM) )
-        nqcd = NQCD_x[ NQCD_xd.index(max(NQCD_xd)) ] # find max deviation
-        add(nqcd,'Jet energy resolution')
+            add(qcdfit(x,spL.clone(sysdir_mc=x)))
+        next('Jet energy resolution')
 
     if a:
-        a.add(key, {'data':(SALL , MQCD )} )
-    return SALL , MQCD
+        a.add(key, {'MSYS':MSYS,'MGROUPS':MGROUPS} )
+    return (MSYS,MGROUPS)
 
 # comprehensive study of qcd fits in 2d: pt x eta bins, using histograms.
 # now also supports 1D and 0D (all-inclusive) fits
 # this version runs ALL necessary fits for a given pt/eta bin, and also produces summary plots
-if mode=='qcdfit_sys':
+if mode in ('qcdfit','qcdfit_sys'):
     spR.enable_nominal()
     iq = opts.charge
     ipt  = opts.ipt if opts.ipt in ('ALL','ALL25') else int(opts.ipt)
@@ -1190,46 +1164,58 @@ if mode=='qcdfit_sys':
         etas = xrange(1,len(absetabins) if opts.etamode==2 else len(etabins))
     else:
         etas = [ int(opts.ieta) ]
-    # prepare a canvas with a summary of systematics
-    c = SuCanvas('qcd_syst_abs_pt%s_eta%s'%(opts.ipt,opts.ieta))
-    c2 = SuCanvas('qcd_syst_rel_pt%s_eta%s'%(opts.ipt,opts.ieta))
-    c3 = SuCanvas('qcd_frac_pt%s_eta%s'%(opts.ipt,opts.ieta))
     if opts.nomonly:
         SuCanvas.g_legend_x1_ndc = 0.55
-    M = PlotOptions()
-    hs = []
+    # prepare canvases and PlotOptions objects
+    PlotOptions.msize = 1.5
+    c = [None,None,None,None]; M = []; hs = [ [],[],[],[] ]
+    c[0] = SuCanvas('qcd_pt%s_eta%s_syst_abs'%(opts.ipt,opts.ieta))
+    c[1] = SuCanvas('qcd_pt%s_eta%s_syst_rel_qcd'%(opts.ipt,opts.ieta))
+    c[2] = SuCanvas('qcd_pt%s_eta%s_syst_rel_bgsub'%(opts.ipt,opts.ieta))
+    c[3] = SuCanvas('qcd_pt%s_eta%s_ewk_frac'%(opts.ipt,opts.ieta))
+    M = [ PlotOptions() for z in xrange(4) ]
+    h_qcd = None         # nqcd with total error (stat + sys)
+    h_ewk = None         # newk with total error (stat + sys)
+    h_qcd_tot = None     # nqcd / tot[nom]
+    h_ewk_tot = None     # newk / tot[nom]
+    he_qcd = []          # delta-qcd
+    he_qcd_bgsub = []    # delta-qcd / bgsub[nom]
+    he_qcd_rel = []      # delta-qcd / qcd[nom]
+    ####### data returned from qcdfit_slice():
+    ##       [0]    [1]     [2]       [3]  [4]  [5] [6]       [7]        [8] [9]    [10]
+    #       [name,  ndata,ndatasub,  ntot,nsig,newk,nqcd,  nqcd*relerr, chi2,ndf,   iref]
     # perform fits
     do_init = True
-    do_tot = True
     for ieta in etas:
-        SALL , MQCD = qcdfit_slice(spR.clone() , iq,opts.etamode,ieta,ipt , nomonly=opts.nomonly)
-        #SLAB,VAL,SABS,SREL = SALL #FIXME TODO HERE
-        if do_init and do_tot:
-            M.ad('Total',style=20,color=ROOT.kBlack)
-            h = SuSample.make_habseta('h'+'Total') if opts.etamode==2 else SuSample.make_heta('h'+'Total')
-            hs.append(h)
-        if do_tot:
+        MSYS , MGROUPS = qcdfit_slice(spR.clone() , iq,opts.etamode,ieta,ipt , nomonly=opts.nomonly)
+        NOM = MSYS[0].values()[0]
+        SREL = qcdfit_sys_deviations(MSYS,MGROUPS)
+        SLAB = MGROUPS[1:]
+        if do_init: # total systematic error
+            for zz in xrange(3):
+                M[zz].ad('Total',style=20,color=ROOT.kBlack)
+                hname = 'h%d_Total'%zz
+                h = SuSample.make_habseta(hname) if opts.etamode==2 else SuSample.make_heta(hname)
+                hs[zz].append(h)
+        brange = xrange(0,hs[0][0].GetNbinsX()+1) if ieta=='ALL' else ([ieta,0] if ieta==1 else [ieta,])
+        if True:
             STOT = math.sqrt( sum([ xx*xx for xx in SREL ]) )
-            if ieta=='ALL':
-                [ hs[0].SetBinContent(ibin,STOT)  for ibin in xrange(0,hs[0].GetNbinsX()+1) ]
-            else:
-                hs[0].SetBinContent(ieta,STOT)
-                if ieta==1: hs[0].SetBinContent(ieta-1,STOT)
-        for i,val in enumerate( SVAL):
+            [ hs[0][0].SetBinContent(ibin,STOT) for ibin in brange ]
+            [ hs[1][0].SetBinContent(ibin,STOT/NOM[6]*100.0) for ibin in brange ]
+            [ hs[2][0].SetBinContent(ibin,STOT/NOM[2]*100.0) for ibin in brange ]
+        assert len(SREL)==len(SLAB)
+        for i,val in enumerate( SREL ):
             if do_init:
-                M.ad(SLAB[i])
-                h = SuSample.make_habseta('h'+SLAB[i]) if opts.etamode==2 else SuSample.make_heta('h'+SLAB[i])
-                hs.append(h)
-            if ieta=='ALL':
-                [ hs[i+1].SetBinContent(ibin, abs(SREL[i]) ) for ibin in xrange(0,hs[i+1].GetNbinsX()+1) ]
-            else:
-                hs[i+1].SetBinContent(ieta, abs(SREL[i]) )
-                if ieta==1: hs[0].SetBinContent(ieta-1, abs(SREL[i]) )
-            print SLAB[i],'%.3f%%'%(SREL[i])
+                for zz in xrange(3):
+                    M[zz].ad('%s'%SLAB[i])
+                    hname = 'h%d_%s'%(zz,SLAB[i])
+                    h = SuSample.make_habseta(hname) if opts.etamode==2 else SuSample.make_heta(hname)
+                    hs[zz].append(h)
+            [ hs[0][i+1].SetBinContent(ibin, val ) for ibin in brange ]
+            [ hs[1][i+1].SetBinContent(ibin, val/NOM[6]*100.0 ) for ibin in brange ]
+            [ hs[2][i+1].SetBinContent(ibin, val/NOM[2]*100.0 ) for ibin in brange ]
+            print SLAB[i],'%.3f%%'%(val/NOM[2])
         do_init=False
-    # clear caches
-    #po.fits={}
-    #OMAP = []
     # save plots
     if True:
         SuCanvas.g_marker_size = 1.8
@@ -1238,26 +1224,28 @@ if mode=='qcdfit_sys':
         SuCanvas.g_text_size_legend = 14
         SuCanvas.g_text_size_pave = 21
         SuCanvas.g_legend_height_per_entry = 0.023
-    M.msize = SuCanvas.g_marker_size
-    sgn = '+' if iq==0 else '-'
+        PlotOptions.msize = SuCanvas.g_marker_size
     ptinfo = ''
     if ipt in ('ALL','ALL25'):
-        ptinfo = 'p_${T} > %d'%(20 if ipt=='ALL' else 25)
+        ptinfo = 'p_{T} > %d'%(20 if ipt=='ALL' else 25)
     elif ipt==len(ptbins)-1:
         ptinfo = 'p_{T} > %d'%(ptbins[ipt])
     else:
         ptinfo = '%d < p_{T} < %d'%(ptbins[ipt-1],ptbins[ipt])
+    sgn = '+' if iq==0 else '-'
     pave = ['W^{%s} #rightarrow #mu^{%s} #nu'%(sgn,sgn),'',ptinfo]
-    xaxis_info = [ '#eta' if opts.etamode==1 else '|#eta|',None  , 'QCD Unc. / N_{W}^{expected} (%)' , None]
-    maxh = 3.0
-    if iq==0 and ipt==1: maxh=16.0
-    if iq==0 and ipt==7: maxh=6.0
-    if iq==1 and ipt==1: maxh=16.0
-    if iq==1 and ipt==6: maxh=8.0
-    if iq==1 and ipt==7: maxh=6.0
+    ys = []
+    ys.append( [ 'QCD Unc. (event counts)' , None] )
+    ys.append( [ 'QCD Unc. / N_{QCD} (%)' , None] )
+    ys.append( [ 'QCD Unc. / N_{W}^{expected} (%)' , None] )
+    xaxis_info = [ '#eta' if opts.etamode==1 else '|#eta|',None ]
+    maxh = 2.5
+    maxp = [0.0,0.5,1.0,3.0,5.0,10.0,20.0,30.0,50.0,100.0]
     if opts.ieta in ('LOOP','ALL'): # only plot if we are looping over all eta
-        c.plotAny(hs,M=M,height=[0,maxh],drawopt='LP',xaxis_info=xaxis_info,pave=pave)
-        c.SaveSelf()
+        for zz in xrange(3):
+            height = maxp if zz in (1,2) else maxh
+            c[zz].plotAny(hs[zz],M=M[zz],height=height,drawopt='LP',xaxis_info=xaxis_info+ys[zz],pave=pave)
+            c[zz].SaveSelf()
     if opts.exit: dexit()
 
 # Study different MC weights.

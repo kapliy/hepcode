@@ -1,20 +1,24 @@
 #!/bin/bash
 
 # Saved qcd histograms for Max
-input=/share/t3data3/antonk/ana/ana_v29I_12042012_edboard_stacoCB_all
 source config.sh
 
-bgqcd=3
-name="IN_12102012_ALL.v1"
+name=${INDB}
 
-bgqcd=4
-name="IN_12042012_ALL.v2"
+# unfolding in |eta|
+#./stack2.py -m prepare_qcd_2d --input ${input} -b -o TEST -t TEST --bgqcd ${bgqcd} --extra "${name}.abseta.2D.root" --etamode 2 &> LOG.PREP.1 &
 
-./stack2.py -m prepare_qcd_2d --input ${input} -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --cut "mcw*puw*wptw*effw*isow*trigw" --bgsig 5 --bgewk 5 --bgqcd ${bgqcd} --extra "${name}.abseta.2D.root" &> LOG.PREP.1 &
-./stack2.py -m prepare_qcd_1d --input ${input} -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --cut "mcw*puw*wptw*effw*isow*trigw" --bgsig 5 --bgewk 5 --bgqcd ${bgqcd} --extra "${name}.abseta.1D.root" &> LOG.PREP.2 &
+./stack2.py -m prepare_qcd_1d --input ${input} -b -o TEST -t TEST --bgqcd ${bgqcd} --extra "${name}.abseta.1D.pt20.root" --ipt 20 --etamode 2 &> LOG.PREP.2 &
+#./stack2.py -m prepare_qcd_1d --input ${input} -b -o TEST -t TEST --bgqcd ${bgqcd} --extra "${name}.abseta.1D.pt25.root" --ipt 25 --etamode 2 &> LOG.PREP.3 &
 
-./stack2.py -m prepare_qcd_2d --input ${input} -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --cut "mcw*puw*wptw*effw*isow*trigw" --bgsig 5 --bgewk 5 --bgqcd ${bgqcd} --extra "${name}.eta.2D.root" --etamode 1 &> LOG.PREP.3 &
-./stack2.py -m prepare_qcd_1d --input ${input} -b --var "fabs(l_eta)" --bin 10,0.0,2.5 --hsource "lepton_absetav" -o TEST -t TEST --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --cut "mcw*puw*wptw*effw*isow*trigw" --bgsig 5 --bgewk 5 --bgqcd ${bgqcd}  --extra "${name}.eta.1D.root" --etamode 1 &> LOG.PREP.4 &
+#./stack2.py -m prepare_qcd_0d --input ${input} -b -o TEST -t TEST --bgqcd ${bgqcd} --extra "${name}.abseta.0D.pt20.root" --ipt 20 --etamode 2 &> LOG.PREP.4 &
+#./stack2.py -m prepare_qcd_0d --input ${input} -b -o TEST -t TEST --bgqcd ${bgqcd} --extra "${name}.abseta.0D.pt25.root" --ipt 25 --etamode 2 &> LOG.PREP.5 &
+
+# DEPRECATED: unfolding in eta, as opposed to |eta|
+if [ "0" == "1" ]; then
+    ./stack2.py -m prepare_qcd_2d --input ${input} -b -o TEST -t TEST --bgqcd ${bgqcd} --extra "${name}.eta.2D.root" --etamode 1 &> LOG.PREP.8 &
+    ./stack2.py -m prepare_qcd_1d --input ${input} -b -o TEST -t TEST --bgqcd ${bgqcd} --extra "${name}.eta.1D.root" --etamode 1 &> LOG.PREP.9 &
+fi
 
 echo "Please wait..."
 wait

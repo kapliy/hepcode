@@ -15,12 +15,12 @@ MAP_BGSIG = {0:'pythia',1:'mcnlo',2:'alpgen_herwig',3:'alpgen_pythia',4:'powheg_
 MAP_BGQCD = {0:'mc',1:'bb',2:'JX',3:'driven',4:'driven_sub',10:'mc_driven'}
 # this is used to do generator systematics
 MCMAP = {}
-MCMAP['mc_powheg_pythia_wminmunu'] = { 1 : 'mc_mcnlo_wminmunu' , 4 : 'mc_powheg_herwig_wminmunu' }
-MCMAP['mc_powheg_pythia_wplusmunu'] = { 1 : 'mc_mcnlo_wplusmunu' , 4 : 'mc_powheg_herwig_wplusmunu' }
-MCMAP['mc_powheg_herwig_wminmunu'] = { 1 : 'mc_mcnlo_wminmunu' , 5 : 'mc_powheg_pythia_wminmunu' }
-MCMAP['mc_powheg_herwig_wplusmunu'] = { 1 : 'mc_mcnlo_wplusmunu' , 5 : 'mc_powheg_pythia_wplusmunu' }
-MCMAP['mc_mcnlo_wminmunu'] = { 4 : 'mc_powheg_herwig_wminmunu' , 5 : 'mc_powheg_pythia_wminmunu' }
-MCMAP['mc_mcnlo_wplusmunu'] = { 4 : 'mc_powheg_herwig_wplusmunu' , 5 : 'mc_powheg_pythia_wplusmunu' }
+MCMAP['mc_powheg_pythia_wminmunu'] = { 1 : 'mc_mcnlo_wminmunu' , 4 : 'mc_powheg_herwig_wminmunu' , 5 : 'mc_powheg_pythia_wminmunu' }
+MCMAP['mc_powheg_pythia_wplusmunu'] = { 1 : 'mc_mcnlo_wplusmunu' , 4 : 'mc_powheg_herwig_wplusmunu' , 5 : 'mc_powheg_pythia_wplusmunu' }
+MCMAP['mc_powheg_herwig_wminmunu'] = { 1 : 'mc_mcnlo_wminmunu' , 4 : 'mc_powheg_herwig_wminmunu'  , 5 : 'mc_powheg_pythia_wminmunu' }
+MCMAP['mc_powheg_herwig_wplusmunu'] = { 1 : 'mc_mcnlo_wplusmunu' , 4 : 'mc_powheg_herwig_wplusmunu' , 5 : 'mc_powheg_pythia_wplusmunu' }
+MCMAP['mc_mcnlo_wminmunu'] = { 1 : 'mc_mcnlo_wminmunu' , 4 : 'mc_powheg_herwig_wminmunu' , 5 : 'mc_powheg_pythia_wminmunu' }
+MCMAP['mc_mcnlo_wplusmunu'] = { 1 : 'mc_mcnlo_wplusmunu' , 4 : 'mc_powheg_herwig_wplusmunu' , 5 : 'mc_powheg_pythia_wplusmunu' }
 
 class SuSys:
     """ Generic class that describes where to get the data for one histogram (systematic).
@@ -371,10 +371,12 @@ class SuSys:
         return qcdevts
     def stack_qcd_events(s,overflow=True):
         return s.stack_bg_events(1,overflow)
+    def stack_sig_events(s,overflow=True):
+        return s.stack_bg_events(0,overflow)
     def stack_ewknosig_events(s,overflow=True):
         """ number of electroweak background events, excluding signal """
         NBG = s.stack.GetStack().GetLast()
-        bglist = range(0,NBG-1)
+        bglist = range(2,NBG+1)
         return sum( [ s.stack_bg_events(ibg,overflow) for ibg in bglist ] )
     def update_var(s,histo,bin=None):
         """ Updates histogram name and ntuple-expression (aka variable)
@@ -587,10 +589,11 @@ class SuPlot:
             s.flat.append(res[-1])
         def add4(n,ss,unfss,bgsig,xadd=None):
             """ Clones with different MC unfolding matrix """
-            if ss in nom.unfold['mc']: return
+            if ss in nom.unfold['mc']: return False
             res.append(nom.clone(name=n,unfdir=unfss,bgsig=bgsig,qcdadd=xadd))
             res[-1].unfold['mc'] = ss
             s.flat.append(res[-1])
+            return True
         def next(nn):
             s.sys.append(res[:])
             s.groups.append(nn)
@@ -679,10 +682,16 @@ class SuPlot:
             next('QCD_FRAC')
         # Signal MC systematic (previously: unfolding systematic)
         if True and 'mc' in nom.unfold:
-            add4('Signal_MCNLO','mcnlo','Nominal',1,xadd=qcdadd)
-            add4('Signal_PowhegJimmy','powheg_herwig','Nominal',4,xadd=qcdadd)
-            add4('Signal_PowhegPythia','powheg_pythia','Nominal',5,xadd=qcdadd)
-            next('UNFOLDING')
+            if 'powheg_pythia' in nom.unfold['mc']:
+                add4('unfoldMCNLO','mcnlo','Nominal',1,xadd=qcdadd)
+                next('Generator ME')
+                add4('unfoldPowhegJimmy','powheg_herwig','Nominal',4,xadd=qcdadd)
+                next('Generator PS')
+            else:
+                add4('unfoldMCNLO','mcnlo','Nominal',1,xadd=qcdadd)
+                add4('unfoldPowhegJimmy','powheg_herwig','Nominal',4,xadd=qcdadd)
+                add4('unfoldPowhegPythia','powheg_pythia','Nominal',5,xadd=qcdadd)
+                next('UNFOLDING')
         assert len(s.sys)==len(s.groups)
         print 'Created systematic variations: N =',len(s.sys)
     def update_errors(s,sysonly=False,force=False,rebin=1,scale=1,renorm=False):
@@ -1121,6 +1130,9 @@ class SuSample:
         sh = s
         def get_sh(d):
             if d.bgsig!= None and s.name in MCMAP and 'driven' not in s.flags:
+                if d.bgsig not in MCMAP[s.name]:
+                    print 'DEBUG:',s.name,d.bgsig
+                    print 'DEBUG:',MCMAP
                 assert d.bgsig in MCMAP[s.name]
                 sh = s.po.find_sample( MCMAP[s.name][d.bgsig] , gname='sig_'+MAP_BGSIG[d.bgsig] )
                 assert sh,'ERROR: unable to change signal sample to a different generator'
@@ -1240,6 +1252,7 @@ class SuSample:
         haxis = hbase.split(':')[1]  # y
         assert haxis in ('x','y')
         imin,imax = [int(cc) for cc in hbase.split(':')[2:2+2]]
+        haxisP = [z for z in ['x','y'] if z!=haxis][0]
         d.histo = horig
         res2d = s.GetHisto(hname,d.h_path(flags=s.flags))
         if not res2d:
@@ -1253,7 +1266,7 @@ class SuSample:
             d.histo = hbase
             return None   # be careful, returning None is a recipe for not noticing problems
         #print 'DEBUG: ',res2d.GetName(),hbase
-        res = getattr(res2d,'Projection'+haxis.upper())(res2d.GetName()+'_%s%d%d'%(haxis,imin,imax),imin,imax,'e')
+        res = getattr(res2d,'Projection'+haxisP.upper())(res2d.GetName()+'_%s%d%d'%(haxis,imin,imax),imin,imax,'e')
         assert res,'Failed to perform 2d projection'
         if s.lumi:
             res.Scale(s.scale(evcnt = s.choose_evcount('')))
@@ -1306,7 +1319,7 @@ class SuSample:
         return res
     def histo_h(s,hname,d,rebin=1.0):
         """ retrieve a particular histogram; path is re-built manually"""
-        # in case we're asking for a projection from a 2d histogram
+        # in case we're asking for a projection from a 2d/3d histogram
         if len(d.histo.split(':'))==7:
             return s.histo_h_3dproj(hname,d,rebin)
         elif len(d.histo.split(':'))==4:
@@ -2008,7 +2021,7 @@ class SuStack:
                     if name=='qcd':
                         if isys==1: title = name
                         else: continue
-                    if re.match('unf',sinst.name) or re.match('qcd',sinst.name): continue
+                    if sinst.name in ('qcdup','qcddown'): continue
                     hs.append( sinst.h )
                     assert hs[-1],'Failed to find systematic %s in sample %s'%(sinst.name,name)
                     hs[-1].SetName(title)
