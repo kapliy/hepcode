@@ -13,18 +13,22 @@ fi
 source config.sh
 
 # manual run
-if [ "1" == "1" ]; then
-    ./stack2.py --nomonly --input ${input} -b --charge ${iq} --lvar d3_abseta_lpt_met --lbin 50,0,40 --isofail IsoWind20 -o TEST -t Q${iq} -m qcdfit_sys --bgsig ${bgsig} --bgewk 5 --bgtau 2 --bgqcd 4 --ieta 1 --ipt ALL --var d3_abseta_lpt_met --xsecerr 0 --etamode 2 --rebin 4
+if [ "0" == "1" ]; then
+    ./stack2.py --exit --input ${input} -b --charge ${iq} --lvar d3_abseta_lpt_met --lbin 50,0,40 --isofail IsoWind20 -o TEST -t Q${iq} -m qcdfit --bgsig ${bgsig} --bgewk 5 --bgtau 2 --bgqcd 4 --ieta ALL --ipt ALL --var d3_abseta_lpt_met --xsecerr 0 --etamode 2 --rebin 4
 fi
 
-#nomonly=" --nomonly"  # to save actual QCD plots
+#nomonly=" --nomonly"  # to save actual QCD plots [for a big table in the paper]
 nomonly=" --extra ${DB} --exit"   # to make systematic summary plots
-if [ "0" == "1" ]; then
-    for iq in 0 1; do 
+if [ "1" == "1" ]; then
+    for iq in 0 1; do
+	# fits in eta slices
 	for ipt in {1..7} ALL ALL25; do
 	    ./stack2.py ${nomonly} --input ${input} -b --charge ${iq} --lvar d3_abseta_lpt_met --lbin 50,0,40 --isofail IsoWind20 -o ${out} -t Q${iq} -m qcdfit_sys --bgsig ${bgsig} --bgewk 5 --bgtau 2 --bgqcd 4  --ipt ${ipt} --var d3_abseta_lpt_met --xsecerr 0 --etamode 2 --rebin 4 --ieta LOOP &> LOG.abseta.q${iq}.pt${ipt} &
 	done
-	./stack2.py ${nomonly} --input ${input} -b --charge ${iq} --lvar d3_abseta_lpt_met --lbin 50,0,40 --isofail IsoWind20 -o ${out} -t Q${iq} -m qcdfit_sys --bgsig ${bgsig} --bgewk 5 --bgtau 2 --bgqcd 4  --ipt ALL --var d3_abseta_lpt_met --xsecerr 0 --etamode 2 --rebin 4 --ieta ALL  &> LOG.abseta.q${iq}.inclusive &
+	# inclusive fits
+	for ipt in ALL ALL25; do
+	    ./stack2.py ${nomonly} --input ${input} -b --charge ${iq} --lvar d3_abseta_lpt_met --lbin 50,0,40 --isofail IsoWind20 -o ${out} -t Q${iq} -m qcdfit_sys --bgsig ${bgsig} --bgewk 5 --bgtau 2 --bgqcd 4  --ipt ${ipt} --var d3_abseta_lpt_met --xsecerr 0 --etamode 2 --rebin 4 --ieta ALL  &> LOG.abseta.q${iq}.inc25.${ipt} &
+	done
     done
 fi
 

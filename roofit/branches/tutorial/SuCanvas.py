@@ -740,8 +740,15 @@ class SuCanvas:
                     hdraw.GetYaxis().SetTitle( xaxis_info[2] + ' [%s]'%xaxis_info[3])
         # axis ranges
         maxh = max([h.GetMaximum() for h in hs])
-        if type(height)==type([]):
+        if type(height)==type([]) and len(height)==2:
             hs[0].GetYaxis().SetRangeUser(height[0],height[1]);
+        elif type(height)==type([]) and len(height)>2:
+            # array of bounds
+            inrange = [ v for v in height[1:] if v >= maxh*2.3 ]
+            hmax = maxh*2.3
+            if len(inrange)>0:
+                hmax = inrange[0]
+            hs[0].GetYaxis().SetRangeUser(height[0],hmax);
         elif height=='asym':
             hs[0].GetYaxis().SetRangeUser(0,0.5);
         elif height=='ratio':
