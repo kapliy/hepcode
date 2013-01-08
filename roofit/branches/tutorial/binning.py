@@ -27,8 +27,8 @@ def PB(b):
     """ Converts opts.ipt to a SuData/TH2::Project specifier (2:2), merging neighboring pt bins
     Note that ipt counts from 1, following ROOT TH1 bin counting convention
     """
-    if b=='ALL': return ':y:1:%d'%(len(ptbins)-1)
-    if b=='ALL25': return ':y:2:%d'%(len(ptbins)-1)
+    if b=='ALL20': return ':y:1:%d'%(len(ptbins)-1)
+    elif b=='ALL25': return ':y:2:%d'%(len(ptbins)-1)
     elif b>0 and b<=len(ptbins)-1: return ':y:%d:%d'%(b,b) # Dec 2012: do not merge bins
     elif b>0 and b<=3: return ':y:%d:%d'%(b,b)   # 30 .. 35
     elif b==4: return ':y:4:5'           # 35 .. 45
@@ -38,7 +38,7 @@ def PB(b):
 def RPB(b):
     """ Reverse map of pt bins, where input b counts from 0
     """
-    if b=='ALL': return b
+    if b=='ALL20': return b
     elif b=='ALL25': return b
     elif b<=10: return b+1 # FIXME: do not merge bins
     elif b<=2: return b+1

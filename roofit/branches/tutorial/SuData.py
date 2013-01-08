@@ -347,28 +347,31 @@ class SuSys:
         return res
     def stack_bg_frac(s,iback=1,overflow=True):
         """ Returns integral fraction of background NBG-iback (NBG corresponds to wmunu) """
-        return s.stack_bg_events(iback,overflow) / s.stack_total_events(overflow)
+        return s.stack_bg_events(iback,overflow)[0] / s.stack_total_events(overflow)[0]
     def stack_qcd_frac(s,overflow=True):
-        return s.stack_qcd_events(overflow) / s.stack_total_events(overflow)
+        return s.stack_qcd_events(overflow)[0] / s.stack_total_events(overflow)[0]
     def stack_ewknosig_frac(s,overflow=True):
-        return s.stack_ewknosig_events(overflow) / s.stack_total_events(overflow)
+        return s.stack_ewknosig_events(overflow)[0] / s.stack_total_events(overflow)[0]
     def stack_total_events(s,overflow=True):
         """ Returns integral of total stack """
         h = s.stack.GetStack().Last()
-        totevts = h.Integral(0,h.GetNbinsX()+1) if overflow else h.Integral()
-        return totevts
+        err = ROOT.Double()
+        totevts = h.IntegralAndError(0,h.GetNbinsX()+1,err) if overflow else h.IntegralAndError(1,h.GetNbinsX(),err)
+        return totevts,float(err)
     def histo_total_events(s,overflow=True):
         """ Returns integral of histo """
         h = s.h
-        totevts = h.Integral(0,h.GetNbinsX()+1) if overflow else h.Integral()
-        return totevts
+        err = ROOT.Double()
+        totevts = h.IntegralAndError(0,h.GetNbinsX()+1,err) if overflow else h.IntegralAndError(1,h.GetNbinsX(),err)
+        return totevts,float(err)
     def stack_bg_events(s,iback=1,overflow=True):
         """ Returns integral of background NBG-iback (NBG corresponds to wmunu) """
         NBG = s.stack.GetStack().GetLast()
         h = s.stack.GetHists().At(NBG - iback)   # TList::At(NBG) = signal
         # include overflow? E.g., met>200
-        qcdevts = h.Integral(0,h.GetNbinsX()+1) if overflow else h.Integral()
-        return qcdevts
+        err = ROOT.Double()
+        qcdevts = h.IntegralAndError(0,h.GetNbinsX()+1,err) if overflow else h.IntegralAndError(1,h.GetNbinsX(),err)
+        return qcdevts,float(err)
     def stack_qcd_events(s,overflow=True):
         return s.stack_bg_events(1,overflow)
     def stack_sig_events(s,overflow=True):
@@ -377,7 +380,12 @@ class SuSys:
         """ number of electroweak background events, excluding signal """
         NBG = s.stack.GetStack().GetLast()
         bglist = range(2,NBG+1)
-        return sum( [ s.stack_bg_events(ibg,overflow) for ibg in bglist ] )
+        pairs = [ s.stack_bg_events(ibg,overflow) for ibg in bglist ]
+        # counts: add up each background
+        evts = sum([x[0] for x in pairs])
+        # error: quadrature sum of each background (assume stat error is independent)
+        err = math.sqrt( sum([x[1]*x[1] for x in pairs]) )
+        return evts,err
     def update_var(s,histo,bin=None):
         """ Updates histogram name and ntuple-expression (aka variable)
         In reality, only one of these applies for a given SuData instance.
@@ -625,7 +633,7 @@ class SuPlot:
             next('MCP_EFF')
         # trigger systematic
         if True:
-            add2('MuonTriggerSFPhi','st_w_trigphi','MuonTriggerSFUp',xadd=qcdadd)
+            add2('MuonTriggerSFPhi','st_w_trigphi','MuonTriggerSFPhi',xadd=qcdadd)
             next('MCP_TRIG')
         else:
             add2('MuonTriggerSFUp','st_w_trigstatup','MuonTriggerSFUp',xadd=qcdadd)
@@ -669,7 +677,7 @@ class SuPlot:
             next('WPT_REWEIGHT')
         # PDF reweighting
         if True:
-            add('PdfCT10nlo','PdfCT10nlo',xadd=qcdadd)
+            #add('PdfCT10nlo','PdfCT10nlo',xadd=qcdadd)
             add('PdfMSTW','PdfMSTW',xadd=qcdadd)
             add('PdfHERA','PdfHERA',xadd=qcdadd)
             add('PdfNNPDF','PdfNNPDF',xadd=qcdadd)
@@ -677,8 +685,8 @@ class SuPlot:
             next('PDF')
         # QCD normalization
         if True:
-            add3('qcdup',1.5,'Nominal',xadd=qcdadd)
-            add3('qcddown',0.5,'Nominal',xadd=qcdadd)
+            add3('qcdup',1.3,'Nominal',xadd=qcdadd)
+            add3('qcddown',0.7,'Nominal',xadd=qcdadd)
             next('QCD_FRAC')
         # Signal MC systematic (previously: unfolding systematic)
         if True and 'mc' in nom.unfold:
@@ -920,6 +928,7 @@ class SuPlot:
                 o.update_var(histo,bin)
     def clone(s,q=None,enable=None,histo=None,do_unfold=None,unfhisto=None,qcdadd=None,
               sysdir=None,sysdir_mc=None,sysdir_qcd=None,
+              subdir=None,subdir_mc=None,
               sliced_1d=None,sliced_2d=None,slice=None,bgsig=None,
               ntuple=None,path=None,var=None,bin=None,pre=None,weight=None):
         """ Clones an entire SuPlot.
@@ -935,7 +944,7 @@ class SuPlot:
         for sgroups in s.sys:
             bla = []
             for sinst in sgroups:
-                bla.append(sinst.clone(q=q,histo=histo,unfhisto=unfhisto,qcdadd=qcdadd,sysdir=sysdir,sysdir_mc=sysdir_mc,sysdir_qcd=sysdir_qcd,ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight,sliced_1d=sliced_1d,sliced_2d=sliced_2d,slice=slice,bgsig=bgsig))
+                bla.append(sinst.clone(q=q,histo=histo,unfhisto=unfhisto,qcdadd=qcdadd,sysdir=sysdir,sysdir_mc=sysdir_mc,sysdir_qcd=sysdir_qcd,subdir=subdir,subdir_mc=subdir_mc,ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight,sliced_1d=sliced_1d,sliced_2d=sliced_2d,slice=slice,bgsig=bgsig))
                 res.flat.append(bla[-1])
             res.sys.append( bla )
         return res

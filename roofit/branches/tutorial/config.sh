@@ -10,12 +10,12 @@ input=/share/t3data3/antonk/ana/ana_v29I_12052012_edboard_anywmt20_stacoCB_all
 DB=DB_12052012_ALL.v1
 out=QCD
 
-input=/share/t3data3/antonk/ana/ana_v29I_12232012_edboard_newtrigSF_stacoCB_all/pt20/
-DB=DB_12232012_ALL.v1
+input=/share/t3data3/antonk/ana/ana_v29I_01052013_edboard_stacoCB_all/pt20
+DB=DB_01052013_ALL.v1
 out=QCD
 
-input=/share/t3data3/antonk/ana/ana_v29I_01032013_edboard_newtrigSF_sumw2_stacoCB_all/pt20
-DB=DB_01032012_ALL.v1
+input=/share/t3data3/antonk/ana/ana_v29I_01072013_edboard_stacoCB_all/pt20
+DB=DB_01072013_ALL.v2
 out=QCD
 
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
