@@ -1,14 +1,11 @@
-QCD updates:
-- DONE: absolute uncertainy on qcd (NOM=delta, DEN = bg-subtracted data, ~ signal)
-- : relative uncertainty on qcd (NOM=delta, DEN = nqcd)
-- : qcd and ewk (non-signal) frac (NOM = qcd , DEN = data counts)
-
+Investigate why the MC@NLO relative uncertainty is almost twice as large *after* unfolding.
+Actually first think about, perhaps it makes sense???
 
 MAX SESSION:
 - Only W+ and W- single and double diff.
   For integrated, need C_W combined, too. How? sum up unfolding W+ and W-. Sum up numerator and denominator separately.
   OR: just use TTrees!
-- systematic bands at detector level
+- DONE: systematic bands at detector level
   no PDF/theory because those affect both reco and truth levels
   But: may include it for better bands to cover differences
 - tables of bg composition:
@@ -18,13 +15,18 @@ MAX SESSION:
   DONE Fix only below; show full range.
 - Purity/stability
   Produce purity plots and save them somewhere
-- Main body of the note: pt=25 
+- DONE: Main body of the note: pt=25 
   lower priority in appendix: pt=20
   2d: plot the lowest pt bin 
-- d0sig < 3.5
+- TODO: d0sig < 3.5
 
 DONE: put QCD_3D on the pbs
 TODO: try to make MC@NLO and Powheg+Herwig QCD entry as the "average"
+
+QCD updates:
+- DONE: absolute uncertainy on qcd (NOM=delta, DEN = bg-subtracted data, ~ signal)
+- DONE: relative uncertainty on qcd (NOM=delta, DEN = nqcd)
+- DONE: qcd and ewk (non-signal) frac (NOM = qcd , DEN = data counts)
 
 TABLES:
 - DONE cutflow in data

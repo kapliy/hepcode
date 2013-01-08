@@ -900,13 +900,17 @@ if mode=='ALL' or mode=='all':
         june17_asymmetry()
 
 # saves a collection of 2D or 1D histograms to be used as input into Max's unfolding
-if mode=='prepare_qcd_1d' or mode=='prepare_qcd_2d':
+if mode in ('prepare_qcd_2d','prepare_qcd_1d','prepare_qcd_0d'):
     var = None
     iptmin = 2 if opts.ipt=='25' else 1
-    if opts.etamode==2: # |eta| bins
-        var = 'd2_abseta_lpt' if mode=='prepare_qcd_2d' else 'd2_abseta_lpt:y:%s:-1'%iptmin
-    elif opts.etamode==1:
-        var = 'd2_eta_lpt' if mode=='prepare_qcd_2d' else 'd2_eta_lpt:y:%s:-1'%iptmin
+    eword = 'abseta' if opts.etamode==2 else 'eta'
+    if mode=='prepare_qcd_0d':
+        assert opts.ipt in ('20','25')
+        var = 'int25' if opts.ipt=='25' else 'int'
+    elif mode=='prepare_qcd_1d':
+        var = 'd2_%s_lpt:y:%s:-1'%(eword,iptmin)
+    elif mode=='prepare_qcd_2d':
+        var = 'd2_%s_lpt'%eword
     assert var
     # disable QCD scaling since here we are just dumping histograms
     SuStackElm.new_scales = False
@@ -966,20 +970,22 @@ def qcdfit(name,spR2,iref=0,apply_stat=False):
     scales = po.scales[key]
     chi2,ndf = scales[8],scales[9]
     relerr = scales[1]/scales[0]   # relerr = 0.02, or 2%
-    nqcd = hstack.nominal().stack_qcd_events()
-    ndata = hdata.nominal().histo_total_events()
-    newk = hstack.nominal().stack_ewknosig_events()
-    nsig = hstack.nominal().stack_sig_events()
-    ntot =  hstack.nominal().stack_total_events()
+    nqcd,nqcdE = hstack.nominal().stack_qcd_events()
+    ndata,ndataE = hdata.nominal().histo_total_events()
+    newk,newkE = hstack.nominal().stack_ewknosig_events()
+    nsig,nsigE = hstack.nominal().stack_sig_events()
+    ntot,ntotE =  hstack.nominal().stack_total_events()
     ndatasub = ndata - newk - nqcd
+    ndatasubE = math.sqrt( sum([xx*xx for xx in (ndataE,newkE,nqcdE)]) )
     assert ntot - (newk + nsig + nqcd) < 1.0, "FATAL: numbers don't add up in a stack"
-    delqcd = nqcd*relerr # absolute delta-qcd counts
+    delqcd = nqcd*relerr # absolute delta-qcd counts (statistical fit error)
     if apply_stat:
         nqcdnew = nqcd + delqcd
         ntot = ntot - nqcd + nqcdnew
         nqcd = nqcdnew
-    #       [0]    [1]     [2]       [3]  [4]  [5] [6]       [7]        [8] [9]    [10]
-    return [name,  ndata,ndatasub,  ntot,nsig,newk,nqcd,   delqcd     , chi2,ndf,   iref]
+    #       [0]    [1]     [2]     [3]     [4]         [5] [6]   [7] [8]   [9]  [10]  [11] [12]     [13]         [14] [15]   [16]
+    return [name,  ndata,ndataE,ndatasub,ndatasubE,  ntot,ntotE,nsig,nsigE,newk,newkE,nqcd,nqcdE,   delqcd     , chi2,ndf,   iref]
+
 
 def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
     """ Performs a full set of systematic QCD fits in a given eta x pt slice """
@@ -1053,14 +1059,15 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
     # MC modeling:
     if MC_SIMPLE:
         po.choose_sig(4)
-        add(qcdfit('Nominal_PowhegJimmy',spL.clone()))
+        add(qcdfit('unfoldPowhegJimmy',spL.clone()))
         next('MC parton shower')
         po.choose_sig(1)
-        # mcnlo is computed wrt PowhegJimmy
-        add(qcdfit('Nominal_MCNLO',spL.clone() , iref=len(MGROUPS) - 1) )
+        # mcnlo difference is computed wrt PowhegJimmy
+        add(qcdfit('unfoldMCNLO',spL.clone() , iref=len(MGROUPS) - 1) )
         next('MC matrix element')
         nom()
     else:
+        assert False,'To be updated with new qcdfit() return type'
         mcdirs = ['WptSherpa','IsoWind20m','IsoWind40','PdfMSTW','PdfHERA','PdfNNPDF','PdfABM','ScaleSoftTermsUp_ptHard','ScaleSoftTermsDown_ptHard','ResoSoftTermsUp_ptHard','ResoSoftTermsDown_ptHard','MuonKScaleUp','MuonKScaleDown','MuonCScaleUp','MuonCScaleDown','JetScaleUp','JetScaleDown','JetNPVUp','JetNPVDown','JetMUUp','JetMUDown']
         def avg_sys(x):
             """ x = res4 - list of lists. A subset of entries is averaged; others are taken from nominal """
@@ -1135,6 +1142,15 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
             add(qcdfit(x,spL.clone(sysdir_mc=x)))
         next('Muon momentum reso')
 
+    # muon efficiencies
+    if True:
+        for x in ['MuonRecoSFUp','MuonRecoSFDown','MuonIsoSFUp','MuonIsoSFDown', 'MuonTriggerSFPhi']:
+            NMAP = {'MuonRecoSFUp':'st_w_effsysup','MuonRecoSFDown':'st_w_effsysdown',
+                    'MuonIsoSFUp':'st_w_isoup','MuonIsoSFDown':'st_w_isodown',
+                    'MuonTriggerSFPhi':'st_w_trigphi'}
+            add(qcdfit(x,spL.clone(subdir_mc=NMAP[x])))
+        next('Muon efficiencies')
+
     # jet energy scale & resolution
     if True:
         for x in ['JetScaleUp','JetScaleDown','JetNPVUp','JetNPVDown','JetMUUp','JetMUDown']:
@@ -1156,7 +1172,7 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
 if mode in ('qcdfit','qcdfit_sys'):
     spR.enable_nominal()
     iq = opts.charge
-    ipt  = opts.ipt if opts.ipt in ('ALL','ALL25') else int(opts.ipt)
+    ipt  = opts.ipt if opts.ipt in ('ALL20','ALL25') else int(opts.ipt)
     etas = []
     if opts.ieta=='ALL':
         etas = ['ALL',]
@@ -1182,28 +1198,35 @@ if mode in ('qcdfit','qcdfit_sys'):
     he_qcd_bgsub = []    # delta-qcd / bgsub[nom]
     he_qcd_rel = []      # delta-qcd / qcd[nom]
     ####### data returned from qcdfit_slice():
-    ##       [0]    [1]     [2]       [3]  [4]  [5] [6]       [7]        [8] [9]    [10]
-    #       [name,  ndata,ndatasub,  ntot,nsig,newk,nqcd,  nqcd*relerr, chi2,ndf,   iref]
+    #       [0]    [1]     [2]     [3]     [4]         [5] [6]   [7] [8]   [9]  [10]  [11] [12]     [13]         [14] [15]   [16]
+    #return [name,  ndata,ndataE,ndatasub,ndatasubE,  ntot,ntotE,nsig,nsigE,newk,newkE,nqcd,nqcdE,   delqcd     , chi2,ndf,   iref]
     # perform fits
     do_init = True
     for ieta in etas:
         MSYS , MGROUPS = qcdfit_slice(spR.clone() , iq,opts.etamode,ieta,ipt , nomonly=opts.nomonly)
         NOM = MSYS[0].values()[0]
-        SREL = qcdfit_sys_deviations(MSYS,MGROUPS)
+        SQCD = SREL = qcdfit_sys_deviations(MSYS,MGROUPS)
         SLAB = MGROUPS[1:]
         if do_init: # total systematic error
-            for zz in xrange(3):
-                M[zz].ad('Total',style=20,color=ROOT.kBlack)
+            for zz in xrange(4):
                 hname = 'h%d_Total'%zz
                 h = SuSample.make_habseta(hname) if opts.etamode==2 else SuSample.make_heta(hname)
                 hs[zz].append(h)
+                if zz==3:
+                    hs[zz].append(h.Clone(h.GetName()+'_ewk'))
+                    M[zz].ad('EWK fraction',color=ROOT.kBlue,style=20)
+                    M[zz].ad('QCD fraction',color=ROOT.kRed,style=21)
+                else:
+                    M[zz].ad('Total',style=20,color=ROOT.kBlack)
         brange = xrange(0,hs[0][0].GetNbinsX()+1) if ieta=='ALL' else ([ieta,0] if ieta==1 else [ieta,])
+        # total error
         if True:
             STOT = math.sqrt( sum([ xx*xx for xx in SREL ]) )
             [ hs[0][0].SetBinContent(ibin,STOT) for ibin in brange ]
-            [ hs[1][0].SetBinContent(ibin,STOT/NOM[6]*100.0) for ibin in brange ]
-            [ hs[2][0].SetBinContent(ibin,STOT/NOM[2]*100.0) for ibin in brange ]
+            [ hs[1][0].SetBinContent(ibin,STOT/NOM[11]*100.0) for ibin in brange ]
+            [ hs[2][0].SetBinContent(ibin,STOT/NOM[3]*100.0) for ibin in brange ]
         assert len(SREL)==len(SLAB)
+        # individual systematic groups
         for i,val in enumerate( SREL ):
             if do_init:
                 for zz in xrange(3):
@@ -1212,9 +1235,20 @@ if mode in ('qcdfit','qcdfit_sys'):
                     h = SuSample.make_habseta(hname) if opts.etamode==2 else SuSample.make_heta(hname)
                     hs[zz].append(h)
             [ hs[0][i+1].SetBinContent(ibin, val ) for ibin in brange ]
-            [ hs[1][i+1].SetBinContent(ibin, val/NOM[6]*100.0 ) for ibin in brange ]
-            [ hs[2][i+1].SetBinContent(ibin, val/NOM[2]*100.0 ) for ibin in brange ]
-            print SLAB[i],'%.3f%%'%(val/NOM[2])
+            [ hs[1][i+1].SetBinContent(ibin, val/NOM[11]*100.0 ) for ibin in brange ]
+            [ hs[2][i+1].SetBinContent(ibin, val/NOM[3]*100.0 ) for ibin in brange ]
+            print SLAB[i],'%.3f%%'%(val/NOM[3]*100.0)
+        # total qcd and ewk fractions wrt stack total
+        if True:
+            SEWK = qcdfit_sys_deviations(MSYS,MGROUPS,idx=9)
+            EWKE = math.sqrt( sum([ xx*xx for xx in SEWK+[NOM[10],] ]) )
+            QCDE = math.sqrt( sum([ xx*xx for xx in SQCD+[NOM[12],] ]) )
+            [hs[3][0].SetBinContent(ibin,NOM[9]/NOM[5]*100.0) for ibin in brange ]
+            [hs[3][0].SetBinError(ibin,EWKE/NOM[5]*100.0) for ibin in brange ]
+            [hs[3][1].SetBinContent(ibin,NOM[11]/NOM[5]*100.0) for ibin in brange ]
+            [hs[3][1].SetBinError(ibin,QCDE/NOM[5]*100.0) for ibin in brange ]
+        #       [0]    [1]     [2]     [3]     [4]         [5] [6]   [7] [8]   [9]  [10]  [11] [12]     [13]         [14] [15]   [16]
+        #return [name,  ndata,ndataE,ndatasub,ndatasubE,  ntot,ntotE,nsig,nsigE,newk,newkE,nqcd,nqcdE,   delqcd     , chi2,ndf,   iref]
         do_init=False
     # save plots
     if True:
@@ -1226,8 +1260,8 @@ if mode in ('qcdfit','qcdfit_sys'):
         SuCanvas.g_legend_height_per_entry = 0.023
         PlotOptions.msize = SuCanvas.g_marker_size
     ptinfo = ''
-    if ipt in ('ALL','ALL25'):
-        ptinfo = 'p_{T} > %d'%(20 if ipt=='ALL' else 25)
+    if ipt in ('ALL20','ALL25'):
+        ptinfo = 'p_{T} > %d'%(20 if ipt=='ALL20' else 25)
     elif ipt==len(ptbins)-1:
         ptinfo = 'p_{T} > %d'%(ptbins[ipt])
     else:
@@ -1237,13 +1271,14 @@ if mode in ('qcdfit','qcdfit_sys'):
     ys = []
     ys.append( [ 'QCD Unc. (event counts)' , None] )
     ys.append( [ 'QCD Unc. / N_{QCD} (%)' , None] )
-    ys.append( [ 'QCD Unc. / N_{W}^{expected} (%)' , None] )
+    ys.append( [ 'QCD Unc. / N_{W}^{candidates} (%)' , None] )
+    ys.append( [ 'Background Fraction (%)' , None] )
     xaxis_info = [ '#eta' if opts.etamode==1 else '|#eta|',None ]
     maxh = 2.5
     maxp = [0.0,0.5,1.0,3.0,5.0,10.0,20.0,30.0,50.0,100.0]
     if opts.ieta in ('LOOP','ALL'): # only plot if we are looping over all eta
-        for zz in xrange(3):
-            height = maxp if zz in (1,2) else maxh
+        for zz in xrange(4):
+            height = maxp if zz in (1,2,3) else maxh
             c[zz].plotAny(hs[zz],M=M[zz],height=height,drawopt='LP',xaxis_info=xaxis_info+ys[zz],pave=pave)
             c[zz].SaveSelf()
     if opts.exit: dexit()

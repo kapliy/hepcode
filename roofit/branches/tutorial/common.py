@@ -8,12 +8,12 @@ if not 'libPyRoot' in sys.modules: #hack to get rid of TenvRec warnings
     gErrorIgnoreLevel=ROOT.kInfo
     sys.modules['libPyROOT'].gROOT.GetListOfGlobals().FindObject('gErrorAbortLevel').GetAddress().__setitem__(0,5001)
 
+
 # a few functions to manipulate QCD fit results saved via antondb in the MSYS/MGROUPS format
-def qcdfit_sys_deviations(MSYS,MGROUPS,idx=6):
+def qcdfit_sys_deviations_subset(MSYS,MGROUPS,allowed,idx=11):
     """ Returns an array of systematic deviations from nominal
-    If idx=6, this computes deviations for QCD, and thus includes a special fit error category
-    [0]    [1]     [2]       [3]  [4]  [5] [6]       [7]        [8] [9]    [10]
-    [name,  ndata,ndatasub,  ntot,nsig,newk,nqcd,  nqcd*relerr, chi2,ndf,   iref]
+    #       [0]    [1]     [2]     [3]     [4]         [5] [6]   [7] [8]   [9]  [10]  [11] [12]     [13]         [14] [15]   [16]
+    return [name,  ndata,ndataE,ndatasub,ndatasubE,  ntot,ntotE,nsig,nsigE,newk,newkE,nqcd,nqcdE,   delqcd     , chi2,ndf,   iref]
     """
     res = []
     assert len(MSYS[0])==1
@@ -21,12 +21,31 @@ def qcdfit_sys_deviations(MSYS,MGROUPS,idx=6):
     for IGRP in MSYS[1:]:
         devs = []
         for INAME,ISYS in IGRP.iteritems():
+            if INAME not in allowed: continue
             idx_nom = ISYS[-1] # normaly this is zero, except for PS/ME error
             NOM = MSYS[idx_nom].values()[0]
             devs.append( abs(   ISYS[idx]-NOM[idx]   ) )
-        res.append(  max(devs)  )
+        res.append(  max(devs) if len(devs)>0 else 0.0 )
     assert len(MGROUPS)-1 == len(res)
     return res
+def qcdfit_sys_deviations(MSYS,MGROUPS,idx=11):
+    """ 
+    shortcut to qcdfit_sys_deviations_subset() that enables ALL systematics
+    """
+    allowed = []
+    for IGRP in MSYS[1:]:
+        for INAME,ISYS in IGRP.iteritems():
+            allowed.append(INAME)
+    return qcdfit_sys_deviations_subset(MSYS,MGROUPS,allowed,idx)
+def qcdfit_sys_flatten(MSYS,MGROUPS):
+    """ Converts the list-of-dics into a plan dic """
+    res = {}
+    for IGRP in MSYS:
+        for INAME,ISYS in IGRP.iteritems():
+            assert INAME not in res
+            res[INAME] = ISYS
+    return res
+
 
 # other stuff
 def dump_pickle(data,name='data.pkl'):
