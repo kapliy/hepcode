@@ -1,5 +1,23 @@
-Investigate why the MC@NLO relative uncertainty is almost twice as large *after* unfolding.
-Actually first think about, perhaps it makes sense???
+- split into low-high pileup subperiods (use systematic folders, i guess)
+- fix pt range on pt7 histograms (pt>50, not pt>120)
+- use CT10 PDF error sets
+Max: add 4 more qcd fit plots in the main body (low/high pt, central/forward)
+- tables of systematics for differential -> appendix. Also split in two halves
+- check stat eff uncertainty on integrated W measurement compared to 2010.
+- integrated measurement systematics table: delta-sigma/sigma (CW+B)
+- QCD plot: make a plot of 3 generators vs qcd fit range
+- JAN: extend fit range to 60 GeV and see if QCD fluctuations go down!!
+QCD + EWK fraction: combine multiple pt slices
+
+Update muon momentum section
+
+Peter: add a statement about ewk template normalization after the fits. 
+
+* background composition: properly correlate errors on total BG (not just sum-in-quadrature of errors of each sample)
+* Investigate why the MC@NLO relative uncertainty is almost twice as large *after* unfolding.
+  Actually first think about, perhaps it makes sense???
+* Investigate why in charge-combined measurement, the ewk uncertainty comes to dominate (!!!)
+* Investigate why in charge-combined measurement, Wpm is not compatible with Wp + Wm, even at "inputs into unfolding" stage. That's not QCD, right, since we add up contributions separately!
 
 MAX SESSION:
 - Only W+ and W- single and double diff.

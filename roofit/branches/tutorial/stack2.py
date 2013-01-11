@@ -1184,19 +1184,14 @@ if mode in ('qcdfit','qcdfit_sys'):
         SuCanvas.g_legend_x1_ndc = 0.55
     # prepare canvases and PlotOptions objects
     PlotOptions.msize = 1.5
-    c = [None,None,None,None]; M = []; hs = [ [],[],[],[] ]
+    NC = 5
+    c = [None,None,None,None,None]; M = []; hs = [ [],[],[],[],[] ]
     c[0] = SuCanvas('qcd_pt%s_eta%s_syst_abs'%(opts.ipt,opts.ieta))
     c[1] = SuCanvas('qcd_pt%s_eta%s_syst_rel_qcd'%(opts.ipt,opts.ieta))
     c[2] = SuCanvas('qcd_pt%s_eta%s_syst_rel_bgsub'%(opts.ipt,opts.ieta))
-    c[3] = SuCanvas('qcd_pt%s_eta%s_ewk_frac'%(opts.ipt,opts.ieta))
-    M = [ PlotOptions() for z in xrange(4) ]
-    h_qcd = None         # nqcd with total error (stat + sys)
-    h_ewk = None         # newk with total error (stat + sys)
-    h_qcd_tot = None     # nqcd / tot[nom]
-    h_ewk_tot = None     # newk / tot[nom]
-    he_qcd = []          # delta-qcd
-    he_qcd_bgsub = []    # delta-qcd / bgsub[nom]
-    he_qcd_rel = []      # delta-qcd / qcd[nom]
+    c[3] = SuCanvas('qcd_pt%s_eta%s_syst_rel_sig'%(opts.ipt,opts.ieta))
+    c[4] = SuCanvas('qcd_pt%s_eta%s_ewk_frac'%(opts.ipt,opts.ieta))
+    M = [ PlotOptions() for z in xrange(NC) ]
     ####### data returned from qcdfit_slice():
     #       [0]    [1]     [2]     [3]     [4]         [5] [6]   [7] [8]   [9]  [10]  [11] [12]     [13]         [14] [15]   [16]
     #return [name,  ndata,ndataE,ndatasub,ndatasubE,  ntot,ntotE,nsig,nsigE,newk,newkE,nqcd,nqcdE,   delqcd     , chi2,ndf,   iref]
@@ -1208,45 +1203,52 @@ if mode in ('qcdfit','qcdfit_sys'):
         SQCD = SREL = qcdfit_sys_deviations(MSYS,MGROUPS)
         SLAB = MGROUPS[1:]
         if do_init: # total systematic error
-            for zz in xrange(4):
+            for zz in xrange(NC):
                 hname = 'h%d_Total'%zz
                 h = SuSample.make_habseta(hname) if opts.etamode==2 else SuSample.make_heta(hname)
+                if zz==0:
+                    print 'FIXME: hadding',len(hs[0]),'TOT'
                 hs[zz].append(h)
-                if zz==3:
+                if zz==NC-1:
                     hs[zz].append(h.Clone(h.GetName()+'_ewk'))
                     M[zz].ad('EWK fraction',color=ROOT.kBlue,style=20)
                     M[zz].ad('QCD fraction',color=ROOT.kRed,style=21)
                 else:
                     M[zz].ad('Total',style=20,color=ROOT.kBlack)
         brange = xrange(0,hs[0][0].GetNbinsX()+1) if ieta=='ALL' else ([ieta,0] if ieta==1 else [ieta,])
+        print 'FIXME2: after tots:',len(hs[0])
         # total error
         if True:
             STOT = math.sqrt( sum([ xx*xx for xx in SREL ]) )
             [ hs[0][0].SetBinContent(ibin,STOT) for ibin in brange ]
             [ hs[1][0].SetBinContent(ibin,STOT/NOM[11]*100.0) for ibin in brange ]
             [ hs[2][0].SetBinContent(ibin,STOT/NOM[3]*100.0) for ibin in brange ]
+            [ hs[3][0].SetBinContent(ibin,STOT/NOM[7]*100.0) for ibin in brange ]
         assert len(SREL)==len(SLAB)
         # individual systematic groups
         for i,val in enumerate( SREL ):
             if do_init:
-                for zz in xrange(3):
+                for zz in xrange(NC-1):
                     M[zz].ad('%s'%SLAB[i])
                     hname = 'h%d_%s'%(zz,SLAB[i])
                     h = SuSample.make_habseta(hname) if opts.etamode==2 else SuSample.make_heta(hname)
+                    if zz==0:
+                        print 'FIXME: hadding',len(hs[zz]),SLAB[i]
                     hs[zz].append(h)
             [ hs[0][i+1].SetBinContent(ibin, val ) for ibin in brange ]
             [ hs[1][i+1].SetBinContent(ibin, val/NOM[11]*100.0 ) for ibin in brange ]
             [ hs[2][i+1].SetBinContent(ibin, val/NOM[3]*100.0 ) for ibin in brange ]
+            [ hs[3][i+1].SetBinContent(ibin, val/NOM[7]*100.0 ) for ibin in brange ]
             print SLAB[i],'%.3f%%'%(val/NOM[3]*100.0)
         # total qcd and ewk fractions wrt stack total
         if True:
             SEWK = qcdfit_sys_deviations(MSYS,MGROUPS,idx=9)
             EWKE = math.sqrt( sum([ xx*xx for xx in SEWK+[NOM[10],] ]) )
             QCDE = math.sqrt( sum([ xx*xx for xx in SQCD+[NOM[12],] ]) )
-            [hs[3][0].SetBinContent(ibin,NOM[9]/NOM[5]*100.0) for ibin in brange ]
-            [hs[3][0].SetBinError(ibin,EWKE/NOM[5]*100.0) for ibin in brange ]
-            [hs[3][1].SetBinContent(ibin,NOM[11]/NOM[5]*100.0) for ibin in brange ]
-            [hs[3][1].SetBinError(ibin,QCDE/NOM[5]*100.0) for ibin in brange ]
+            [hs[4][0].SetBinContent(ibin,NOM[9]/NOM[5]*100.0) for ibin in brange ]
+            [hs[4][0].SetBinError(ibin,EWKE/NOM[5]*100.0) for ibin in brange ]
+            [hs[4][1].SetBinContent(ibin,NOM[11]/NOM[5]*100.0) for ibin in brange ]
+            [hs[4][1].SetBinError(ibin,QCDE/NOM[5]*100.0) for ibin in brange ]
         #       [0]    [1]     [2]     [3]     [4]         [5] [6]   [7] [8]   [9]  [10]  [11] [12]     [13]         [14] [15]   [16]
         #return [name,  ndata,ndataE,ndatasub,ndatasubE,  ntot,ntotE,nsig,nsigE,newk,newkE,nqcd,nqcdE,   delqcd     , chi2,ndf,   iref]
         do_init=False
@@ -1272,16 +1274,22 @@ if mode in ('qcdfit','qcdfit_sys'):
     ys.append( [ 'QCD Unc. (event counts)' , None] )
     ys.append( [ 'QCD Unc. / N_{QCD} (%)' , None] )
     ys.append( [ 'QCD Unc. / N_{W}^{candidates} (%)' , None] )
+    ys.append( [ 'QCD Unc. / N_{W}^{MC} (%)' , None] )
     ys.append( [ 'Background Fraction (%)' , None] )
     xaxis_info = [ '#eta' if opts.etamode==1 else '|#eta|',None ]
     maxh = 2.5
     maxp = [0.0,0.5,1.0,3.0,5.0,10.0,20.0,30.0,50.0,100.0]
-    if opts.ieta in ('LOOP','ALL'): # only plot if we are looping over all eta
-        for zz in xrange(4):
-            height = maxp if zz in (1,2,3) else maxh
+    # FIXME AK
+    if True or opts.ieta in ('LOOP','ALL'): # only plot if we are looping over all eta
+        for zz in xrange(NC):
+            height = maxh if zz == NC-1 else maxp
+            print zz,len(hs[zz]),M[zz].ntot()
             c[zz].plotAny(hs[zz],M=M[zz],height=height,drawopt='LP',xaxis_info=xaxis_info+ys[zz],pave=pave)
             c[zz].SaveSelf()
     if opts.exit: dexit()
+
+if mode=='qcdfit_frac':
+    assert False,'TODO - make qcd/ewk fraction plots that overlay multiple pT slices, similar to Adrian'
 
 # Study different MC weights.
 # Also can be used to perform stack comparison of TH1 and ntuple-based histograms

@@ -670,7 +670,7 @@ class SuCanvas:
         mode=1 - apply systematics
         """
         if M:
-            assert M.ntot()==len(hplots),'Size mismatch between SuPlots and PlotOptions'
+            assert M.ntot()==len(hplots),'Size mismatch between SuPlots(%d) And PlotOptions(%d)'%(M.ntot(),len(hplots))
         leg = ROOT.TLegend()
         if M and M.title!=None:
             leg.SetHeader(M.title)

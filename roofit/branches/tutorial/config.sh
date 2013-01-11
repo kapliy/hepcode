@@ -15,7 +15,7 @@ DB=DB_01052013_ALL.v1
 out=QCD
 
 input=/share/t3data3/antonk/ana/ana_v29I_01072013_edboard_stacoCB_all/pt20
-DB=DB_01072013_ALL.v2
+DB=DB_01072013_ALL.v3
 out=QCD
 
 INDB=`echo $DB | sed -e 's#DB#IN#g'`

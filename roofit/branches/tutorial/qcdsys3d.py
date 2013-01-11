@@ -10,6 +10,7 @@ due to different signal MC or different fit variables.
 memo = """
 v1: first version to be placed in common afs area. January 6 2013.
 v2: added integrated measurement. January 7 2013.
+v3: saving all background components. Added charge-summed integrated measurement. January 7 2013.
 """
 
 import sys,os,re,math,copy
@@ -81,6 +82,7 @@ def make_qcd(name):
     if name in CACHE: return [CACHE[name],]
     out = qcd.Clone(name)
     out.Reset()
+    out.SetTitle(out.GetTitle()+'_'+name)
     ipts = range(1,len(ptbins)) if DIM==2 else ['ALL%d'%PT,]
     ietas = range(1,len(etabins))
     for ipt in ipts:
@@ -92,13 +94,13 @@ def make_qcd(name):
             if name in MSYS_FLAT:
                 v  = MSYS_FLAT[name][11]
                 ve = MSYS_FLAT[name][12]
-            elif name in ('qcd_up','qcd_down'):
+            elif name in ('Nominal_qcd_up','Nominal_qcd_down'):
                 # Hardcoded list of QCD systematics not propagated through EWUnfold (so we need to add them in quadrature here)
                 # That includes: fit error; met fit range  + choice of anti-isolation (previously missing)
                 _ERRORS = ['fit_error','met_range','IsoWind20m','IsoWind40']
                 devs = common.qcdfit_sys_deviations_subset(MSYS,MGROUPS,_ERRORS)
                 dev2 = math.sqrt( sum([ xx*xx for xx in devs ]) )
-                err  = 1.0*dev2 if name=='qcd_up' else -1.0*dev2
+                err  = 1.0*dev2 if name=='Nominal_qcd_up' else -1.0*dev2
                 v  = MSYS_FLAT['Nominal'][11] + err
                 ve = MSYS_FLAT['Nominal'][12]
                 if v<0:
@@ -117,48 +119,60 @@ def make_qcd(name):
     CACHE[name] = out
     return [out,]
 
-def make_total(csys,samples,cdir,prefix=None):
+def make_total(csys,samples,cdir,prefix,add=False):
     """ Makes and saves total-bg histograms.
     Additionally, saved all components AND ewk-only AND qcd-only.
-    Assumes QCD is always the last one under samples[] """
+    Assumes samples = [s1,s2,s3,...,QCD,SIG]. s1,QCD,SIG have to be non-empty
+    """
     h,g = None,None
     assert samples[0],'Missing first ewk background (please fix or allow this error to be recoverable)'
     assert samples[-2],'Missing qcd'
     assert samples[-1],'Missing signal (wmunu)'
+    def write_or_add(xdir,xnew,xtitle):
+        xold = xdir.Get(xtitle)
+        if add and xold:
+            xold.Add(xnew)
+            xold.Write( xtitle , ROOT.TObject.kOverwrite)
+        else:
+            xnew.Write( xtitle , ROOT.TObject.kOverwrite)
     # save all subsamples (in a sub-directory)
     if True:
         sdir = cdir.Get("all") if cdir.Get("all") else cdir.mkdir("all")
         sdir.cd()
-        [ h.Write( h.GetTitle() , ROOT.TObject.kOverwrite)  for h in samples if h]
+        for h in samples:
+            if not h: continue
+            title = h.GetTitle()
+            if not re.search(prefix,title):
+                assert re.search('_Nominal',title),'ERROR: found histogram without _Nominal in its name: %s'%title
+                title = re.sub('_Nominal','_'+prefix,title)
+            assert re.search(prefix,title)
+            #print 'Subsample: ',prefix,title
+            write_or_add(sdir,h,title)
         sdir.Write()
         cdir.cd()
     # save signal (in root directory)
     if True:
         d = samples[-1].Clone('sig_'+csys)
-        if prefix:
-            d.SetTitle('sig_'+prefix)
-        d.Write(d.GetTitle(),ROOT.TObject.kOverwrite)
+        d.SetTitle('sig_'+prefix)
+        write_or_add(cdir,d,d.GetTitle())
     # save qcd (in root directory)
     if True:
         d = samples[-2].Clone('qcd_'+csys)
-        if prefix:
-            d.SetTitle('qcd_'+prefix)
-        d.Write(d.GetTitle(),ROOT.TObject.kOverwrite)
+        d.SetTitle('qcd_'+prefix)
+        write_or_add(cdir,d,d.GetTitle())
     # save ewk (all minus QCD) (in root directory). Excludes signal.
     if True:
         g = samples[0].Clone('ewk_'+csys)
         [ g.Add( sample ) for sample in samples[1:-2] if sample]
-        if prefix:
-            g.SetTitle('ewk_'+prefix)
-        g.Write(g.GetTitle(),ROOT.TObject.kOverwrite)
+        g.SetTitle('ewk_'+prefix)
+        write_or_add(cdir,g,g.GetTitle())
     # save totals (including QCD) (in root directory). Excludes signal
     if True:
         h = samples[0].Clone('totalbg_'+csys)
         #print 'Adding:',[ sample.GetName() for sample in samples[:] ]
         [ h.Add( sample ) for sample in samples[1:-1] if sample]
-        if prefix:
-            h.SetTitle('totalbg_'+prefix)
-        h.Write(h.GetTitle(),ROOT.TObject.kOverwrite)
+        h.SetTitle('totalbg_'+prefix)
+        write_or_add(cdir,h,h.GetTitle())
     return h,g
 
 if __name__=='__main__':
@@ -172,6 +186,7 @@ if __name__=='__main__':
     fout = ROOT.TFile.Open(fout_name,"RECREATE")
     fout_D.append(fout.mkdir('POS'))
     fout_D.append(fout.mkdir('NEG'))
+    fout_D.append(fout.mkdir('ALL'))
     for iq in (0,1,):
         samples,systems,qcd = None,None,None
         assert fin and fin.IsOpen()
@@ -183,41 +198,49 @@ if __name__=='__main__':
         qcd = adir.Get('qcd').Clone()
         qcd.Reset()
         # generate total histograms for detector systematics
-        fout_D[iq].cd()
         if True:
             bgsig=5
+            fout_D[2].cd()
+            hh = fout_D[2].Get('data')
+            if hh:
+                hh.Add(adir.Get('data'))
+                hh.Write('data',ROOT.TObject.kOverwrite)
+            else:
+                adir.Get('data').Write('data',ROOT.TObject.kOverwrite)
+            fout_D[iq].cd()
             adir.Get('data').Write('data',ROOT.TObject.kOverwrite)
             for system in systems: #including Nominal
                 sigL = [adir.Get('wmunu_'+system),]
                 allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + make_qcd(system) + sigL
-                make_total(system,allsamples,fout_D[iq],system)
+                [ make_total(system,allsamples,fout_D[q],system,q==2 and iq==1) for q in (iq,2) ]
                 #adir4.Get('wmunu_'+system).Write('wmunu_PowhegJimmy_'+system,ROOT.TObject.kOverwrite)
             # manually generate nominal histograms with qcd Up/Down variations
             # this only includes variations that are not correlated with the response matrix.
             system='Nominal'
             sigL = [adir.Get('wmunu_'+system),]
-            allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + make_qcd('qcd_up') + sigL
-            make_total(system,allsamples,fout_D[iq],'Nominal_qcd_up')
-            allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + make_qcd('qcd_down') + sigL
-            make_total(system,allsamples,fout_D[iq],'Nominal_qcd_down')
+            allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + make_qcd('Nominal_qcd_up') + sigL
+            [ make_total(system,allsamples,fout_D[q],'Nominal_qcd_up',q==2 and iq==1) for q in (iq,2) ]
+            allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + make_qcd('Nominal_qcd_down') + sigL
+            [ make_total(system,allsamples,fout_D[q],'Nominal_qcd_down',q==2 and iq==1) for q in (iq,2) ]
             # generate histograms for ewkbg xsec variations
             if True:
                 bdir = fin.Get( '%s_xsecup'%FQNAMES[iq] )
                 assert bdir
                 sigL = [bdir.Get('wmunu_'+system),]
                 allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + make_qcd('Nominal') + sigL
-                make_total(system,allsamples,fout_D[iq],'Nominal_ewk_xsecup')
+                [ make_total(system,allsamples,fout_D[q],'Nominal_ewk_xsecup',q==2 and iq==1) for q in (iq,2) ]
                 bdir = fin.Get( '%s_xsecdown'%FQNAMES[iq] )
                 assert bdir
                 allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + make_qcd('Nominal') + sigL
-                make_total(system,allsamples,fout_D[iq],'Nominal_ewk_xsecdown')
+                [ make_total(system,allsamples,fout_D[q],'Nominal_ewk_xsecdown',q==2 and iq==1) for q in (iq,2) ]
             # generate histograms for MC-based QCD
             if True:
                 bdir = fin.Get('%s_qcdmc'%FQNAMES[iq])
                 assert bdir
                 sigL = [bdir.Get('wmunu_'+system),]
-                allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [bdir.Get('qcd').Clone(),] + sigL
-                make_total(system,allsamples,fout_D[iq],'Nominal_qcdmc')
+                sqcd = bdir.Get('qcd').Clone('qcd_Nominal_qcdmc'); sqcd.SetTitle('qcd_Nominal_qcdmc')
+                allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + [sqcd,] + sigL
+                [ make_total(system,allsamples,fout_D[q],'Nominal_qcdmc',q==2 and iq==1) for q in (iq,2) ]
     fin.Close()
     fout.cd()
     sout = ROOT.TObjString(memo)

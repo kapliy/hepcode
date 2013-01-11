@@ -14,11 +14,12 @@ source config.sh
 
 # manual run
 if [ "0" == "1" ]; then
-    ./stack2.py --exit --input ${input} -b --charge ${iq} --lvar d3_abseta_lpt_met --lbin 50,0,40 --isofail IsoWind20 -o TEST -t Q${iq} -m qcdfit --bgsig ${bgsig} --bgewk 5 --bgtau 2 --bgqcd 4 --ieta ALL --ipt ALL20 --var d3_abseta_lpt_met --xsecerr 0 --etamode 2 --rebin 4
+    iq=1
+    ./stack2.py --input ${input} -b --charge ${iq} --lvar d3_abseta_lpt_met --lbin 50,0,40 --isofail IsoWind20 -o TEST -t Q${iq} -m qcdfit --bgsig ${bgsig} --bgewk 5 --bgtau 2 --bgqcd 4 --ieta 11 --ipt ALL25 --var d3_abseta_lpt_met --xsecerr 0 --etamode 2 --rebin 4
 fi
 
 #nomonly=" --nomonly"  # to save actual QCD plots [for a big table in the paper]
-nomonly=" --extra ${DB} --exit"   # to make systematic summary plots
+pnomonly=" --extra ${DB} --exit"   # to make systematic summary plots
 if [ "1" == "1" ]; then
     for iq in 0 1; do
 	# fits in eta slices
