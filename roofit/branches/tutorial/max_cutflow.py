@@ -1,30 +1,28 @@
 #!/usr/bin/env python
 
-"""
-# RUNNING CUTFLOW
-out=bla.tex
-out=/home/antonk/SupportingDocument/Wmunu/WmunuCutflow.tex
-./max_cutflow.py 1 > ${out} && ./max_cutflow.py 0 POS >> ${out} && ./max_cutflow.py 0 NEG >> ${out} && echo OK
+# creates latex cutflow tables.
+# see examples in max_cutflow.sh
 
-# INSTRUCTIONS ON HOW TO PREPARE A COMPLETE DATA CUTFLOW FILE
-bdir=/share/t3data3/antonk/ana/ana_v29I_12042012_edboard_stacoCB_all
-cd ${bdir}
-/bin/ls ${bdir}/data_period*/data*root > ALLDATA.list
-~/TrigFTKAna/plot/dgadd -f 1 -d ${bdir}/ALLDATA.root -l ${bdir}/ALLDATA.list
+import sys,os
 
-"""
-import sys
-
+datadir = None
 is_data = 0
 charge = 0
+pt = 20
 if len(sys.argv)>=2:
-    is_data = int(sys.argv[1])
+    datadir = sys.argv[1]
 if len(sys.argv)>=3:
-    charge = sys.argv[2]
+    is_data = int(sys.argv[2])
+if len(sys.argv)>=4:
+    charge = sys.argv[3]
     assert charge in ('POS','NEG')
     charge = 0 if charge=='POS' else 1
+if len(sys.argv)>=5:
+    pt = int(sys.argv[4])
+    assert pt in (20,25)
 
-datadir = '/share/t3data3/antonk/ana/ana_v29I_12042012_edboard_stacoCB_all'
+assert os.path.isdir(datadir),'ERROR: cannot locate directory %s'%datadir
+
 data = None
 qword = 'plus' if charge==0 else 'min'
 if is_data:
@@ -60,8 +58,6 @@ CUTSQ.append('passes_w_neg')
     
 
 HEADER = """
-\\begin{table}
-\\begin{center}
 \\begin{tabular}{lrrr}
 \hline
 \hline
@@ -71,13 +67,7 @@ PH= ' \phantom{0} '
 TAILER = """\hline
 \hline
 \end{tabular}
-\caption{%s}
-\label{tab:Wmunu:%s}
-\end{center}
-\end{table}
 """
-tab_mc = 'Cutflow for $W^{%s} \\rightarrow \mu^{%s} \\nu$ events in the nominal Monte Carlo signal sample~(Powheg+Pythia). Pileup, vertex position, and $p_T^{W}$  weights are applied. The number of selected events after the application of efficiency scale factors is shown in the last row.' % ('+' if charge==0 else '-','+' if charge==0 else '-')
-tab_data = 'Cutflow for \Wmn\ candidate events in data.'
 
 TOT = None
 def eff(v,bef,aft):
@@ -85,6 +75,8 @@ def eff(v,bef,aft):
     res = ''
     assert v in CUTMAP
     mcur = CUTMAP[v]
+    if v=='passes_w_pt' and pt==25:
+        mcur = CUTMAP['passes_w_pt_25']
     mmax = max(CUTMAP.values(), key=len)
     xtra = len(mmax) - len(mcur)
     res += mcur + ' '*xtra + '  & '
@@ -105,6 +97,8 @@ def tot(v,aft,xtra=''):
     res = ''
     assert v in CUTMAP
     mcur = CUTMAP[v]+xtra
+    if v=='passes_w_pt' and pt==25:
+        mcur = CUTMAP['passes_w_pt_25']
     mmax = max(CUTMAP.values(), key=len)
     xtra = len(mmax) - len(mcur)
     if xtra<0: xtra = 1
@@ -156,4 +150,4 @@ else:
     L = find(CUTS[-1],DATAW)
     print tot( L[NAME], float(L[NUM]) , xtra=' (Efficiency Corrected)')
 
-print TAILER%(tab_data if is_data else tab_mc,'cutflow_data' if is_data else 'cutflow_mc_%s'%qword)
+print TAILER
