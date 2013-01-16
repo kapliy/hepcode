@@ -6,6 +6,10 @@
 #include <map>
 #include <cmath>
 
+#include <iostream>
+#include <cassert>
+#include <LHAPDF/LHAPDF.h>
+
 class PDFReweightTool {
 protected:
   bool m_ready;
@@ -24,6 +28,7 @@ public:
   void Info() const;
  
   unsigned int NPDFSets() const { return m_pdflist.size(); }
+  unsigned int numberPDF(int nset) const { return LHAPDF::numberPDF(nset); }
   void AddPDFSet(const int& setid, const std::string& setname) {
     m_pdfmap[m_pdflist.size()] = setid;
     m_pdflist.push_back(setname);
@@ -34,6 +39,7 @@ public:
     m_pdfmap = pdfmap;
   }
   void AddDefaultPDFSets();
+  void AddCT10PDFSet();
   
   double GetEventWeight(int nset, int member,                // nset start from 1, member start from 0
 			double mcevt_pdf_scale,              // energy scale (Q)
@@ -53,10 +59,6 @@ public:
 
 };
 
-#include <iostream>
-#include <cassert>
-#include <LHAPDF/LHAPDF.h>
-
 void PDFReweightTool::Initialize(bool verbose) {
   const int NSETS = m_pdflist.size();
   assert(NSETS<=6 && "PDFReweightTool: cannot initialize more than 6 PDF sets");
@@ -74,7 +76,10 @@ void PDFReweightTool::Initialize(bool verbose) {
 void PDFReweightTool::Info() const {
   std::cout <<   "PDFReweightTool::Info status - " << (m_ready ? "READY" : "NOT INITIALIZED") << std::endl;
   for(unsigned int i=0; i<m_pdflist.size(); i++) {
-    std::cout << "                  PDF #" << i+1 << ": " << m_pdflist[i] << std::endl;
+    const int nset = i+1;
+    std::cout << "                  PDF #" << nset << ": " << m_pdflist[i];
+    if(m_ready) std::cout << " with " << LHAPDF::numberPDF(nset) << " members";
+    std::cout << std::endl;
   }
 }
 
@@ -89,6 +94,12 @@ void PDFReweightTool::AddDefaultPDFSets() {
   AddPDFSet(42060,"abm11_5n_nlo.LHgrid");
 }
 
+void PDFReweightTool::AddCT10PDFSet() {
+  assert(!m_ready && "ERROR: PDFReweightTool::GetWeight must be called before PDFReweightTool::Initialize");
+  // the following PDF sets are recommended for 2011 W/Z paper
+  AddPDFSet(10800,"CT10.LHgrid");
+}
+
 double PDFReweightTool::GetEventWeight(int nset, int member,
 				       double mcevt_pdf_scale,
 				       int mcevt_id1, int mcevt_id2,
@@ -99,11 +110,10 @@ double PDFReweightTool::GetEventWeight(int nset, int member,
   const int NSETS = m_pdflist.size();
   // nset starts at 1!
   assert(nset>=1 && nset<=NSETS);
-  // temporary
-  assert(member<=0 && "PDFReweightingTool: TrigFTKAna is configured with --enable-low-memory option, precluding the use of PDF members");
+  //assert(member<=0 && "PDFReweightingTool: TrigFTKAna is configured with --enable-low-memory option, precluding the use of PDF members");
   // member starts at 0!
   if(member>=0) {
-    assert(member < LHAPDF::numberPDF(nset) );
+    assert(member <= LHAPDF::numberPDF(nset) );
     LHAPDF::usePDFMember(nset,member);
   }
   const double Q = mcevt_pdf_scale;
@@ -127,12 +137,12 @@ double PDFReweightTool::GetEventWeight(int nset, int member,
   const double pnew = pdf1_new * pdf2_new;
   if(verbose) {
     std::streamsize oldp = std::cout.precision();
-    std::cout.precision(4);
+    std::cout.precision(5);
     std::cout << "PDFReweightTool: ORIGINAL   = " << pdf1 << " * " << pdf2 << " = " << porig << " | "
 	      << "Q=" << Q << " x1=" << x1 << " x2=" << x2 << " id1=" << id1 << " id2=" << id2 
 	      << std::endl
 	      << "                 RECOMPUTED = " << pdf1_new << " * " << pdf2_new << " = " << pnew
-	      << "                 EQUAL? " << (std::abs(pnew-porig)<0.0005 ? "YES" : "NO" )
+	      << "                 EQUAL? " << (std::abs(pnew-porig)<0.00005 ? "YES" : "NO" )
 	      << std::endl;
     std::cout.precision(oldp);
   }
