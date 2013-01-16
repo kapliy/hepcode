@@ -1,14 +1,22 @@
 #include <iostream>
 #include <PDFReweightTool.hpp>
 
+const bool ONE_SET = true;
+
 int main() {
   PDFReweightTool *rw = new PDFReweightTool();
-  if(true) {
+  if(ONE_SET) {
+    const std::string LHAPATH = "/share/ftkdata/software/pdfsets";
+    std::cout << "Using custom $LHAPATH: " << LHAPATH << std::endl;
+    rw->SetLHAPATH(LHAPATH);
+    rw->AddCT10PDFSet();
+  }
+  else if(true) {
     const std::string LHAPATH = "/share/ftkdata/software/pdfsets";
     std::cout << "Using custom $LHAPATH: " << LHAPATH << std::endl;
     rw->SetLHAPATH(LHAPATH);
     rw->AddDefaultPDFSets();
-  } else {
+  } else { // deprecated
     std::cout << "Taking $LHAPATH from athena" << std::endl;
     rw->AddPDFSet(10800,"CT10.LHgrid");
     rw->AddPDFSet(21100,"MSTW2008nlo68cl.LHgrid");
@@ -28,11 +36,15 @@ int main() {
   mcevt_pdf_scale=79.820602;mcevt_id1=2; mcevt_id2=21;x1=0.0891022;x2=0.0188473;pdf1=0.6118854;pdf2=5.0477380;
 
   for(int nset=1; nset<=rw->NPDFSets(); nset++) {
-    std::cout << "RUNNING PDFSET # " << nset << std::endl;
-    rw->GetEventWeight(nset,mcevt_pdf_scale,mcevt_id1,mcevt_id2,x1,x2,pdf1,pdf2,verbose);
+    const int MEM_MIN = ONE_SET ? 0 : 0;
+    const int MEM_MAX = ONE_SET ? 53 : 1;
+    for(int nmem=MEM_MIN; nmem<MEM_MAX; nmem++) {
+      std::cout << "RUNNING PDFSET # " << nset << " & MEMBER # " << nmem << std::endl;
+      rw->GetEventWeight(nset,nmem,mcevt_pdf_scale,mcevt_id1,mcevt_id2,x1,x2,pdf1,pdf2,verbose);
+    }
   }
 
-  // while(true) continue;
+  while(true) continue;
 
   return 0;
 }
