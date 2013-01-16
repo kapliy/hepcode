@@ -1,6 +1,6 @@
-- split into low-high pileup subperiods (use systematic folders, i guess)
+- split into low-high pileup subperiods (use systematic folders, i guess). OR: scale nmu pileup +/- 10%
 - fix pt range on pt7 histograms (pt>50, not pt>120)
-- use CT10 PDF error sets
+- use CT10 PDF error sets instead of individual PDFs
 Max: add 4 more qcd fit plots in the main body (low/high pt, central/forward)
 - tables of systematics for differential -> appendix. Also split in two halves
 - check stat eff uncertainty on integrated W measurement compared to 2010.
