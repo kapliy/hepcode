@@ -1,15 +1,31 @@
 #!/usr/bin/env python
 
-"""
-out=bla.tex
-out=/home/antonk/SupportingDocument/Wmunu/WmunuBackgroundTables.tex
-./max_latex.py 1 POS >  ${out} && ./max_latex.py 1 NEG >> ${out} && ./max_latex.py 2 POS >> ${out} && ./max_latex.py 2 NEG >> ${out} && echo DONE
-"""
+# creates latex tables of event composition with systematics
 
 import os,sys,re,math
 
-fname = 'OUT_11022012_ALL.v2.abseta.1D.root'
-fname = 'OUT_12102012_ALL.v2.abseta.%sD.root'
+fname = None
+qs = 'POS'
+ipt = None
+if len(sys.argv)>=2:
+    fname = sys.argv[1]
+if len(sys.argv)>=3:
+    qs = sys.argv[2]
+if len(sys.argv)>=4:
+    ipt = int(sys.argv[3])
+
+assert os.path.isfile(fname),'ERROR: cannot locate file %s'%fname
+
+DIM = 1 if re.search('1D',fname) else (2 if re.search('2D',fname) else 0)
+pt  = 20 if re.search('pt20',fname) else 25
+
+assert pt in (20,25)
+assert DIM in (1,2)
+assert qs in ('POS','NEG')
+if DIM!=2:
+    assert ipt==None
+else:
+    assert ipt
 
 import common
 import ROOT
@@ -17,35 +33,23 @@ import binning
 etabins = binning.absetabins
 ptbins = binning.ptbins
 
-DIM = 1
-if len(sys.argv)>1:
-    DIM = int(sys.argv[1])
-assert DIM in (1,2)
-fname = fname%DIM
-
-qs='POS'
-if len(sys.argv)>2:
-    qs = sys.argv[2]
-assert qs in ('POS','NEG')
-
-
 NDATA = 'data'
 NQCD = 'qcd'
 NEWK = 'ewk'
-# these are unused
 NBG = 'totalbg'
-NSIG = 'wmunu_PowhegPythia'
+NSIG = 'wmunu'
 
 f = ROOT.TFile.Open(fname,'READ')
 assert f.IsOpen()
 
 # EWK systematics list
+# MISSING: stat. uncertainty due to scale factors; PDF eigenvectors
 EWK = []
 EWK.append( ['Nominal'] )
 EWK.append( ['MuonResMSUp','MuonResMSDown'] )
 EWK.append( ['MuonResIDUp','MuonResIDDown'] )
-EWK.append( ['MuonScaleKUp','MuonScaleKDown' ] )
-EWK.append( ['MuonScaleCUp','MuonScaleCDown' ] )
+EWK.append( ['MuonKScaleUp','MuonKScaleDown' ] )
+EWK.append( ['MuonCScaleUp','MuonCScaleDown' ] )
 EWK.append( ['MuonRecoSFUp','MuonRecoSFDown'] )
 EWK.append( ['MuonIsoSFUp','MuonIsoSFDown'] )
 EWK.append( ['MuonTriggerSFPhi',] )
@@ -59,28 +63,34 @@ EWK.append( ['ScaleSoftTermsUp_ptHard','ScaleSoftTermsDown_ptHard'] )
 EWK.append( ['WptSherpa',] )
 EWK.append( ['PdfMSTW','PdfHERA','PdfNNPDF','PdfABM'] )
 EWK.append( ['Nominal_ewk_xsecdown','Nominal_ewk_xsecup'] )
-EWK.append( ['Nominal_unfoldPowhegJimmy', 'Nominal_unfoldMCNLO'] ) # caveat: ewk=5 (same)
-# we use alpgen, reweighted to CT10 PDF, so no need to consider it separately.
-#EWK.append( ['Nominal_ewk_alpgen'] )
+EWK.append( ['unfoldPowhegJimmy', 'unfoldMCNLO'] ) # caveat: ewk=5 (same)
+EWK.append( ['Nominal_qcd_up','Nominal_qcd_down'])
 
-# SIG systematics list. Include difference between three NLO generators? For now, just use Powheg+Pythia in the tables.
-# Note that we also exclude EWK xsec uncertainy for the SIG numbers
-SIG=EWK[:-2]
-
-# QCD systematics list (no need to correlate them here!)
-QCD = []
-QCD = EWK[:-2]
-QCD.append( ['Nominal_qcd_up','Nominal_qcd_down'])
-#QCD.append( ['PowhegPythia'] ) # average of 3 generators!
-#QCD.append( ['PowhegHerwig','McAtNlo'] )
-
-def get(x,py=None):
+def getH(x):
     """ retrieves one histogram and makes sure it is valid """
     nm = '%s/%s'%(qs,x)
     tmp = f.Get(nm)
     if not tmp:
-        print 'ERROR: cannot find histogram',nm
-        os._exit(0)
+        assert False, 'ERROR: cannot find histogram %s'%nm
+    return tmp
+
+def get(xall,py=None):
+    """ retrieves one histogram and makes sure it is valid
+    py performs a projection on an axis
+    """
+    x = None
+    assert isinstance(xall,list) or isinstance(xall,tuple), 'ERROR: get() now only accepts python lists or tuples'
+    x = xall
+    tmp = None
+    for ix,curx in enumerate(x):
+        if ix==0:
+            tmpix = getH(curx)
+            tmp = tmpix.Clone('%s_%d'%(tmpix.GetName(),len(x)))
+        else:
+            tmpix = getH(curx)
+            tmp.Add(tmpix)
+    if not tmp:
+        assert False, 'ERROR: cannot find histogram %s'%nm
     if py!=None:
         assert DIM==2,'Projection only works in 2D'
         # d2_abseta_lpt  x=abseta, y=lpt
@@ -89,9 +99,9 @@ def get(x,py=None):
         return tmp2
     return tmp
 
-def getStatSys(NSYS,SYS,py=None):
+def get2(NSYS,py=None,SYS=EWK):
     """ returns both statistical and systematic histograms """
-    nom = get(NSYS + '_' + SYS[0][0],py)
+    nom = get( [ isys + '_' + SYS[0][0] for isys in NSYS] ,py)
     sys = nom.Clone(nom.GetName()+'_sys')
     # zero out stat. error in sys, since it will contain systematic ONLY
     [sys.SetBinError(ii,0) for ii in xrange(0,sys.GetNbinsX()+2)]
@@ -99,7 +109,7 @@ def getStatSys(NSYS,SYS,py=None):
         bdiffs = [[] for z in xrange(0,sys.GetNbinsX()+2)]
         # loop over systematics in this group
         for hs in hss:
-            h = get(NSYS + '_' + hs,py)
+            h = get( [ isys + '_' + hs for isys in NSYS] ,py)
             for ibin in xrange(0,sys.GetNbinsX()+2):
                 bdiffs[ibin].append ( abs(nom.GetBinContent(ibin)-h.GetBinContent(ibin)) )
         # loop over bins and add new error (max. deviation) in quadrature
@@ -155,16 +165,16 @@ def lineXYZ(i,data,ewk,qcd,py=None):
 
 def printDataEwkQcd(py=None):
     data = get(NDATA,py)
-    ewk = getStatSys(NEWK,EWK,py)
-    qcd = getStatSys(NQCD,QCD,py)
+    ewk = get2(NEWK,EWK,py)
+    qcd = get2(NQCD,QCD,py)
     for i in xrange(1,data.GetNbinsX()+1):
         lineXYZ(i,data,ewk,qcd,py)
 
 def printDataBgsubSig(py=None):
     data = get(NDATA,py)
-    ewk = getStatSys(NEWK,EWK,py)
-    qcd = getStatSys(NQCD,QCD,py)
-    sig = getStatSys(NSIG,SIG,py)
+    ewk = get2(NEWK,EWK,py)
+    qcd = get2(NQCD,QCD,py)
+    sig = get2(NSIG,SIG,py)
     bgsub = [ data.Clone('bgsub_stat') , data.Clone('bgsub_sys') ]
     for i in xrange(2):
         bgsub[i].Add(ewk[i],-1)
@@ -185,7 +195,7 @@ def printEventComposition(py=None):
     hs.append(hbg)
     snames.append('All Backgrounds')
     # signal
-    hsig = get('wmunu_PowhegPythia_Nominal',py)
+    hsig = get('all/wmunu_Nominal',py)
     hs.append(hsig)
     snames.append('$W \\rightarrow \mu \\nu$ (Signal)')
     # total
@@ -232,38 +242,33 @@ def printEventComposition(py=None):
     print r'\end{center}'
     print r'\end{sidewaystable}'
 
-def printEventComposition_x2(py=None):
+def printEventComposition_x2(py=None , dorel=True):
     """ A version split across two tables """
     HLINES = []
-    samples = ['qcd_Nominal' , 'all/zmumu_Nominal' , 'all/wtaunu_Nominal' , 'all/ttbar_stop_Nominal' , 'all/ztautau_Nominal' , 'all/diboson_Nominal']
-    snames = ['QCD','$Z \\rightarrow \mu\mu$ + DrellYan','$W \\rightarrow \\tau \\tau$','$t \\bar{t}$ + single-top','$Z \\rightarrow \\tau \\tau$','Dibosons']
-    hs = [ get(sample,py) for sample in samples]
+    samples = ['all/zmumu' , 'all/wtaunu' , 'all/ttbar_stop' , 'all/ztautau' , 'all/diboson']
+    snames = ['$Z \\rightarrow \mu\mu$ + DrellYan','$W \\rightarrow \\tau \\tau$','$t \\bar{t}$ + single-top','$Z \\rightarrow \\tau \\tau$','Dibosons']
+    hs = [ get2([sample,],py) for sample in samples]
     HLINES.append( len(hs)-1 )
-    # sum of bg
-    hbg = hs[0].Clone('bgtotal')
-    [hbg.Add(h) for h in hs[1:]]
-    hs.append(hbg)
-    snames.append('All Backgrounds')
-    # signal
-    hsig = get('wmunu_PowhegPythia_Nominal',py)
-    hs.append(hsig)
-    snames.append('$W \\rightarrow \mu \\nu$ (Signal)')
-    # total
-    htot = hbg.Clone('bgtotalsig')
-    htot.Add(hsig)
-    hs.append(htot)
-    snames.append('Signal + Backgrounds')
+    # sum of ewk backgrounds
+    hewk = get2(samples,py)
+    hs.append(hewk)
+    snames.append('Total EWK+top')
+    # qcd
+    hqcd = get2(['qcd',])
+    hs.append(hqcd)
+    snames.append('QCD')
     HLINES.append( len(hs)-1 )
-    # data
-    hsig = get('data',py)
-    hs.append(hsig)
-    snames.append('Data')
-
-    ntotal = hs[0].GetNbinsX()
+    # sum of ALL backgrounds
+    if False:
+        hbg = get2(samples + ['qcd'],py)
+        hs.append(hbg)
+        snames.append('Total BG')
+    # data (for normalization)
+    hsig = get(['data',],py)
+    
+    ntotal = hs[0][0].GetNbinsX()
     nfirst = int(ntotal/2)
     nsecond = ntotal - nfirst
-    print '\\begin{table}'
-    print '\\centering'
     for isub in (0,1):
         nbins = nfirst if isub == 0 else nsecond
         binloop = xrange( 1 if isub==0 else nfirst+1 , nbins+1 if isub==0 else ntotal+1)
@@ -273,16 +278,24 @@ def printEventComposition_x2(py=None):
         print '\hline'
         print 'Process / $|\eta|$    ',
         for ibin in binloop:
-            low = '%.2f'%(hs[0].GetBinLowEdge(ibin))
-            high = '%.2f'%(hs[0].GetBinLowEdge(ibin)+hs[0].GetBinWidth(ibin))
+            low = '%.2f'%(hs[0][0].GetBinLowEdge(ibin))
+            high = '%.2f'%(hs[0][0].GetBinLowEdge(ibin)+hs[0][0].GetBinWidth(ibin))
             print '&   %s-%s   '%(low,high),
         print '\\\\'
         print '\hline'
         for i,h in enumerate(hs):
             z = [ snames[i] ]
             for ibin in binloop:
-                z.append( '%d'%h.GetBinContent(ibin) if i==0 else '%.1f'%h.GetBinContent(ibin) )
-            print '  &  '.join(z) + '   \\\\'
+                v  = h[0].GetBinContent(ibin)
+                e1 = h[0].GetBinError(ibin)
+                e2 = h[1].GetBinError(ibin)
+                if dorel:
+                    d  = hsig.GetBinContent(ibin)
+                    v = v/d*100.0
+                    e1 = e1/d*100.0
+                    e2 = e2/d*100.0
+                z.append( '$%.2f \pm %.2f \pm %.2f$'%(v,e1,e2) )
+            print ' & '.join(z) + '   \\\\'
             if i in HLINES:
                 print '\hline'
         print '\hline'
@@ -292,10 +305,6 @@ def printEventComposition_x2(py=None):
         if isub==0:
             for ibr in range(4):
                 print r'\linebreak'
-    print '\label{tab:Wmunu_bgcomp_%s_%s}'%(qs,py)
-    print '\caption{Estimated backgrounds in \Wmunu%s\ channel in $|\eta|$ bins, '%('m' if qs=='NEG' else 'p'),
-    print ptword(py) + '}'
-    print '\\end{table}'
 
 if __name__ == '__main__' and False:
     #print '======== DATA-EWK-QCD table ========'
@@ -308,11 +317,7 @@ if __name__ == '__main__' and False:
 if __name__ == '__main__' and True:
     #print '======== Event composition ========'
     if DIM==1:
-        print ''
-        print ''
         printEventComposition_x2()
     else:
-        for ipt in xrange(1,len(ptbins)):
-            print ''
-            print ''
-            printEventComposition_x2(ipt)
+        for iipt in [ipt,]:
+            printEventComposition_x2(iipt)
