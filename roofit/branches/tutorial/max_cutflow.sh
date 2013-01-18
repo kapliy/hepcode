@@ -3,6 +3,12 @@
 # RUNNING CUTFLOW
 bdir=/share/t3data3/antonk/ana/ana_v29I_12042012_edboard_stacoCB_all
 bdir=/share/t3data3/antonk/ana/ana_v29I_01072013_edboard_stacoCB_all
+bdir=/share/t3data3/antonk/ana/ana_v29I_01152013_paper_stacoCB_all
+
+source config.sh
+bdir=`dirname ${input}`
+
+echo "Input directory: ${bdir}"
 
 if [ "$#" -ge "1" ]; then
     # INSTRUCTIONS ON HOW TO PREPARE A COMPLETE DATA CUTFLOW FILE
