@@ -1,0 +1,59 @@
+
+%===========================================
+%  Unfolded plots
+%===========================================
+
+\section{ Cross-sections }
+\slide{ Status }
+{
+\iteb
+\item Added full McAtNlo and PowhegHerwig statistics
+\item Added PDF reweighting systematics
+\iteb
+\item CT10nlo,MSTW2008nlo68cl,HERAPDF15NLO_EIG,NNPDF23_nlo_as_0118,abm11_5n_nlo
+\itee
+\item Added W pt reweighting systematics
+\iteb
+\item Nominal is PowhegPythia8
+\item Maximum deviation wrt Sherpa14 or PythiaMC10
+\itee
+\itee
+}
+
+
+
+
+\section{ TFractionFitter }
+
+\slide{ Infinite loops in track-fitter }
+{
+\iteb
+\item TFractionFitter can sometimes go into an infinite loop
+\item No way to handle this in code since it blocks execution
+\item Previous solution was to use ExcludeBin on bins with little statistics
+\iteb
+\item For example, bins where both EWK and QCD templates have <3 events
+\item In my testing (100k fits), this was sufficient to fully prevent loops
+\itee
+\item I used Sebastian's script to check if this solution introduces bias
+\itee
+}
+
+\slide{ Pull distributions via Sebastian's script }
+{
+\colb[T]
+
+\column{.5\textwidth}
+\centering
+\only<1>{\footnotesize{Pull distribution in the nominal case }}
+\only<2>{\footnotesize{Exclude bins where either mc0 or mc1 has 0 or less entries}}
+\only<3>{\footnotesize{Exclude bins where either mc0 or mc1 has 2 or less entries}}
+
+\column{.5\textwidth}
+\centering
+\includegraphics[width=1.0\textwidth]<1>{dates/20121219/figures/pull/pull.pdf}
+\includegraphics[width=1.0\textwidth]<2>{dates/20121219/figures/pull/pull0.pdf}
+\includegraphics[width=1.0\textwidth]<3>{dates/20121219/figures/pull/pull2.pdf}
+
+\cole
+}

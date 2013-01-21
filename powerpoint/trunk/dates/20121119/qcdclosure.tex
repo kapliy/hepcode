@@ -80,3 +80,21 @@ Muon $\Wplus$ $|\eta|$ \\
 \itee 
 
 }
+
+
+
+\slide{ Aside: TFractionFitter and bin-by-bin variations }
+{
+
+\centering
+\only<1>{\footnotesize{ Templates returned from TFractionFitter  }}
+\only<2>{\footnotesize{ Original templates, but normalization from TFractionFitter }}
+
+\includegraphics[width=0.6\textwidth]<1>{dates/20121119/figures/qcdclosure/tff_mod.png}
+\includegraphics[width=0.6\textwidth]<2>{dates/20121119/figures/qcdclosure/tff_orig.png}
+
+TFractionFitter is free to change contents of each bin independently. \\
+This means the template shapes may change, and agreement looks better.\\
+Of course, if a bin changes too much, the penalty to $\chi^{2}$ gets large.
+
+}
