@@ -28,14 +28,6 @@ class antondb:
         f = open(name if name else s.fname,'w')
         pickle.dump(s.data,f)
         f.close()
-    def load(s):
-        """ non-locking """
-        if os.path.isfile(s.fname):
-            f = open(s.fname,'r')
-            s.data = pickle.load(f)
-            f.close()
-            return True
-        return False
     def ls(s,path='/'):
         """ trivial ls() """
         keys = s.data.keys()
@@ -50,6 +42,25 @@ class antondb:
             if lj==path and path in s.data and isinstance(s.data[path],dict):
                 for ikey in sorted(s.data[path].keys()):
                     print '-->',ikey
+    def load(s,do_lock=False):
+        return s.load_lock() if do_lock else s.load_nolock()
+    def load_nolock(s):
+        """ non-locking read """
+        if os.path.isfile(s.fname):
+            f = open(s.fname,'r')
+            s.data = pickle.load(f)
+            f.close()
+            return True
+        return False
+    def load_lock(s):
+        """ locking read """
+        with FileLock(s.fname):
+            if os.path.isfile(s.fname):
+                f = open(s.fname,'r')
+                s.data = pickle.load(f)
+                f.close()
+                return True
+        return False
     def add(s,path,addition):
         """ locking write """
         with FileLock(s.fname):

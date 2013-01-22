@@ -1,9 +1,22 @@
 #!/bin/bash
 
-out=/home/antonk/SupportingDocument/Wmunu/WmunuBackgroundTables.tex
-out=bla.tex
+source config.sh
+dout=${OUTDB}.abseta
 
-#./max_latex.py OUT_01072013_ALL.v3.abseta.1D.pt25.root POS
-./max_latex.py OUT_01072013_ALL.v3.abseta.2D.pt20.root NEG 1
+out=/home/antonk/SupportingDocument/Wmunu/figures/bgcomp
 
-#./max_latex.py 1 POS >  ${out} && ./max_latex.py 1 NEG >> ${out} && ./max_latex.py 2 POS >> ${out} && ./max_latex.py 2 NEG >> ${out} && echo DONE
+for q in POS NEG; do
+    # 1D
+    for pt in 20 25; do
+	echo "1D: ${q} pt${pt}"
+	./max_latex.py ${dout}.1D.pt${pt}.root ${q} > ${out}/bgcomp_${q}_pt${pt}.tex &
+    done
+    # 2D
+    pt=20
+    for ipt in {1..7}; do
+	echo "2D: ${q} pt${pt}"
+	./max_latex.py ${dout}.2D.pt${pt}.root ${q} ${ipt} > ${out}/bgcomp_${q}_${ipt}.tex &
+    done
+done
+
+wait

@@ -555,6 +555,30 @@ class SuPlot:
             for iss,sinst in enumerate(sgroups):
                 s.enable.append(idx)
                 idx += 1
+    def disable_max_control(s):
+        """ Disable some of the systematics for the control plots, per Max.
+        Thinking again about this, i think we also don't have the contribution
+        from CT10 error set for each plot, similarly as for SF toys. So in the
+        list i mentioned below the PDF rw is undefined....let's keep it out for
+        the moment.
+
+        Then the proposal is to draw a band with **shape uncertainty only**
+        and systematics covering:
+
+        all up/down exp systematics + MC gen + boson pT rw
+        """
+        assert len(s.flat) == len(s.enable), 'ERROR: disable_max_control requires that everything is enabled first'
+        idx = 0
+        newenable = s.enable[:]
+        for ig,sgroups in enumerate(s.sys):
+            name = s.groups[ig]
+            for iss,sinst in enumerate(sgroups):
+                if idx in s.enable and name in ('PDF',):
+                    newenable.remove(idx)
+                    print 'Disabling systematic:',name,sinst.name
+                idx += 1
+        print 'Removed a total of %d systematics'%(len(s.enable) - len(newenable))
+        s.enable = newenable[:]
     def qcd_region(s):
         """ Puts all SuSys in qcd region based on qcd map """
         assert False, "This function is unused. Rather, we normally call qcd_region directly on individual SuSys's"
@@ -628,21 +652,21 @@ class SuPlot:
             next('MCP_CSCALE')
         # MCP efficiency
         if True:
-            add2('MuonRecoSFUp','st_w_effsysup','MuonRecoSFUp',xadd=qcdadd)
-            add2('MuonRecoSFDown','st_w_effsysdown','MuonRecoSFDown',xadd=qcdadd)
+            add2('MuonRecoSFUp','MuonRecoSFUp','MuonRecoSFUp',xadd=qcdadd)
+            add2('MuonRecoSFDown','MuonRecoSFDown','MuonRecoSFDown',xadd=qcdadd)
             next('MCP_EFF')
         # trigger systematic
         if True:
-            add2('MuonTriggerSFPhi','st_w_trigphi','MuonTriggerSFPhi',xadd=qcdadd)
+            add2('MuonTriggerSFPhi','MuonTriggerSFPhi','MuonTriggerSFPhi',xadd=qcdadd)
             next('MCP_TRIG')
         else:
-            add2('MuonTriggerSFUp','st_w_trigstatup','MuonTriggerSFUp',xadd=qcdadd)
-            add2('MuonTriggerSFDown','st_w_trigstatdown','MuonTriggerSFDown',xadd=qcdadd)
+            add2('MuonTriggerSFUp','MuonTriggerSFUp','MuonTriggerSFUp',xadd=qcdadd)
+            add2('MuonTriggerSFDown','MuonTriggerSFDown','MuonTriggerSFDown',xadd=qcdadd)
             next('MCP_TRIG')
         # ISO efficiency
         if True:
-            add2('MuonIsoSFUp','st_w_isoup','MuonIsoSFUp',xadd=qcdadd)
-            add2('MuonIsoSFDown','st_w_isodown','MuonIsoSFDown',xadd=qcdadd)
+            add2('MuonIsoSFUp','MuonIsoSFUp','MuonIsoSFUp',xadd=qcdadd)
+            add2('MuonIsoSFDown','MuonIsoSFDown','MuonIsoSFDown',xadd=qcdadd)
             next('MCP_ISO')
         # JET
         if True:
@@ -672,21 +696,21 @@ class SuPlot:
             next('MET_CALJET')
         # W pT targets
         if True:
-            add('WptSherpa','WptSherpa',xadd=qcdadd)
-            #add('WptPythiaMC10','WptPythiaMC10')
+            add2('WptSherpa','WptSherpa','WptSherpa',xadd=qcdadd)
+            #add2('WptPythiaMC10','WptPythiaMC10','WptPythiaMC10',xadd=qcdadd)
             next('WPT_REWEIGHT')
         # PDF reweighting
         if True:
-            #add('PdfCT10nlo','PdfCT10nlo',xadd=qcdadd)
-            add('PdfMSTW','PdfMSTW',xadd=qcdadd)
-            add('PdfHERA','PdfHERA',xadd=qcdadd)
-            add('PdfNNPDF','PdfNNPDF',xadd=qcdadd)
-            add('PdfABM','PdfABM',xadd=qcdadd)
+            #add2('PdfCT10nlo','PdfCT10nlo',xadd=qcdadd)
+            add2('PdfMSTW','PdfMSTW','PdfMSTW',xadd=qcdadd)
+            add2('PdfHERA','PdfHERA','PdfHERA',xadd=qcdadd)
+            add2('PdfNNPDF','PdfNNPDF','PdfNNPDF',xadd=qcdadd)
+            add2('PdfABM','PdfABM','PdfABM',xadd=qcdadd)
             next('PDF')
         # QCD normalization
         if True:
-            add3('qcdup',1.3,'Nominal',xadd=qcdadd)
-            add3('qcddown',0.7,'Nominal',xadd=qcdadd)
+            add3('qcdup',1.04,'Nominal',xadd=qcdadd)
+            add3('qcddown',0.96,'Nominal',xadd=qcdadd)
             next('QCD_FRAC')
         # Signal MC systematic (previously: unfolding systematic)
         if True and 'mc' in nom.unfold:
@@ -757,102 +781,6 @@ class SuPlot:
             for hs in hss: # loop over systematics in this group
                 print '%s \t\t:\t\t %.2f%%' % (hs.name, 100.0*(hs.h.GetBinContent(b) - nom.GetBinContent(b))/nom.GetBinContent(b) if nom.GetBinContent(b) else 0 )
         pass
-    def summary_bin(s,b=None,html_name=None,canvas_name='SYS',MAKE_PLOT=True):
-        """
-        Prints relative deviation of various systematics in a given bin, compared with the statistical uncertainty
-        """
-        assert MAKE_PLOT==True,'Please enable making of the plot in SuData::summary_bin'
-        assert 0 in s.enable
-        nom = s.nominal_h()
-        bins = b if b else range(1,nom.GetNbinsX()+1)
-        oldsys,f = sys.stdout,None
-        if html_name:
-            f = open(html_name+'.html','w')
-            sys.stdout = f
-        else:
-            f = open(os.devnull, 'w')
-            sys.stdout = f
-        print '<HTML><BODY>'
-        print '<TABLE border="1">'
-        print '<thead><tr>'
-        print '<td width="100">|eta| bin</td>'
-        for b in bins:
-            tmin = nom.GetBinLowEdge(b)
-            tmax = tmin + nom.GetBinWidth(b)
-            print '<td width="50">%.1f..%.1f</td>'%(tmin,tmax)
-        print '</tr></thead>'
-        # statistical errors (for reference)
-        print '<TR>'
-        print '<TD>stat. err</TD>'
-        for b in bins:
-            err  = 100.0*(nom.GetBinError(b))/nom.GetBinContent(b) if nom.GetBinContent(b) else -999
-            print '<TD>%.2f</TD>'%(err)
-        print '</TR>'
-        Cc,Hh,Ll = None,[],None
-        s.Hh = Hh
-        colorlist = [2,3,4,5,6,20,28,41,46]
-        colorlist += colorlist
-        colorlist += colorlist
-        markerlist = [20,21,22,23]
-        markerlist+= markerlist
-        markerlist+= markerlist
-        if MAKE_PLOT:
-            import SuCanvas
-            s.Ccan = SuCanvas.SuCanvas(canvas_name)
-            s.Ccan.buildDefault(width=800,height=600)
-            s.Cc = Cc = s.Ccan.cd_canvas()
-            Cc.cd()
-            for ig,hss in enumerate(s.sys[1:]):
-                if False:
-                    bla = nom.Clone('hsys%d'%ig)
-                    bla.Reset()
-                    bla.Sumw2()
-                    bla.SetFillColor(0)
-                    Hh.append( bla )
-                else:
-                    Hh.append( SuSample.make_habseta('hsys%d'%ig) )
-                Hh[-1].SetLineColor(colorlist[ig])
-                #Hh[-1].SetFillColor(colorlist[ig])
-                Hh[-1].SetMarkerColor(colorlist[ig])
-                Hh[-1].SetMarkerStyle(markerlist[ig])
-            s.Ll = Ll = ROOT.TLegend()
-            Ll.SetFillColor(0)
-            Ll.SetHeader('Systematics:')
-        itot = 1
-        for ig,hss in enumerate(s.sys[1:]):
-            print '<TR><TD colspan="%d">'%(len(bins)+1)
-            print s.groups[ig+1]
-            print '</TD></TR>'
-            maxd = [0]*(len(bins)+2)
-            for hs in hss:
-                if itot not in s.enable: continue
-                name = hs.name
-                print '<TR>'
-                print '<TD>%s</TD>'%name
-                for b in bins:
-                    diff = 100.0*(hs.h.GetBinContent(b) - nom.GetBinContent(b))/nom.GetBinContent(b) if nom.GetBinContent(b) else -999
-                    maxd[b] = maxd[b] if maxd[b]>abs(diff) else abs(diff)
-                print '</TR>'
-                itot += 1
-            # use maximum deviation within this *group*
-            if MAKE_PLOT:
-                [ Hh[ig].SetBinContent(b,maxd[b]) for b in bins ]
-                Ll.AddEntry(Hh[ig],s.groups[ig+1],'LP')
-        print '</TABLE>'
-        print '</BODY></HTML>'
-        sys.stdout = oldsys
-        if f: f.close()
-        if MAKE_PLOT:
-            Hh[0].Draw('C P0')
-            s.Ccan.ConfigureAxis(Hh[0], None)
-            Hh[0].GetYaxis().SetRangeUser(0.0,3.0)
-            Hh[0].GetYaxis().SetTitle('Percentage deviation')
-            Hh[0].GetXaxis().SetTitle('|#eta|')
-            [ih.Draw('C P0 same') for ih in Hh[1:]]
-            s.Ccan.ConfigureLegend(Ll)
-            Ll.Draw('same')
-            #Cc.SaveAs("SYST_%s.png"%fname)
-        return s.Ccan
     def individual_systematics(s,canvas_name='SYS',norm=False):
         """
         if norm==True, absolute relative deviations are plotted
@@ -1109,7 +1037,7 @@ class SuSample:
                 h = f.Get(fpath).Clone(fname)
                 h.Sumw2()
                 if SuSample.debug:
-                    print ' Int: %.1f'%(h.Integral())
+                    print ' Int: %.1f  N: %d  x: %.3f'%(h.Integral(),h.GetEntries(),h.GetMean(1))
             else:
                 h.Add( f.Get('%s/%s'%(s.topdir(f),hpath)) )
         if h:
@@ -1838,7 +1766,7 @@ class SuStack:
                 print 'QCD ewk lumi: fake lumi = %.2f, based on this sample: %s'%(SuSample.lumi,thesig.name)
         if SuSample.debug: print 'SuData::get_scale(SuFit): 0 making ewk'
         hfixed = s.ewk('bgfixed',d2.clone()).h
-        assert hfixed.Integral()>0,'ewk template is empty for systematic: %s'%d.name
+        assert hfixed.Integral()>0,'ewk template is empty (%.2f) for systematic: %s'%(hfixed.Integral(),d.name)
         SuSample.lumi = oldlumi
         SuSample.lumifake = False
         if not (hdata and hfree and hfixed):

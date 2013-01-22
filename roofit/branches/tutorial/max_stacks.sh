@@ -4,6 +4,10 @@
 
 source config.sh
 
+# refit qcd for each systematic? As of Jan 22, we decided to NOT refit.
+METALLSYS="--metallsys"
+METALLSYS=""
+
 # eta with QCD template from external root file
 if [ "0" == "1" ]; then
     echo ''
@@ -19,8 +23,9 @@ function run() {
     # 0.92,1.095
     PB=2
     if [ "${PT}" == "20" ]; then PB=0; fi
-    ./stack2.py -o ${out} --hsource "d3_eta_lpt_met:y:${PB}:-1:z:0:-1" --bin 10,-2.5,2.5 --refline 0.90,1.12 ${common} &> ${log}.eta &
-    #./stack2.py -o ${out} --hsource "d3_abseta_lpt_eta:${fiducial}" --bin 10,-2.5,2.5 --rebin 2 --refline 0.85,1.175 ${common} &> ${log}.eta &
+    REFLINE_ETA="0.90,1.12"
+    REFLINE_ETA="0.85,1.175"
+    ./stack2.py -o ${out} --hsource "d3_eta_lpt_met:y:${PB}:-1:z:0:-1" --bin 10,-2.5,2.5 --refline ${REFLINE_ETA} ${common} &> ${log}.eta &
     ./stack2.py -o ${out} --hsource "d3_abseta_lpt_phi:${fiducial}" --bin 10,-3.14,3.14 --rebin 4 --refline 0.85,1.175 ${common} &> ${log}.phi &
     ./stack2.py -o ${out} --hsource "d3_abseta_lpt_wmt:${fiducial}" --bin 100,40,120 --rebin 2 --refline 0.85,1.175 ${common} &> ${log}.wmt &
     ./stack2.py -o ${out} --hsource "d3_abseta_lpt_wpt:${fiducial}" --bin 100,0,120  --rebin 2 --refline 0.85,1.175 ${common} &> ${log}.wpt &
@@ -29,12 +34,12 @@ function run() {
 }
 # Standard stacks 20 GeV
 fiducial="x:0:-1:y:0:-1" # 20 GeV
-common="-b --input ${input} --lvar d3_abseta_lpt_met:${fiducial} --lbin 100,0,40 --lrebin 2 -t P -m control_stack --charge 3 --bgqcd ${bgqcd} --metallsys --lnofits"
+common="-b --input ${input} --lvar d3_abseta_lpt_met:${fiducial} --lbin 100,0,40 --lrebin 2 -t P -m control_stack --charge 3 --bgqcd ${bgqcd} ${METALLSYS} --lnofits"
 PT=20
 run
 # Standard stacks 25 GeV
 fiducial="x:0:-1:y:2:-1" # 25 GeV
-common="-b --input ${input} --lvar d3_abseta_lpt_met:${fiducial} --lbin 100,0,40 --lrebin 2 -t P -m control_stack --charge 3 --bgqcd ${bgqcd} --metallsys --lnofits"
+common="-b --input ${input} --lvar d3_abseta_lpt_met:${fiducial} --lbin 100,0,40 --lrebin 2 -t P -m control_stack --charge 3 --bgqcd ${bgqcd} ${METALLSYS} --lnofits"
 PT=25
 run
 
@@ -54,14 +59,16 @@ function runs() {
     out=CONTROL_BINS
     log=LOG.ipt${ipt}
     fiducial="x:0:-1:y:${ipt}:${ipt}"
-    ./stack2.py -o ${out} --hsource "d3_eta_lpt_met:y:${ipt}:${ipt}:z:0:-1" --bin 10,-2.5,2.5 --refline 0.90,1.12 ${common} &> ${log}.eta &
+    REFLINE_ETA="0.90,1.12"
+    REFLINE_ETA="0.85,1.175"
+    ./stack2.py -o ${out} --hsource "d3_eta_lpt_met:y:${ipt}:${ipt}:z:0:-1" --bin 10,-2.5,2.5 --refline ${REFLINE_ETA} ${common} &> ${log}.eta &
     ./stack2.py -o ${out} --hsource "d3_abseta_lpt_phi:${fiducial}" --bin 10,-3.14,3.14 --rebin 4 --refline 0.85,1.175 ${common} &> ${log}.phi &
     ./stack2.py -o ${out} --hsource "d3_abseta_lpt_wmt:${fiducial}" --bin 100,40,120 --rebin 2 --refline 0.85,1.175 ${common} &> ${log}.wmt &
     ./stack2.py -o ${out} --hsource "d3_abseta_lpt_wpt:${fiducial}" --bin 100,0,120  --rebin 2 --refline 0.85,1.175 ${common} &> ${log}.wpt &
     ./stack2.py -o ${out} --hsource "d3_abseta_lpt_met:${fiducial}" --bin 100,25,120 --rebin 2 --refline 0.85,1.175 ${common} &> ${log}.met &
 }
 for ipt in {1..7}; do
-    common="-b --input ${input} --lvar d3_abseta_lpt_met:x:0:-1:y:${ipt}:${ipt} --lbin 100,0,40 --lrebin 2 -t P${ipt} -m control_stack --charge 3 --bgqcd ${bgqcd} --metallsys --lnofits"
+    common="-b --input ${input} --lvar d3_abseta_lpt_met:x:0:-1:y:${ipt}:${ipt} --lbin 100,0,40 --lrebin 2 -t P${ipt} -m control_stack --charge 3 --bgqcd ${bgqcd} ${METALLSYS} --lnofits"
     runs
     if [ "${ipt}" == "2" ]; then
 	echo "Waiting mid-way: `jobs | wc -l` jobs..."

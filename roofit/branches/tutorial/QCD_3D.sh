@@ -19,7 +19,7 @@ if [ "0" == "1" ]; then
 fi
 
 #nomonly=" --nomonly"  # to save actual QCD plots [for a big table in the paper]
-pnomonly=" --extra ${DB} --exit"   # to make systematic summary plots
+nomonly=" --extra ${DB} --exit"   # to make systematic summary plots
 if [ "1" == "1" ]; then
     for iq in 0 1; do
 	# fits in eta slices
