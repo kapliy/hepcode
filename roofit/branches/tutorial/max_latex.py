@@ -197,15 +197,14 @@ def printEventComposition(py=None , dorel=True):
     hqcd = get2(['qcd',],py)
     hs.append(hqcd)
     snames.append('QCD')
-    HLINES.append( len(hs)-1 )
     # sum of ALL backgrounds
     if False:
+        HLINES.append( len(hs)-1 )
         hbg = get2(samples + ['qcd'],py)
         hs.append(hbg)
         snames.append('Total BG')
     # data (for normalization)
     hsig = get(['data',],py)
-    
     ntotal = hs[0][0].GetNbinsX()
     nfirst = int(ntotal/2)
     nsecond = ntotal - nfirst
@@ -246,21 +245,66 @@ def printEventComposition(py=None , dorel=True):
             for ibr in range(4):
                 print r'\linebreak'
 
-if __name__ == '__main__' and False:
-    #print '======== DATA-EWK-QCD table ========'
-    print ''
-    printDataEwkQcd()
-    #print '======== DATA-BGSUB-SIG table ========'
-    print ''
-    printDataBgsubSig()
+def printCombinedComposition(py=None , dorel=True):
+    """ A combined Q+ / Q- / Q+- version """
+    global qs
+    hlines = []
+    samples = ['all/zmumu' , 'all/wtaunu' , 'all/ttbar_stop' , 'all/ztautau' , 'all/diboson']
+    snames = ['$Z \\rightarrow \mu\mu$ + DrellYan','$W \\rightarrow \\tau \\tau$','$t \\bar{t}$ + single-top','$Z \\rightarrow \\tau \\tau$','Dibosons']
 
-if __name__ == '__main__' and True:
-    #print '======== Event composition ========'
-    if DIM==1:
+    HS = []
+    HSIG = []
+    
+    for qs in ['POS','NEG','ALL']:
+        hs = [ get2([sample,],py) for sample in samples]
+        if qs=='POS': hlines.append( len(hs)-1 )
+        # sum of ewk backgrounds
+        hs.append(get2(samples,py))
+        if qs=='POS': snames.append('Total EWK+top')
+        # qcd
+        hs.append(get2(['qcd',],py))
+        if qs=='POS': snames.append('QCD')
+        # data (for normalization)
+        hsig = get(['data',],py)
+        # GLOBALIZE
+        HS.append ( hs )
+        HSIG.append( hsig )
+
+    def oops(iq):
+        v,e1,e2 = HS[iq][i][0].GetBinContent(ibin),HS[iq][i][0].GetBinError(ibin),HS[iq][i][1].GetBinError(ibin)
+        if dorel:
+            d  = HSIG[iq].GetBinContent(ibin); v = v/d*100.0; e1 = e1/d*100.0; e2 = e2/d*100.0
+        return v,e1,e2
+        
+    if True:
+        print '\\begin{tabular}{lccc}'
+        print '\hline'
+        print '\hline'
+        print r'Process & $W^+$ & $W^-$ & $W^{\pm}$ \\'
+        print '\hline'
+        ibin = 1
+        for i,h in enumerate(HS[0]):
+            z = [ snames[i] ]
+            v,e1,e2 = oops(0)
+            z.append( '$%.2f \pm %.2f \pm %.2f$'%(v,e1,e2) )
+            v,e1,e2 = oops(1)
+            z.append( '$%.2f \pm %.2f \pm %.2f$'%(v,e1,e2) )
+            v,e1,e2 = oops(2)
+            z.append( '$%.2f \pm %.2f \pm %.2f$'%(v,e1,e2) )
+            print ' & '.join(z) + '   \\\\'
+            if i in hlines:
+                print '\hline'
+        print '\hline'
+        print '\hline'
+
+if __name__ == '__main__':
+    if DIM==0:
+        assert qs == 'ALL'
+        printCombinedComposition(dorel=False)
+    elif DIM==1:
         printEventComposition()
     elif DIM==2:
         for iipt in [ipt,]:
             printEventComposition(py=iipt)
-    elif DIM==0:
-        assert qs == 'ALL'
-        pass
+    else:
+        assert False
