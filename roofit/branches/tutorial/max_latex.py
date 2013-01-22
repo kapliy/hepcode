@@ -20,8 +20,8 @@ DIM = 1 if re.search('1D',fname) else (2 if re.search('2D',fname) else 0)
 pt  = 20 if re.search('pt20',fname) else 25
 
 assert pt in (20,25)
-assert DIM in (1,2)
-assert qs in ('POS','NEG')
+assert DIM in (0,1,2)
+assert qs in ('POS','NEG','ALL')
 if DIM!=2:
     assert ipt==None
 else:
@@ -258,6 +258,9 @@ if __name__ == '__main__' and True:
     #print '======== Event composition ========'
     if DIM==1:
         printEventComposition()
-    else:
+    elif DIM==2:
         for iipt in [ipt,]:
             printEventComposition(py=iipt)
+    elif DIM==0:
+        assert qs == 'ALL'
+        pass
