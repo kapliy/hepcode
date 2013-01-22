@@ -986,9 +986,12 @@ def qcdfit(name,spR2,iref=0,apply_stat=False):
     #       [0]    [1]     [2]     [3]     [4]         [5] [6]   [7] [8]   [9]  [10]  [11] [12]     [13]         [14] [15]   [16]
     return [name,  ndata,ndataE,ndatasub,ndatasubE,  ntot,ntotE,nsig,nsigE,newk,newkE,nqcd,nqcdE,   delqcd     , chi2,ndf,   iref]
 
-
-def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
-    """ Performs a full set of systematic QCD fits in a given eta x pt slice """
+qcdfit_cache = None
+def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
+    """ Performs a full set of systematic QCD fits in a given eta x pt slice
+    if read_cache is True, it will load the values from cache file
+    """
+    global qcdfit_cache
     MC_SIMPLE = True # if False, obtain the average of several sig=1 and sig=4 variations
     # cache results
     import antondb
@@ -996,8 +999,15 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
     a = None
     if opts.extra:
         a = antondb.antondb(opts.extra)
-        if a.load() and key in a.data:
-            return a.data[key]['MSYS'],a.data[key]['MGROUPS']
+        if read_cache:
+            if not qcdfit_cache:
+                assert a.load(False),'Unable to read values from DB file'
+                qcdfit_cache = a.data
+            assert key in qcdfit_cache,'Running with read_cache, but missing key %s'%key
+            return qcdfit_cache[key]['MSYS'],qcdfit_cache[key]['MGROUPS']
+        else:
+            if a.load(True) and key in a.data:
+                return a.data[key]['MSYS'],a.data[key]['MGROUPS']
     # set defaults for nominal case
     eword = 'eta' if etamode==1 else 'abseta'
     opts.lvar = opts.var = 'd3_%s_lpt_met'%(eword)
@@ -1200,9 +1210,10 @@ if mode in ('qcdfit','qcdfit_sys'):
     #       [0]    [1]     [2]     [3]     [4]         [5] [6]   [7] [8]   [9]  [10]  [11] [12]     [13]         [14] [15]   [16]
     #return [name,  ndata,ndataE,ndatasub,ndatasubE,  ntot,ntotE,nsig,nsigE,newk,newkE,nqcd,nqcdE,   delqcd     , chi2,ndf,   iref]
     # perform fits
+    read_cache = opts.ieta in ['LOOP',]
     do_init = True
     for ieta in etas:
-        MSYS , MGROUPS = qcdfit_slice(spR.clone() , iq,opts.etamode,ieta,ipt , nomonly=opts.nomonly)
+        MSYS , MGROUPS = qcdfit_slice(spR.clone() , iq,opts.etamode,ieta,ipt , nomonly=opts.nomonly , read_cache = read_cache )
         NOM = MSYS[0].values()[0]
         SQCD = SREL = qcdfit_sys_deviations(MSYS,MGROUPS)
         SLAB = MGROUPS[1:]
@@ -1281,17 +1292,19 @@ if mode in ('qcdfit','qcdfit_sys'):
     ys.append( [ 'QCD Unc. / N_{W}^{MC} (%)' , None] )
     ys.append( [ 'Background Fraction (%)' , None] )
     xaxis_info = [ '#eta' if opts.etamode==1 else '|#eta|',None ]
-    maxh = 2.5
     maxp = [0.0,0.5,1.0,3.0,5.0,10.0,20.0,30.0,50.0,100.0]
     if opts.ieta in ('LOOP','ALL'): # only plot if we are looping over all eta
         for zz in xrange(NC):
-            height = maxh if zz == NC-1 else maxp
-            print zz,len(hs[zz]),M[zz].ntot()
+            height = maxp
+            if zz==0: height=2.5
+            elif opts.ieta=='LOOP' and opts.ipt=='ALL25' and zz in (2,3): height = 'abs2.0'
+            elif opts.ieta=='LOOP' and opts.ipt=='ALL20' and zz in (2,3): height = 'abs2.5'
+            print 'SAVING:',zz,xaxis_info+ys[zz],height
             c[zz].plotAny(hs[zz],M=M[zz],height=height,drawopt='LP',xaxis_info=xaxis_info+ys[zz],pave=pave)
             c[zz].SaveSelf()
     if opts.exit: dexit()
 
-if mode=='qcdfit_frac':
+if mode=='qcdfit_adrian':
     assert False,'TODO - make qcd/ewk fraction plots that overlay multiple pT slices, similar to Adrian'
 
 # Study different MC weights.

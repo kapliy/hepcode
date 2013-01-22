@@ -42,7 +42,7 @@ class antondb:
             if lj==path and path in s.data and isinstance(s.data[path],dict):
                 for ikey in sorted(s.data[path].keys()):
                     print '-->',ikey
-    def load(s,do_lock=False):
+    def load(s,do_lock=True):
         return s.load_lock() if do_lock else s.load_nolock()
     def load_nolock(s):
         """ non-locking read """

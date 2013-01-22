@@ -753,9 +753,12 @@ class SuCanvas:
             hs[0].GetYaxis().SetRangeUser(0,0.5);
         elif height=='ratio':
             hs[0].GetYaxis().SetRangeUser(0,2.0);
-        elif height<3.0:
+        elif type(height)==type('abs') and height[0:3]=='abs':
+            hmax = float(height[3:])
+            hs[0].GetYaxis().SetRangeUser(0,hmax);
+        elif height<3.0: # relative scale factor
             hs[0].GetYaxis().SetRangeUser(0,maxh*float(height));
-        else:
+        else:            # absolute scale
             hs[0].GetYaxis().SetRangeUser(0,height);
         # legend
         s.ConfigureLegend(leg)
