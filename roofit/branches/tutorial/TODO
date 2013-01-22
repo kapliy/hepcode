@@ -1,13 +1,20 @@
-- split into low-high pileup subperiods (use systematic folders, i guess). OR: scale nmu pileup +/- 10%
+- POS+NEG background composition table in inclusive measurement (separate function needed)
+- background composition tables double-diff: put mu+ and mu- on one axis
+
+
+- DONE: extend fit range to 60 GeV and see if QCD fluctuations go down!! - not really
+DOING: Add vertical bar to met fit plots
+integrated case qcd plots: keep y axis at 2%
+
 - fix pt range on pt7 histograms (pt>50, not pt>120)
-- use CT10 PDF error sets instead of individual PDFs
+- DONE: use CT10 PDF error sets instead of individual PDFs
 Max: add 4 more qcd fit plots in the main body (low/high pt, central/forward)
 - tables of systematics for differential -> appendix. Also split in two halves
 - check stat eff uncertainty on integrated W measurement compared to 2010.
 - integrated measurement systematics table: delta-sigma/sigma (CW+B)
-- QCD plot: make a plot of 3 generators vs qcd fit range
-- JAN: extend fit range to 60 GeV and see if QCD fluctuations go down!!
+- OPTIONAL: QCD plot - make a plot of 3 generators vs qcd fit range
 QCD + EWK fraction: combine multiple pt slices
+- NO NEED: split into low-high pileup subperiods (use systematic folders, i guess). OR: scale nmu pileup +/- 10%
 
 Update muon momentum section
 

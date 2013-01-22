@@ -1010,8 +1010,12 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
         return
     # prepare fit-related systematics
     ltail = EB(ieta,etamode) + PB(ipt)
-    qcdadd={'var':'d3_%s_lpt_met'%(eword)+ltail,'min':0,'max':40,'rebin':2} # adrian nominal
-    qcdadd_range={'var':'d3_%s_lpt_met'%(eword)+ltail,'min':5,'max':50,'rebin':2}
+    if False:
+        qcdadd={'var':'d3_%s_lpt_met'%(eword)+ltail,'min':0,'max':40,'rebin':2} # old nominal
+        qcdadd_range={'var':'d3_%s_lpt_met'%(eword)+ltail,'min':5,'max':50,'rebin':2}
+    else:
+        qcdadd={'var':'d3_%s_lpt_met'%(eword)+ltail,'min':0,'max':60,'rebin':2} # adrian's new nominal
+        qcdadd_range={'var':'d3_%s_lpt_met'%(eword)+ltail,'min':5,'max':50,'rebin':2}
     qcdadd_var={'var':'d3_%s_lpt_wmt'%(eword)+ltail,'min':50,'max':85,'rebin':2}
     # clone the stack maker
     spL = spL2.clone(q=iq, histo = opts.var + ltail , qcdadd = qcdadd)
@@ -1103,7 +1107,7 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
 
     # pt reweighting target
     if True:
-        add(qcdfit('WptSherpa',spL.clone(sysdir_mc='WptSherpa')))
+        add(qcdfit('WptSherpa',spL.clone(subdir_mc='WptSherpa')))
         next('p_{T}^{W} reweighting')
 
     # type of anti-isolation
@@ -1115,7 +1119,7 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
     # PDF
     if True:
         for x in ['PdfMSTW','PdfHERA','PdfNNPDF','PdfABM']:
-            add(qcdfit(x,spL.clone(sysdir_mc=x)))
+            add(qcdfit(x,spL.clone(subdir_mc=x)))
         next('PDF')
 
     # MET scale
@@ -1148,7 +1152,7 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False):
             NMAP = {'MuonRecoSFUp':'st_w_effsysup','MuonRecoSFDown':'st_w_effsysdown',
                     'MuonIsoSFUp':'st_w_isoup','MuonIsoSFDown':'st_w_isodown',
                     'MuonTriggerSFPhi':'st_w_trigphi'}
-            add(qcdfit(x,spL.clone(subdir_mc=NMAP[x])))
+            add(qcdfit(x,spL.clone(subdir_mc=x)))
         next('Muon efficiencies')
 
     # jet energy scale & resolution
@@ -1279,8 +1283,7 @@ if mode in ('qcdfit','qcdfit_sys'):
     xaxis_info = [ '#eta' if opts.etamode==1 else '|#eta|',None ]
     maxh = 2.5
     maxp = [0.0,0.5,1.0,3.0,5.0,10.0,20.0,30.0,50.0,100.0]
-    # FIXME AK
-    if True or opts.ieta in ('LOOP','ALL'): # only plot if we are looping over all eta
+    if opts.ieta in ('LOOP','ALL'): # only plot if we are looping over all eta
         for zz in xrange(NC):
             height = maxh if zz == NC-1 else maxp
             print zz,len(hs[zz]),M[zz].ntot()
@@ -1597,6 +1600,8 @@ if mode=='unfold2d':
 if mode=='control_stack':
     if opts.nomonly:
         spR.enable_nominal()
+    else:
+        spR.disable_max_control()
     plots = [opts.hsource,]
     charges = [opts.charge,]
     if opts.charge==3:

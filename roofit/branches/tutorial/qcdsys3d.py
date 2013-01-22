@@ -11,6 +11,15 @@ memo = """
 v1: first version to be placed in common afs area. January 6 2013.
 v2: added integrated measurement. January 7 2013.
 v3: saving all background components. Added charge-summed integrated measurement. January 7 2013.
+v4: qcd fits are performed in 0..60 range
+v6: Jan 15-21 2013
+    Fixed bug where QCD was charge-symmetric (always taken from mu+)
+    Fixed bug that disabled wmunu signal xsec_up variation
+    Fixed bug whereas charged-combined histos (POS+NEG) were sometimes saved as NEG+NEG
+    lbl=01152013_paper   # large rewrite of sf systematics: all st_w_XXX are renamed; wptw and pdf are moved to st_w folder; saving PDF vars for each CT10 member.
+    lbl=01152013_paper_fix  # retrying MC runs in an attempt to fix broken systematics. dgadd -u1
+    lbl=01182013_paper      # latest trigger phi corrections (works for multiple muons!). dgadd -u5 (again). stability fix from adrian.
+v7: same as v6, but qcd fits performed to 60 GeV    
 """
 
 import sys,os,re,math,copy
@@ -68,6 +77,8 @@ assert os.path.exists(fin_name),'ERROR: cannot find input file: %s'%fin_name
 print 'ROOT repackaging: %s -> %s'%(fin_name,fout_name)
 import common
 import ROOT
+ROOT.TH1.AddDirectory(ROOT.kFALSE)
+ROOT.TH2.AddDirectory(ROOT.kFALSE)
     
 def get(ieta,ipt):
     key = '%s_%s_%s_%s'%(iq,ETAMODE,ieta,ipt)
@@ -79,7 +90,8 @@ def get(ieta,ipt):
     
 CACHE = {}
 def make_qcd(name):
-    if name in CACHE: return [CACHE[name],]
+    cname = '%s_Q%s'%(name,iq)
+    if cname in CACHE: return [CACHE[cname],]
     out = qcd.Clone(name)
     out.Reset()
     out.SetTitle(out.GetTitle()+'_'+name)
@@ -104,7 +116,7 @@ def make_qcd(name):
                 v  = MSYS_FLAT['Nominal'][11] + err
                 ve = MSYS_FLAT['Nominal'][12]
                 if v<0:
-                    print 'WARNING: negative qcd contribution:',ipt,ieta,nom,err
+                    print 'WARNING: negative qcd contribution:',ipt,ieta,v
             else:
                 if ipt==ipts[0] and ieta==ietas[0]:
                     print 'Falling back to Nominal for systematic:',name
@@ -116,7 +128,7 @@ def make_qcd(name):
             elif DIM==2:
                 out.SetBinContent(ieta,ipt,v)
                 out.SetBinError(ieta,ipt,ve)
-    CACHE[name] = out
+    CACHE[cname] = out
     return [out,]
 
 def make_total(csys,samples,cdir,prefix,add=False):
@@ -131,11 +143,14 @@ def make_total(csys,samples,cdir,prefix,add=False):
     def write_or_add(xdir,xnew,xtitle):
         xold = xdir.Get(xtitle)
         if add and xold:
-            xold.Add(xnew)
-            xold.Write( xtitle , ROOT.TObject.kOverwrite)
+            xoldc = xold.Clone()
+            xoldc.Add(xnew)
+            xoldc.Write( xtitle , ROOT.TObject.kOverwrite)
         else:
-            xnew.Write( xtitle , ROOT.TObject.kOverwrite)
+            xoldc = xnew.Clone()
+            xoldc.Write( xtitle , ROOT.TObject.kOverwrite)
     # save all subsamples (in a sub-directory)
+    sdir = None
     if True:
         sdir = cdir.Get("all") if cdir.Get("all") else cdir.mkdir("all")
         sdir.cd()
@@ -148,7 +163,6 @@ def make_total(csys,samples,cdir,prefix,add=False):
             assert re.search(prefix,title)
             #print 'Subsample: ',prefix,title
             write_or_add(sdir,h,title)
-        sdir.Write()
         cdir.cd()
     # save signal (in root directory)
     if True:
@@ -231,6 +245,7 @@ if __name__=='__main__':
                 [ make_total(system,allsamples,fout_D[q],'Nominal_ewk_xsecup',q==2 and iq==1) for q in (iq,2) ]
                 bdir = fin.Get( '%s_xsecdown'%FQNAMES[iq] )
                 assert bdir
+                sigL = [bdir.Get('wmunu_'+system),]
                 allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + make_qcd('Nominal') + sigL
                 [ make_total(system,allsamples,fout_D[q],'Nominal_ewk_xsecdown',q==2 and iq==1) for q in (iq,2) ]
             # generate histograms for MC-based QCD
@@ -246,3 +261,16 @@ if __name__=='__main__':
     sout = ROOT.TObjString(memo)
     sout.Write("memo")
     fout.Close()
+    
+    if True: # a few sanity checks
+        fout = ROOT.TFile.Open(fout_name,"READ")
+        CHK = [ 'data','ewk_Nominal','sig_Nominal','qcd_Nominal','totalbg_Nominal', 'totalbg_Nominal_qcd_up','totalbg_Nominal_ewk_xsecdown','totalbg_JetScaleUp','totalbg_unfoldMCNLO' ,'all/qcd_Nominal','all/wmunu_MuonResMSDown','all/zmumu_MuonResIDUp',]
+        BNS = [1,] if DIM==0 else ([1,2,3,5] if DIM==1 else [1,5,10,16,22])
+        for chk in CHK:
+            c1 = fout.Get('POS/%s'%chk); assert c1
+            c2 = fout.Get('NEG/%s'%chk); assert c2
+            c3 = fout.Get('ALL/%s'%chk); assert c3
+            for b in BNS:
+                assert abs( c1.GetBinContent(b)+c2.GetBinContent(b)-c3.GetBinContent(b) ) < 0.00001
+            assert abs( c1.Integral()+c2.Integral()-c3.Integral() ) < 0.00001
+        fout.Close()

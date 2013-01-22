@@ -182,67 +182,7 @@ def printDataBgsubSig(py=None):
     for i in xrange(1,data.GetNbinsX()+1):
         lineXYZ(i,data,bgsub,sig,py)
 
-def printEventComposition(py=None):
-    """ Adrian version: one huge table """
-    HLINES = []
-    samples = ['qcd_Nominal' , 'all/zmumu_Nominal' , 'all/wtaunu_Nominal' , 'all/ttbar_stop_Nominal' , 'all/ztautau_Nominal' , 'all/diboson_Nominal']
-    snames = ['QCD','$Z \\rightarrow \mu\mu$ + DrellYan','$W \\rightarrow \\tau \\tau$','$t \\bar{t}$ + single-top','$Z \\rightarrow \\tau \\tau$','Dibosons']
-    hs = [ get(sample,py) for sample in samples]
-    HLINES.append( len(hs)-1 )
-    # sum of bg
-    hbg = hs[0].Clone('bgtotal')
-    [hbg.Add(h) for h in hs[1:]]
-    hs.append(hbg)
-    snames.append('All Backgrounds')
-    # signal
-    hsig = get('all/wmunu_Nominal',py)
-    hs.append(hsig)
-    snames.append('$W \\rightarrow \mu \\nu$ (Signal)')
-    # total
-    htot = hbg.Clone('bgtotalsig')
-    htot.Add(hsig)
-    hs.append(htot)
-    snames.append('Signal + Backgrounds')
-    HLINES.append( len(hs)-1 )
-    # data
-    hsig = get('data',py)
-    hs.append(hsig)
-    snames.append('Data')
-    ntotal = hs[0].GetNbinsX()
-    #print '\\clearpage'
-    print '\\begin{sidewaystable}'
-    print r'\begin{center}'
-    if True:
-        nbins = ntotal
-        binloop = xrange( 1 , ntotal+1)
-        print '\\begin{tabular}{%s}'%('c'*(nbins+1))
-        #/        &  0.00--0.20  &  0.20--0.40  &  0.40--0.60  &  0.60--0.80  &  1.00--1.20  \\
-        print '\hline'
-        print '\hline'
-        print 'Process / $|\eta|$    ',
-        for ibin in binloop:
-            low = '%.2f'%(hs[0].GetBinLowEdge(ibin))
-            high = '%.2f'%(hs[0].GetBinLowEdge(ibin)+hs[0].GetBinWidth(ibin))
-            print '&   %s-%s   '%(low,high),
-        print '\\\\'
-        print '\hline'
-        for i,h in enumerate(hs):
-            z = [ snames[i] ]
-            for ibin in binloop:
-                z.append( '%d'%h.GetBinContent(ibin) if i==0 else '%.1f'%h.GetBinContent(ibin) )
-            print '  &  '.join(z) + '   \\\\'
-            if i in HLINES:
-                print '\hline'
-        print '\hline'
-        print '\hline'
-        print '\end{tabular}'
-    print '\label{tab:Wmunu_bgcomp_%s_%s}'%(qs,py)
-    print '\caption{Estimated backgrounds in \Wmunu%s\ channel in bins of $|\eta|$, '%('m' if qs=='NEG' else 'p'),
-    print ptword(py) + '}'
-    print r'\end{center}'
-    print r'\end{sidewaystable}'
-
-def printEventComposition_x2(py=None , dorel=True):
+def printEventComposition(py=None , dorel=True):
     """ A version split across two tables """
     HLINES = []
     samples = ['all/zmumu' , 'all/wtaunu' , 'all/ttbar_stop' , 'all/ztautau' , 'all/diboson']
@@ -254,7 +194,7 @@ def printEventComposition_x2(py=None , dorel=True):
     hs.append(hewk)
     snames.append('Total EWK+top')
     # qcd
-    hqcd = get2(['qcd',])
+    hqcd = get2(['qcd',],py)
     hs.append(hqcd)
     snames.append('QCD')
     HLINES.append( len(hs)-1 )
@@ -317,7 +257,7 @@ if __name__ == '__main__' and False:
 if __name__ == '__main__' and True:
     #print '======== Event composition ========'
     if DIM==1:
-        printEventComposition_x2()
+        printEventComposition()
     else:
         for iipt in [ipt,]:
-            printEventComposition_x2(iipt)
+            printEventComposition(py=iipt)
