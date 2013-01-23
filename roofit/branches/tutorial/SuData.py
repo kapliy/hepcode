@@ -1767,6 +1767,7 @@ class SuStack:
         if SuSample.debug: print 'SuData::get_scale(SuFit): 0 making ewk'
         hfixed = s.ewk('bgfixed',d2.clone()).h
         assert hfixed.Integral()>0,'ewk template is empty (%.2f) for systematic: %s'%(hfixed.Integral(),d.name)
+        lumifrac =  oldlumi / SuSample.lumi
         SuSample.lumi = oldlumi
         SuSample.lumifake = False
         if not (hdata and hfree and hfixed):
@@ -1798,7 +1799,7 @@ class SuStack:
             pteta = d2.histo_pteta()
             assert type(pteta)==type([]) and len(pteta)==2
             ftitle = [ SuSys.QMAP[d2.charge][4]+' : '+pteta[0]   ,   pteta[1]   ]
-        tmp = f.drawFitsTF(ftitle,logscale=logscale,modbins=SuStack.QCD_PLOT_MODIFIED_BINS)
+        tmp = f.drawFitsTF(ftitle,logscale=logscale,modbins=SuStack.QCD_PLOT_MODIFIED_BINS,lumifrac=lumifrac)
         assert tmp
         s.fitnames[key] = fitname
         s.fits[key] = tmp[0]
