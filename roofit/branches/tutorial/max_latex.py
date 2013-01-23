@@ -300,6 +300,7 @@ def printCombinedComposition(py=None , dorel=True):
                 print '\hline'
         print '\hline'
         print '\hline'
+        print '\end{tabular}'
 
 if __name__ == '__main__':
     if DIM==0:
