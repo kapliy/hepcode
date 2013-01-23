@@ -8,6 +8,10 @@ source config.sh
 METALLSYS="--metallsys"
 METALLSYS=""
 
+# as of Jan 22, 0..60 is the default met fit range
+METRANGE="100,0,40"
+METRANGE="100,0,60"
+
 # eta with QCD template from external root file
 if [ "0" == "1" ]; then
     echo ''
@@ -34,12 +38,12 @@ function run() {
 }
 # Standard stacks 20 GeV
 fiducial="x:0:-1:y:0:-1" # 20 GeV
-common="-b --input ${input} --lvar d3_abseta_lpt_met:${fiducial} --lbin 100,0,40 --lrebin 2 -t P -m control_stack --charge 3 --bgqcd ${bgqcd} ${METALLSYS} --lnofits"
+common="-b --input ${input} --lvar d3_abseta_lpt_met:${fiducial} --lbin ${METRANGE} --lrebin 2 -t P -m control_stack --charge 3 --bgqcd ${bgqcd} ${METALLSYS} --lnofits"
 PT=20
 run
 # Standard stacks 25 GeV
 fiducial="x:0:-1:y:2:-1" # 25 GeV
-common="-b --input ${input} --lvar d3_abseta_lpt_met:${fiducial} --lbin 100,0,40 --lrebin 2 -t P -m control_stack --charge 3 --bgqcd ${bgqcd} ${METALLSYS} --lnofits"
+common="-b --input ${input} --lvar d3_abseta_lpt_met:${fiducial} --lbin ${METRANGE} --lrebin 2 -t P -m control_stack --charge 3 --bgqcd ${bgqcd} ${METALLSYS} --lnofits"
 PT=25
 run
 
@@ -48,7 +52,7 @@ run
 fiducial="x:0:-1:y:2:-1" # 25 GeV
 out=METSHAPE_GEN
 log=LOG.stackMC
-./stack2.py -b --input ${input} --hsource d3_abseta_lpt_met:${fiducial} --bin 100,25,120  --rebin 2 --refline 0.85,1.175 -o ${out} -t D -m control_stack --charge 0 --bgqcd ${bgqcd} --lvar d3_abseta_lpt_met:${fiducial} --lbin 100,0,40 --lrebin 2 --metallsys  &> ${log}.met &  # --nomonly
+./stack2.py -b --input ${input} --hsource d3_abseta_lpt_met:${fiducial} --bin 100,25,120  --rebin 2 --refline 0.85,1.175 -o ${out} -t D -m control_stack --charge 0 --bgqcd ${bgqcd} --lvar d3_abseta_lpt_met:${fiducial} --lbin ${METRANGE} --lrebin 2 --metallsys  &> ${log}.met &  # --nomonly
 
 # PLOTTING IN VARIOUS PT BINS
 function runs() {
@@ -68,7 +72,7 @@ function runs() {
     ./stack2.py -o ${out} --hsource "d3_abseta_lpt_met:${fiducial}" --bin 100,25,120 --rebin 2 --refline 0.85,1.175 ${common} &> ${log}.met &
 }
 for ipt in {1..7}; do
-    common="-b --input ${input} --lvar d3_abseta_lpt_met:x:0:-1:y:${ipt}:${ipt} --lbin 100,0,40 --lrebin 2 -t P${ipt} -m control_stack --charge 3 --bgqcd ${bgqcd} ${METALLSYS} --lnofits"
+    common="-b --input ${input} --lvar d3_abseta_lpt_met:x:0:-1:y:${ipt}:${ipt} --lbin ${METRANGE} --lrebin 2 -t P${ipt} -m control_stack --charge 3 --bgqcd ${bgqcd} ${METALLSYS} --lnofits"
     runs
     if [ "${ipt}" == "2" ]; then
 	echo "Waiting mid-way: `jobs | wc -l` jobs..."

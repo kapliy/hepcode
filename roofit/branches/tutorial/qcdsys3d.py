@@ -19,7 +19,9 @@ v6: Jan 15-21 2013
     lbl=01152013_paper   # large rewrite of sf systematics: all st_w_XXX are renamed; wptw and pdf are moved to st_w folder; saving PDF vars for each CT10 member.
     lbl=01152013_paper_fix  # retrying MC runs in an attempt to fix broken systematics. dgadd -u1
     lbl=01182013_paper      # latest trigger phi corrections (works for multiple muons!). dgadd -u5 (again). stability fix from adrian.
-v7: same as v6, but qcd fits performed to 60 GeV    
+v7: same as v6, but qcd fits performed to 60 GeV.
+    Also fixed a bug in charge-combined ScaleSoftTermsDown_ptHard histograms
+    Also fixed a bug in 0D qcd calculation - it was not grabbing the right number
 """
 
 import sys,os,re,math,copy
@@ -96,7 +98,7 @@ def make_qcd(name):
     out.Reset()
     out.SetTitle(out.GetTitle()+'_'+name)
     ipts = range(1,len(ptbins)) if DIM==2 else ['ALL%d'%PT,]
-    ietas = range(1,len(etabins))
+    ietas = ['ALL',] if DIM==0 else range(1,len(etabins))
     for ipt in ipts:
         for ieta in ietas:
             MSYS,MGROUPS = get(ieta,ipt)
@@ -122,12 +124,17 @@ def make_qcd(name):
                     print 'Falling back to Nominal for systematic:',name
                 v  = MSYS_FLAT['Nominal'][11]
                 ve = MSYS_FLAT['Nominal'][12]
-            if DIM in (0,1):
+            if DIM==0:
+                out.SetBinContent(1,v)
+                out.SetBinError(1,ve)
+            elif DIM==1:
                 out.SetBinContent(ieta,v)
                 out.SetBinError(ieta,ve)
             elif DIM==2:
                 out.SetBinContent(ieta,ipt,v)
                 out.SetBinError(ieta,ipt,ve)
+            else:
+                assert False
     CACHE[cname] = out
     return [out,]
 
@@ -141,6 +148,7 @@ def make_total(csys,samples,cdir,prefix,add=False):
     assert samples[-2],'Missing qcd'
     assert samples[-1],'Missing signal (wmunu)'
     def write_or_add(xdir,xnew,xtitle):
+        assert xtitle == xtitle.strip(), 'ERROR: extra spaces in: |%s|'%xtitle
         xold = xdir.Get(xtitle)
         if add and xold:
             xoldc = xold.Clone()
@@ -224,6 +232,7 @@ if __name__=='__main__':
             fout_D[iq].cd()
             adir.Get('data').Write('data',ROOT.TObject.kOverwrite)
             for system in systems: #including Nominal
+                assert system == system.strip(), 'Extra space in systematic name: |%s|'%system
                 sigL = [adir.Get('wmunu_'+system),]
                 allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + make_qcd(system) + sigL
                 [ make_total(system,allsamples,fout_D[q],system,q==2 and iq==1) for q in (iq,2) ]
@@ -264,13 +273,13 @@ if __name__=='__main__':
     
     if True: # a few sanity checks
         fout = ROOT.TFile.Open(fout_name,"READ")
-        CHK = [ 'data','ewk_Nominal','sig_Nominal','qcd_Nominal','totalbg_Nominal', 'totalbg_Nominal_qcd_up','totalbg_Nominal_ewk_xsecdown','totalbg_JetScaleUp','totalbg_unfoldMCNLO' ,'all/qcd_Nominal','all/wmunu_MuonResMSDown','all/zmumu_MuonResIDUp',]
+        CHK = [ 'data','ewk_Nominal','sig_Nominal','qcd_Nominal','totalbg_Nominal', 'totalbg_Nominal_qcd_up','totalbg_Nominal_ewk_xsecdown','totalbg_JetScaleUp','totalbg_unfoldMCNLO' ,'all/qcd_Nominal','all/wmunu_MuonResMSDown','all/zmumu_MuonResIDUp','all/zmumu_ScaleSoftTermsDown_ptHard','all/zmumu_ScaleSoftTermsUp_ptHard']
         BNS = [1,] if DIM==0 else ([1,2,3,5] if DIM==1 else [1,5,10,16,22])
         for chk in CHK:
             c1 = fout.Get('POS/%s'%chk); assert c1
             c2 = fout.Get('NEG/%s'%chk); assert c2
             c3 = fout.Get('ALL/%s'%chk); assert c3
             for b in BNS:
-                assert abs( c1.GetBinContent(b)+c2.GetBinContent(b)-c3.GetBinContent(b) ) < 0.00001
-            assert abs( c1.Integral()+c2.Integral()-c3.Integral() ) < 0.00001
+                assert abs( c1.GetBinContent(b)+c2.GetBinContent(b)-c3.GetBinContent(b) ) < 0.00001, '%s: %.2f + %.2f != %.2f'%(chk,c1.GetBinContent(b),c2.GetBinContent(b),c3.GetBinContent(b))
+            assert abs( c1.Integral()+c2.Integral()-c3.Integral() ) < 0.00001, '%s: %.2f + %.2f != %.2f'%(chk,c1.Integral(),c2.Integral(),c3.Integral())
         fout.Close()

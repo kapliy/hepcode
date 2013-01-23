@@ -151,7 +151,7 @@ class SuSys:
         ptbins = binning.ptbins
         if iminB in (0,1) and imaxB in (-1,len(ptbins)-1): res[1] = pad+'p_{T} > 20'
         elif iminB==2 and imaxB==len(ptbins)-1: res[1] = pad+'p_{T} > 25'
-        elif iminB==7 and imaxB==7: res[1] = pad+'p_{T} > %d'%(ptbins[iminB-1]) #FIXME TODO - wrong pt range!
+        elif iminB==7 and imaxB==7: res[1] = pad+'p_{T} > %d'%(ptbins[iminB-1])
         else: res[1] = pad+'%d < p_{T} < %d'%(ptbins[iminB-1],ptbins[imaxB])
         return res
     def use_ntuple(s):
@@ -688,7 +688,7 @@ class SuPlot:
             add('ResoSoftTermsDown_ptHard','ResoSoftTermsDown_ptHard',xadd=qcdadd)
             next('MET_RESO')
             add('ScaleSoftTermsUp_ptHard','ScaleSoftTermsUp_ptHard',xadd=qcdadd)
-            add('ScaleSoftTermsDown_ptHard ','ScaleSoftTermsDown_ptHard',xadd=qcdadd)
+            add('ScaleSoftTermsDown_ptHard','ScaleSoftTermsDown_ptHard',xadd=qcdadd)
             next('MET_SCALE')
         # using fully calibrated jets for MET?
         if False:
@@ -1950,6 +1950,7 @@ class SuStack:
             for sgroups in h.sys:
                 for sinst in sgroups:
                     isys += 1
+                    assert sinst.name == sinst.name.strip(), 'FATAL: found a white space in systematic name: [%s]'%sinst.name
                     title = name+'_'+sinst.name
                     # skip rules
                     if name=='data':
