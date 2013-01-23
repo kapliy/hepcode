@@ -16,6 +16,9 @@ def safe_divide(num,den):
   return num*1.0/den if den!=0 else sys.float_info.max
 fabs = math.fabs
 
+# choose if we want to print EWK SF (underneath to qcd SF)
+SUFIT_PLOT_EWK_FRAC = True
+
 class SuFit:
   """ Float background fit class """
   def __init__(s):
@@ -320,14 +323,14 @@ class SuFit:
     print 'INFO: EWK frac = %.2f  QCD frac = %.2f'%(s.fractions[-1],s.Wfractions[-1]),'INFO: Chi2 =','%8f'%s.chi2[-1],' NDF =',s.ndf[-1]
     sys.stdout.flush()
 
-  def drawFitsTF(s,title=None,logscale=False,modbins=True):
+  def drawFitsTF(s,title=None,logscale=False,modbins=True,lumifrac=1.0):
     """ Draw fits in all variables - using the TFractionFitter version """
     res = []
     for ivar in xrange(len(s.vnames)):
-      res += s.drawFitTF(ivar,title,logscale=logscale,modbins=modbins)
+      res += s.drawFitTF(ivar,title,logscale=logscale,modbins=modbins,lumifrac=lumifrac)
     return res
 
-  def drawFitTF(s,ivar,title=None,logscale=False,modbins=True):
+  def drawFitTF(s,ivar,title=None,logscale=False,modbins=True,lumifrac=1.0):
     """ Draw the fit for ivar's variable - TFractionFitter version
     if modbins==True, it uses modified templates where each bin is allowed to float within Poisson stats
     Otherwise, it uses the original out-of-the-box templates
@@ -389,6 +392,17 @@ class SuFit:
       obj.GetXaxis().SetTitle( xname  ) # over-ridden in ratio plot
       bin_width = data.GetXaxis().GetBinWidth(1)
       obj.GetYaxis().SetTitle( "Entries / %.2f GeV" % bin_width )
+
+    # indicate fit range
+    if True:
+      canvas.update()
+      fmax = s.w.var(s.vnames[ivar]).getMax()
+      s.gr = gr = ROOT.TGraph(2)
+      gr.SetPoint(0,fmax,canvas._plotPad.GetFrame().GetY1())
+      gr.SetPoint(1,fmax,canvas._plotPad.GetFrame().GetY2())
+      gr.SetLineColor(ROOT.kRed)
+      gr.SetLineStyle(2)
+      gr.Draw('L')
     
     #s.key = key = ROOT.TLegend(0.6, canvas.getY2()-(0.03*(3+len(s.free))) , canvas.getX2() , canvas.getY2() )
     s.key = key = ROOT.TLegend()
@@ -410,11 +424,10 @@ class SuFit:
           fractext.AddText(title)
           fractext.AddText('')
       if s.fractions[ift]!=0 and s.scales[ift]!=0:
-        fractext.AddText( '%s Frac. = %.3f #pm %.2f%%'%(s.free[ift].getLegendName(),s.fractions[ift],s.fractionsE[ift]/s.fractions[ift]*100.0 if abs(s.fractions[ift])>1e-6 else 0) )
-        fractext.AddText( '%s SF = %.3f #pm %.2f%%'%(s.free[ift].getLegendName(),s.scales[ift],s.scalesE[ift]/s.scales[ift]*100.0 if abs(s.scales[ift])>1e-6 else 0) )
-      if s.Wfractions[ift]!=0 and s.Wscales[ift]!=0 and False:
-        fractext.AddText( '%s Frac. = %.3f #pm %.2f%%'%('EWK',s.Wfractions[ift],s.WfractionsE[ift]/s.Wfractions[ift]*100.0 if s.Wfractions[ift]!=0 else 0) )
-        fractext.AddText( '%s Scale = %.3f #pm %.2f%%'%('EWK',s.Wscales[ift],s.WscalesE[ift]/s.Wscales[ift]*100.0 if s.Wscales[ift]!=0 else 0) )
+        fractext.AddText( '%s Frac. = %.2f #pm %.2f%%'%(s.free[ift].getLegendName(),s.fractions[ift],s.fractionsE[ift]/s.fractions[ift]*100.0 if abs(s.fractions[ift])>1e-6 else 0) )
+        fractext.AddText( '%s SF = %.2f #pm %.2f%%'%(s.free[ift].getLegendName(),s.scales[ift],s.scalesE[ift]/s.scales[ift]*100.0 if abs(s.scales[ift])>1e-6 else 0) )
+      if s.Wfractions[ift]!=0 and s.Wscales[ift]!=0 and SUFIT_PLOT_EWK_FRAC:
+        fractext.AddText( '%s SF = %.2f #pm %.2f%%'%('EWK',s.Wscales[ift]/lumifrac,s.WscalesE[ift]/s.Wscales[ift]*100.0 if s.Wscales[ift]!=0 else 0) )
       if s.ndf[ift]!=0:
         fractext.AddText( '#chi^{2}=%.1f   #chi^{2}/NDF=%.1f'%(s.chi2[ift],s.chi2[ift]/s.ndf[ift]) )
     canvas.ConfigureText(fractext,text_y2 = key.GetY1NDC()-0.03)
