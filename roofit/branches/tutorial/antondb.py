@@ -16,6 +16,8 @@ class antondb:
     """ DB manager """
     def __init__(s,fbase):
         """ contstructor """
+        if re.search('.db',fbase):
+            fbase = fbase[:-3]
         s.fbase = fbase
         s.fname = fbase + '.db'   # antondb
         s.rname = fbase + '.root' # ROOT TFile

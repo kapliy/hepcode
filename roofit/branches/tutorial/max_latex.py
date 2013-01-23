@@ -67,7 +67,9 @@ EWK.append( ['unfoldPowhegJimmy', 'unfoldMCNLO'] ) # caveat: ewk=5 (same)
 EWK.append( ['Nominal_qcd_up','Nominal_qcd_down'])
 
 def getH(x):
-    """ retrieves one histogram and makes sure it is valid """
+    """ retrieves one histogram and makes sure it is valid
+    TODO: re.search for slash (/) and if found, do not add qs manually
+    """
     nm = '%s/%s'%(qs,x)
     tmp = f.Get(nm)
     if not tmp:
@@ -100,7 +102,9 @@ def get(xall,py=None):
     return tmp
 
 def get2(NSYS,py=None,SYS=EWK):
-    """ returns both statistical and systematic histograms """
+    """ returns both statistical and systematic histograms
+    NSYS is a vector of samples to add (eg, if we want all ewk, or to combine charges)
+    """
     nom = get( [ isys + '_' + SYS[0][0] for isys in NSYS] ,py)
     sys = nom.Clone(nom.GetName()+'_sys')
     # zero out stat. error in sys, since it will contain systematic ONLY
@@ -300,7 +304,7 @@ def printCombinedComposition(py=None , dorel=True):
 if __name__ == '__main__':
     if DIM==0:
         assert qs == 'ALL'
-        printCombinedComposition(dorel=False)
+        printCombinedComposition(dorel=True)
     elif DIM==1:
         printEventComposition()
     elif DIM==2:

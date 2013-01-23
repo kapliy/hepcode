@@ -19,4 +19,12 @@ for q in POS NEG; do
     done
 done
 
+# 0D charge-combined
+q=ALL
+for pt in 20 25; do
+    echo "0D: ${q} pt${pt}"
+    ./max_latex.py ${dout}.0D.pt${pt}.root ${q} > ${out}/bgcomp_${q}_pt${pt}.tex &
+done
+
+
 wait

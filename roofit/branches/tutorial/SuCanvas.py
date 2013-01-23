@@ -714,10 +714,18 @@ class SuCanvas:
                 else:
                     #h.SetLineColor( PlotOptions.autocolor(i) )
                     if i==0:
-                        h.Draw(drawopt)
+                        if drawopt=='HIST CP E0':
+                            h.Draw('HIST CP')
+                            s.data.append( h.DrawClone('A SAME CP')  )
+                        else:
+                            h.Draw(drawopt)
                         hdraw = h
                     else:
-                        h.Draw('A SAME '+drawopt)
+                        if drawopt=='HIST CP E0':
+                            h.Draw('A SAME HIST CP')
+                            s.data.append( h.DrawClone('A SAME CP')  )
+                        else:
+                            h.Draw('A SAME '+drawopt)
             if htot:
                 htot.Draw('A same E2')
         # axis labeling
