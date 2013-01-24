@@ -1,52 +1,19 @@
-- POS+NEG background composition table in inclusive measurement (separate function needed)
-- background composition tables double-diff: put mu+ and mu- on one axis
 
 
-- DONE: extend fit range to 60 GeV and see if QCD fluctuations go down!! - not really
-DOING: Add vertical bar to met fit plots
-integrated case qcd plots: keep y axis at 2%
-
-- fix pt range on pt7 histograms (pt>50, not pt>120)
-- DONE: use CT10 PDF error sets instead of individual PDFs
-Max: add 4 more qcd fit plots in the main body (low/high pt, central/forward)
 - tables of systematics for differential -> appendix. Also split in two halves
 - check stat eff uncertainty on integrated W measurement compared to 2010.
 - integrated measurement systematics table: delta-sigma/sigma (CW+B)
 - OPTIONAL: QCD plot - make a plot of 3 generators vs qcd fit range
 QCD + EWK fraction: combine multiple pt slices
-- NO NEED: split into low-high pileup subperiods (use systematic folders, i guess). OR: scale nmu pileup +/- 10%
-
 Update muon momentum section
 
-Peter: add a statement about ewk template normalization after the fits. 
-
-* background composition: properly correlate errors on total BG (not just sum-in-quadrature of errors of each sample)
 * Investigate why the MC@NLO relative uncertainty is almost twice as large *after* unfolding.
   Actually first think about, perhaps it makes sense???
-* Investigate why in charge-combined measurement, the ewk uncertainty comes to dominate (!!!)
-* Investigate why in charge-combined measurement, Wpm is not compatible with Wp + Wm, even at "inputs into unfolding" stage. That's not QCD, right, since we add up contributions separately!
 
 MAX SESSION:
-- Only W+ and W- single and double diff.
-  For integrated, need C_W combined, too. How? sum up unfolding W+ and W-. Sum up numerator and denominator separately.
-  OR: just use TTrees!
-- DONE: systematic bands at detector level
-  no PDF/theory because those affect both reco and truth levels
-  But: may include it for better bands to cover differences
-- tables of bg composition:
-  integrated - with errors
-  single/double diff. - no errors
-- DONE QCD: variable bin width - nope, just extend range
-  DONE Fix only below; show full range.
 - Purity/stability
   Produce purity plots and save them somewhere
-- DONE: Main body of the note: pt=25 
-  lower priority in appendix: pt=20
-  2d: plot the lowest pt bin 
 - TODO: d0sig < 3.5
-
-DONE: put QCD_3D on the pbs
-TODO: try to make MC@NLO and Powheg+Herwig QCD entry as the "average"
 
 QCD updates:
 - DONE: absolute uncertainy on qcd (NOM=delta, DEN = bg-subtracted data, ~ signal)
