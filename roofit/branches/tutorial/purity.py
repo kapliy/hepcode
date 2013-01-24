@@ -1,4 +1,9 @@
+#!/usr/bin/env python
+import common
 import ROOT
+ROOT.gROOT.SetBatch(True)
+
+import os,sys
 
 """
 # Adrian's script to plot purity
@@ -8,16 +13,27 @@ ROOT.gStyle.SetPaintTextFormat(".2f")
 ROOT.gStyle.SetPalette(1)
 ROOT.gStyle.SetOptStat(0)
 
-filename = "/Users/adrian/data/AnalysisOutput/hists_19.1.2013_All/Nominal/sign_combined/hists_mc11c_v4_powheg_pythia_Wenu__NOMINAL.root"
+# from config.sh
+bgqcd = 4
+z = os.popen('source config.sh && echo $input','r')
+fin_dir = z.readline().strip()
+z.close()
 
+OUTDIR='/home/antonk/SupportingDocument/Wmunu/figures/purity'
 num = "purityNum"
 purityDenomName = "purityDenom"
 stabilityDenomName = "stabilityDenom"
 
-f = ROOT.TFile(filename, "READ")
-
+f = None
 for sign in ["pos", "neg"]:
-    indir = "UnfoldingHists_{0}_vsEta_vsPt".format(sign)
+    print 'Processing:',sign
+    if f: f.Close()
+    filename = os.path.join(fin_dir,'unfold_histo_powheg_pythia_%s.root'%('plus' if sign=='pos' else 'min'))
+
+    f = ROOT.TFile(filename, "READ")
+    assert f.IsOpen() and not f.IsZombie()
+
+    indir = "%s/Nominal/abseta_lpt"%('POS' if sign=='pos' else 'NEG')
 
     purityHist = f.Get(indir+"/"+num).Clone("purityNum")
     stabilityHist = f.Get(indir+"/"+num).Clone("stabilityNum")
@@ -43,8 +59,10 @@ for sign in ["pos", "neg"]:
 
     c = ROOT.TCanvas("canvas", "canvas", 600, 600)
     purityHist.Draw("COLZTEXT")
-    c.Print("plots/note_plots/purity_2D_{0}.pdf".format(sign))
+    c.Print(OUTDIR+"/purity_2D_{0}.pdf".format(sign))
+    c.Print("DELME_purity_2D_{0}.png".format(sign))
 
     c2 = ROOT.TCanvas("canvas", "canvas", 600, 600)
     stabilityHist.Draw("COLZTEXT")
-    c2.Print("plots/note_plots/stability_2D_{0}.pdf".format(sign))
+    c2.Print(OUTDIR+"/stability_2D_{0}.pdf".format(sign))
+    c2.Print("DELME_stability_2D_{0}.png".format(sign))
