@@ -22,6 +22,8 @@ v6: Jan 15-21 2013
 v7: same as v6, but qcd fits performed to 60 GeV.
     Also fixed a bug in charge-combined ScaleSoftTermsDown_ptHard histograms
     Also fixed a bug in 0D qcd calculation - it was not grabbing the right number
+v8: unscrambled fit and control region uncertainties on QCD
+    now, these get unfolded independently to preserve bin-by-bin correlations
 """
 
 import sys,os,re,math,copy
@@ -92,9 +94,15 @@ def get(ieta,ipt):
     
 CACHE = {}
 def make_qcd(name):
-    cname = '%s_Q%s'%(name,iq)
+    # quick hack to create some naming aliases for the systematics
+    REPMAP = {}
+    REPMAP['Nominal_qcd_fitrange'] = 'met_range'
+    REPMAP['Nominal_qcd_iso1'] = 'IsoWind20m'
+    REPMAP['Nominal_qcd_iso2'] = 'IsoWind40'
+    mname = REPMAP[name] if name in REPMAP else name
+    cname = '%s_Q%s'%(mname,iq)
     if cname in CACHE: return [CACHE[cname],]
-    out = qcd.Clone(name)
+    out = qcd.Clone(mname)
     out.Reset()
     out.SetTitle(out.GetTitle()+'_'+name)
     ipts = range(1,len(ptbins)) if DIM==2 else ['ALL%d'%PT,]
@@ -105,25 +113,33 @@ def make_qcd(name):
             MSYS_FLAT = common.qcdfit_sys_flatten(MSYS,MGROUPS)
             v = 0
             # if requesting a particular systematic, just take it directly
-            if name in MSYS_FLAT:
-                v  = MSYS_FLAT[name][11]
-                ve = MSYS_FLAT[name][12]
-            elif name in ('Nominal_qcd_up','Nominal_qcd_down'):
+            if mname in MSYS_FLAT:
+                v  = MSYS_FLAT[mname][11]
+                ve = MSYS_FLAT[mname][12]
+            elif mname in ('Nominal_qcd_up','Nominal_qcd_down'):
                 # Hardcoded list of QCD systematics not propagated through EWUnfold (so we need to add them in quadrature here)
                 # That includes: fit error; met fit range  + choice of anti-isolation (previously missing)
                 _ERRORS = ['fit_error','met_range','IsoWind20m','IsoWind40']
                 devs = common.qcdfit_sys_deviations_subset(MSYS,MGROUPS,_ERRORS)
                 dev2 = math.sqrt( sum([ xx*xx for xx in devs ]) )
-                err  = 1.0*dev2 if name=='Nominal_qcd_up' else -1.0*dev2
+                err  = 1.0*dev2 if mname=='Nominal_qcd_up' else -1.0*dev2
                 v  = MSYS_FLAT['Nominal'][11] + err
                 ve = MSYS_FLAT['Nominal'][12]
-                if v<0:
-                    print 'WARNING: negative qcd contribution:',ipt,ieta,v
+            elif mname in ('Nominal_qcd_statup','Nominal_qcd_statdown'):
+                _ERRORS = ['fit_error',]
+                devs = common.qcdfit_sys_deviations_subset(MSYS,MGROUPS,_ERRORS)
+                dev2 = math.sqrt( sum([ xx*xx for xx in devs ]) )
+                err  = 1.0*dev2 if mname=='Nominal_qcd_statup' else -1.0*dev2
+                v  = MSYS_FLAT['Nominal'][11] + err
+                ve = MSYS_FLAT['Nominal'][12]
             else:
+                assert False,'Comment out this line if you are OK with falling back to Nominal systemtics for: %s'%mname
                 if ipt==ipts[0] and ieta==ietas[0]:
-                    print 'Falling back to Nominal for systematic:',name
+                    print 'Falling back to Nominal for systematic:',mname
                 v  = MSYS_FLAT['Nominal'][11]
                 ve = MSYS_FLAT['Nominal'][12]
+            if v<0:
+                print 'WARNING: negative qcd contribution:',ipt,ieta,v
             if DIM==0:
                 out.SetBinContent(1,v)
                 out.SetBinError(1,ve)
@@ -237,14 +253,21 @@ if __name__=='__main__':
                 allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + make_qcd(system) + sigL
                 [ make_total(system,allsamples,fout_D[q],system,q==2 and iq==1) for q in (iq,2) ]
                 #adir4.Get('wmunu_'+system).Write('wmunu_PowhegJimmy_'+system,ROOT.TObject.kOverwrite)
-            # manually generate nominal histograms with qcd Up/Down variations
+            # manually generate nominal histograms with additional qcd variations
             # this only includes variations that are not correlated with the response matrix.
             system='Nominal'
             sigL = [adir.Get('wmunu_'+system),]
-            allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + make_qcd('Nominal_qcd_up') + sigL
-            [ make_total(system,allsamples,fout_D[q],'Nominal_qcd_up',q==2 and iq==1) for q in (iq,2) ]
-            allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + make_qcd('Nominal_qcd_down') + sigL
-            [ make_total(system,allsamples,fout_D[q],'Nominal_qcd_down',q==2 and iq==1) for q in (iq,2) ]
+            for qsys in ['Nominal_qcd_up','Nominal_qcd_down',
+                         'Nominal_qcd_statup','Nominal_qcd_statdown',
+                         'Nominal_qcd_fitrange',
+                         'Nominal_qcd_iso1','Nominal_qcd_iso2']:
+                allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + make_qcd(qsys) + sigL
+                [ make_total(system,allsamples,fout_D[q],qsys,q==2 and iq==1) for q in (iq,2) ]
+            if False: # old list
+                allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + make_qcd('Nominal_qcd_up') + sigL
+                [ make_total(system,allsamples,fout_D[q],'Nominal_qcd_up',q==2 and iq==1) for q in (iq,2) ]
+                allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + make_qcd('Nominal_qcd_down') + sigL
+                [ make_total(system,allsamples,fout_D[q],'Nominal_qcd_down',q==2 and iq==1) for q in (iq,2) ]
             # generate histograms for ewkbg xsec variations
             if True:
                 bdir = fin.Get( '%s_xsecup'%FQNAMES[iq] )
