@@ -1,90 +1,37 @@
+JAN:
+as a cross-check, re-build cross-section in bins of eta (not |eta|) - only for single-differential.
+Do bin-by-bin for all measurements.
+DONE: remove AlternativeUnfolding systematic from the script
+Comparison between different monte-carlos at reco level (?, via Max)
 
+* Make scripts to create integrated cross-section tables.
+cat NOW | awk '{v=2.4*2; print $1*v,$2,$3*v,$4,$5,$6*v,$7,$8,$9*v}'
+* understand why 1D unfolding does not do proper division by bin width in Plot.C!!!
+
+* Peter: double ratio plots of control plots: mean discrepancy weighted by efficiency 
 
 - tables of systematics for differential -> appendix. Also split in two halves
 - check stat eff uncertainty on integrated W measurement compared to 2010.
-- integrated measurement systematics table: delta-sigma/sigma (CW+B)
 - OPTIONAL: QCD plot - make a plot of 3 generators vs qcd fit range
 QCD + EWK fraction: combine multiple pt slices
 Update muon momentum section
+- TODO: d0sig < 3.5
 
 * Investigate why the MC@NLO relative uncertainty is almost twice as large *after* unfolding.
   Actually first think about, perhaps it makes sense???
 
-MAX SESSION:
-- Purity/stability
-  Produce purity plots and save them somewhere
-- TODO: d0sig < 3.5
-
-QCD updates:
-- DONE: absolute uncertainy on qcd (NOM=delta, DEN = bg-subtracted data, ~ signal)
-- DONE: relative uncertainty on qcd (NOM=delta, DEN = nqcd)
-- DONE: qcd and ewk (non-signal) frac (NOM = qcd , DEN = data counts)
-
 TABLES:
-- DONE cutflow in data
-- DONE cutflow in MC
 - QCD uncertainties in table form
 - Plot QCD chi2/ndf for different systematics
-- data, EWK, QCD event counts
-
-Check QCD template shapes in mu+ and mu-: both in signal and control regions
-Make sure the toy variations are actually used in Plot.C
-
-Compare by eye a few images of with/without bin exclusion.
-Finish making the "test" plots.
-
-Check jet calibration effect, especially in data - propagation to met.
-  - by adding it as a "systematic"
 
 Do MCP eff/reco corrections use pt scaling?
 TH1 phi - try fourier spectrum
-Check tau in lowest pt bin
-MEL: add cone40 anti-isolation window, too
-
-NOV28:
-* SLIDES wtaunu - any decision? Reweighting Alpgen to CT10 -> mean SF = 1.12!
-* show the change in inclusive W spectrum vs eta when using Alpgen vs Powheg+Pythia for tau MC.
-
-Compare version summing up sub-components
-Max: add sub-samples of larger vs smaller values of <mu> in single-differential histograms
-Max: add sub-samples of earlier vs later periods.
-Max: wpt reweighting - make sure we have a no-reweigting sub-sample (why?)
-
-
-Work on qcdsys2d: automatically save qcd inside make_total, too.
 
 DONE: CHECK if muon reco corrections correct in phi - NO
-DONE: Check Max's physics_Nominal - he does include all truth, so can be used for acceptance correction
-      DONE: speed: stays the same
-DONE: PDF REWEIGHTING:
-      study LHA pdf reweighting via TrigFTKAna addition
-DONE: include some extra variables in unfolding to derive isFiducial on-the-fly
-DONE: implement Carl's eta/phi map for trigger efficiencies
-DONE: Implement cutflow tables by parsing OUT*root files
 DONE: slimmed ntuples fully work now. But sometimes they run super slowly, not sure why!
-DONE: replicas scheme - how to do it. For which scale factors.
-DONE: add 53.8 GeV cut to Powheg+Pythia Z samples to remove overlap with Drell-Yan
-DONE: check if pileup reweighting works better with my own, old pileup reweighting file (found bug in my pileup file!)
-DONE: add jes pileup term etc (two terms total) to systematics!
-DONE: fake lumi for qcd fits prevents bgqcd=4 from working correctly - we need to do bg subtraction - it's fine
-DONE: QCD fits from  3d histograms
-DONE: check if last two-three pt bins have vastly different scale factors. If not, see if we can fit them all together (easy via 3d histos)
 
 QCD FITS:
-Possibility of relaxing charge requirement on QCD to double stats
-Lumi: some bins in ewk template appear to have extra large errors. WHY? low-stat backgrounds? Should all templates be normed to min.?
 LONG overdue: really need to understand difference in bgqcd=3 and bgqcd=4. Plot normalized templates on top of each other!
-
-INCLUSIVE FITS:
-- show shape change in tfraction fitter vs in stack plots in all variables (met,wmt,pt)
-- show how ewk normalization changes in tfraction fitter (how it is scaled relative to cross-section) Do math back.
-- plot muon pt when fit was done in pt, vs when fit was done in met. how much does it improve?
-- ratio band: add band of qcd systematic in three different variables
-- ZOOM: 5% on eta, 10% on others
-- AMBITIOUS: add other variables in slices of pt-eta bins and then re-add them using correct QCD scale factors!
-            this needs to be done soon - to be added to the ntuple!
-            can qcd templates then be re-built inside qcdsys2d?
-
 
 BAD BIN: switch to ntuple-based studies with un-normalized bb/cc MC
      Look at muons in Z events (use QCD heavy flavor MC) - plot eta
@@ -105,42 +52,13 @@ OCT29:
 * Look at MCP systematics by-hand: is statistical uncertainty dominant? If not, can we reduce it by averaging?
 * Apply d0/z0 cuts in ntuple format and see if eta spectrum smoothness improves
 
-STYLE:
-Re-sort stack histograms from smallest to largest contributions (BUT: maybe keep hardcoded order for consistency?)
-
 OCTOBER:
 MAX: repeat unfolded distribution errors
-* C_W calculation: try dropping individual cuts, especially MET.
-* Study QCD bg subtraction: overlay templates with and without subtraction on each other with ratio!
-* Study QCD: saw funny business between MC template vs data-driven.
-* TODO: simplify qcdsys2d.py script. rms(qcdfrac) = final figure of merit?
 * DONE: Re-run October 4 version in TrigFTKAna_trunk with new MCP-curvature offsets.
   Perhaps this will/can fix the ugly hole? - NOPE
-* Re-generate MCP scripts with coarser binning that follows detector geometry
-  WHY is Max seeing funny MCP numbers? He uses old version!
-
-UNFOLDING AND WEIGHTS:
-Consider this simplified example.
-Suppose there are no bin-by-bin migrations.
-Suppose there are no backgrounds, so the data histogram is already the reco-level signal histogram.
-Suppose trigger efficiency scale factor in 0.5 for |eta|<1 and 1.0 otherwise.
-I.e., triggered events in data exhibit a ~50% dip in central region, which is not modeled by MC.
-Input into unfolding: a data (=signal) histogram that exhibits the dip.
-Output from unfolding: a truth-level histogram without a dip.
 
 Peter:
 Make a stack plot of W reconstruction vs phi in the specific bin that gives trouble.
-
-Max:
-[11:03:46 AM] Massimiliano Bellomo: PowhegPythia for W,Z to muons
-[11:03:58 AM] Massimiliano Bellomo: Alpgen for W,Z to tau
-[11:04:09 AM] Massimiliano Bellomo: MC@NLO for ttbar and single top
-[11:04:19 AM] Massimiliano Bellomo: Herwig for WW,ZZ,WZ
-W/Gamma alpgen: 117410-15
-
-2010 paper: table with MCs
-8.5% ttbar
-5% w/z
 
 Idea: fit in delta-phi between MET and muon
 TODO: understand the Z MC veto and drell-yan
@@ -154,64 +72,19 @@ it factors out w pt. Overlay templates for different generators - expect better 
 
 Consider EtMissRel instead of etmiss?
 /home/antonk/ElectroweakBosons/AnalysisZmumu/HFrame/src
-
-ME:
 * Add dressed muons for C_W factors!
 
 MET propagation: see if KC corrections are actually valid for low-pt muons, which are used for MET propagation!
 Peter: isolation is very different between b and c. Need to worry about the mix.
 
-Max meeting:
-Q: chi2 plot script 
-   number of sigma
-   data-mc / (sum of errors). For fit, chi2 is directly from the fit bin-by-bin. sqrt(chi2). Sign is comparing template to data. MC below - > chi2 contribution positive.
-Q: muon efficiency: correlated uncertainty?
-
-Understand why the TFractionFitter metfit fails in some cases yet succeeds if it is attempted one more time. Understand if ewk normalization is floating, and if so, add it to canvas printout
-
 Peter: Photos  -> Dressed truth should be the same
 FEWZ has no ewk FSR term. -> FEWZ 3.0
-
-Ntuple based studies:
-* Compare QCD template shapes as a function of isolation cone.
-* Compare data/MC agreement in roofit for tigher cone (0.1)
-
 * CM: ABCD = isolation and MULTIJET_LIKE{met<X && mT<X && nlepton=small}
-
-Work in progress:
-* understand njets distribution issues. Isolation? Ntuple/histo difference?
-  Re-made the distribution in roofit/stack2.py - looks a lot better. WHY???
-* Data driven QCD
-* Why data driven backgrounds go in one-sided direction.
-* W/Z common meeting.
-
-*Add veto on z mass from non-isolated muons.
-
-* separate run for wmunu pt reweighting for samples with the same PDF.
-* add isoww_metfit category to get isolation choice systematic
-
-
-TrigFTKAna updates:
-* add tag-probe in.
-  hardcode in study class, as Ho Ling does!
 * LATER: Add FSR tool; add FSR-present flag; add FSR-corrected Z
 * LATER: add dressed truth leptons
-
 * Mel: compare Pythia and Alpgen pre-FSR distributions.
   Peter: identify and veto events that have an FSR photon around the mu
   Mel: Make reco plots of w pt, see if generator differences wash away
-  Peter: make truth plots of asymmetry in w pt bins (0..5 GeV)
-* Choose MC truth correctly: Alpgen status != 1, but 123/124 (see google docs!)
-
-Mel meeting:
-* lepton pt and njet bins
-* TODO: Look at distributions in high lepton pt bin - see if everything is alright.
-* Tight isolation issue: add ptcone/etcone plots, as well as relative plots
-* MET resolution near 25 GeV
-
-roofit:
-Check that Z TP errors don't change if I scale the lumi by a factor of 10
-   (or alternatively, if I actually normalize the histograms)
 
 charge mis-id - won't work from Z's. Flip probability. Can't look at same-sign Z's
 + add bins of lepton pt
@@ -227,30 +100,18 @@ For the "bad" cmb bin, look at a variation of akluit where the other muon is for
 Peter: does z resolution improve in data following the correction?
 
 MCP:
-Re-write db_* executable using classes that will automatically write out all latex output.
-Basically, create python abstraction classes for every table. They can reference the database in the constructor.
-Printing will occur in a correct manner automatically.
-Use sequence of inheritance, starting from top-level document (that includes facilities to save and compile)
 TODO: Z mass fit in bins of eta/phi - including on MC (confirm Kluit's problem)
       Z mass peak fit with alpgen; fit with/without pileup factors.
       Z mass peak at particle level (which is, however, after FSR/ISR)
-
 
 TrigFTKAna:
 * ID efficiency via tag and probe (lX, lY, lZ)
   Create a completely separate ntuple (manually turned on though). The idea is to create mu-ID candidates. The AOD::id muons would 
   have a link to the closest-matched full muon (if any). Make sure smearing class can smear ID muons, too!
-* come up with a way to combine truth and reco ntuples:
-  Keep default truth ntuples
-  Add (if MC) additional words to primary ntuple: keeping relevant information from truth ntuple
-  This would need some matching: for a given W/Z candidate, it will seek the closest truth candidate.
 
 conversion to truth level. Resolution is not negligible in MET. unfolding.
 Peter: METRefFinal - METTruth; split into parallel and perpendicular to lepton axis components (later)
 Handle bad charge-dependent modeling - even though QCD is fit in a charge-dependent fasion.
-
-Issues:
-* choose generator that models missing et best (!!!)
 
 Suggestions for analysis:
 * z0/d0 vs nvtx plots
@@ -266,11 +127,8 @@ Suggestions for MCP:
   https://indico.cern.ch/getFile.py/access?subContId=0&contribId=7&resId=0&materialId=slides&confId=157170
 
 print keysfit id/exms string modification to make sure it is correct.
-* Add data-driven QCD template capability to SuData
-
 * Et-miss resolution study: use Z events; project on Z pt axis (Sam Whitehead's thesis)
 
-Consider W+jets QCD templates
 
 Muon scales:
 * Investigate RooEggePdf - see if it is indeed compatible with my implementation!

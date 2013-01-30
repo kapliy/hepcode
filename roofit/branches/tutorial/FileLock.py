@@ -13,7 +13,7 @@ class FileLock(object):
         compatible as it doesn't rely on msvcrt or fcntl for the locking.
     """
 
-    def __init__(self, file_name, timeout=240, delay=.03):
+    def __init__(self, file_name, timeout=600, delay=.03):
         """ Prepare the file locker. Specify the file to lock and optionally
             the maximum timeout and the delay between each attempt to lock.
         """
