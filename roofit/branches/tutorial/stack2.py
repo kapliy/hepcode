@@ -906,7 +906,7 @@ if mode in ('prepare_qcd_2d','prepare_qcd_1d','prepare_qcd_0d'):
     eword = 'abseta' if opts.etamode==2 else 'eta'
     if mode=='prepare_qcd_0d':
         assert opts.ipt in ('20','25')
-        var = 'int25' if opts.ipt=='25' else 'int'
+        var = 'uint25' if opts.ipt=='25' else 'uint'
     elif mode=='prepare_qcd_1d':
         var = 'd2_%s_lpt:y:%s:-1'%(eword,iptmin)
     elif mode=='prepare_qcd_2d':

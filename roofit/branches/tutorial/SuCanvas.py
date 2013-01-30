@@ -19,7 +19,7 @@ class SuCanvas:
     g_smaller_text_size = g_text_size*0.85; # in pixel
     g_text_font = 43; # force font style 4 and size specification in pixels (font%10==3)
     g_text_size_legend = None; # over-ride (in pixel)
-    g_text_size_pave = None;   # over-rise (in pixel)
+    g_text_size_pave = None;   # over-ride (in pixel)
     g_marker_size = 0.8
     # should have no influence because of fixed text and symbol size
     g_legend_width = 0.2;

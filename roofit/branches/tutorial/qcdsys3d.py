@@ -24,6 +24,8 @@ v7: same as v6, but qcd fits performed to 60 GeV.
     Also fixed a bug in 0D qcd calculation - it was not grabbing the right number
 v8: unscrambled fit and control region uncertainties on QCD
     now, these get unfolded independently to preserve bin-by-bin correlations
+v9: simply re-running with additional histograms (mcp_noscale; uint).
+    also adding a test with etamode=1 (i.e., signed eta)
 """
 
 import sys,os,re,math,copy

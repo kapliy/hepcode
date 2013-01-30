@@ -726,10 +726,12 @@ class SuPlot:
                 next('UNFOLDING')
         assert len(s.sys)==len(s.groups)
         print 'Created systematic variations: N =',len(s.sys)
-    def update_errors(s,sysonly=False,force=False,rebin=1,scale=1,renorm=False):
+    def update_errors(s,sysonly=False,force=False,rebin=1,scale=1,renorm=False,avg=True):
         """ folds systematic variations into total TH1 error.
         If renorm is true, scale holds the data normalization
-        Possible upgrade: independent two-sided variations (non-symmetrized) """
+        Possible upgrade: independent two-sided variations (non-symmetrized)
+        if avg=True, it takes the mean up/down variation, as opposed to max
+        """
         if s.hsys and sysonly==True and not force: return s.hsys
         if s.htot and sysonly==False and not force: return s.htot
         stack_mode = False
@@ -760,7 +762,7 @@ class SuPlot:
                     bdiffs[ibin].append ( abs(s.hsys.GetBinContent(ibin)-h.GetBinContent(ibin)) )
                 i+=1
             for ibin in xrange(0,s.hsys.GetNbinsX()+2):
-                newerr = max(bdiffs[ibin]) if len(bdiffs[ibin])>0 else 0
+                newerr = (  (bdiffs[ibin][0]+bdiffs[ibin][1])/2.0 if len(bdiffs[ibin])==2 and avg==True else max(bdiffs[ibin])  )   if len(bdiffs[ibin])>0 else 0
                 if False and ibin==4: #DEBUG
                     print i,'%.1f'%s.sys[0][0].stack.GetStack().Last().GetBinError(ibin),['%.1f'%zz for zz in bdiffs[ibin]],'%.1f'%newerr,'%.1f'%s.htot.GetBinError(ibin),'%.1f'%s.hsys.GetBinError(ibin)
                 # hsys

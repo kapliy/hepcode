@@ -9,7 +9,7 @@ import os,sys
 # Adrian's script to plot purity
 """
 
-ROOT.gStyle.SetPaintTextFormat(".2f")
+ROOT.gStyle.SetPaintTextFormat(".0f")
 ROOT.gStyle.SetPalette(1)
 ROOT.gStyle.SetOptStat(0)
 
@@ -56,6 +56,11 @@ for sign in ["pos", "neg"]:
     stabilityHist.GetXaxis().SetTitle("|#eta|")
     stabilityHist.GetYaxis().SetTitle("p_{T} [GeV]")
     stabilityHist.GetYaxis().SetTitleOffset(1.3)
+
+    purityHist.SetMarkerSize(1.5)
+    stabilityHist.SetMarkerSize(1.5)
+    purityHist.GetZaxis().SetRangeUser(50,100)
+    stabilityHist.GetZaxis().SetRangeUser(50,100)
 
     c = ROOT.TCanvas("canvas", "canvas", 600, 600)
     purityHist.Draw("COLZTEXT")
