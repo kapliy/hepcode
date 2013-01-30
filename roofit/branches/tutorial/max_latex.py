@@ -66,6 +66,10 @@ EWK.append( ['Nominal_ewk_xsecdown','Nominal_ewk_xsecup'] )
 EWK.append( ['unfoldPowhegJimmy', 'unfoldMCNLO'] ) # caveat: ewk=5 (same)
 EWK.append( ['Nominal_qcd_up','Nominal_qcd_down'])
 
+SAMPLES = ['all/wtaunu' , 'all/zmumu' , 'all/ztautau' , 'all/ttbar_stop' , 'all/diboson']
+SNAMES = ['$W \\rightarrow \\tau \\tau$','$Z \\rightarrow \mu\mu$ + DrellYan','$Z \\rightarrow \\tau \\tau$','$t \\bar{t}$ + single-top','Dibosons']
+assert len(SAMPLES)==len(SNAMES)
+
 def getH(x):
     """ retrieves one histogram and makes sure it is valid
     TODO: re.search for slash (/) and if found, do not add qs manually
@@ -188,9 +192,9 @@ def printDataBgsubSig(py=None):
 
 def printEventComposition(py=None , dorel=True):
     """ A version split across two tables """
+    samples = SAMPLES[:]
+    snames = SNAMES[:]
     HLINES = []
-    samples = ['all/zmumu' , 'all/wtaunu' , 'all/ttbar_stop' , 'all/ztautau' , 'all/diboson']
-    snames = ['$Z \\rightarrow \mu\mu$ + DrellYan','$W \\rightarrow \\tau \\tau$','$t \\bar{t}$ + single-top','$Z \\rightarrow \\tau \\tau$','Dibosons']
     hs = [ get2([sample,],py) for sample in samples]
     HLINES.append( len(hs)-1 )
     # sum of ewk backgrounds
@@ -253,8 +257,11 @@ def printCombinedComposition(py=None , dorel=True):
     """ A combined Q+ / Q- / Q+- version """
     global qs
     hlines = []
-    samples = ['all/zmumu' , 'all/wtaunu' , 'all/ttbar_stop' , 'all/ztautau' , 'all/diboson']
-    snames = ['$Z \\rightarrow \mu\mu$ + DrellYan','$W \\rightarrow \\tau \\tau$','$t \\bar{t}$ + single-top','$Z \\rightarrow \\tau \\tau$','Dibosons']
+    samples = SAMPLES[:]
+    snames = SNAMES[:]
+
+    #samples = ['all/zmumu' , 'all/wtaunu' , 'all/ttbar_stop' , 'all/ztautau' , 'all/diboson']
+    #snames = ['$Z \\rightarrow \mu\mu$ + DrellYan','$W \\rightarrow \\tau \\tau$','$t \\bar{t}$ + single-top','$Z \\rightarrow \\tau \\tau$','Dibosons']
 
     HS = []
     HSIG = []

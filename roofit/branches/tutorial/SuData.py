@@ -99,8 +99,10 @@ class SuSys:
             h = s.h.Clone()
             h.Rebin(rebin)
             return h
-    def get_stack(s,rebin=1,normto=None):
-        """ stack accessor with rebinning/rescaling option """
+    def get_stack(s,rebin=1,normto=None,order=None):
+        """ stack accessor with rebinning/rescaling option
+        order keyword allows to force a particular reordering of the stack elements [for W/Z inclusive paper]
+        """
         if True:
             # an alternative version that makes a new stack
             n = s.stack.GetName()+'_cl'
@@ -118,14 +120,24 @@ class SuSys:
                 assert htot.GetNbinsX() == normsrc.GetNbinsX(),'Different nbins: %d and %d'%(htot.GetNbinsX(),normsrc.GetNbinsX())
                 scale = normsrc.Integral() / htot.Integral()
                 print 'get_stacks: rescaling stack',s.name,' with SF=%.3f'%scale
-            for ii in xrange(0,NBG):
+            sorder = range(0,NBG)
+            # re-order stacks by area, except for signal (last one)
+            if order!=None:
+                assert len(sorder)>=2,'ERROR: current algorithm assumes at least two backgrounds in the stack'
+                assert order==1,'ERROR: get_stack() only supports order=1 for the moment (found %s)'%(order)
+                zint = [ s.stack.GetHists().At(ii).Integral() for ii in sorder ]
+                zint[-1] += 1e8  # hack: always force the signal to appear first in the stack
+                sorder = sorted(range(len(zint)), key=lambda k: zint[k])
+                #print zint
+                #print sorder
+            for ii in sorder:
                 htmp2 = s.stack.GetHists().At(ii)
                 htmp = htmp2.Clone(htmp2.GetName()+'_rebin%s'%rebin)
                 htmp.Rebin(rebin)
                 if scale!=1:
                     htmp.Scale( scale )
                 h.Add(htmp,'hist')
-            return h,scale
+            return h,scale,sorder
     def histo_pteta(s):
         """ Converts d3_abseta_lpt_met:x:0:8:y:1:2 to human-readable form
         """
