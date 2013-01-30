@@ -812,7 +812,7 @@ class SuCanvas:
         s.buildRatio(mlogy=mlogy,rlogy=rlogy);
         s.cd_plotPad();
         data = hdata.nominal_h(rebin)
-        stack , stackScale  =  hstack.nominal().get_stack(rebin, data if norm==True else None)
+        stack , stackScale , stackOrder =  hstack.nominal().get_stack(rebin, data if norm==True else None,order=1)
         stackH = stack.GetStack().Last()
         # create the legend from the legend specifier
         if leg!=None:
@@ -824,13 +824,15 @@ class SuCanvas:
             leg = ROOT.TLegend()
             leg.AddEntry(data,daleg[0][1],daleg[0][2])
             NBG = stack.GetHists().GetSize()
-            if NBG!=len(mcleg):
+            if NBG!=len(mcleg) or NBG!=len(stackOrder):
                 print 'Stack size:',NBG
                 print 'Legend list:',len(alleg),alleg
                 print 'MC legend list:',len(mcleg),mcleg
-            assert NBG == len(mcleg), 'Different number of elements in stack and legend label array'
+                print 'stackOrder list:',len(stackOrder),stackOrder
+            assert NBG == len(mcleg) == len(stackOrder), 'Different number of elements in stack and legend label array'
             for ii in reversed(xrange(0,NBG)):
-                htmp = stack.GetHists().At(ii)
+                zi = stackOrder.index(ii)
+                htmp = stack.GetHists().At(zi)
                 leg.AddEntry(htmp,mcleg[ii][1],mcleg[ii][2])
         s.data.append((stack,data,leg))
         # mc
@@ -890,10 +892,8 @@ class SuCanvas:
                 s.ConfigureText(fractext,text_x1=leg_x1,text_y2 = leg.GetY1NDC()-0.02)
                 fractext.Draw()
         # configure legend
-        #if not lumi_x: lumi_x = leg.GetX1NDC() - 0.2
-        #if not lumi_y: lumi_y = leg.GetY2NDC() - SuCanvas.g_legend_height_per_entry
         if not lumi_x: lumi_x = leg.GetX1NDC() + 0.2
-        if not lumi_y: lumi_y = leg.GetY1NDC() + 0.02
+        if not lumi_y: lumi_y = leg.GetY1NDC() + 0.02 + 0.15 + 0.03
         s.drawLuminosity(lumi_x,lumi_y)
         # ratio
         s.cd_ratioPad();
