@@ -819,7 +819,7 @@ class SuCanvas:
             alleg = leg[:]
             daleg = [l for l in leg if l[0]=='data']
             if len(daleg)==0:
-                daleg.append( ['data','data 2011 (#sqrt{s} = 7 TeV)','LP'] )
+                daleg.append( ['data','Data 2011 (#sqrt{s} = 7 TeV)','LP'] )
             mcleg = [l for l in leg if l[0]!='data']
             leg = ROOT.TLegend()
             leg.AddEntry(data,daleg[0][1],daleg[0][2])

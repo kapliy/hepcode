@@ -66,8 +66,8 @@ EWK.append( ['Nominal_ewk_xsecdown','Nominal_ewk_xsecup'] )
 EWK.append( ['unfoldPowhegJimmy', 'unfoldMCNLO'] ) # caveat: ewk=5 (same)
 EWK.append( ['Nominal_qcd_up','Nominal_qcd_down'])
 
-SAMPLES = ['all/wtaunu' , 'all/zmumu' , 'all/ztautau' , 'all/ttbar_stop' , 'all/diboson']
-SNAMES = ['$W \\rightarrow \\tau \\tau$','$Z \\rightarrow \mu\mu$ + DrellYan','$Z \\rightarrow \\tau \\tau$','$t \\bar{t}$ + single-top','Dibosons']
+SAMPLES = ['all/wtaunu' , 'all/zmumu' , 'all/ttbar_stop' , 'all/ztautau' , 'all/diboson']
+SNAMES = ['$W \\rightarrow \\tau \\tau$','$Z \\rightarrow \mu\mu$ + DrellYan','$t \\bar{t}$ + single-top','$Z \\rightarrow \\tau \\tau$','Dibosons']
 assert len(SAMPLES)==len(SNAMES)
 
 def getH(x):
