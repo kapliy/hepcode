@@ -67,7 +67,7 @@ EWK.append( ['unfoldPowhegJimmy', 'unfoldMCNLO'] ) # caveat: ewk=5 (same)
 EWK.append( ['Nominal_qcd_up','Nominal_qcd_down'])
 
 SAMPLES = ['all/wtaunu' , 'all/zmumu' , 'all/ttbar_stop' , 'all/ztautau' , 'all/diboson']
-SNAMES = ['$W \\rightarrow \\tau \\tau$','$Z \\rightarrow \mu\mu$ + DrellYan','$t \\bar{t}$ + single-top','$Z \\rightarrow \\tau \\tau$','Dibosons']
+SNAMES = ['$W \\rightarrow \\tau \\nu$','$Z \\rightarrow \mu\mu$ + DrellYan','$t \\bar{t}$ + single-top','$Z \\rightarrow \\tau \\tau$','Dibosons']
 assert len(SAMPLES)==len(SNAMES)
 
 def getH(x):
@@ -259,9 +259,6 @@ def printCombinedComposition(py=None , dorel=True):
     hlines = []
     samples = SAMPLES[:]
     snames = SNAMES[:]
-
-    #samples = ['all/zmumu' , 'all/wtaunu' , 'all/ttbar_stop' , 'all/ztautau' , 'all/diboson']
-    #snames = ['$Z \\rightarrow \mu\mu$ + DrellYan','$W \\rightarrow \\tau \\tau$','$t \\bar{t}$ + single-top','$Z \\rightarrow \\tau \\tau$','Dibosons']
 
     HS = []
     HSIG = []
