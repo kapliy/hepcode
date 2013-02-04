@@ -902,6 +902,12 @@ class SuCanvas:
             hratio.Divide(stackH) # stat error data/MC combined
         else:
             hratio.Divide(HMC[0]) # stat data error only
+        # Peter's cross-check of R_i
+        if True:
+            NoverR = len(range(1,hratio.GetNbinsX()+1))
+            overR = [(hratio.GetBinContent(ibin) if hratio.GetBinContent(ibin)!=0 else 1.0) for ibin in xrange(1,hratio.GetNbinsX()+1)]
+            CoverC = NoverR*1.0 / sum(overR)
+            print 'INFO: Cp / C = %.4f'%CoverC
         s.drawRatio(hratio)
         if xaxis_label:
             hratio.GetXaxis().SetTitle( xaxis_label )

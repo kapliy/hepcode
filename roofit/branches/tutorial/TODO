@@ -1,20 +1,23 @@
+put a couple of MET plots to systematics section (show changes in MET shape due to MET systematics).
+Max debugging: do the differences in every step through the procedure. data, data-bgsub, scale factors, 
+
+cutflow: scale Monte-Carlo to integrated lumi?
+
 JAN:
-as a cross-check, re-build cross-section in bins of eta (not |eta|) - only for single-differential.
-Do bin-by-bin for all measurements.
-DONE: remove AlternativeUnfolding systematic from the script
-Comparison between different monte-carlos at reco level (?, via Max)
+DONE: re-build cross-section in bins of eta (not |eta|) - only for single-differential.
+
+MAX:
+- Comparison between different monte-carlos at reco level
+- tables of systematics for differential -> appendix. Also split in two halves
 
 * Make scripts to create integrated cross-section tables.
 cat NOW | awk '{v=2.4*2; print $1*v,$2,$3*v,$4,$5,$6*v,$7,$8,$9*v}'
-* understand why 1D unfolding does not do proper division by bin width in Plot.C!!!
+* understand why 1D unfolding does not do proper division by bin width in Plot.C. DOING: new integrated files
 
-* Peter: double ratio plots of control plots: mean discrepancy weighted by efficiency 
+* Peter: double ratio plots of control plots: mean discrepancy weighted by efficiency
 
-- tables of systematics for differential -> appendix. Also split in two halves
 - check stat eff uncertainty on integrated W measurement compared to 2010.
 - OPTIONAL: QCD plot - make a plot of 3 generators vs qcd fit range
-QCD + EWK fraction: combine multiple pt slices
-Update muon momentum section
 - TODO: d0sig < 3.5
 
 * Investigate why the MC@NLO relative uncertainty is almost twice as large *after* unfolding.
