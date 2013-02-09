@@ -71,6 +71,24 @@ class SuSys:
         s.sysdir = s.qlist(sysdir)
         s.subdir = s.qlist(subdir)
         s.basedir = s.qlist(basedir)
+    def eta_to_AC(s):
+        """ converts an eta histogram to A/C ratio """
+        assert s.h
+        h = SuSample.make_habseta(s.h.GetName()+'_ACratio')
+        h.Sumw2()
+        assert h.GetNbinsX()*2 == s.h.GetNbinsX(),'Bin size mismatch: %d %d %d'%(h.GetNbinsX(),h.GetNbinsX()*2+1,s.h.GetNbinsX())
+        hA,hC = h.Clone(h.GetName()+'_A'),h.Clone(h.GetName()+'_C')
+        for ibin in xrange(1,h.GetNbinsX()+1): # loop over abseta bins
+            ibinC = h.GetNbinsX() + 1 - ibin
+            ibinA = h.GetNbinsX() + ibin
+            #print ibin,h.GetNbinsX(),':',ibinA,ibinC
+            hC.SetBinContent(ibin,s.h.GetBinContent(ibinC))
+            hC.SetBinError(ibin,s.h.GetBinError(ibinC))
+            hA.SetBinContent(ibin,s.h.GetBinContent(ibinA))
+            hA.SetBinError(ibin,s.h.GetBinError(ibinA))
+        h.Divide(hA,hC,1,1)
+        s.h = h
+        return h
     def gpre(s,i=None):
         """ a wrap around s.pre that searches and substitutes special shortcuts
         (hardcoded here) """
@@ -470,6 +488,8 @@ class SuPlot:
         s.do_unfold = False
     def has_systematics(s):
         return len(s.enable)>1
+    def eta_to_AC(s):
+        return [ p1.eta_to_AC() for i,p1 in enumerate(s.flat) if i in s.enable]
     def Add(s,h,dd=1.0):
         return [ p1.Add(p2,dd) for i,(p1,p2) in enumerate(zip(s.flat,h.flat)) if i in s.enable]
     def AddStack(s,h):
@@ -871,6 +891,7 @@ class SuPlot:
     def clone(s,q=None,enable=None,histo=None,do_unfold=None,unfhisto=None,qcdadd=None,
               sysdir=None,sysdir_mc=None,sysdir_qcd=None,
               subdir=None,subdir_mc=None,
+              basedir=None,
               sliced_1d=None,sliced_2d=None,slice=None,bgsig=None,
               ntuple=None,path=None,var=None,bin=None,pre=None,weight=None):
         """ Clones an entire SuPlot.
@@ -886,7 +907,7 @@ class SuPlot:
         for sgroups in s.sys:
             bla = []
             for sinst in sgroups:
-                bla.append(sinst.clone(q=q,histo=histo,unfhisto=unfhisto,qcdadd=qcdadd,sysdir=sysdir,sysdir_mc=sysdir_mc,sysdir_qcd=sysdir_qcd,subdir=subdir,subdir_mc=subdir_mc,ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight,sliced_1d=sliced_1d,sliced_2d=sliced_2d,slice=slice,bgsig=bgsig))
+                bla.append(sinst.clone(q=q,histo=histo,unfhisto=unfhisto,qcdadd=qcdadd,sysdir=sysdir,sysdir_mc=sysdir_mc,sysdir_qcd=sysdir_qcd,subdir=subdir,subdir_mc=subdir_mc,basedir=basedir,ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight,sliced_1d=sliced_1d,sliced_2d=sliced_2d,slice=slice,bgsig=bgsig))
                 res.flat.append(bla[-1])
             res.sys.append( bla )
         return res
@@ -1866,7 +1887,8 @@ class SuStack:
         """ data summed histogram """
         loop = [e for e in s.elm if 'data' in e.flags and 'no' not in e.flags]
         res = s.histosum(loop,hname,d,norm=norm)
-        leg.append( ['data','data 2011 (#sqrt{s} = 7 TeV)','LP'] )
+        if type(leg)==type([]):
+            leg.append( ['data','data 2011 (#sqrt{s} = 7 TeV)','LP'] )
         return res
     def asym_data(s,*args,**kwargs):
         return s.asym_generic(s.data,*args,**kwargs)
@@ -2003,7 +2025,8 @@ class SuStack:
             h = bg.histo(hname,d.clone())
             if h.any_h():
                 res.AddStack(h)
-                leg.append( [bg.name,bg.label,'F'] )
+                if type(leg)==type([]):
+                    leg.append( [bg.name,bg.label,'F'] )
         return res
     def histosum(s,loop,hname,d,norm=None,weights=None):
         """ a wrapper around histosum_apply: allows reconstruction of histograms in eta slices """

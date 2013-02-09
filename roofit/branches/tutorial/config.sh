@@ -12,27 +12,34 @@ out=QCD
 
 input=/share/t3data3/antonk/ana/ana_v29I_01052013_edboard_stacoCB_all/pt20
 DB=DB_01052013_ALL.v1
-out=QCD
 
 input=/share/t3data3/antonk/ana/ana_v29I_01072013_edboard_stacoCB_all/pt20
 DB=DB_01072013_ALL.v3
-out=QCD
 
 input=/share/t3data3/antonk/ana/ana_v29I_01182013_paper_stacoCB_all/pt20
 DB=DB_01182013_ALL.v6
-out=QCD
 
 input=/share/t3data3/antonk/ana/ana_v29I_01182013_paper_stacoCB_all/pt20
 DB=DB_01182013_ALL.v7
-out=QCD
 
 input=/share/t3data3/antonk/ana/ana_v29I_01182013_paper_stacoCB_all/pt20
 DB=DB_01182013_ALL.v8
-out=QCD
 
 input=/share/t3data3/antonk/ana/ana_v29I_01252013_paper_stacoCB_all/pt20
 DB=DB_01252013_ALL.v9
-out=QCD
+
+input=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_stacoCB_all/pt20 # just a rerun
+DB=DB_01292013_ALL.v10
+#input=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_noCK_stacoCB_all/pt20/
+#DB=DB_01292013_ALL.v10noCK
+#input=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_noC_stacoCB_all/pt20/
+#DB=DB_01292013_ALL.v10noC
+#input=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_noC_stacoCB_all/pt20/
+#DB=DB_01292013_ALL.v10noCnoqcd
+#input=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_oldC_stacoCB_all/pt20
+#DB=DB_01292013_ALL.v10oldC
+#input=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_fineCK_stacoCB_all/pt20
+#DB=DB_01292013_ALL.v10fineCK
 
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`

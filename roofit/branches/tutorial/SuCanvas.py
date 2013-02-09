@@ -733,14 +733,14 @@ class SuCanvas:
         if xaxis_info!=None:
             assert len(xaxis_info)>=2,'Incorrect format of xaxis_info: [xaxis_label , xaxis_units , ...]'
             xaxis_label,xaxis_units = xaxis_info[0],xaxis_info[1]
-            if xaxis_label:
-                hdraw.GetXaxis().SetTitle( xaxis_label )
             if xaxis_units==None:
                 hdraw.GetYaxis().SetTitle( "Entries" )
             else:
                 bin_width = hdraw.GetXaxis().GetBinWidth(1)
                 hdraw.GetYaxis().SetTitle( "Entries / %.1f %s" % (bin_width,xaxis_units) )
                 xaxis_label += ' [%s]'%xaxis_units
+            if xaxis_label:
+                hdraw.GetXaxis().SetTitle( xaxis_label )
             if len(xaxis_info)>=4: # y axis information
                 if xaxis_info[3]==None:
                     hdraw.GetYaxis().SetTitle( xaxis_info[2] )
@@ -784,9 +784,9 @@ class SuCanvas:
             s.cd_ratioPad();
             for i,h in enumerate(hs):
                 print 'Working on:',i,h.GetName()
-                hratio,href = h.Clone("hratio"),h.Clone("href")
+                hratio = h.Clone("hratio")
                 hratio.Divide(hs[0])
-                s.data.append( (hratio,href) )
+                s.data.append( hratio )
                 if not M.ratios[i]: continue
                 #[hratio.SetBinError(ii,0) for ii in xrange(0,hratio.GetNbinsX()+2)]
                 s.drawRatio(hratio , hdrawratio!=None )
