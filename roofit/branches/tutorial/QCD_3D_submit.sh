@@ -34,16 +34,17 @@ for iblk in `seq 0 ${nblk}`; do
     echo "BLOCK ${iblk} / ${nblk} : `expr ${ijmax} - ${ijmin} + 1` jobs: ${ijmin} to ${ijmax}"
     # submit jobs in this group
     for i in `seq ${ijmin} ${ijmax}`; do
-	jid=`qsub -v id=$i -N QCD3D_${i} -o /home/antonk/roofit/logs/log.QCD3D.${i}.stdout -e /home/antonk/roofit/logs/log.QCD3D.${i}.stderr QCD_3D_exec.sh`
+	JID="qsub -v id=$i -N QCD3D_${i} -o /home/antonk/roofit/logs/log.QCD3D.${i}.stdout -e /home/antonk/roofit/logs/log.QCD3D.${i}.stderr QCD_3D_exec.sh"
+	jid=`${JID}`
 	echo "JOB: $i"
 	if [ "$jid" == "" ]; then
 	    echo "Retrying submission: $i"
 	    sleep 10
-	    jid=`qsub -v id=$i -N QCD3D_${i} -o /home/antonk/roofit/logs/log.QCD3D.${i}.stdout -e /home/antonk/roofit/logs/log.QCD3D.${i}.stderr QCD_3D_exec.sh`
+	    jid=`${JID}`
 	    if [ "$jid" == "" ]; then
 		echo "Re-Retrying submission: $i"
 		sleep 20
-		jid=`qsub -v id=$i -N QCD3D_${i} -o /home/antonk/roofit/logs/log.QCD3D.${i}.stdout -e /home/antonk/roofit/logs/log.QCD3D.${i}.stderr QCD_3D_exec.sh`
+		jid=`${JID}`
 	    fi
 	fi
     done
