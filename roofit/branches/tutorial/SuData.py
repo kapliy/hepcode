@@ -1064,7 +1064,12 @@ class SuSample:
             if not h:
                 if SuSample.debug:
                     print 'GetHisto:: %s \t %s/%s'%(os.path.basename(f.GetName()),s.topdir(f),hpath),
-                if not  f.Get('%s/%s'%(s.topdir(f),hpath)):
+                try:
+                    fgot = f.Get('%s/%s'%(s.topdir(f),hpath))
+                except:
+                    print 'Failed to get: ','%s/%s'%(s.topdir(f),hpath)
+                    raise
+                if not fgot:
                     if SuSample.debug: print ''
                     return None
                 fpath = '%s/%s'%(s.topdir(f),hpath)
