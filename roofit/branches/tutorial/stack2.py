@@ -466,10 +466,8 @@ SuStack.QCD_SYS_SCALES = opts.metallsys
 SuStack.QCD_STAT_HACK = 1              # 1=scale ewk template to signal Monte-Carlo stats; 2=scale to most-scarce MC stats (usually wtaunu)
 SuStack.QCD_MIX_CHARGE = True          # if True, QCD template becomes the sum of POS and NEG (to increase statistics)
 SuStack.QCD_EXC_ZERO_BINS = 0          # exclude from fit all bins where any of the templates or data have less than X entries
-SuStack.QCD_PLOT_MODIFIED_BINS = True  # if True, we plot templates varied within poisson stats for best fit agreement
+SuStack.QCD_PLOT_MODIFIED_BINS = False # if True, we plot templates varied within poisson stats for best fit agreement
 SuStack.QCD_USE_FITTER2 = True         # use a custom, patched version of TFractionFitter that prevents infinite loops?
-
-#SuStack.QCD_MIX_CHARGE = False
 
 spR.enable_all()
 # Reco-level [ntuple]
@@ -1316,6 +1314,7 @@ if mode in ('qcdfit','qcdfit_sys'):
             if zz in (0,NC-1): height=2.5
             elif opts.ieta=='LOOP' and opts.ipt=='ALL25' and zz in (2,3): height = 'abs2.0'
             elif opts.ieta=='LOOP' and opts.ipt=='ALL20' and zz in (2,3): height = 'abs2.5'
+            elif opts.ieta=='LOOP' and opts.ipt=='ALL25' and zz in (4,): height = 'abs12.5'
             print 'SAVING:',zz,xaxis_info+ys[zz],height
             c[zz].plotAny(hs[zz],M=M[zz],height=height,drawopt='LP',xaxis_info=xaxis_info+ys[zz],pave=pave)
             c[zz].SaveSelf()
@@ -1342,7 +1341,6 @@ if mode=='qcdfit_adrian':
     #return [name,  ndata,ndataE,ndatasub,ndatasubE,  ntot,ntotE,nsig,nsigE,newk,newkE,nqcd,nqcdE,   delqcd     , chi2,ndf,   iref]
     # perform fits
     read_cache = True
-    read_cache = False # FIXME AK
 
     COLORS = [1,2,4,209,221,225,94]
     EWK_STYLE = [24,25,26,32,27,28,30]

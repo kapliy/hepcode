@@ -12,6 +12,7 @@ if [ "0" == "1" ]; then
 fi
 
 nomonly=" --extra ${DB} --exit"   # to make systematic summary plots
+out=FITS
 if [ "1" == "1" ]; then
     for iq in 0 1; do
 	# fits in eta slices
