@@ -17,7 +17,8 @@ def get_total(line):
     if re.match('/atlas',l):
         l = 'root://uct3-xrd.mwt2.org/%s'%l
     if re.match('/pnfs',l):
-        l = 'dcache://%s'%l
+        #l = 'dcache://%s'%l
+        l = 'root://xrddc.mwt2.org:1096%s'%l
     # try up to 10 times
     for i in range(10):
         try:
@@ -39,6 +40,7 @@ def get_total(line):
         saved = 0
         print >>sys.stderr,'ERROR |%s|   tree:'%sys.argv[1],l
     f.Close()
+    print >>sys.stderr,'INFO: opened',l
     return int(str(total)),int(str(saved))
 
 ff = open(sys.argv[1])

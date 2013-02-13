@@ -21,7 +21,8 @@ if True:
     fname = flist.readlines()[0].strip()
     
 if re.match("/pnfs/uchicago.edu/atlaslocalgroupdisk/user/",fname):
-    fname = 'root://xrddc.mwt2.org:1096//atlas/dq2/' + re.sub('/pnfs/uchicago.edu/atlaslocalgroupdisk/','',fname)
+    #fname = 'root://xrddc.mwt2.org:1096//atlas/dq2/' + re.sub('/pnfs/uchicago.edu/atlaslocalgroupdisk/','',fname)
+    fname = 'root://xrddc.mwt2.org:1096/pnfs/uchicago.edu' + re.sub('/pnfs/uchicago.edu','',fname)
 
 print fname
 
