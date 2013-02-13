@@ -8,14 +8,14 @@ if [ "0" -eq "1" ]; then
 fi
 
 # if reading from LOCALGROUPDISK and LOCAL DIR
-if [ "0" -eq "1" ]; then
+if [ "1" -eq "1" ]; then
     tag=v1_29i
     RDIR=/share/t3data3/antonk/NTUPLE/${tag}
     CDIR=/pnfs/uchicago.edu/atlaslocalgroupdisk/user/kapliy/UCNTUP
 fi
 
 # if reading slimmed v1_29i/v1_29g ntuples (v1_29l)
-if [ "1" -eq "1" ]; then
+if [ "0" -eq "1" ]; then
     tag=v1_29l
     CDIR=/atlas/uct3/data/users/antonk/NTUPLE/v1_29l
     RDIR=/home/antonk/bin
@@ -144,6 +144,7 @@ run pythia_bbmu15x 108405
 run mcnlo_wminmunu 106084
 run mcnlo_wplusmunu 106083
 run mcnlo_zmumu 106088
+run mcnlo_dyan 113712
 run mcnlo_wmintaunu 108329
 run mcnlo_wplustaunu 108328
 run mcnlo_ztautau 106062
