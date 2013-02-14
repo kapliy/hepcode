@@ -1,28 +1,22 @@
 Eta debugging:
-* Max: make plots for MC WITHOUT scale factors (using the ntuple!)
+* make z plots with trigger matching requirements.
+* make z plots requiring both muons to fall in the same eta bin
+* DONE: make plots for MC WITHOUT scale factors (using the ntuple!)
 * John: plot A-C side differences for MET correction.
-  Jan: use a different type of MET (LocHadTopo)
-* do the differences in every step through the procedure. data, data-bgsub, scale factors,
+  DONE: use a different type of MET (LocHadTopo)
+* DONE: do the differences in every step through the procedure. data, data-bgsub, scale factors,
   DONE: Make script that translates a 1D eta histo into 1D abseta histo + ratio
 * Suspect: MET. IDEA: wmunu stack, avoiding MET fits via QCD MC.
                       zmumu eta stack (!)
-* Re-run MCP generation scripts
-
-TODO: put a couple of MET plots to systematics section (show changes in MET shape due to MET systematics).
-      Similar to Adrian's plots. Somewhere in section 6 (?)
-
-MAX:
-- Comparison between different monte-carlos at reco level
 
 * Make scripts to create integrated cross-section tables.
 cat NOW | awk '{v=2.4*2; print $1*v,$2,$3*v,$4,$5,$6*v,$7,$8,$9*v}'
 * understand why 1D unfolding does not do proper division by bin width in Plot.C. DOING: new integrated files
 
 * Peter: double ratio plots of control plots: mean discrepancy weighted by efficiency
-
 - check stat eff uncertainty on integrated W measurement compared to 2010.
 - OPTIONAL: QCD plot - make a plot of 3 generators vs qcd fit range
-- TODO: d0sig < 3.5
+- DONE: d0sig < 3.5
 
 * Investigate why the MC@NLO relative uncertainty is almost twice as large *after* unfolding.
   Actually first think about, perhaps it makes sense???

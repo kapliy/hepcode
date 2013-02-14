@@ -394,22 +394,23 @@ class SuSys:
         err = ROOT.Double()
         totevts = h.IntegralAndError(0,h.GetNbinsX()+1,err) if overflow else h.IntegralAndError(1,h.GetNbinsX(),err)
         return totevts,float(err)
-    def stack_bg_events(s,iback=1,overflow=True):
+    def stack_bg_events(s,iback,overflow=True):
         """ Returns integral of background NBG-iback (NBG corresponds to wmunu) """
         NBG = s.stack.GetStack().GetLast()
-        h = s.stack.GetHists().At(NBG - iback)   # TList::At(NBG) = signal
+        h = s.stack.GetHists().At(NBG - iback)   # TList::At(NBG) = signal; At(0) = qcd
         # include overflow? E.g., met>200
         err = ROOT.Double()
         qcdevts = h.IntegralAndError(0,h.GetNbinsX()+1,err) if overflow else h.IntegralAndError(1,h.GetNbinsX(),err)
         return qcdevts,float(err)
     def stack_qcd_events(s,overflow=True):
-        return s.stack_bg_events(1,overflow)
+        NBG = s.stack.GetStack().GetLast()
+        return s.stack_bg_events(NBG,overflow)
     def stack_sig_events(s,overflow=True):
         return s.stack_bg_events(0,overflow)
     def stack_ewknosig_events(s,overflow=True):
         """ number of electroweak background events, excluding signal """
         NBG = s.stack.GetStack().GetLast()
-        bglist = range(2,NBG+1)
+        bglist = range(1,NBG)
         pairs = [ s.stack_bg_events(ibg,overflow) for ibg in bglist ]
         # counts: add up each background
         evts = sum([x[0] for x in pairs])
