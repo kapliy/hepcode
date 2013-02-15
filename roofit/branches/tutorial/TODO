@@ -1,3 +1,6 @@
+Plot zmumu plots requiring both muons to be cloe.
+Plot muon scale factors
+
 Eta debugging:
 * Different signal generators
 * DONE make w plots with trigger matching requirements.
@@ -8,7 +11,7 @@ Eta debugging:
   DONE: use a different type of MET (LocHadTopo)
 * DONE: do the differences in every step through the procedure. data, data-bgsub, scale factors,
   DONE: Make script that translates a 1D eta histo into 1D abseta histo + ratio
-* DONE: wmunu stack, avoiding MET fits via QCD MC.
+* DONE: wmunu stack, avoiding MET fits via QCD MC
   DONE: zmumu eta stack
 
 * Make scripts to create integrated cross-section tables.
