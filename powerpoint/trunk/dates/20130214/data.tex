@@ -180,11 +180,11 @@ $0.42 < |\eta| <0.63$ & 423.8 & 424.6 & 4.7 & -6.8 & -1.5 \\
 $0.63 < |\eta| <0.84$ & 418.8 & 418.7 & 3.7 & 6.8 & 1.8 \\
 $0.84 < |\eta| <1.05$ & 412.0 & 407.8 & 5.1 & 11.5 & 2.3 \\
 $1.05 < |\eta| <1.37$ & 406.2 & 398.8 & 5.1 & 1.4 & 0.3 \\
-$1.37 < |\eta| <1.52$ & 199.1 & 380.9 & 4.5 & 1.3 & 0.3 \\
-$1.52 < |\eta| <1.74$ & 199.1 & 371.9 & 4.1 & 4.9 & 1.2 \\
+$1.37 < |\eta| <1.52$ & XXX.X & 380.9 & 4.5 & 1.3 & 0.3 \\
+$1.52 < |\eta| <1.74$ & XXX.X & 371.9 & 4.1 & 4.9 & 1.2 \\
 $1.74 < |\eta| <1.95$ & 360.4 & 358.0 & 5.1 & 4.3 & 0.9 \\
 $1.95 < |\eta| <2.18$ & 339.9 & 331.5 & 3.9 & 19.4 & \color{red}{5.0} \\
-$2.18 < |\eta| <2.4$ & 312.4 & 316.4 & 3.6 & -0.5 & -0.1 \\
+$2.18 < |\eta| <2.4$ & XXX.X & 316.4 & 3.6 & -0.5 & -0.1 \\
 
 \hline
 \end{tabular}
@@ -211,11 +211,11 @@ $0.42 < |\eta| <0.63$ & 572.5 & 572.9 & 6.9 & 0.8 & 0.1 \\
 $0.63 < |\eta| <0.84$ & 579.0 & 578.0 & 4.5 & 14.3 & \color{red}{3.2} \\
 $0.84 < |\eta| <1.05$ & 582.6 & 577.9 & 5.2 & 7.1 & 1.4 \\
 $1.05 < |\eta| <1.37$ & 596.2 & 589.2 & 5.7 & 8.9 & 1.6 \\
-$1.37 < |\eta| <1.52$ & 320.0 & 586.2 & 6.2 & 7.3 & 1.2 \\
-$1.52 < |\eta| <1.74$ & 320.0 & 586.9 & 5.4 & 26.5 & \color{red}{4.9} \\
+$1.37 < |\eta| <1.52$ & XXX.X & 586.2 & 6.2 & 7.3 & 1.2 \\
+$1.52 < |\eta| <1.74$ & XXX.X & 586.9 & 5.4 & 26.5 & \color{red}{4.9} \\
 $1.74 < |\eta| <1.95$ & 596.9 & 591.2 & 4.2 & 13.3 & \color{red}{3.1} \\
 $1.95 < |\eta| <2.18$ & 584.8 & 570.7 & 7.0 & 32.4 & \color{red}{4.6} \\
-$2.18 < |\eta| <2.4$ & 549.4 & 558.3 & 6.4 & 10.2 & 1.6 \\
+$2.18 < |\eta| <2.4$ & XXX.X & 558.3 & 6.4 & 10.2 & 1.6 \\
 
 \hline
 \end{tabular}
@@ -232,10 +232,11 @@ $2.18 < |\eta| <2.4$ & 549.4 & 558.3 & 6.4 & 10.2 & 1.6 \\
  A/C ratios for data, background-subtracted data, and signal MC. \\
  The shaded errors on the ratio (in the following plots) are correct. \\
  Here, we are considering the \red{effects of QCD subtraction}. \\
- \small{(for all subsequent studies, MC-based QCD will be used for simplicity)}
+ \small{(the fits, however, are always performed in an integrated kinematic region)}
 }
 \only<4>{
-  Conclusion: on the scale of existing disagreements, the choice of QCD templates has a minor effect.
+  Conclusion: on the scale of existing disagreements, the choice of QCD templates has a minor effect. \\
+  All subsequent plots will use simple, unscaled QCD-based template (bb/cc mu15X).
 }
 
 \colb[T]
@@ -258,6 +259,43 @@ $2.18 < |\eta| <2.4$ & 549.4 & 558.3 & 6.4 & 10.2 & 1.6 \\
 }
 
 
+\slide{ A-C ratios: choice of signal MC }
+{
+
+\only<1>{
+ A/C ratios for data, background-subtracted data, and signal MC. \\
+ The shaded errors on the ratio (in the following plots) are correct. \\
+ Here, we are considering the \red{effects of different signal MCs}. \\
+ \small{(for all subsequent studies, MC-based QCD will be used for simplicity)}
+}
+\only<5>{
+  Conclusion: A/C disagreements persist for all generators.
+}
+
+\colb[T]
+
+\column{.5\textwidth}
+\centering
+\only<2>{ \small{ Nominal: $W^{+}$}}
+\only<3>{ \small{ Powheg-Herwig: $W^{+}$}}
+\only<4>{ \small{ MCNLO: $W^{+}$}}
+\includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC/W_NOM_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_POS}
+\includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/WSYS_BGSIG4_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_POS}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC/WSYS_BGSIG1_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_POS}
+
+\column{.5\textwidth}
+\centering
+\only<2>{ \small{ Nominal: $W^{-}$}}
+\only<3>{ \small{ Powheg-Herwig: $W^{-}$}}
+\only<4>{ \small{ MCNLO: $W^{-}$}}
+\includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC/W_NOM_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
+\includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/WSYS_BGSIG4_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC/WSYS_BGSIG1_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
+
+\cole
+}
+
+
 \slide{ A-C ratios: playing with reco/trigger scale factors }
 {
 
@@ -269,7 +307,8 @@ $2.18 < |\eta| <2.4$ & 549.4 & 558.3 & 6.4 & 10.2 & 1.6 \\
 }
 \only<6>{
   Conclusion: trigger scale factors have a major effect, especially in the barrel. \\
-  However, they don't seen to provide a substantial A/C correction in the endcaps.
+  However, they don't seen to provide a substantial A/C correction in the endcapss. \\
+  (i.e., forward TGC trigger chambers are more symmetric than RPCs in the barrel)
 }
 
 
@@ -338,19 +377,55 @@ $2.18 < |\eta| <2.4$ & 549.4 & 558.3 & 6.4 & 10.2 & 1.6 \\
 }
 
 
+\slide{ A-C ratios: trigger matching in W }
+{
+
+\only<1>{
+ A/C ratios for data, background-subtracted data, and signal MC. \\
+ The shaded errors on the ratio (in the following plots) are correct. \\
+ Here, we are considering the \red{effect of requiring the W muon trigger match}. \\
+ \small{(sorry, no systematic bands in the following set of plots)}
+}
+
+\only<4>{
+  Conclusion: as expected, requiring the W muon to explicitly match a trigger \red{does not do anyting} - because in an over-whelming majority of cases, that W muon had to fire the trigger anyway.
+}
+
+\colb[T]
+
+\column{.5\textwidth}
+\centering
+\only<2>{ \small{ Nominal, $W^{+}$}}
+\only<3>{ \small{ Nominal + trigger match, $W^{+}$}}
+\includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC/WNT_NOM_Q0_stack_lepton_etav_POS}
+\includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/WNT_TRIGMATCH_Q0_stack_lepton_etav_POS}
+
+\column{.5\textwidth}
+\centering
+\only<2>{ \small{ Nominal, $W^{-}$}}
+\only<3>{ \small{ Nominal + trigger match, $W^{-}$}}
+\includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC/WNT_NOM_Q0_stack_lepton_etav_NEG}
+\includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/WNT_TRIGMATCH_Q0_stack_lepton_etav_NEG}
+
+\cole
+}
+
+
 \slide{ A-C ratios: choice of MET }
 {
 
 \only<1>{
  A/C ratios for data, background-subtracted data, and signal MC. \\
  The shaded errors on the ratio (in the following plots) are correct. \\
- Here, we are considering the \red{effects of a different MET: corrected LocHadTopo}. \\
- \small{(the same MET that was used in the 2010 measurement)} \\
+ Here, we are considering the \red{effects of a different MET definitions}. \\
+ \small{Option 1: MetRefFinal, but without correcting for muon/jet momentum } \\
+ \small{Option 2: LocHadTopo (corr), as used in the 2010 measurement} \\
  \small{(sorry, no systematic bands in the following set of plots)}
 }
 
-\only<4>{
-  Conclusion: disagreements persist even with LocHadTopo, although overall things move around a bit.
+\only<5>{
+  Conclusion: disagreements persist even with other METs. \\
+  However, things move around a bit ($W^+$ gets better, $W^-$ gets worse), which is caused not by the choice of MET but by whether the muon momentum scale corrections are propagated into MET. As will be shown later, this is the effect of the charge-splitting curvature correction.
 }
 
 \colb[T]
@@ -358,16 +433,20 @@ $2.18 < |\eta| <2.4$ & 549.4 & 558.3 & 6.4 & 10.2 & 1.6 \\
 \column{.5\textwidth}
 \centering
 \only<2>{ \small{ Nominal: MetRefFinal, $W^{+}$}}
-\only<3>{ \small{ Nominal: LocHadTopo(corr), $W^{+}$}}
+\only<3>{ \small{ Nominal: MetRefFinal (uncorr), $W^{+}$}}
+\only<4>{ \small{ Nominal: LocHadTopo, $W^{+}$}}
 \includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC/WNT_NOM_Q0_stack_lepton_etav_POS}
-\includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/WNT_METLH_Q0_stack_lepton_etav_POS}
+\includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/WNT_RAWMET_Q0_stack_lepton_etav_POS}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC/WNT_METLH_Q0_stack_lepton_etav_POS}
 
 \column{.5\textwidth}
 \centering
 \only<2>{ \small{ Nominal: MetRefFinal, $W^{-}$}}
-\only<3>{ \small{ Nominal: LocHadTopo(corr), $W^{-}$}}
+\only<3>{ \small{ Nominal: MetRefFinal (uncorr), $W^{-}$}}
+\only<4>{ \small{ Nominal: LocHadTopo, $W^{-}$}}
 \includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC/WNT_NOM_Q0_stack_lepton_etav_NEG}
-\includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/WNT_METLH_Q0_stack_lepton_etav_NEG}
+\includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/WNT_RAWMET_Q0_stack_lepton_etav_NEG}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC/WNT_METLH_Q0_stack_lepton_etav_NEG}
 
 \cole
 }
@@ -379,7 +458,8 @@ $2.18 < |\eta| <2.4$ & 549.4 & 558.3 & 6.4 & 10.2 & 1.6 \\
 \only<1>{
  A/C ratios for data, background-subtracted data, and signal MC. \\
  The shaded errors on the ratio (in the following plots) are correct. \\
- Here, we are considering the \red{effect of adding a $|d_{0}/d_{0}^{sig}|<3.5$ cut, as done in Zmumu}. \\
+ Here, we are considering the \red{effect of adding a $|d_{0}/d_{0}^{sig}|<3.5$ cut}. \\
+ \small{ this is the same cut that's used in the Z channel }
 }
 
 \only<4>{
@@ -391,14 +471,14 @@ $2.18 < |\eta| <2.4$ & 549.4 & 558.3 & 6.4 & 10.2 & 1.6 \\
 \column{.5\textwidth}
 \centering
 \only<2>{ \small{ Nominal $W^{+}$}}
-\only<3>{ \small{ Nominal + $|d_{0}/d_{0}^{sig}|<3.5$, $W^{+}$}}
+\only<3>{ \small{ Nominal + d0, $W^{+}$}}
 \includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC/W_NOM_Q4_stack_d3_eta_lpt_met_y_2__1_z_0__1_POS}
 \includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/WSYS_D0_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_POS}
 
 \column{.5\textwidth}
 \centering
 \only<2>{ \small{ Nominal $W^{-}$}}
-\only<3>{ \small{ Nominal + $|d_{0}/d_{0}^{sig}|<3.5$, $W^{-}$}}
+\only<3>{ \small{ Nominal + d0, $W^{-}$}}
 \includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC/W_NOM_Q4_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
 \includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/WSYS_D0_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
 
@@ -474,8 +554,9 @@ that exhibits good agreement for both $W^+$ and $W^-$. Various versions simply p
  \small{(sorry, no error band for the Z)}
 }
 \only<7>{
-  Conclusion: Zs do not exhibit a large A/C difference if the other muon is allowed to trigger. However, if the plotted muon is \red{required} to have fired the trigger, we get \red{the same A/C disagreements as seen in the W channel}. It seems that the \red{trigger scale factors} are at fault since they should correct these kinds of disagreements. \\
-  \small{Caveat: I am not using official trigger matching, but rather \red{manually} match muons to EF trigger objects using a $\phi-\eta$ cone of 0.2.}
+  Conclusion: when the Z muons are required to trigger, we see the same overall A/C structure as in Ws - which means that the \red{A/C structure is caused by the trigger}. However, the MC models these disagreements reasonably well in Z events, but not in W events. \\
+  \small{Caveat: I am not using official trigger matching, but rather \red{manually} match muons to EF trigger objects using a $\phi-\eta$ cone of 0.2.} \\
+  
 }
 
 \colb[T]
@@ -483,30 +564,36 @@ that exhibits good agreement for both $W^+$ and $W^-$. Various versions simply p
 \column{.5\textwidth}
 \centering
 \only<2>{ \small{ $W^{+}$}}
-\only<3>{ \small{ Z, no trigger ($\mu^{+}$)}}
+\only<3>{ \small{ Z, no trigger match ($\mu^{+}$)}}
 \only<4>{ \small{ Z, both muons close in \eta ($\mu^{+}$)}}
-\only<5>{ \small{ Z, muon matched to EF trigger ($\mu^{+}$)}}
+\only<5>{ \small{ Z, muons matched to EF trigger ($\mu^{+}$)}}
 \only<6>{ \small{ $W^{+}$ (repeated)}}
 \includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC/W_NOM_Q4_stack_d3_eta_lpt_met_y_2__1_z_0__1_POS}
 \includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/ZNT_NOM_stack_leptonP_etav_ALL}
 \includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC/ZNT_CLOSE_stack_leptonP_etav_ALL}
-\includegraphics[width=1.0\textwidth]<5>{dates/20130214/figures/AC/ZNT_TMATCH_stack_leptonP_etav_ALL}
+\includegraphics[width=1.0\textwidth]<5>{dates/20130214/figures/AC/ZNT_TMATCHBOTH_stack_leptonP_etav_ALL}
 \includegraphics[width=1.0\textwidth]<6>{dates/20130214/figures/AC/W_NOM_Q4_stack_d3_eta_lpt_met_y_2__1_z_0__1_POS}
 
 \column{.5\textwidth}
 \centering
 \only<2>{ \small{ $W^{-}$}}
-\only<3>{ \small{ Z, no trigger ($\mu^{-}$)}}
+\only<3>{ \small{ Z, no trigger match ($\mu^{-}$)}}
 \only<4>{ \small{ Z, both muons close in \eta ($\mu^{-}$)}}
 \only<5>{ \small{ Z, muon matched to EF trigger ($\mu^{-}$)}}
 \only<6>{ \small{ $W^{-}$ (repeated)}}
 \includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC/W_NOM_Q4_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
 \includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/ZNT_NOM_stack_leptonN_etav_ALL}
 \includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC/ZNT_CLOSE_stack_leptonN_etav_ALL}
-\includegraphics[width=1.0\textwidth]<5>{dates/20130214/figures/AC/ZNT_TMATCH_stack_leptonN_etav_ALL}
+\includegraphics[width=1.0\textwidth]<5>{dates/20130214/figures/AC/ZNT_TMATCHBOTH_stack_leptonN_etav_ALL}
 \includegraphics[width=1.0\textwidth]<6>{dates/20130214/figures/AC/W_NOM_Q4_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
 
 \cole
+}
+
+\slide{Conclusions}
+{
+\centering
+Sadly, it is still unclear what causes the A/C side disagreements in the forward region in Ws, but not in Zs.
 }
 
 %%%%%%% Back-up slides %%%%%%%%%%
