@@ -1,0 +1,119 @@
+Dataset Parameters
+========================
+amiStatus                     VALID
+dataType                      AOD
+runNumber                     periodD
+logicalDatasetName            data11_7TeV.periodD.physics_Muons.PhysCont.AOD.pro10_v01
+totalEvents                   30407278
+version                       pro10_v01
+createdBy                     Lucotte
+nFiles                        1212
+
+
+Dataset Parameters
+========================
+amiStatus                     VALID
+dataType                      AOD
+runNumber                     periodE
+logicalDatasetName            data11_7TeV.periodE.physics_Muons.PhysCont.AOD.pro10_v01
+totalEvents                   6182165
+version                       pro10_v01
+createdBy                     Lucotte
+nFiles                        264
+
+
+Dataset Parameters
+========================
+amiStatus                     VALID
+dataType                      AOD
+runNumber                     periodF
+logicalDatasetName            data11_7TeV.periodF.physics_Muons.PhysCont.AOD.pro10_v01
+totalEvents                   14667057
+version                       pro10_v01
+createdBy                     Lucotte
+nFiles                        651
+
+
+Dataset Parameters
+========================
+amiStatus                     VALID
+dataType                      AOD
+runNumber                     periodG
+logicalDatasetName            data11_7TeV.periodG.physics_Muons.PhysCont.AOD.pro10_v01
+totalEvents                   54565841
+version                       pro10_v01
+createdBy                     Lucotte
+nFiles                        2527
+
+
+Dataset Parameters
+========================
+amiStatus                     VALID
+dataType                      AOD
+runNumber                     periodH
+logicalDatasetName            data11_7TeV.periodH.physics_Muons.PhysCont.AOD.pro10_v01
+totalEvents                   28368676
+version                       pro10_v01
+createdBy                     Lucotte
+nFiles                        1270
+
+
+Dataset Parameters
+========================
+amiStatus                     VALID
+dataType                      AOD
+runNumber                     periodI
+logicalDatasetName            data11_7TeV.periodI.physics_Muons.PhysCont.AOD.pro10_v01
+totalEvents                   37939525
+version                       pro10_v01
+createdBy                     Lucotte
+nFiles                        1824
+
+
+Dataset Parameters
+========================
+amiStatus                     VALID
+dataType                      AOD
+runNumber                     periodJ
+logicalDatasetName            data11_7TeV.periodJ.physics_Muons.PhysCont.AOD.pro10_v01
+totalEvents                   20658616
+version                       pro10_v01
+createdBy                     Lucotte
+nFiles                        1070
+
+
+Dataset Parameters
+========================
+amiStatus                     VALID
+dataType                      AOD
+runNumber                     periodK
+logicalDatasetName            data11_7TeV.periodK.physics_Muons.PhysCont.AOD.pro10_v01
+totalEvents                   53062941
+version                       pro10_v01
+createdBy                     Lucotte
+nFiles                        2787
+
+
+Dataset Parameters
+========================
+amiStatus                     VALID
+dataType                      AOD
+runNumber                     periodL
+logicalDatasetName            data11_7TeV.periodL.physics_Muons.PhysCont.AOD.pro10_v01
+totalEvents                   113916548
+version                       pro10_v01
+createdBy                     Lucotte
+nFiles                        10988
+
+
+Dataset Parameters
+========================
+amiStatus                     VALID
+dataType                      AOD
+runNumber                     periodM
+logicalDatasetName            data11_7TeV.periodM.physics_Muons.PhysCont.AOD.pro10_v01
+totalEvents                   80445474
+version                       pro10_v01
+createdBy                     Lucotte
+nFiles                        7396
+
