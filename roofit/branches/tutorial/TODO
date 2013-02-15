@@ -1,13 +1,15 @@
 Eta debugging:
-* make z plots with trigger matching requirements.
-* make z plots requiring both muons to fall in the same eta bin
+* Different signal generators
+* DONE make w plots with trigger matching requirements.
+* DONE make z plots with trigger matching requirements.
+* DONE make z plots requiring both muons to fall in the same eta bin
 * DONE: make plots for MC WITHOUT scale factors (using the ntuple!)
 * John: plot A-C side differences for MET correction.
   DONE: use a different type of MET (LocHadTopo)
 * DONE: do the differences in every step through the procedure. data, data-bgsub, scale factors,
   DONE: Make script that translates a 1D eta histo into 1D abseta histo + ratio
-* Suspect: MET. IDEA: wmunu stack, avoiding MET fits via QCD MC.
-                      zmumu eta stack (!)
+* DONE: wmunu stack, avoiding MET fits via QCD MC.
+  DONE: zmumu eta stack
 
 * Make scripts to create integrated cross-section tables.
 cat NOW | awk '{v=2.4*2; print $1*v,$2,$3*v,$4,$5,$6*v,$7,$8,$9*v}'
