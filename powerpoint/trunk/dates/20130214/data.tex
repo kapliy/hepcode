@@ -3,154 +3,68 @@
 %% %% INTRO
 %% %%
 
+\slide{ A vs C side asymmetry: W vs Z }
+{
 
-%% \slide{ Random notes }
-%% {
-%% \iteb
-%% \item Mel Shochet (U. of C) and Peter Onyisi (Austin) added to the author list
-%% \item Discovered that 0.2\% of data is missing in my ntuples (all in period-L)
-%% \iteb
-%% \item Re-making period-L right now. If it fails, may need to add a systematic
-%% \item Recall that the current systematic on single-differential is about 1.0\%
-%% \itee
-%% \itee
-%% }
+\only<1>{
+ \iteb
+ \item The plots below show A-side to C-side ratios for data, background-subtracted data, and signal MC.
+ \item Standard selection for inclusive W analysis: $p_T^{\mu}>20$, $E_T^{Miss}>25$, $m_T^{W}>40$, iso $p_{T}^{R=40}/p_{T}<0.1$
+ \item Single-muon trigger (18 GeV) used both for Ws and Zs
+ \item Reconstruction, trigger, isolation scale factors are computed in bins of measurement.
+ \item The shaded error bands (on the W plots) include all detector systematics.
+ \item We expect that A/C ratio agrees between data and MC within the error bands.
+ \item  But... (focus on last 4 \eta\ bins)
+ \itee
+}
+\only<6>{
+  \iteb
+  \item The overall ``funny'' A/C structure seen in Ws is caused by the trigger and confirmed in Zs.
+  \item In Zs, this structure is reasonably well-modeled by the Monte-Carlo.
+  \item In Ws, there are multi-sigma A/C disagreements (e.g., last 4 bins in $W^{+}$)
+  \item Source of disagreements is not clear: see backup slides for detailed cross-checks.
+  \itee
+}
 
-%% %%
-%% %% SMOOTHING SYSTEMATICS
-%% %%
+\colb[T]
 
-%% \slide{Smoothing systematics}
-%% {
-%% \centering
-%% Smoothing parton shower and matrix element systematics, which suffer from low MC statistics
+\column{.5\textwidth}
+\centering
+\only<2>{ \small{ $W^{+}$}}
+\only<3>{ \small{ Z, trigger match, 2nd muon anywhere ($\mu^{+}$)}}
+\only<4>{ \small{ Z, trigger match, same \eta\ bin ($\mu^{+}$)}}
+\only<5>{ \small{ Z, no trigger match ($\mu^{+}$)}}
+\includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC/W_NOM_Q4_stack_d3_eta_lpt_met_y_2__1_z_0__1_POS}
+\includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/ZNT_TMATCHBOTH_stack_leptonP_etav_ALL}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC/ZNT_SAME_TMATCHBOTH_stack_leptonP_etav_ALL}
+\includegraphics[width=1.0\textwidth]<5>{dates/20130214/figures/AC/ZNT_NOM_stack_leptonP_etav_ALL}
 
-%% }
+\column{.5\textwidth}
+\centering
+\only<2>{ \small{ $W^{-}$}}
+\only<3>{ \small{ Z, trigger match, 2nd muon anywhere ($\mu^{-}$)}}
+\only<4>{ \small{ Z, trigger match, same \eta\ bin ($\mu^{-}$)}}
+\only<5>{ \small{ Z, no trigger match ($\mu^{-}$)}}
+\includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC/W_NOM_Q4_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
+\includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/ZNT_TMATCHBOTH_stack_leptonN_etav_ALL}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC/ZNT_SAME_TMATCHBOTH_stack_leptonN_etav_ALL}
+\includegraphics[width=1.0\textwidth]<5>{dates/20130214/figures/AC/ZNT_NOM_stack_leptonN_etav_ALL}
 
-%% \slide{Parton Shower}
-%% {
-%%   \begin{itemize}
-%%   \item Polynomial fits to the Parton Shower / Hadronization systematic
-%%   \end{itemize}
+\cole
+}
 
-%%   \begin{center}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/smoothing/PSsyst_bin2.png}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/smoothing/PSsyst_bin3.png}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/smoothing/PSsyst_bin4.png}
-%%   \end{center}
+%%%%%%% Back-up slides %%%%%%%%%%
+\appendix
+\newcounter{finalframe}
+\setcounter{finalframe}{\value{framenumber}}
 
-%%   \begin{center}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/smoothing/PSsyst_bin5.png}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/smoothing/PSsyst_bin6.png}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/smoothing/PSsyst_bin7.png}
-%%   \end{center}
+\slide{}
+{
 
-%% }
+\centering
+\Huge Back-up slides
+}
 
-%% \slide{Matrix Element}
-%% {
-%%   \begin{itemize}
-%%   \item Polynomial fits to the Matrix Element systematic
-%%   \end{itemize}
-
-%%   \begin{center}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/smoothing/MEsyst_bin2.png}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/smoothing/MEsyst_bin3.png}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/smoothing/MEsyst_bin4.png}
-%%   \end{center}
-
-%%   \begin{center}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/smoothing/MEsyst_bin5.png}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/smoothing/MEsyst_bin6.png}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/smoothing/MEsyst_bin7.png}
-%%   \end{center}
-
-%% }
-
-%% %%
-%% %% FIRST E/MU COMPARISON PLOTS
-%% %%
-
-%% \slide{Electron-muon comparison}
-%% {
-%% \centering
-%% \Huge First e/mu comparison plots
-
-%% }
-
-%% \slide{Single-differential W}
-%% {
-%% \colb[T]
-
-%% \column{.5\textwidth}
-%% \centering
-%% \small{ $W^{+}$ }
-%% \includegraphics[width=1.0\textwidth]{dates/20130214/figures/plots/WPeta25_combined}
-
-%% \column{.5\textwidth}
-%% \centering
-%% \small{ $W^{-}$ }
-%% \includegraphics[width=1.0\textwidth]{dates/20130214/figures/plots/WMeta25_combined}
-
-%% \cole
-%% }
-
-%% \slide{Single-differential Z}
-%% {
-%% \only<1>{ \small{ Z 46-66 GeV}}
-%% \only<2>{ \small{ Z 66-116 GeV}}
-%% \only<3>{ \small{ Z 116-150 GeV}}
-%% \centering
-%% \only<1> {
-%% \includegraphics[width=0.7\textwidth]<1>{dates/20130214/figures/plots/Zlow_combined}
-%% }
-%% \only<2>{
-%% \includegraphics[width=0.7\textwidth]<2>{dates/20130214/figures/plots/Zcen_combined}
-%% }
-%% \only<3>{
-%% \includegraphics[width=0.7\textwidth]<3>{dates/20130214/figures/plots/Zhigh_combined}
-%% }
-%% }
-
-
-%% \slide{Double-differential W}
-%% {
-%%   \only<1> {
-%%     \begin{itemize}
-%%     \item $W^+$
-%%     \end{itemize}
-
-%%   \begin{center}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/plots/WPetaPt25-30_combined}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/plots/WPetaPt30-35_combined}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/plots/WPetaPt35-40_combined}
-%%   \end{center}
-
-%%   \begin{center}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/plots/WPetaPt40-45_combined}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/plots/WPetaPt45-50_combined}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/plots/WPetaPt50_combined}
-%%   \end{center}
-%% }
-%%   \only<2> {
-%%     \begin{itemize}
-%%     \item $W^-$
-%%     \end{itemize}
-
-%%   \begin{center}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/plots/WMetaPt25-30_combined}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/plots/WMetaPt30-35_combined}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/plots/WMetaPt35-40_combined}
-%%   \end{center}
-
-%%   \begin{center}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/plots/WMetaPt40-45_combined}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/plots/WMetaPt45-50_combined}
-%%     \includegraphics[width=0.3\textwidth]{dates/20130214/figures/plots/WMetaPt50_combined}
-%%   \end{center}
-%% }
-
-%% }
 
 
 %%
@@ -234,26 +148,30 @@ $2.18 < |\eta| <2.4$ & XXX.X & 558.3 & 6.4 & 10.2 & 1.6 \\
  Here, we are considering the \red{effects of QCD subtraction}. \\
  \small{(the fits, however, are always performed in an integrated kinematic region)}
 }
-\only<4>{
-  Conclusion: on the scale of existing disagreements, the choice of QCD templates has a minor effect. \\
-  All subsequent plots will use simple, unscaled QCD-based template (bb/cc mu15X).
+\only<5>{
+  Conclusion: on the scale of existing A/C disagreements, the choice of QCD templates is a minor effect. \\
+  All subsequent plots will use simple, unscaled QCD-based template (bb/cc mu15X) to study A/C differences.
 }
 
 \colb[T]
 
 \column{.5\textwidth}
 \centering
-\only<2>{ \small{ Data-driven QCD: $W^{+}$}}
-\only<3>{ \small{ Heavy-flavor MC QCD: $W^{+}$}}
+\only<2>{ \small{ Data-driven QCD (global fit): $W^{+}$}}
+\only<3>{ \small{ Data-driven QCD (per-bin fit): $W^{+}$}}
+\only<4>{ \small{ Heavy-flavor MC QCD: $W^{+}$}}
 \includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC/W_NOM_Q4_stack_d3_eta_lpt_met_y_2__1_z_0__1_POS}
-\includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/W_NOM_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_POS}
+\includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/W_NOM_Q4BINS_stack_d3_eta_lpt_met_y_2__1_z_0__1_POS}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC/W_NOM_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_POS}
 
 \column{.5\textwidth}
 \centering
-\only<2>{ \small{ Data-driven QCD: $W^{-}$}}
-\only<3>{ \small{ Heavy-flavor MC QCD: $W^{-}$}}
+\only<2>{ \small{ Data-driven QCD (global fit): $W^{-}$}}
+\only<3>{ \small{ Data-driven QCD (per-bin fit): $W^{-}$}}
+\only<4>{ \small{ Heavy-flavor MC QCD: $W^{-}$}}
 \includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC/W_NOM_Q4_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
-\includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/W_NOM_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
+\includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/W_NOM_Q4BINS_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC/W_NOM_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
 
 \cole
 }
@@ -307,7 +225,7 @@ $2.18 < |\eta| <2.4$ & XXX.X & 558.3 & 6.4 & 10.2 & 1.6 \\
 }
 \only<6>{
   Conclusion: trigger scale factors have a major effect, especially in the barrel. \\
-  However, they don't seen to provide a substantial A/C correction in the endcapss. \\
+  However, they don't seen to provide a substantial A/C correction in the endcaps. \\
   (i.e., forward TGC trigger chambers are more symmetric than RPCs in the barrel)
 }
 
@@ -419,7 +337,7 @@ $2.18 < |\eta| <2.4$ & XXX.X & 558.3 & 6.4 & 10.2 & 1.6 \\
  The shaded errors on the ratio (in the following plots) are correct. \\
  Here, we are considering the \red{effects of a different MET definitions}. \\
  \small{Option 1: MetRefFinal, but without correcting for muon/jet momentum } \\
- \small{Option 2: LocHadTopo (corr), as used in the 2010 measurement} \\
+ \small{Option 2: LocHadTopo (corrected for muons), as used in the 2010 measurement} \\
  \small{(sorry, no systematic bands in the following set of plots)}
 }
 
@@ -434,7 +352,7 @@ $2.18 < |\eta| <2.4$ & XXX.X & 558.3 & 6.4 & 10.2 & 1.6 \\
 \centering
 \only<2>{ \small{ Nominal: MetRefFinal, $W^{+}$}}
 \only<3>{ \small{ Nominal: MetRefFinal (uncorr), $W^{+}$}}
-\only<4>{ \small{ Nominal: LocHadTopo, $W^{+}$}}
+\only<4>{ \small{ Nominal: LocHadTopo+mu (uncorr), $W^{+}$}}
 \includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC/WNT_NOM_Q0_stack_lepton_etav_POS}
 \includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/WNT_RAWMET_Q0_stack_lepton_etav_POS}
 \includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC/WNT_METLH_Q0_stack_lepton_etav_POS}
@@ -443,7 +361,7 @@ $2.18 < |\eta| <2.4$ & XXX.X & 558.3 & 6.4 & 10.2 & 1.6 \\
 \centering
 \only<2>{ \small{ Nominal: MetRefFinal, $W^{-}$}}
 \only<3>{ \small{ Nominal: MetRefFinal (uncorr), $W^{-}$}}
-\only<4>{ \small{ Nominal: LocHadTopo, $W^{-}$}}
+\only<4>{ \small{ Nominal: LocHadTopo+mu (uncorr), $W^{-}$}}
 \includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC/WNT_NOM_Q0_stack_lepton_etav_NEG}
 \includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/WNT_RAWMET_Q0_stack_lepton_etav_NEG}
 \includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC/WNT_METLH_Q0_stack_lepton_etav_NEG}
@@ -497,7 +415,7 @@ $2.18 < |\eta| <2.4$ & XXX.X & 558.3 & 6.4 & 10.2 & 1.6 \\
 }
 \only<10>{
   Conclusion: while muon momentum corrections have an effect on the A/C disagreements, there is no version of correction factors
-that exhibits good agreement for both $W^+$ and $W^-$. Various versions simply provide a play-off between better agreement for $mu^+$ versus $mu^-$, which is mainly influenced by the curvature correction (``C'').
+that exhibits good agreement for both $W^+$ and $W^-$. Various versions simply provide a play-off between better agreement for $mu^+$ versus $mu^-$, which is mainly influenced by the propagation of curvature correction (``C'') into MET.
 }
 
 \colb[T]
@@ -553,10 +471,10 @@ that exhibits good agreement for both $W^+$ and $W^-$. Various versions simply p
  Here, we are comparing \red{W and Z eta plots}. \\
  \small{(sorry, no error band for the Z)}
 }
-\only<7>{
+\only<8>{
   Conclusion: when the Z muons are required to trigger, we see the same overall A/C structure as in Ws - which means that the \red{A/C structure is caused by the trigger}. However, the MC models these disagreements reasonably well in Z events, but not in W events. \\
   \small{Caveat: I am not using official trigger matching, but rather \red{manually} match muons to EF trigger objects using a $\phi-\eta$ cone of 0.2.} \\
-  
+ 
 }
 
 \colb[T]
@@ -565,27 +483,31 @@ that exhibits good agreement for both $W^+$ and $W^-$. Various versions simply p
 \centering
 \only<2>{ \small{ $W^{+}$}}
 \only<3>{ \small{ Z, no trigger match ($\mu^{+}$)}}
-\only<4>{ \small{ Z, both muons close in \eta ($\mu^{+}$)}}
-\only<5>{ \small{ Z, muons matched to EF trigger ($\mu^{+}$)}}
-\only<6>{ \small{ $W^{+}$ (repeated)}}
+\only<4>{ \small{ Z, no trigger match, same \eta\ bin ($\mu^{+}$)}}
+\only<5>{ \small{ Z, trigger match, same \eta\ bin ($\mu^{+}$)}}
+\only<6>{ \small{ Z, trigger match, 2nd muon anywhere ($\mu^{+}$)}}
+\only<7>{ \small{ $W^{+}$ (repeated)}}
 \includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC/W_NOM_Q4_stack_d3_eta_lpt_met_y_2__1_z_0__1_POS}
 \includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/ZNT_NOM_stack_leptonP_etav_ALL}
-\includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC/ZNT_CLOSE_stack_leptonP_etav_ALL}
-\includegraphics[width=1.0\textwidth]<5>{dates/20130214/figures/AC/ZNT_TMATCHBOTH_stack_leptonP_etav_ALL}
-\includegraphics[width=1.0\textwidth]<6>{dates/20130214/figures/AC/W_NOM_Q4_stack_d3_eta_lpt_met_y_2__1_z_0__1_POS}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC/ZNT_SAME_stack_leptonP_etav_ALL}
+\includegraphics[width=1.0\textwidth]<5>{dates/20130214/figures/AC/ZNT_SAME_TMATCHBOTH_stack_leptonP_etav_ALL}
+\includegraphics[width=1.0\textwidth]<6>{dates/20130214/figures/AC/ZNT_TMATCHBOTH_stack_leptonP_etav_ALL}
+\includegraphics[width=1.0\textwidth]<7>{dates/20130214/figures/AC/WNT_NOM_Q0_stack_lepton_etav_POS}
 
 \column{.5\textwidth}
 \centering
 \only<2>{ \small{ $W^{-}$}}
 \only<3>{ \small{ Z, no trigger match ($\mu^{-}$)}}
-\only<4>{ \small{ Z, both muons close in \eta ($\mu^{-}$)}}
-\only<5>{ \small{ Z, muon matched to EF trigger ($\mu^{-}$)}}
-\only<6>{ \small{ $W^{-}$ (repeated)}}
+\only<4>{ \small{ Z, no trigger match, same \eta\ bin ($\mu^{+}$)}}
+\only<5>{ \small{ Z, trigger match, same \eta\ bin ($\mu^{+}$)}}
+\only<6>{ \small{ Z, trigger match, 2nd muon anywhere ($\mu^{+}$)}}
+\only<7>{ \small{ $W^{-}$ (repeated)}}
 \includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC/W_NOM_Q4_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
 \includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC/ZNT_NOM_stack_leptonN_etav_ALL}
-\includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC/ZNT_CLOSE_stack_leptonN_etav_ALL}
-\includegraphics[width=1.0\textwidth]<5>{dates/20130214/figures/AC/ZNT_TMATCHBOTH_stack_leptonN_etav_ALL}
-\includegraphics[width=1.0\textwidth]<6>{dates/20130214/figures/AC/W_NOM_Q4_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC/ZNT_SAME_stack_leptonN_etav_ALL}
+\includegraphics[width=1.0\textwidth]<5>{dates/20130214/figures/AC/ZNT_SAME_TMATCHBOTH_stack_leptonN_etav_ALL}
+\includegraphics[width=1.0\textwidth]<6>{dates/20130214/figures/AC/ZNT_TMATCHBOTH_stack_leptonN_etav_ALL}
+\includegraphics[width=1.0\textwidth]<7>{dates/20130214/figures/AC/WNT_NOM_Q0_stack_lepton_etav_NEG}
 
 \cole
 }
@@ -594,16 +516,4 @@ that exhibits good agreement for both $W^+$ and $W^-$. Various versions simply p
 {
 \centering
 Sadly, it is still unclear what causes the A/C side disagreements in the forward region in Ws, but not in Zs.
-}
-
-%%%%%%% Back-up slides %%%%%%%%%%
-\appendix
-\newcounter{finalframe}
-\setcounter{finalframe}{\value{framenumber}}
-
-\slide{}
-{
-
-\centering
-\Huge Back-up slides
 }
