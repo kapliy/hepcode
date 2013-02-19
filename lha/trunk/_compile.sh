@@ -15,9 +15,9 @@ export LHANMAX=6
 LOWMEM="--enable-low-memory"
 
 # CT10 ONLY
-export LHANMAX=1
+export LHANMAX=5
 LOWMEM=""
-PDFSETS="--enable-pdfsets=cteq"
+PDFSETS=""
 
 ####################################################
 ##################### INSTALL ######################

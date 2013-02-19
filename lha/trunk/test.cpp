@@ -1,7 +1,7 @@
 #include <iostream>
 #include <PDFReweightTool.hpp>
 
-const bool ONE_SET = true;
+const bool ONE_SET = false;
 
 int main() {
   PDFReweightTool *rw = new PDFReweightTool();

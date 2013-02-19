@@ -87,7 +87,7 @@ void PDFReweightTool::AddDefaultPDFSets() {
   assert(!m_ready && "ERROR: PDFReweightTool::GetWeight must be called before PDFReweightTool::Initialize");
   // the following PDF sets are recommended for 2011 W/Z paper
   AddPDFSet(10800,"CT10.LHgrid");
-  AddPDFSet(11000,"CT10nlo.LHgrid");
+  //AddPDFSet(11000,"CT10nlo.LHgrid");
   AddPDFSet(21100,"MSTW2008nlo68cl.LHgrid");
   AddPDFSet(60700,"HERAPDF15NLO_EIG.LHgrid");
   AddPDFSet(229800,"NNPDF23_nlo_as_0118.LHgrid");
