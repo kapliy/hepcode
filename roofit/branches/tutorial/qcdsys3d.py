@@ -26,6 +26,11 @@ v8: unscrambled fit and control region uncertainties on QCD
     now, these get unfolded independently to preserve bin-by-bin correlations
 v9: simply re-running with additional histograms (mcp_noscale; uint).
     also adding a test with etamode=1 (i.e., signed eta)
+    this is version v2 in common afs area
+v10: just re-running with extra debug stuff.
+    this is version v3 in common afs area
+v11: added missing 0.2% of events in periodL.
+    now ALL event counts agree with what is reported in AMI for the AODs
 """
 
 import sys,os,re,math,copy
