@@ -47,6 +47,14 @@ def RPB(b):
     assert False,'Unkown pt bin: %s'%b
     return b
 
+def zpre_samebin_eta():
+    """ a utility function that creates a long pre string for Z selection, forcing both muons to be in the same bin """
+    b = setabins
+    out = []
+    for i,ib in enumerate(b[:-1]):
+        out.append(   '(lP_eta>=%.2f && lP_eta<=%.2f && lN_eta>=%.2f && lN_eta<=%.2f)'%(b[i],b[i+1],b[i],b[i+1])   )
+    return '('+(' || '.join(out))+')'
+
 # label maps
 LABELMAP = {}
 LABELMAP['lepton_etav'] = ['#eta',None]
@@ -115,6 +123,8 @@ def match_labelmap(x):
 
 # cut maps
 CUTMAP = {}
+CUTMAP['all_events'] = 'All events'
+CUTMAP['passes_ntuple'] = 'Preselection (8 GeV muon)'
 CUTMAP['passes_e_grl'] = 'GRL'
 CUTMAP['passes_e_lar_cleaning'] = 'LAr error'
 CUTMAP['passes_e_primary_vertex'] = 'Primary vertex'
@@ -137,3 +147,5 @@ if __name__ == '__main__':
     print absetabins
     print len(setabins)
     print setabins
+    print zpre_samebin_eta()
+

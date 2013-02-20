@@ -44,9 +44,10 @@ DB=DB_01252013_ALL.v9
 #DB=DB_01292013_ALL.rerun.d0.v10
 #input=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_higgsmcp_stacoCB_all/pt20 # higgs mcp corrections
 #DB=DB_01292013_ALL.higgsmcp.v10
-input=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_anyfit_stacoCB_all/pt20 # rerun (met debugging added)
-DB=DB_01292013_ALL.rerun.v10
-
+#input=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_anyfit_stacoCB_all/pt20 # rerun (met debugging added)
+#DB=DB_01292013_ALL.rerun.v10
+input=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_anyfit_L_stacoCB_all/pt20 # fixed missing statistics in periodL
+DB=DB_01292013_ALL.rerun.v11
 
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`

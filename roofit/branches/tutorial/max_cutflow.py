@@ -132,11 +132,17 @@ def find(cut,DATA):
 
 PREV = None
 print HEADER
+if is_data:
+    NALL = 440214121.0
+    L = find(CUTS[0],DATAU if is_data else DATAV)
+    print eff( 'all_events',NALL,NALL)
+    TOT = 440214121.0
+    print eff( 'passes_ntuple',440214121.0,float(L[DEN]) )
 for i,cut in enumerate(CUTS):
     L = find(cut,DATAU if is_data else DATAV)
     print eff( L[NAME], float(L[DEN]), float(L[NUM]) )
     PREV = L[NUM]
-    if i==0:
+    if not TOT:
         TOT = float(L[NUM])
 
 if is_data:

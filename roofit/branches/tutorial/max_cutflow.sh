@@ -18,6 +18,7 @@ if [ "$#" -ge "1" ]; then
 else
     echo "Printing latex tables:"
     out=/home/antonk/SupportingDocument/Wmunu/figures/cutflow
+    mkdir -p $out
     for pt in 20 25; do
     	sdir=${bdir}/pt${pt}
 	./max_cutflow.py ${sdir} 1 POS ${pt} > ${out}/data_pt${pt}.tex && ./max_cutflow.py ${sdir} 0 POS ${pt} > ${out}/mc_POS_pt${pt}.tex && ./max_cutflow.py ${sdir} 0 NEG ${pt} > ${out}/mc_NEG_pt${pt}.tex && echo OK

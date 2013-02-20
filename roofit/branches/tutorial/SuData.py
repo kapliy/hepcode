@@ -99,6 +99,8 @@ class SuSys:
         SMAP.append(['IsoFail40','ptiso40/l_pt>=0.1'])
         SMAP.append(['IsoWind20','ptiso20/l_pt>=0.1 && ptiso20/l_pt<=0.2'])
         SMAP.append(['IsoWind40','ptiso40/l_pt>=0.1 && ptiso40/l_pt<=0.2'])
+        import binning
+        SMAP.append(['ZETASAME',binning.zpre_samebin_eta()])
         def dosub(x):
             for V in SMAP:
                 x = re.sub(V[0],V[1],x)
