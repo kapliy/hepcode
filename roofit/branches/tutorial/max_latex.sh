@@ -10,6 +10,7 @@ for q in POS NEG; do
     for pt in 20 25; do
 	echo "1D: ${q} pt${pt}"
 	./max_latex.py ${dout}.1D.pt${pt}.root ${q} > ${out}/bgcomp_${q}_pt${pt}.tex &
+	./max_latex.py ${dout}.1D.pt${pt}.root ${q} > ${out}/bgcomp_${q}_pt${pt}.tex &
     done
     # 2D
     pt=20
