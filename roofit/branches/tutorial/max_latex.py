@@ -191,6 +191,73 @@ def printDataBgsubSig(py=None):
         lineXYZ(i,data,bgsub,sig,py)
 
 def printEventComposition(py=None , dorel=True):
+    """ A version split across THREE tables """
+    samples = SAMPLES[:]
+    snames = SNAMES[:]
+    HLINES = []
+    hs = [ get2([sample,],py) for sample in samples]
+    HLINES.append( len(hs)-1 )
+    # sum of ewk backgrounds
+    hewk = get2(samples,py)
+    hs.append(hewk)
+    snames.append('Total EWK+top')
+    # qcd
+    hqcd = get2(['qcd',],py)
+    hs.append(hqcd)
+    snames.append('QCD')
+    # sum of ALL backgrounds
+    if False:
+        HLINES.append( len(hs)-1 )
+        hbg = get2(samples + ['qcd'],py)
+        hs.append(hbg)
+        snames.append('Total BG')
+    # data (for normalization)
+    hsig = get(['data',],py)
+    ntotal = hs[0][0].GetNbinsX()
+    assert( ntotal==11 ) # only works in |eta| due to hardcoded row boundaries
+    nfirst = 4
+    nsecond = 4
+    nthird = 3
+    for isub in (0,1,2):
+        nbins = nfirst if isub == 0 else (nsecond if isub==1 else nthird)
+        binmin = 1 if isub==0 else (5 if isub==1 else 9)
+        binmax = 4+1 if isub==0 else (8+1 if isub==1 else 12)
+        binloop = xrange( binmin , binmax )
+        print '\\begin{tabular}{%s}'%('c'*(nbins+1))
+        #/        &  0.00--0.20  &  0.20--0.40  &  0.40--0.60  &  0.60--0.80  &  1.00--1.20  \\
+        print '\hline'
+        print '\hline'
+        print 'Process / $|\eta|$    ',
+        for ibin in binloop:
+            low = '%.2f'%(hs[0][0].GetBinLowEdge(ibin))
+            high = '%.2f'%(hs[0][0].GetBinLowEdge(ibin)+hs[0][0].GetBinWidth(ibin))
+            print '&   %s-%s   '%(low,high),
+        print '\\\\'
+        print '\hline'
+        for i,h in enumerate(hs):
+            z = [ snames[i] ]
+            for ibin in binloop:
+                v  = h[0].GetBinContent(ibin)
+                e1 = h[0].GetBinError(ibin)
+                e2 = h[1].GetBinError(ibin)
+                if dorel:
+                    d  = hsig.GetBinContent(ibin)
+                    v = v/d*100.0
+                    e1 = e1/d*100.0
+                    e2 = e2/d*100.0
+                z.append( '$%.2f \pm %.2f \pm %.2f$'%(v,e1,e2) )
+            print ' & '.join(z) + '   \\\\'
+            if i in HLINES:
+                print '\hline'
+        print '\hline'
+        print '\hline'
+        print '\end{tabular}'
+        # this separates the lower tables from the upper ones
+        if isub in (0,1):
+            for ibr in range(4):
+                print r'\linebreak'
+
+def printEventComposition_tworows(py=None , dorel=True):
     """ A version split across two tables """
     samples = SAMPLES[:]
     snames = SNAMES[:]
