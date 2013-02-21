@@ -8,7 +8,7 @@
 
 \only<1>{
  \iteb
-% TODO - 2011 data
+ \item 2011 data, MC11c, STACO muons
  \item The plots below show A-side to C-side ratios for data, background-subtracted data, and signal MC.
  \item Standard selection for inclusive W analysis: $p_T^{\mu}>20$, $E_T^{Miss}>25$, $m_T^{W}>40$, iso $p_{T}^{R=40}/p_{T}<0.1$
  \item Single-muon trigger (18 GeV) used both for Ws and Zs
@@ -570,8 +570,11 @@ that exhibits good agreement for both $W^+$ and $W^-$. Various versions simply p
  Here, we are looking at various distributions inside the worst eta slice: $|\eta| = 1.95-2.18$.\\
  \small{Note that the worst data/MC disagreement is seen on the C-side}
 }
-\only<8>{
- Conclusion: we simply see an overall shift in MET and $\phi$ distributions \red{on the C side} that produces a 5\% disagreement. Beyond that, we see a difference in the correction to MET due to propagation of muon momentum into MET (mostly influenced by the curvature ``C''). This difference is about \red{0.1-0.2 GeV}, which is consistent with the A-C side difference in curvature correction constants for combined muons. Recall that those constants are derived by balancing the momenta of the Z boson legs against each other for events where both legs fall in the same $\eta$ bin.
+\only<10>{
+ Conclusions: \\
+ In MET and $\phi$ distributions \red{on the C side}, we simply see an overall 5\% shift. \\
+ In MET-MuonBoy, we also see some shape differences between A and C sides. \\
+ We also see a difference in the correction to MET due to propagation of muon momentum into MET (mostly influenced by the curvature ``C''). This difference is about \red{0.1-0.2 GeV}, which is consistent with the A-C side difference seen in curvature correction constants for combined muons. Recall that those constants are derived by balancing the momenta of the Z boson legs against each other for events where both legs fall in the same $\eta$ bin.
 }
 
 \colb[T]
@@ -582,14 +585,18 @@ that exhibits good agreement for both $W^+$ and $W^-$. Various versions simply p
 \only<3>{ \small{ $W^{+}$: muon $\phi$ (A-side)}}
 \only<4>{ \small{ $W^{+}$: MET (C-side)}}
 \only<5>{ \small{ $W^{+}$: MET (A-side)}}
-\only<6>{ \small{ $W^{+}$: $\delta(MET) corr.$ (C-side)}}
-\only<7>{ \small{ $W^{+}$: $\delta(MET) corr.$ (A-side)}}
+\only<6>{ \small{ $W^{+}$: MET-MuonBoy (C-side)}}
+\only<7>{ \small{ $W^{+}$: MET-MuonBoy (A-side)}}
+\only<8>{ \small{ $W^{+}$: $\Delta(MET)$ MCP corrections (C-side)}}
+\only<9>{ \small{ $W^{+}$: $\Delta(MET)$ MCP correctoins (A-side)}}
 \includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC2_NOM/WDB_C_BADBIN_stack_l_phi_POS}
 \includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC2_NOM/WDB_A_BADBIN_stack_l_phi_POS}
 \includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC2_NOM/WDB_C_BADBIN_stack_met_POS}
 \includegraphics[width=1.0\textwidth]<5>{dates/20130214/figures/AC2_NOM/WDB_A_BADBIN_stack_met_POS}
-\includegraphics[width=1.0\textwidth]<6>{dates/20130214/figures/AC2_NOM/WDB_C_BADBIN_stack_metcorr_total_POS}
-\includegraphics[width=1.0\textwidth]<7>{dates/20130214/figures/AC2_NOM/WDB_A_BADBIN_stack_metcorr_total_POS}
+\includegraphics[width=1.0\textwidth]<6>{dates/20130214/figures/AC2_NOM/WDB_C_BADBIN_stack_met_muonboy_POS}
+\includegraphics[width=1.0\textwidth]<7>{dates/20130214/figures/AC2_NOM/WDB_A_BADBIN_stack_met_muonboy_POS}
+\includegraphics[width=1.0\textwidth]<8>{dates/20130214/figures/AC2_NOM/WDB_C_BADBIN_stack_metcorr_total_POS}
+\includegraphics[width=1.0\textwidth]<9>{dates/20130214/figures/AC2_NOM/WDB_A_BADBIN_stack_metcorr_total_POS}
 
 \column{.5\textwidth}
 \centering
@@ -597,22 +604,37 @@ that exhibits good agreement for both $W^+$ and $W^-$. Various versions simply p
 \only<3>{ \small{ $W^{-}$: muon $\phi$ (A-side)}}
 \only<4>{ \small{ $W^{-}$: MET (C-side)}}
 \only<5>{ \small{ $W^{-}$: MET (A-side)}}
-\only<6>{ \small{ $W^{-}$: MET correction (C-side)}}
-\only<7>{ \small{ $W^{-}$: MET correction (A-side)}}
+\only<6>{ \small{ $W^{-}$: MET-MuonBoy (C-side)}}
+\only<7>{ \small{ $W^{-}$: MET-MuonBoy (A-side)}}
+\only<8>{ \small{ $W^{-}$: $\Delta(MET)$ MCP corrections (C-side)}}
+\only<9>{ \small{ $W^{-}$: $\Delta(MET)$ MCP corrections (A-side)}}
 \includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC2_NOM/WDB_C_BADBIN_stack_l_phi_NEG}
 \includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC2_NOM/WDB_A_BADBIN_stack_l_phi_NEG}
 \includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC2_NOM/WDB_C_BADBIN_stack_met_NEG}
 \includegraphics[width=1.0\textwidth]<5>{dates/20130214/figures/AC2_NOM/WDB_A_BADBIN_stack_met_NEG}
-\includegraphics[width=1.0\textwidth]<6>{dates/20130214/figures/AC2_NOM/WDB_C_BADBIN_stack_metcorr_total_NEG}
-\includegraphics[width=1.0\textwidth]<7>{dates/20130214/figures/AC2_NOM/WDB_A_BADBIN_stack_metcorr_total_NEG}
-
+\includegraphics[width=1.0\textwidth]<6>{dates/20130214/figures/AC2_NOM/WDB_C_BADBIN_stack_met_muonboy_NEG}
+\includegraphics[width=1.0\textwidth]<7>{dates/20130214/figures/AC2_NOM/WDB_A_BADBIN_stack_met_muonboy_NEG}
+\includegraphics[width=1.0\textwidth]<8>{dates/20130214/figures/AC2_NOM/WDB_C_BADBIN_stack_metcorr_total_NEG}
+\includegraphics[width=1.0\textwidth]<9>{dates/20130214/figures/AC2_NOM/WDB_A_BADBIN_stack_metcorr_total_NEG}
 
 \cole
+}
+
+\slide{A-C cross-check in Wenu channel}
+{
+Unfolded cross-sections in the Wenu channel on A vs C sides, and their ratio. \\
+The disagreement is less than 2\%, as contrasted to up to 5\% in Wmunu channel.
+
+\centering
+\includegraphics[width=0.8\textwidth]{dates/20130214/figures/ele/Wenu_AC_unfolded}
+
 }
 
 
 \slide{Conclusions}
 {
 \centering
-Sadly, it is still unclear what causes the A/C side disagreements in the forward region in Ws, but not in Zs.
+It is still unclear what causes the A/C side disagreements in the forward region. \\
+Since only Ws are affected, the suspicion falls on MET (MuonBoy term?). \\
+But how can we better understand and, ultimately, correct these effects?
 }
