@@ -8,6 +8,7 @@
 
 \only<1>{
  \iteb
+% TODO - 2011 data
  \item The plots below show A-side to C-side ratios for data, background-subtracted data, and signal MC.
  \item Standard selection for inclusive W analysis: $p_T^{\mu}>20$, $E_T^{Miss}>25$, $m_T^{W}>40$, iso $p_{T}^{R=40}/p_{T}<0.1$
  \item Single-muon trigger (18 GeV) used both for Ws and Zs
@@ -511,6 +512,104 @@ that exhibits good agreement for both $W^+$ and $W^-$. Various versions simply p
 
 \cole
 }
+
+
+%% W in slices of PHI
+
+\slide{ A-C ratios: W in different $\phi$ quadrants}
+{
+
+\only<1>{
+ A/C ratios for data, background-subtracted data, and signal MC. \\
+ The shaded errors on the ratio (in the following plots) are correct. \\
+ Here, we are comparing W eta plots in different \red{$\phi$ quadrants}.\\
+ \small{Caveat: all scale factors are integrated in $\phi$, so we don't expect excellent agreement here}
+}
+\only<7>{
+ Conclusion: the A-C ratio shows very different structure in $\phi$. However, the last four $\eta$ bins of $W^{+}$ show \red{consistent disagreement in ALL four $\phi$ quadrants}.
+}
+
+\colb[T]
+
+\column{.5\textwidth}
+\centering
+\only<2>{ \small{ $W^{+}$ (all $\phi$)}}
+\only<3>{ \small{ $W^{+}$ ($0 < \phi < PI/2$)}}
+\only<4>{ \small{ $W^{+}$ ($PI/2 < \phi < PI$)}}
+\only<5>{ \small{ $W^{+}$ ($-PI < \phi < -PI/2$)}}
+\only<6>{ \small{ $W^{+}$ ($-PI/2 < \phi < 0$)}}
+\includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC/WNT_NOM_Q0_stack_lepton_etav_POS}
+\includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC2_NOM/WNT_NOM_C0_stack_lepton_etav_POS}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC2_NOM/WNT_NOM_C1_stack_lepton_etav_POS}
+\includegraphics[width=1.0\textwidth]<5>{dates/20130214/figures/AC2_NOM/WNT_NOM_C2_stack_lepton_etav_POS}
+\includegraphics[width=1.0\textwidth]<6>{dates/20130214/figures/AC2_NOM/WNT_NOM_C3_stack_lepton_etav_POS}
+
+\column{.5\textwidth}
+\centering
+\only<2>{ \small{ $W^{-}$ (all $\phi$)}}
+\only<3>{ \small{ $W^{-}$ ($0 < \phi < PI/2$)}}
+\only<4>{ \small{ $W^{-}$ ($PI/2 < \phi < PI$)}}
+\only<5>{ \small{ $W^{-}$ ($-PI < \phi < -PI/2$)}}
+\only<6>{ \small{ $W^{-}$ ($-PI/2 < \phi < 0$)}}
+\includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC/WNT_NOM_Q0_stack_lepton_etav_NEG}
+\includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC2_NOM/WNT_NOM_C0_stack_lepton_etav_NEG}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC2_NOM/WNT_NOM_C1_stack_lepton_etav_NEG}
+\includegraphics[width=1.0\textwidth]<5>{dates/20130214/figures/AC2_NOM/WNT_NOM_C2_stack_lepton_etav_NEG}
+\includegraphics[width=1.0\textwidth]<6>{dates/20130214/figures/AC2_NOM/WNT_NOM_C3_stack_lepton_etav_NEG}
+
+\cole
+}
+
+
+%% Explicitly looking inside the bad bins
+
+\slide{ Various distributions for $|\eta| = 1.95-2.18$ (worst bin) }
+{
+
+\only<1>{
+ Here, we are looking at various distributions inside the worst eta slice: $|\eta| = 1.95-2.18$.\\
+ \small{Note that the worst data/MC disagreement is seen on the C-side}
+}
+\only<8>{
+ Conclusion: we simply see an overall shift in MET and $\phi$ distributions \red{on the C side} that produces a 5\% disagreement. Beyond that, we see a difference in the correction to MET due to propagation of muon momentum into MET (mostly influenced by the curvature ``C''). This difference is about \red{0.1-0.2 GeV}, which is consistent with the A-C side difference in curvature correction constants for combined muons. Recall that those constants are derived by balancing the momenta of the Z boson legs against each other for events where both legs fall in the same $\eta$ bin.
+}
+
+\colb[T]
+
+\column{.5\textwidth}
+\centering
+\only<2>{ \small{ $W^{+}$: muon $\phi$ (C-side)}}
+\only<3>{ \small{ $W^{+}$: muon $\phi$ (A-side)}}
+\only<4>{ \small{ $W^{+}$: MET (C-side)}}
+\only<5>{ \small{ $W^{+}$: MET (A-side)}}
+\only<6>{ \small{ $W^{+}$: $\delta(MET) corr.$ (C-side)}}
+\only<7>{ \small{ $W^{+}$: $\delta(MET) corr.$ (A-side)}}
+\includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC2_NOM/WDB_C_BADBIN_stack_l_phi_POS}
+\includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC2_NOM/WDB_A_BADBIN_stack_l_phi_POS}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC2_NOM/WDB_C_BADBIN_stack_met_POS}
+\includegraphics[width=1.0\textwidth]<5>{dates/20130214/figures/AC2_NOM/WDB_A_BADBIN_stack_met_POS}
+\includegraphics[width=1.0\textwidth]<6>{dates/20130214/figures/AC2_NOM/WDB_C_BADBIN_stack_metcorr_total_POS}
+\includegraphics[width=1.0\textwidth]<7>{dates/20130214/figures/AC2_NOM/WDB_A_BADBIN_stack_metcorr_total_POS}
+
+\column{.5\textwidth}
+\centering
+\only<2>{ \small{ $W^{-}$: muon $\phi$ (C-side)}}
+\only<3>{ \small{ $W^{-}$: muon $\phi$ (A-side)}}
+\only<4>{ \small{ $W^{-}$: MET (C-side)}}
+\only<5>{ \small{ $W^{-}$: MET (A-side)}}
+\only<6>{ \small{ $W^{-}$: MET correction (C-side)}}
+\only<7>{ \small{ $W^{-}$: MET correction (A-side)}}
+\includegraphics[width=1.0\textwidth]<2>{dates/20130214/figures/AC2_NOM/WDB_C_BADBIN_stack_l_phi_NEG}
+\includegraphics[width=1.0\textwidth]<3>{dates/20130214/figures/AC2_NOM/WDB_A_BADBIN_stack_l_phi_NEG}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130214/figures/AC2_NOM/WDB_C_BADBIN_stack_met_NEG}
+\includegraphics[width=1.0\textwidth]<5>{dates/20130214/figures/AC2_NOM/WDB_A_BADBIN_stack_met_NEG}
+\includegraphics[width=1.0\textwidth]<6>{dates/20130214/figures/AC2_NOM/WDB_C_BADBIN_stack_metcorr_total_NEG}
+\includegraphics[width=1.0\textwidth]<7>{dates/20130214/figures/AC2_NOM/WDB_A_BADBIN_stack_metcorr_total_NEG}
+
+
+\cole
+}
+
 
 \slide{Conclusions}
 {
