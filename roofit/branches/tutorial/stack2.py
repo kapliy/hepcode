@@ -1681,7 +1681,7 @@ if mode=='metplots':
         OMAP.append( metshape_qcd_vs_ewk(iq) )
     
 if mode in ('one_plot','one_plot_nt'):
-    assert opts.nomonly, 'one_plot is designed to work with nomonly'
+    assert opts.nomonly, 'one_plot is designed to work with nomonly. MC is not renormalized to data'
     if opts.nomonly:
         spR.enable_nominal()
     else:
@@ -1805,7 +1805,7 @@ if mode=='control_stack':
 if mode=='control_stack_dratio':
     spR.enable_nominal()
     plots = [opts.hsource,]
-    plot_stacks(spR.clone(),plots,m=1,qs=(0,1))
+    plot_stacks(spR.clone(),plots,m=1,qs=(0,1),norm=True)
     assert len(OMAP)==2
     hPOS = OMAP[0].hratio
     hNEG = OMAP[1].hratio

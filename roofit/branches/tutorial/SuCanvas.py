@@ -805,7 +805,7 @@ class SuCanvas:
                   mlogy=False,rlogy=False):
         """ Wrapper to make a complete plot of stack and data overlayed - SuData version
         if norm==True, the stack is rescaled to Nominal data counts
-        if norm_sys_from_nominal=True,  systematics normalized to nominal (rather than to data)
+        if norm_sys_from_nominal=True, systematics are normalized to nominal (rather than to data)
         mode=0 - nominal only
         mode=1 - nominal + systematic bands
         """
