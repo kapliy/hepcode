@@ -49,6 +49,9 @@ DB=DB_01252013_ALL.v9
 input=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_anyfit_L_stacoCB_all/pt20 # fixed missing statistics in periodL
 DB=DB_01292013_ALL.rerun.v11
 
+input=/share/t3data3/antonk/ana/ana_v29I_02222013_paper_stacoCB_all/pt20  # should be the same. removed anyfit, updated egammaUtils, added pythia11-data rw systematic target. adding new items to ntuple to debug A/C differences. added avgmu to ntuple
+DB=DB_02222013_ALL.v12
+
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`
 iq=0

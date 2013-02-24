@@ -1,14 +1,29 @@
-test
-Plot zmumu plots requiring both muons to be cloe.
-Plot muon scale factors
+PETER: difference between the MET_Muonboy term and the actual muon pt for A and C
+
+TODO: LocHadTopo raw, or LocHadTopo with muon explicitly
+MAX:  make plots in other eta bins
+
+ANSATZ: PROPAGATE MET CORRECTION
+<---- jet 4
+            muon 2  -->
+      met 2 --> 
+========= MCP ==========
+            MCP 4 ---->
+       met=0
+mx = MCP - raw = 4-2 = 2 -->
+met = orig - mx = 2 - 2 = 0
+
+TODO: Plot muon scale factors
 
 Eta debugging:
-* Different signal generators
+* DONE: Different signal generators
+* DONE: Plot W A/C in quarters of phi space
 * DONE make w plots with trigger matching requirements.
 * DONE make z plots with trigger matching requirements.
 * DONE make z plots requiring both muons to fall in the same eta bin
 * DONE: make plots for MC WITHOUT scale factors (using the ntuple!)
-* John: plot A-C side differences for MET correction.
+* DONE: Plot zmumu plots requiring both muons to be close.
+* DONE: plot A-C side differences for MET correction.
   DONE: use a different type of MET (LocHadTopo)
 * DONE: do the differences in every step through the procedure. data, data-bgsub, scale factors,
   DONE: Make script that translates a 1D eta histo into 1D abseta histo + ratio
