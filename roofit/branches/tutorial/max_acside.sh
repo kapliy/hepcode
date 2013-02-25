@@ -2,43 +2,34 @@
 
 # debugging A-C side asymmetry at various levels:
 source config.sh
+finold=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_anyfit_stacoCB_all/pt20
+
+bgqcd=0
 
 # compare QCD0 vs QCD4 vs QCD4-BINS (we want to use QCD0 simplification!)
-fin=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_anyfit_stacoCB_all/pt20
+fin=/share/t3data3/antonk/ana/ana_v29I_02222013_paper_stacoCB_all/pt20
 if [ 0 -eq 1 ]; then
     for q in 0 1 ; do
-	./stack2.py -q ${q} -o TEST --hsource d3_eta_lpt_met:y:2:-1:z:0:-1 --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} --lvar d3_abseta_lpt_met:x:0:-1:y:2:-1 --lbin 100,0,60 --lrebin 2 -t W_NOM_Q0 -m acside --bgqcd 0 --qcdscale 1.0 --lnofits
-	#./stack2.py -q ${q} -o TEST --hsource d3_eta_lpt_met:y:2:-1:z:0:-1 --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} --lvar d3_abseta_lpt_met:x:0:-1:y:2:-1 --lbin 100,0,60 --lrebin 2 -t W_NOM_Q4 -m acside --bgqcd 4 --lnofits
-	#./stack2.py -q ${q} -o TEST --hsource d3_eta_lpt_met:y:2:-1:z:0:-1 --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} --lvar d3_abseta_lpt_met:x:0:-1:y:2:-1 --lbin 100,0,60 --lrebin 2 -t W_NOM_Q4BINS -m acside --bgqcd 0 --qcdsource "${OUTDB}.eta.1D.pt25.root:qcd_Nominal" --lnofits --nomonly
-    done
-fi
-
-# Z
-fin=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_anyfit_stacoCB_all/pt20
-if [ 0 -eq 1 ]; then
-    for lq in P N; do
-	./stack2.py -q 2 -b -o TEST --ntuple z --hsource lepton${lq}_etav --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} -t Z_NOM -m acside --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly
+	./stack2.py -q ${q} -o ACSIDE --hsource d3_eta_lpt_met:y:2:-1:z:0:-1 --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} --lvar d3_abseta_lpt_met:x:0:-1:y:2:-1 --lbin 100,0,60 --lrebin 2 -t W_NOM_Q0 -m acside --bgqcd 0 --qcdscale 1.0 --lnofits
+	./stack2.py -q ${q} -o ACSIDE --hsource d3_eta_lpt_met:y:2:-1:z:0:-1 --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} --lvar d3_abseta_lpt_met:x:0:-1:y:2:-1 --lbin 100,0,60 --lrebin 2 -t W_NOM_Q4 -m acside --bgqcd 4 --lnofits
+	./stack2.py -q ${q} -o ACSIDE --hsource d3_eta_lpt_met:y:2:-1:z:0:-1 --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} --lvar d3_abseta_lpt_met:x:0:-1:y:2:-1 --lbin 100,0,60 --lrebin 2 -t W_NOM_Q4BINS -m acside --bgqcd 0 --qcdsource "${OUTDB}.eta.1D.pt25.root:qcd_Nominal" --lnofits --nomonly
     done
 fi
 
 # Z ntuple
-zpreN='lP_pt>20.0 && fabs(lP_eta)<2.4 && lN_pt>20.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2'
-zpreTP='lP_pt>20.0 && fabs(lP_eta)<2.4 && lN_pt>20.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lP_trigEF<0.2'
-zpreTN='lP_pt>20.0 && fabs(lP_eta)<2.4 && lN_pt>20.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lN_trigEF<0.2'
-zpreTB='lP_pt>20.0 && fabs(lP_eta)<2.4 && lN_pt>20.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lP_trigEF<0.2 && lN_trigEF<0.2'
-zpreCL='lP_pt>20.0 && fabs(lP_eta)<2.4 && lN_pt>20.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && fabs(lP_eta-lN_eta)<0.2'
+fin=/share/t3data3/antonk/ana/ana_v29I_02222013_paper_stacoCB_all/pt20
+finsp=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_ztrigboth_stacoCB_all/pt20
+zpreN='lP_pt>25.0 && fabs(lP_eta)<2.4 && lN_pt>25.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2'
+zpreTB='lP_pt>25.0 && fabs(lP_eta)<2.4 && lN_pt>25.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lP_trigEF<0.2 && lN_trigEF<0.2'
 if [ 0 -eq 1 ]; then
     for lq in P N; do
-	./stack2.py -q 2 -b -o TEST --ntuple z --hsource lepton${lq}_etav --var l${lq}_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} -m acside_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreN}" --pre "${zpreN}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZNT_NOM &
-	# require both muons to be close
-	./stack2.py -q 2 -b -o TEST --ntuple z --hsource lepton${lq}_etav --var l${lq}_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} -m acside_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreCL}" --pre "${zpreCL}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZNT_CLOSE &
+	./stack2.py -q 2 -b -o ACSIDE --ntuple z --hsource lepton${lq}_etav --var l${lq}_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} -m acside_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreN}" --pre "${zpreN}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZNT_NOM &
 	# require both muons to be in the same eta bin
-	./stack2.py -q 2 -b -o TEST --ntuple z --hsource lepton${lq}_etav --var l${lq}_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} -m acside_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreN} && ZETASAME" --pre "${zpreN} && ZETASAME" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZNT_SAME &
+	./stack2.py -q 2 -b -o ACSIDE --ntuple z --hsource lepton${lq}_etav --var l${lq}_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} -m acside_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreN} && ZETASAME" --pre "${zpreN} && ZETASAME" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZNT_SAME &
 	# trig match (both muons)
-	finsp=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_ztrigboth_stacoCB_all/pt20
-	./stack2.py -q 2 -b -o TEST --ntuple z --hsource lepton${lq}_etav --var l${lq}_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${finsp} -m acside_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreTB}" --pre "${zpreTB}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZNT_TMATCHBOTH &
+	./stack2.py -q 2 -b -o ACSIDE --ntuple z --hsource lepton${lq}_etav --var l${lq}_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${finsp} -m acside_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreTB}" --pre "${zpreTB}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZNT_TMATCHBOTH &
 	# trig match + same bin
-	./stack2.py -q 2 -b -o TEST --ntuple z --hsource lepton${lq}_etav --var l${lq}_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${finsp} -m acside_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreTB} && ZETASAME" --pre "${zpreTB} && ZETASAME" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZNT_SAME_TMATCHBOTH &
+	./stack2.py -q 2 -b -o ACSIDE --ntuple z --hsource lepton${lq}_etav --var l${lq}_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${finsp} -m acside_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreTB} && ZETASAME" --pre "${zpreTB} && ZETASAME" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZNT_SAME_TMATCHBOTH &
     done
     wait
 fi
@@ -47,41 +38,56 @@ fi
 fin=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_rawmet_stacoCB_all/pt20
 if [ 0 -eq 1 ]; then
     for q in 0 1; do
-	./stack2.py -q ${q} -o TEST --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --preNN 'ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --preNQ 'ptiso20/l_pt>0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2' --preFN 'ptiso40/l_pt<0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --preFQ 'ptiso20/l_pt>0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_RAWMET_Q0 &
+	./stack2.py -q ${q} -o ACSIDE --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --preNN 'ptiso40/l_pt<0.1 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_RAWMET_Q0 &
     done
     wait
 fi
 
 # W ntuple
-fin=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_anyfit_stacoCB_all/pt20
-if [ 0 -eq 1 ]; then
+fin=/share/t3data3/antonk/ana/ana_v29I_02222013_paper_stacoCB_all/pt20
+if [ 1 -eq 1 ]; then
     for q in 0 1; do
-	./stack2.py -q ${q} -o TEST --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --preNN 'ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --preNQ 'ptiso20/l_pt>0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2' --preFN 'ptiso40/l_pt<0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --preFQ 'ptiso20/l_pt>0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_NOM_Q0 &
-	./stack2.py -q ${q} -o TEST --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --pre "ptiso40/l_pt<0.1 && l_pt>20.0 && fabs(l_eta)<2.4 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --preNN 'ptiso40/l_pt<0.1 && l_pt>20.0 && fabs(l_eta)<2.4 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --preNQ 'ptiso20/l_pt>0.1 && l_pt>20.0 && fabs(l_eta)<2.4 && idhits==1 && fabs(z0)<10.0 && nmuons<2' --preFN 'ptiso40/l_pt<0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --preFQ 'ptiso20/l_pt>0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_NOMETMT_Q0 &
-	./stack2.py -q ${q} -o TEST --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2" --preNN 'ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2' --preNQ 'ptiso20/l_pt>0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2 && l_trigEF<0.2' --preFN 'ptiso40/l_pt<0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && l_trigEF<0.2' --preFQ 'ptiso20/l_pt>0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2 && l_trigEF<0.2' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_TRIGMATCH_Q0 &
-	#./stack2.py -q ${q} -o TEST --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --preNN 'ptiso40/l_pt<0.1 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --preNQ 'ptiso20/l_pt>0.1 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2' --preFN 'ptiso40/l_pt<0.1 && met>0.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --preFQ 'ptiso20/l_pt>0.1 && met>0.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_PT25_Q0 &
-	#./stack2.py -q ${q} -o TEST --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --pre "ptiso40/l_pt<0.1 && met>35.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>50.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --preNN 'ptiso40/l_pt<0.1 && met>35.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>50.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --preNQ 'ptiso20/l_pt>0.1 && met>35.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>50.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2' --preFN 'ptiso40/l_pt<0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>50.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --preFQ 'ptiso20/l_pt>0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>50.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_MET35WMT50_Q0 &  # wmt>50, too
-	./stack2.py -q ${q} -o TEST --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --pre "ptiso40/l_pt<0.1 && met_lochad_ichep>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && wmt_lochad_ichep>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --preNN 'ptiso40/l_pt<0.1 && met_lochad_ichep>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && wmt_lochad_ichep>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --preNQ 'ptiso20/l_pt>0.1 && met_lochad_ichep>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && wmt_lochad_ichep>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2' --preFN 'ptiso40/l_pt<0.1 && met_lochad_ichep>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && wmt_lochad_ichep>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --preFQ 'ptiso20/l_pt>0.1 && met_lochad_ichep>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && wmt_lochad_ichep>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_METLH_Q0 &
-	#./stack2.py -q ${q} -o TEST --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --preNN 'ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --preNQ 'ptiso20/l_pt>0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2' --preFN 'ptiso40/l_pt<0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --preFQ 'ptiso20/l_pt>0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*isow*trigw" -t WNT_NORECSF_Q0 &
-	#./stack2.py -q ${q} -o TEST --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --preNN 'ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --preNQ 'ptiso20/l_pt>0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2' --preFN 'ptiso40/l_pt<0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --preFQ 'ptiso20/l_pt>0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow" -t WNT_NOTRIGSF_Q0 &
-	#./stack2.py -q ${q} -o TEST --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --pre "ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1" --preNN 'ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --preNQ 'ptiso20/l_pt>0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2' --preFN 'ptiso40/l_pt<0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --preFQ 'ptiso20/l_pt>0.1 && met>0.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons<2' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w" -t WNT_NOSF_Q0 &
+	./stack2.py -q ${q} -o ACSIDE --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --preNN 'ptiso40/l_pt<0.1 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_NOM_Q0 &
+	./stack2.py -q ${q} -o ACSIDE --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --preNN 'ptiso40/l_pt<0.1 && l_pt>25.0 && fabs(l_eta)<2.4 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_NOMETMT_Q0 &
+	./stack2.py -q ${q} -o ACSIDE --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --preNN 'ptiso40/l_pt<0.1 && met_raw>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && wmt_raw>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_METRAW_Q0 &
+	./stack2.py -q ${q} -o ACSIDE --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --preNN 'ptiso40/l_pt<0.1 && met_ichep>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && wmt_ichep>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_METICHEP_Q0 &
+	./stack2.py -q ${q} -o ACSIDE --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --preNN 'ptiso40/l_pt<0.1 && met_ichep_corr>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && wmt_ichep_corr>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_METICHEPCORR_Q0 &
+	./stack2.py -q ${q} -o ACSIDE --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --preNN 'ptiso40/l_pt<0.1 && met_locmuon>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && wmt_locmuon>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_METLOCMUON_Q0 &
+	./stack2.py -q ${q} -o ACSIDE --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --preNN 'ptiso40/l_pt<0.1 && met_locmuon_corr>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && wmt_locmuon_corr>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_METLOCMUONCORR_Q0 &
     done
     wait
 fi
 
 
+function makewnt() {
+    fin=/share/t3data3/antonk/ana/$1/pt20
+    tag=$2
+    bgsig=$3
+    for q in 0 1 ; do
+	./stack2.py -q ${q} -o ACSIDE --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --bgsig ${bgsig} --qcdscale 1.0 --lnofits --preNN 'ptiso40/l_pt<0.1 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WSYSNT_${tag}_Q0 &
+	if [ "${bgsig}" == "2" ]; then
+	    ./stack2.py -q ${q} -o ACSIDE --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --bgsig ${bgsig} --qcdscale 1.0 --lnofits --preNN 'ptiso40/l_pt<0.1 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --cut "mcw*puw*wzptw*znlow*vxw*ls1w*ls2w*effw*isow*trigw" -t WSYSNT_${tag}_ALPNW_Q0 &
+	fi
+    done
+}
 function makew() {
     fin=/share/t3data3/antonk/ana/$1/pt20
     tag=$2
     bgsig=$3
     for q in 0 1 ; do
-	./stack2.py -q ${q} -o TEST --hsource d3_eta_lpt_met:y:2:-1:z:0:-1 --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} --lvar d3_abseta_lpt_met:x:0:-1:y:2:-1 --lbin 100,0,60 --lrebin 2 -t WSYS_${tag}_Q0 -m acside --bgqcd 0 --bgsig ${bgsig} --qcdscale 1.0 --lnofits &
+	./stack2.py -q ${q} -o ACSIDE --hsource d3_eta_lpt_met:y:2:-1:z:0:-1 --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} --lvar d3_abseta_lpt_met:x:0:-1:y:2:-1 --lbin 100,0,60 --lrebin 2 -t WSYS_${tag}_Q0 -m acside --bgqcd 0 --bgsig ${bgsig} --qcdscale 1.0 --lnofits &
     done
 }
-# various systematic variations, such as MCP scale
+# W: different generators
 if [ 0 -eq 1 ]; then
-    makew ana_v29I_01292013_paper_anyfit_stacoCB_all BGSIG1 1
-    makew ana_v29I_01292013_paper_anyfit_stacoCB_all BGSIG4 4
+    makew ana_v29I_02222013_paper_stacoCB_all BGSIG1 1
+    makew ana_v29I_02222013_paper_stacoCB_all BGSIG2 2
+    makew ana_v29I_02222013_paper_stacoCB_all BGSIG4 4
+    makew ana_v29I_02222013_paper_stacoCB_all BGSIG5 5
+    wait
+fi
+# W: various systematic variations, such as MCP scale
+if [ 0 -eq 1 ]; then
     makew ana_v29I_01292013_paper_rawmet_stacoCB_all RAWMET 5
     makew ana_v29I_01292013_paper_anyfit_d0_stacoCB_all D0 5
     makew ana_v29I_01292013_paper_fineCK_stacoCB_all MCPFINE 5
@@ -93,54 +99,82 @@ if [ 0 -eq 1 ]; then
 fi
 
 # Z ntuple: plotting MET-related distributions in each eta bin
-zpreN='lP_pt>20.0 && fabs(lP_eta)<2.4 && lN_pt>20.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2'
+fin=/share/t3data3/antonk/ana/ana_v29I_02222013_paper_stacoCB_all/pt20
 if [ 0 -eq 1 ]; then
-    #./stack2.py -q 2 -b -o TEST --ntuple z --hsource met --var met --bin 50,0,50 --refline 0.85,1.175 -b --input ${fin} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreN}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_MET_ALL &
-    ./stack2.py -q 2 -b -o TEST --ntuple z --hsource met --var met --bin 50,0,50 --refline 0.85,1.175 -b --input ${fin} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreN} && lP_eta>1.95 && lP_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_A_BADBIN_POS &
-    ./stack2.py -q 2 -b -o TEST --ntuple z --hsource met --var met --bin 50,0,50 --refline 0.85,1.175 -b --input ${fin} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreN} && lP_eta<-1.95 && lP_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_C_BADBIN_POS_C &
-    ./stack2.py -q 2 -b -o TEST --ntuple z --hsource met --var met --bin 50,0,50 --refline 0.85,1.175 -b --input ${fin} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreN} && lN_eta>1.95 && lN_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_A_BADBIN_NEG &
-    ./stack2.py -q 2 -b -o TEST --ntuple z --hsource met --var met --bin 50,0,50 --refline 0.85,1.175 -b --input ${fin} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreN} && lN_eta<-1.95 && lN_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_C_BADBIN_NEG &
+    # inclusive
+    #./stack2.py -q 2 -b -o ACSIDE --ntuple z --hsource met --var met --bin 50,0,50 --refline 0.85,1.175 -b --input ${fin} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreN}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_NOM &
+    # eta/phi (no trigger reqs)
+    ./stack2.py --norm -q 2 -b -o ACSIDE --ntuple z --hsource lP_eta --var lP_eta --bin 40,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreN}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_NOM &
+    ./stack2.py --norm -q 2 -b -o ACSIDE --ntuple z --hsource lN_eta --var lN_eta --bin 40,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreN}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_NOM &
+    ./stack2.py --norm -q 2 -b -o ACSIDE --ntuple z --hsource lP_phi --var lP_phi --bin 40,-3.15,3.15 --refline 0.85,1.175 -b --input ${fin} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreN}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_NOM &
+    ./stack2.py --norm -q 2 -b -o ACSIDE --ntuple z --hsource lN_phi --var lN_phi --bin 40,-3.15,3.15 --refline 0.85,1.175 -b --input ${fin} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreN}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_NOM &
+    # eta/phi (trigger)
+    ./stack2.py --norm -q 2 -b -o ACSIDE --ntuple z --hsource lP_eta --var lP_eta --bin 40,-2.5,2.5 --refline 0.85,1.175 -b --input ${finsp} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreTB}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_TB &
+    ./stack2.py --norm -q 2 -b -o ACSIDE --ntuple z --hsource lN_eta --var lN_eta --bin 40,-2.5,2.5 --refline 0.85,1.175 -b --input ${finsp} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreTB}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_TB &
+    ./stack2.py --norm -q 2 -b -o ACSIDE --ntuple z --hsource lP_phi --var lP_phi --bin 40,-3.15,3.15 --refline 0.85,1.175 -b --input ${finsp} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreTB}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_TB &
+    ./stack2.py --norm -q 2 -b -o ACSIDE --ntuple z --hsource lN_phi --var lN_phi --bin 40,-3.15,3.15 --refline 0.85,1.175 -b --input ${finsp} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreTB}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_TB &
+    # phi (trigger) (un-normalized, in bad eta bin)
+    ./stack2.py -q 2 -b -o ACSIDE --ntuple z --hsource lP_phi --var lP_phi --bin 40,-3.15,3.15 --refline 0.85,1.175 -b --input ${finsp} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreTB} && lP_eta>1.95 && lP_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_A &
+    ./stack2.py -q 2 -b -o ACSIDE --ntuple z --hsource lN_phi --var lN_phi --bin 40,-3.15,3.15 --refline 0.85,1.175 -b --input ${finsp} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreTB} && lN_eta>1.95 && lN_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_A &
+    ./stack2.py -q 2 -b -o ACSIDE --ntuple z --hsource lP_phi --var lP_phi --bin 40,-3.15,3.15 --refline 0.85,1.175 -b --input ${finsp} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreTB} && lP_eta<-1.95 && lP_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_C &
+    ./stack2.py -q 2 -b -o ACSIDE --ntuple z --hsource lN_phi --var lN_phi --bin 40,-3.15,3.15 --refline 0.85,1.175 -b --input ${finsp} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreTB} && lN_eta<-1.95 && lN_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_C &
+    # eta (trigger) (un-normalized, in bad eta bin)
+    ./stack2.py -q 2 -b -o ACSIDE --ntuple z --hsource lP_eta --var lP_eta --bin 40,1.95,2.18 --refline 0.85,1.175 -b --input ${finsp} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreTB} && lP_eta>1.95 && lP_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_A &
+    ./stack2.py -q 2 -b -o ACSIDE --ntuple z --hsource lN_eta --var lN_eta --bin 40,1.95,2.18 --refline 0.85,1.175 -b --input ${finsp} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreTB} && lN_eta>1.95 && lN_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_A &
+    ./stack2.py -q 2 -b -o ACSIDE --ntuple z --hsource lP_eta --var lP_eta --bin 40,-2.18,-1.95 --refline 0.85,1.175 -b --input ${finsp} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreTB} && lP_eta<-1.95 && lP_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_C &
+    ./stack2.py -q 2 -b -o ACSIDE --ntuple z --hsource lN_eta --var lN_eta --bin 40,-2.18,-1.95 --refline 0.85,1.175 -b --input ${finsp} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreTB} && lN_eta<-1.95 && lN_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_C &
 
+    # eta bins
+#     ./stack2.py -q 2 -b -o ACSIDE --ntuple z --hsource met --var met --bin 50,0,50 --refline 0.85,1.175 -b --input ${fin} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreN} && lP_eta>1.95 && lP_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_A_BADBIN_POS &
+#     ./stack2.py -q 2 -b -o ACSIDE --ntuple z --hsource met --var met --bin 50,0,50 --refline 0.85,1.175 -b --input ${fin} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreN} && lP_eta<-1.95 && lP_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_C_BADBIN_POS_C &
+#     ./stack2.py -q 2 -b -o ACSIDE --ntuple z --hsource met --var met --bin 50,0,50 --refline 0.85,1.175 -b --input ${fin} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreN} && lN_eta>1.95 && lN_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_A_BADBIN_NEG &
+#     ./stack2.py -q 2 -b -o ACSIDE --ntuple z --hsource met --var met --bin 50,0,50 --refline 0.85,1.175 -b --input ${fin} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreN} && lN_eta<-1.95 && lN_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_C_BADBIN_NEG &
     wait
 fi
 
 # W ntuple: studying MET and MET corrections
-fin=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_anyfit_stacoCB_all/pt20 # default
 #fin=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_rawmet_stacoCB_all/pt20 # rawmet
-if [ 1 -eq 1 ]; then
+fin=/share/t3data3/antonk/ana/ana_v29I_02222013_paper_stacoCB_all/pt20
+if [ 0 -eq 1 ]; then
     for q in 0 1; do
-	wpre='ptiso40/l_pt<0.1 && met>25.0 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
-	wpre2='ptiso40/l_pt<0.1 && l_pt>20.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
+	wpre='ptiso40/l_pt<0.1 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
+	wpre2='ptiso40/l_pt<0.1 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
+	wpre3='ptiso40/l_pt<0.1 && l_pt>25.0 && fabs(l_eta)<2.4 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
+	wpre4='ptiso40/l_pt<0.1 && l_pt>15.0 && fabs(l_eta)<2.4 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
+	./stack2.py --norm -q ${q} -o ACSIDE --hsource l_phi --var l_phi --bin 40,-3.15,3.15 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_NOM &
+	./stack2.py --norm -q ${q} -o ACSIDE --hsource l_phi --var l_phi --bin 40,-3.15,3.15 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_NOM &
+	./stack2.py --norm -q ${q} -o ACSIDE --hsource l_eta --var l_eta --bin 40,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_NOM &
+	./stack2.py --norm -q ${q} -o ACSIDE --hsource l_eta --var l_eta --bin 40,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_NOM &
+	#continue
 	# phi quadrants
-	./stack2.py -q ${q} -o TEST --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --preNN "${wpre} && l_phi>0 && l_phi<3.14/2.0" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_NOM_C0 &
-	./stack2.py -q ${q} -o TEST --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --preNN "${wpre} && l_phi>3.14/2.0 && l_phi<3.14" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_NOM_C1 &
-	./stack2.py -q ${q} -o TEST --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --preNN "${wpre} && l_phi>-3.14 && l_phi<-3.14/2.0" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_NOM_C2 &
-	./stack2.py -q ${q} -o TEST --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --preNN "${wpre} && l_phi>-3.14/2.0 && l_phi<0" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_NOM_C3 &
+# 	./stack2.py -q ${q} -o ACSIDE --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --preNN "${wpre} && l_phi>0 && l_phi<3.14/2.0" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_NOM_C0 &
+# 	./stack2.py -q ${q} -o ACSIDE --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --preNN "${wpre} && l_phi>3.14/2.0 && l_phi<3.14" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_NOM_C1 &
+# 	./stack2.py -q ${q} -o ACSIDE --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --preNN "${wpre} && l_phi>-3.14 && l_phi<-3.14/2.0" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_NOM_C2 &
+# 	./stack2.py -q ${q} -o ACSIDE --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --preNN "${wpre} && l_phi>-3.14/2.0 && l_phi<0" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_NOM_C3 &
 	# met
-	./stack2.py -q ${q} -o TEST --hsource met --var met --bin 100,0,100 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre2} && l_eta>1.95 && l_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_A_BADBIN &
-	./stack2.py -q ${q} -o TEST --hsource met --var met --bin 100,0,100 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre2} && l_eta<-1.95 && l_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_C_BADBIN &
+	./stack2.py -q ${q} -o ACSIDE --hsource met --var met --bin 100,0,100 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre3} && l_eta>1.95 && l_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_A &
+	./stack2.py -q ${q} -o ACSIDE --hsource met --var met --bin 100,0,100 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre3} && l_eta<-1.95 && l_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_C &
+	# met (low pt)
+	./stack2.py -q ${q} -o ACSIDE --hsource met --var met --bin 100,0,100 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre4} && l_eta>1.95 && l_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_A_LOWPT &
+	./stack2.py -q ${q} -o ACSIDE --hsource met --var met --bin 100,0,100 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre4} && l_eta<-1.95 && l_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_C_LOWPT &
 	# met-lochad
-	./stack2.py -q ${q} -o TEST --hsource met_lochad --var met_lochad --bin 100,0,100 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre2} && l_eta>1.95 && l_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_A_BADBIN &
-	./stack2.py -q ${q} -o TEST --hsource met_lochad --var met_lochad --bin 100,0,100 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre2} && l_eta<-1.95 && l_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_C_BADBIN &
+	./stack2.py -q ${q} -o ACSIDE --hsource met_lochad --var met_lochad --bin 100,0,100 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre3} && l_eta>1.95 && l_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_A &
+	./stack2.py -q ${q} -o ACSIDE --hsource met_lochad --var met_lochad --bin 100,0,100 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre3} && l_eta<-1.95 && l_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_C &
 	# met-muonboy (uncorrected)
-	./stack2.py -q ${q} -o TEST --hsource met_muonboy --var met_muonboy --bin 100,0,100 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre2} && l_eta>1.95 && l_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_A_BADBIN &
-	./stack2.py -q ${q} -o TEST --hsource met_muonboy --var met_muonboy --bin 100,0,100 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre2} && l_eta<-1.95 && l_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_C_BADBIN &
-	# met-muonboy (corrected)
-	./stack2.py -q ${q} -o TEST --hsource met_muonboycorr --var met_muonboycorr --bin 100,0,100 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre2} && l_eta>1.95 && l_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_A_BADBIN &
-	./stack2.py -q ${q} -o TEST --hsource met_muonboycorr --var met_muonboycorr --bin 100,0,100 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre2} && l_eta<-1.95 && l_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_C_BADBIN &
+	./stack2.py -q ${q} -o ACSIDE --hsource met_muonboy --var met_muonboy --bin 100,0,100 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre3} && l_eta>1.95 && l_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_A &
+	./stack2.py -q ${q} -o ACSIDE --hsource met_muonboy --var met_muonboy --bin 100,0,100 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre3} && l_eta<-1.95 && l_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_C &
 	# muon phi
-	./stack2.py -q ${q} -o TEST --hsource l_phi --var l_phi --bin 50,-3.14,3.14 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} && l_eta>1.95 && l_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_A_BADBIN &
-	./stack2.py -q ${q} -o TEST --hsource l_phi --var l_phi --bin 50,-3.14,3.14 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} && l_eta<-1.95 && l_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_C_BADBIN &
+	./stack2.py -q ${q} -o ACSIDE --hsource l_phi --var l_phi --bin 40,-3.15,3.15 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} && l_eta>1.95 && l_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_A &
+	./stack2.py -q ${q} -o ACSIDE --hsource l_phi --var l_phi --bin 40,-3.15,3.15 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} && l_eta<-1.95 && l_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_C &
+	# muon eta
+	./stack2.py -q ${q} -o ACSIDE --hsource l_eta --var l_eta --bin 40,1.95,2.18 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} && l_eta>1.95 && l_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_A &
+	./stack2.py -q ${q} -o ACSIDE --hsource l_eta --var l_eta --bin 40,-2.18,-1.95 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} && l_eta<-1.95 && l_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_C &
 	# met correction (total and muon-only)
-	./stack2.py -q ${q} -o TEST --hsource metcorr_total --var metcorr_total --bin 100,0,5 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} && l_eta>1.95 && l_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_A_BADBIN &
-	./stack2.py -q ${q} -o TEST --hsource metcorr_total --var metcorr_total --bin 100,0,5 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} && l_eta<-1.95 && l_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_C_BADBIN &
-	./stack2.py -q ${q} -o TEST --hsource metcorr_muon --var metcorr_muon --bin 100,0,5 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} && l_eta>1.95 && l_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_A_BADBIN &
-	./stack2.py -q ${q} -o TEST --hsource metcorr_muon --var metcorr_muon --bin 100,0,5 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} && l_eta<-1.95 && l_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_C_BADBIN &
-	# weights
-# 	./stack2.py -q ${q} -o TEST --hsource effw --var effw --bin 100,0.95,1.05 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} && l_eta<-1.95 && l_eta>-2.18" --cut "1.0" -t WDB_C_BADBIN &
-# 	./stack2.py -q ${q} -o TEST --hsource effw --var effw --bin 100,0.95,1.05 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} && l_eta>1.95 && l_eta<2.18" --cut "1.0" -t WDB_A_BADBIN &
-# 	./stack2.py -q ${q} -o TEST --hsource trigw --var trigw --bin 100,0.95,1.05 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} && l_eta<-1.95 && l_eta>-2.18" --cut "1.0" -t WDB_C_BADBIN &
-# 	./stack2.py -q ${q} -o TEST --hsource trigw --var trigw --bin 100,0.95,1.05 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} && l_eta>1.95 && l_eta<2.18" --cut "1.0" -t WDB_A_BADBIN &
+# 	./stack2.py -q ${q} -o ACSIDE --hsource metcorr_total --var metcorr_total --bin 100,0,5 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} && l_eta>1.95 && l_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_A &
+# 	./stack2.py -q ${q} -o ACSIDE --hsource metcorr_total --var metcorr_total --bin 100,0,5 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} && l_eta<-1.95 && l_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_C &
+# 	./stack2.py -q ${q} -o ACSIDE --hsource metcorr_muon --var metcorr_muon --bin 100,0,5 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} && l_eta>1.95 && l_eta<2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_A &
+# 	./stack2.py -q ${q} -o ACSIDE --hsource metcorr_muon --var metcorr_muon --bin 100,0,5 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} && l_eta<-1.95 && l_eta>-2.18" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_C &
+	#wait
     done
     wait
 fi
