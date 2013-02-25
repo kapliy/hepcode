@@ -97,6 +97,9 @@ parser.add_option("--hsource",dest="hsource",
 parser.add_option("--nevtsh",dest="nevtsh",
                   type="string", default=None,
                   help="Name of nevts histogram used to normalize MC to luminosity")
+parser.add_option("--norm", default=False,
+                  action="store_true",dest="norm",
+                  help="If set to true, plotStack normalizes MC to data")
 parser.add_option("--sysdir",dest="sysdir",
                   type="string", default='Nominal', # 'Rawmet'
                   help="Nominal/st_w_final/baseline - Nominal")
@@ -1694,7 +1697,7 @@ if mode in ('one_plot','one_plot_nt'):
     if opts.bin and len(opts.bin.split(','))==3:
         sbin = opts.bin.split(',')
         xaxis_range = [float(sbin[1]),float(sbin[2])]
-    plot_stacks(spR.clone() if mode=='one_plot' else spRN.clone(),plots,m=1,xaxis_range=xaxis_range,qs=charges)
+    plot_stacks(spR.clone() if mode=='one_plot' else spRN.clone(),plots,m=1,xaxis_range=xaxis_range,qs=charges,norm=opts.norm)
 
 if mode == 'plot_z0':
     # plots normalized vertex z0 distributions for several Monte-Carlos
