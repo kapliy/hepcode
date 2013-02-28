@@ -1,7 +1,24 @@
-PETER: difference between the MET_Muonboy term and the actual muon pt for A and C
+TODO: EWUnfoldingH:
+- Take care of statistical uncertainty stuff when adding/asymmetrizing.
+  In particular, clone two copies of central histogram; set uncertainties (computed from diff-to-syst), make asymmetry/sum, adjust central for final error
+- Create Group-of-Groups?
+  Outer group = sum in quadrature of these systematics
+  Inner group = Up/Down or toys or PDF variations or ME-PS difference
 
-TODO: LocHadTopo raw, or LocHadTopo with muon explicitly
+TODO (MET FITS):
+  FIRST, find out what's up with chi2. Why DEBUG result looks different from QCD_3D.sh stuff ???
+  fits with Alpgen
+  fits for avgmu groups, and then add up. OR: fit subperiods and then add up.
+  fits before W m_T cut
+  unscaled MC
+  MC scaled to minimum-stats monte-carlo (wtaunu or ztautau)
+
 MAX:  make plots in other eta bins
+      TODO: Plot muon scale factors
+
+DONE: difference between the MET_Muonboy term and the actual muon pt for A and C
+DONE: plot LocHadTopo raw, before any muon stuff
+DONE: Z plots with njets cut (to de-correlate phi)
 
 ANSATZ: PROPAGATE MET CORRECTION
 <---- jet 4
@@ -13,7 +30,6 @@ ANSATZ: PROPAGATE MET CORRECTION
 mx = MCP - raw = 4-2 = 2 -->
 met = orig - mx = 2 - 2 = 0
 
-TODO: Plot muon scale factors
 
 Eta debugging:
 * DONE: Different signal generators
