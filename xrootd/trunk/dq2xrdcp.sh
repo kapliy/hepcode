@@ -2,7 +2,7 @@
 
 # Highly parallel file replicator from DQ2 grid datasets to an xrootd directory
 
-NTHREADS=30           # maximum number of parallel dq2-get/xrdcp threads
+NTHREADS=25           # maximum number of parallel dq2-get/xrdcp threads
 PATTERN=".root"       # pattern for files that you want downloaded
 HASHCHECK=0           # enable a hash check of previously-downloaded files (SUPER SLOW!)
 
@@ -205,6 +205,12 @@ if [ "${HOSTNAME}" != "uct3-s1.uchicago.edu" -a "${HOSTNAME}" != "uct3-s3.uchica
     exit 2
 fi
 
+# require PWD = /tmp/blabla (never dq2-get over NFS!)
+echo $PWD | grep -q '/tmp' || {
+    echo "ERROR: PWD=$PWD is not under /tmp. Never download to HOME or t3dataX drives."
+    exit 2
+}
+
 # require exactly two arguments
 if [ "$#" -lt "2" ]; then
     if [ "$#" -eq "0" ]; then
@@ -221,8 +227,7 @@ shift
 containers=$@
 
 echo ${to} | grep -q '/atlas/uct3/' || {
-    echo "ERROR: destination is not XROOT (must begin with '/atlas/uct3/')"
-    exit 1
+    echo "INFO: destination is not XROOT (must begin with '/atlas/uct3/')"
 }
 
 if [ "$PWD" == "$HOME" ]; then
