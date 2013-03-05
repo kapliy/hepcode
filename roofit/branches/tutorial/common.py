@@ -55,6 +55,44 @@ def dump_pickle(data,name='data.pkl'):
         pickle.dump(data,output)
         output.close()
 
+def dump_plot(h,name='SYS',titles=[],fmode='RECREATE',opts='',title_common='',do_plot=True,do_ratio=False):
+    """ A generic mini-function to plot / save a collection of TObjects """
+    o = []
+    if isinstance(h,list) or isinstance(h,tuple):
+      o = h
+    else:
+      o = [h,]
+    assert len(o)>0
+    if len(titles)>0:
+      assert len(titles)==len(h)
+    else:
+      for oo in o:
+        titles.append(oo.GetTitle())
+    if do_ratio:
+        assert len(h)==2,'dump_plot: do_ratio can only be applied to a list of TWO histograms, not %d'%len(h)
+        hratio = h[0].Clone(h[0].GetName()+'_ratio')
+        hratio.Divide(h[1])
+        o.append(hratio)
+        titles.append( titles[0] + '_OVER_' + titles[1] )
+    titles = [ title_common+tt for tt in titles ]
+    # save in ROOT
+    import FileLock
+    with FileLock.FileLock(name+'.root'):
+        f = ROOT.TFile.Open(name+'.root',fmode)
+        f.cd()
+        [ oo.Write(titles[i]) for i,oo in enumerate(o) ]
+        f.Close()
+    # save as a plot
+    if do_plot:
+        c = ROOT.TCanvas(name,name,800,600)
+        c.cd()
+        [ oo.SetLineColor(i+1) for i,oo in enumerate(o) ]
+        o[0].Draw(opts)
+        [ oo.Draw('A SAME %s'%opts) for oo in o[1:] ]
+        maxh = max([htmp.GetMaximum() for htmp in o])*1.3
+        o[0].GetYaxis().SetRangeUser(0,maxh)
+        c.SaveAs(name+'.png')
+
 def dexit(v=0):
     sys.stdout.flush()
     os._exit(v)

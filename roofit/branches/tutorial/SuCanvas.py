@@ -809,6 +809,7 @@ class SuCanvas:
         mode=0 - nominal only
         mode=1 - nominal + systematic bands
         """
+        out = None,None
         s.buildRatio(mlogy=mlogy,rlogy=rlogy);
         s.cd_plotPad();
         data = hdata.nominal_h(rebin)
@@ -891,6 +892,7 @@ class SuCanvas:
                 fractext.AddText( 'QCD Frac. = %.3f #pm %.2f%%'%(qcdfrac,staterr*100.0) )
                 s.ConfigureText(fractext,text_x1=leg_x1,text_y2 = leg.GetY1NDC()-0.02)
                 fractext.Draw()
+        out = data.Clone() , stackH.Clone()
         # configure legend
         if not lumi_x: lumi_x = leg.GetX1NDC() + 0.2
         if not lumi_y: lumi_y = leg.GetY1NDC() + 0.02 + 0.15 + 0.03
@@ -937,6 +939,7 @@ class SuCanvas:
         s.ConfigureAxis(stack, hratio)
         # fin
         s.update()
+        return out
 
     def plotTagProbe(s,hda_bef,hda_aft,hmc_bef,hmc_aft,xtitle='var'):
         """ Makes a large tag-and-probe canvas """

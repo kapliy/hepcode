@@ -1,7 +1,9 @@
 #!/bin/bash
 
-# debugging A-C side asymmetry at various levels:
+# debugging A-C side asymmetry in some of the measurement bins.
+
 source config.sh
+source _binning.sh
 fin=${input}
 fintr=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_ztrigboth_stacoCB_all/pt20
 finraw=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_rawmet_stacoCB_all/pt20
@@ -9,7 +11,7 @@ finraw=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_rawmet_stacoCB_all/pt20
 bgqcd=0
 
 # compare QCD0 vs QCD4 vs QCD4-BINS (we want to use QCD0 simplification!)
-if [ 1 -eq 1 ]; then
+if [ 0 -eq 1 ]; then
     for q in 0 1 ; do
 	./stack2.py -q ${q} -o ACSIDE --hsource d3_eta_lpt_met:y:2:-1:z:0:-1 --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} --lvar d3_abseta_lpt_met:x:0:-1:y:2:-1 --lbin 100,0,60 --lrebin 2 -t W_NOM_Q0 -m acside --bgqcd 0 --qcdscale 1.0 --lnofits &
 	./stack2.py -q ${q} -o ACSIDE --hsource d3_eta_lpt_met:y:2:-1:z:0:-1 --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} --lvar d3_abseta_lpt_met:x:0:-1:y:2:-1 --lbin 100,0,60 --lrebin 2 -t W_NOM_Q4 -m acside --bgqcd 4 --lnofits &
@@ -21,7 +23,7 @@ fi
 # Z ntuple
 zpreN='lP_pt>25.0 && fabs(lP_eta)<2.4 && lN_pt>25.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2'
 zpreTB='lP_pt>25.0 && fabs(lP_eta)<2.4 && lN_pt>25.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lP_trigEF<0.2 && lN_trigEF<0.2'
-if [ 1 -eq 1 ]; then
+if [ 0 -eq 1 ]; then
     for q in P N; do
 	qo=P; if [ "${q}" == "P" ]; then qo=N; fi;
 	./stack2.py -q 2 -b -o ACSIDE --ntuple z --hsource lepton${q}_etav --var l${q}_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} -m acside_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreN}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZNT_NOM &
@@ -45,7 +47,7 @@ if [ 1 -eq 1 ]; then
 fi
 
 # W ntuple
-if [ 1 -eq 1 ]; then
+if [ 0 -eq 1 ]; then
     for q in 0 1; do
 	./stack2.py -q ${q} -o ACSIDE --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --preNN 'ptiso40/l_pt<0.1 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_NOM_Q0 &
 	./stack2.py -q ${q} -o ACSIDE --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --preNN 'ptiso40/l_pt<0.1 && l_pt>25.0 && fabs(l_eta)<2.4 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WNT_NOMETMT_Q0 &
@@ -99,7 +101,7 @@ if [ 0 -eq 1 ]; then
 fi
 
 # Z ntuple: plotting MET-related distributions in each eta bin
-if [ 1 -eq 1 ]; then
+if [ 0 -eq 1 ]; then
     # inclusive
     #./stack2.py -q 2 -b -o ACSIDE --ntuple z --hsource met --var met --bin 50,0,50 --refline 0.85,1.175 -b --input ${fin} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreN}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t ZDB_NOM &
     for q in P N; do
@@ -125,7 +127,7 @@ if [ 1 -eq 1 ]; then
 fi
 
 # W ntuple: studying MET and MET corrections, plus plots in each eta bin
-if [ 1 -eq 1 ]; then
+if [ 0 -eq 1 ]; then
     BIN10C="&& l_eta<-1.95 && l_eta>-2.18"
     BIN10A="&& l_eta>1.95 && l_eta<2.18"
     for q in 0 1; do
@@ -162,13 +164,104 @@ if [ 1 -eq 1 ]; then
 	# difference between MET and muon
 	./stack2.py -q ${q} -o ACSIDE --hsource delta_muonboy_muon --var dmet_muonboy_muon --bin 40,0,2 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre3} ${BIN10A}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_A &
 	./stack2.py -q ${q} -o ACSIDE --hsource delta_muonboy_muon --var dmet_muonboy_muon --bin 40,0,2 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre3} ${BIN10C}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_C &
-	# muon phi
+	# bad bin: muon phi
 	./stack2.py --rebin 1 -q ${q} -o ACSIDE --hsource l_phi --var l_phi --bin 40,-3.15,3.15 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} ${BIN10A}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_A &
 	./stack2.py --rebin 1 -q ${q} -o ACSIDE --hsource l_phi --var l_phi --bin 40,-3.15,3.15 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} ${BIN10C}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_C &
-	# muon eta
+	# bad bin: muon eta
 	./stack2.py -q ${q} -o ACSIDE --hsource l_eta --var l_eta --bin 40,1.95,2.18 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} ${BIN10A}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_A &
 	./stack2.py -q ${q} -o ACSIDE --hsource l_eta --var l_eta --bin 40,-2.18,-1.95 --refline 0.85,1.175 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${wpre} ${BIN10C}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t WDB_C &
 	wait
     done
     wait
+fi
+
+# makes a few plots for W and Z in the "bad" bin.
+function badbinW() {
+    local IBIN BPRE cvar side q thebin BSTR TAG
+    IBIN="$1"
+    BPRE="$2"
+    TAG="$3"
+    for cvar in phi eta; do
+	for side in A C; do
+	    thebin="40,-3.15,3.15"
+	    if [ "${cvar}" == "eta" ]; then thebin=`V_getbins ${IBIN} ${side}`; fi
+	    for q in 0 1 ; do
+		BSTR=`W_getpre ${IBIN} ${side}`
+		./stack3.py --rebin 1 -q ${q} -o ACSIDE --hsource l_${cvar} --var l_${cvar} --bin ${thebin} --refline 0.75,1.275 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${BPRE} ${BSTR}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t W${TAG}_${IBIN}_${side} &> logs/LOG.badbinW${TAG}.${IBIN}.${cvar}.${side}.${q} &
+	    done
+	done
+    done
+}
+function badbinZ() {
+    local IBIN BPRE cvar side q thebin BSTR TAG
+    IBIN="$1"
+    BPRE="$2"
+    TAG="$3"
+    for cvar in phi eta; do
+	for side in A C; do
+	    thebin="40,-3.15,3.15"
+	    if [ "${cvar}" == "eta" ]; then thebin=`V_getbins ${IBIN} ${side}`; fi
+	    for q in P N ; do
+		BSTR=`Z_getpre ${IBIN} ${q} ${side}`
+		./stack3.py --rebin 1 -q 2 -b -o ACSIDE --ntuple z --hsource l${q}_${cvar} --var l${q}_${cvar} --bin ${thebin} --refline 0.75,1.275 -b --input ${fin} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${BPRE} ${BSTR}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigallw" -t Z${TAG}_${IBIN}_${side} &> logs/LOG.badbinZ${TAG}.${IBIN}.${cvar}.${side}.${q} &
+	    done
+	done
+    done
+}
+
+if [ 1 -eq 1 ]; then
+    wpre='ptiso40/l_pt<0.1 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
+    wpre35='ptiso40/l_pt<0.1 && met>25.0 && l_pt>35.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
+    wpreNOMETMT='ptiso40/l_pt<0.1 && l_pt>25.0 && fabs(l_eta)<2.4 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
+    zpre='lP_pt>25.0 && fabs(lP_eta)<2.4 && lN_pt>25.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lP_trigEF<0.2 && lN_trigEF<0.2'
+    zpre35='lP_pt>35.0 && fabs(lP_eta)<2.4 && lN_pt>35.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lP_trigEF<0.2 && lN_trigEF<0.2'
+
+    # njets>=1 and nometmt in bin 10
+    badbinW 10 "${wpre} && njets>=1" "njets"
+    badbinW 10 "${wpreNOMETMT}" "nometmt"
+    badbinZ 10 "${zpre} && njets>=1" "njets"
+    echo "10 with njets>=1 and nomet"; wait    
+
+    # pt>35 in bin 10
+    badbinW 10 "${wpre35}" "pt35"
+    badbinZ 10 "${zpre35}" "pt35"
+    echo "10 with pt=35 cut"; wait    
+
+    # RUN W
+    badbinW 1 "${wpre}"
+    badbinW 2 "${wpre}"
+    echo "1 2"; wait;
+    badbinW 3 "${wpre}"
+    badbinW 4 "${wpre}"
+    echo "3 4"; wait;
+    badbinW 5 "${wpre}"
+    badbinW 6 "${wpre}"
+    echo "5 6"; wait;
+    badbinW 7 "${wpre}"
+    badbinW 8 "${wpre}"
+    echo "7 8"; wait;
+    badbinW 9 "${wpre}"
+    badbinW 10 "${wpre}"
+    badbinW 11 "${wpre}";
+    echo "9 10 11"; wait;
+
+    # RUN Z
+    badbinZ 1 "${zpre}"
+    badbinZ 2 "${zpre}"
+    echo "1 2"; wait;
+    badbinZ 3 "${zpre}"
+    badbinZ 4 "${zpre}"
+    echo "3 4"; wait;
+    badbinZ 5 "${zpre}"
+    badbinZ 6 "${zpre}"
+    echo "5 6"; wait;
+    badbinZ 7 "${zpre}"
+    badbinZ 8 "${zpre}"
+    echo "7 8"; wait;
+    badbinZ 9 "${zpre}"
+    badbinZ 10 "${zpre}"
+    badbinZ 11 "${zpre}";
+    echo "9 10 11"; wait;
+
+    echo "ALL DONE"
 fi
