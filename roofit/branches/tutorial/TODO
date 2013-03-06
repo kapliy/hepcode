@@ -1,7 +1,10 @@
+TODO MCP mtg:
+
+
 Redo w MT fits and pT fits in inclusive region and add to appendix!
 Dump scale factors into the note
 Jan/Max: 
-Max: p.42 make plots of eta inside eta bin with njets requirement
+DONE:p.42 make plots of eta inside eta bin with njets requirement
      p.42 - drop MET requirement for Ws
      p.42 - cut at muon pt = 35 GeV
      Plot lepton pT inside the funny region.

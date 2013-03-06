@@ -882,7 +882,11 @@ class SuCanvas:
             s.cd_plotPad();
             s.ConfigureLegend(leg,leg_x1,leg_y2)
             leg.Draw()
-            qcdfrac = hstack.nominal().stack_bg_frac()
+            qcdfrac = None
+            try:
+                qcdfrac = hstack.nominal().stack_bg_frac()
+            except:
+                qcdfrac = None
             if pave and qcdfrac!=None:
                 s.fractext = fractext = ROOT.TPaveText()
                 try:
