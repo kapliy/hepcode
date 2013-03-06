@@ -1,4 +1,8 @@
 TODO MCP mtg:
+Number of muon stations on muon track. 2-station muon.
+Make W plots with pt range 25-35
+Make Z plots with relaxed Z window
+Plot diff of pt (MS - ID); apply diff cut
 
 
 Redo w MT fits and pT fits in inclusive region and add to appendix!
