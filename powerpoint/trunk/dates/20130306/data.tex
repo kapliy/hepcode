@@ -1,0 +1,398 @@
+
+%% %%
+%% %% INTRO
+%% %%
+
+\slide{ A vs C side asymmetry: W vs Z }
+{
+
+ \iteb
+ \item 2011 data, MC11c, combined STACO muons
+ \item Inclusive W analysis: $p_T^{\mu}>25$, $E_T^{Miss}>25$, $m_T^{W}>40$, $p_{T}^{iso R=40}/p_{T}<0.1$
+ \item Missing ET: MetREFFinal
+ \item Single-muon trigger (18 GeV) used both for Ws and Zs
+ \iteb
+ \item In plots below, both Z muons are required to have fired the trigger
+ \itee
+ \item Reconstruction, trigger, isolation scale factors are computed in $\eta$ bins of measurement.
+ \item Disagreements in A-side to C-side ratio
+ \item Focus on last 4 \eta\ bins
+ \itee
+
+}
+
+\slide{ A-C ratios }
+{
+
+\only<1>{
+ A/C ratios for data, background-subtracted data, and signal MC. \\
+
+ Let's start with the nominal W selection
+}
+
+\only<3>{ Next, consider muons in Z selection. First, without explicit trigger match. }
+\only<5>{ Adding trigger match requirement to both Z muons. }
+\only<7>{ Is it MET? Let's try to re-build it in Ws from LocHadTopo using actual muon }
+\only<10>{ It turns out curvature correction ``C'' has noticeable effect on A/C. \\
+It might be beneficial to update it using the 2012 MCP machinery. \\
+Still, there are still substantial disagreements remaining. Let's drop MET completely.
+}
+
+\only<12>{
+  Conclusions:\\
+  \iteb
+    \item Z with trigger match reproduces overall A/C shape seen in W
+    \item A/C disagreements between data and MC are seen in W, but not in Z
+    \item It doesn't seem to be MET: seen without $MET>25$ and $WMT>40$ cut
+    \item Disabling MCP corrections (``C'' term) improves $W^+$ but worsens $W^-$
+  \itee
+}
+
+\colb[T]
+
+\column{.5\textwidth}
+\centering
+\only<2>{ \small{ W (nominal), $\mu^{+}$}}
+\only<4>{ \small{ Z (no trigger match), $\mu^{+}$}}
+\only<6>{ \small{ Z (trigger match), $\mu^{+}$}}
+\only<8>{ \small{ W: $LocHad+muPT>25$,MCP corr,$W^{+}$}}
+\only<9>{ \small{ W: $LocHad+muPT>25$,raw muon,$W^{+}$}}
+\only<11>{ \small{ W: No MET,WMT cuts, $W^{+}$}}
+\includegraphics[width=1.0\textwidth]<2>{dates/20130306/figures/wz/W_NOM_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_POS}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130306/figures/wz/ZNT_NOM_stack_leptonP_etav_ALL}
+\includegraphics[width=1.0\textwidth]<6>{dates/20130306/figures/wz/ZNT_TMATCHBOTH_stack_leptonP_etav_ALL}
+\includegraphics[width=1.0\textwidth]<8>{dates/20130306/figures/wz/WNT_METLOCMUONCORR_Q0_stack_lepton_etav_POS}
+\includegraphics[width=1.0\textwidth]<9>{dates/20130306/figures/wz/WNT_METLOCMUON_Q0_stack_lepton_etav_POS}
+\includegraphics[width=1.0\textwidth]<11>{dates/20130306/figures/wz/WNT_NOMETMT_Q0_stack_lepton_etav_POS}
+
+\column{.5\textwidth}
+\centering
+\only<2>{ \small{ W (nominal), $\mu^{-}$}}
+\only<4>{ \small{ Z (no trigger match), $\mu^{-}$}}
+\only<6>{ \small{ Z (trigger match), $\mu^{-}$}}
+\only<8>{ \small{ W: $LocHad+muPT>25$,MCP corr,$W^{-}$}}
+\only<9>{ \small{ W: $LocHad+muPT>25$,raw muon,$W^{-}$}}
+\only<11>{ \small{ W: No MET,WMT cuts, $W^{-}$}}
+\includegraphics[width=1.0\textwidth]<2>{dates/20130306/figures/wz/W_NOM_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130306/figures/wz/ZNT_NOM_stack_leptonN_etav_ALL}
+\includegraphics[width=1.0\textwidth]<6>{dates/20130306/figures/wz/ZNT_TMATCHBOTH_stack_leptonN_etav_ALL}
+\includegraphics[width=1.0\textwidth]<8>{dates/20130306/figures/wz/WNT_METLOCMUONCORR_Q0_stack_lepton_etav_NEG}
+\includegraphics[width=1.0\textwidth]<9>{dates/20130306/figures/wz/WNT_METLOCMUON_Q0_stack_lepton_etav_NEG}
+\includegraphics[width=1.0\textwidth]<11>{dates/20130306/figures/wz/WNT_NOMETMT_Q0_stack_lepton_etav_NEG}
+
+\cole
+}
+
+
+\slide{ A-C ratios: looking at Zs }
+{
+\only<1>{
+Another look at Zs...
+}
+
+\only<3>{
+\iteb
+\item Recall that the second Z muon is allowed to be ``anywhere''.
+\item However, it is in fact highly correlated with the first muon
+\iteb
+\item E.g., almost always back-to-back in $\phi$.
+\itee
+\item We can break this correlation by requiring at least one jet.
+\iteb
+\item The two Z muons would balance agains the jet, and would no longer be back-to-back.
+\itee
+\itee
+}
+
+\only<6>{
+ Conclusions: \\
+ \iteb
+ \item Statistics in Z+jets events is lower, but there is a hint of similar A/C disagreements seen in Ws.
+ \item Could this somehow bias the tag-and-probe scale factors, to the tune of a few percent?
+ \itee
+}
+
+\colb[T]
+
+\column{.5\textwidth}
+\centering
+\only<2>{ \small{ Z, trigger match, 2nd muon anywhere ($\mu^{+}$)}}
+\only<4>{ \small{ Z, trigger match, $njets>0$ ($\mu^{+}$)}}
+\only<5>{ \small{ $W^{+}$ (repeated)}}
+\includegraphics[width=1.0\textwidth]<2>{dates/20130306/figures/wz/ZNT_TMATCHBOTH_stack_leptonP_etav_ALL}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130306/figures/wz/ZNT_TMATCHJETS_stack_leptonP_etav_ALL}
+\includegraphics[width=1.0\textwidth]<5>{dates/20130306/figures/wz/WNT_NOM_Q0_stack_lepton_etav_POS}
+
+\column{.5\textwidth}
+\centering
+\only<2>{ \small{ Z, trigger match, 2nd muon anywhere ($\mu^{-}$)}}
+\only<4>{ \small{ Z, trigger match, $njets>0$ ($\mu^{-}$)}}
+\only<5>{ \small{ $W^{-}$ (repeated)}}
+\includegraphics[width=1.0\textwidth]<2>{dates/20130306/figures/wz/ZNT_TMATCHBOTH_stack_leptonN_etav_ALL}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130306/figures/wz/ZNT_TMATCHJETS_stack_leptonN_etav_ALL}
+\includegraphics[width=1.0\textwidth]<5>{dates/20130306/figures/wz/WNT_NOM_Q0_stack_lepton_etav_NEG}
+
+\cole
+}
+
+
+\slide{ A-C ratios: plots in $\phi$ quadrants}
+{
+
+\only<1>{
+ A/C ratios for data, background-subtracted data, and signal MC. \\
+ Here, we are comparing W and Z eta plots in different \red{$\phi$ quadrants}.\\
+ \small{Caveat: all scale factors are integrated in $\phi$, so we don't expect excellent agreement here}
+}
+\only<12>{
+ Conclusion: the A-C ratios are very different in the four $\phi$ quadrants. There are substantial detector effects that we don't correct for, and hope they integrate out in $\phi$. \\
+ In the barrel, Ws and Zs show similar uncorrected effects. But in forward regions, we see the same W vs Z differences as we saw in phi-integrated plots.
+}
+
+\colb[T]
+
+\column{.5\textwidth}
+\centering
+\only<2>{ \small{ $W^{+}$ (all $\phi$)}}
+\only<3>{ \small{ $W^{+}$ ($0 < \phi < PI/2$)}}
+\only<4>{ \small{ $W^{+}$ ($PI/2 < \phi < PI$)}}
+\only<5>{ \small{ $W^{+}$ ($-PI < \phi < -PI/2$)}}
+\only<6>{ \small{ $W^{+}$ ($-PI/2 < \phi < 0$)}}
+\only<7>{ \small{ $W^{-}$ (all $\phi$)}}
+\only<8>{ \small{ $W^{-}$ ($0 < \phi < PI/2$)}}
+\only<9>{ \small{ $W^{-}$ ($PI/2 < \phi < PI$)}}
+\only<10>{ \small{ $W^{-}$ ($-PI < \phi < -PI/2$)}}
+\only<11>{ \small{ $W^{-}$ ($-PI/2 < \phi < 0$)}}
+\includegraphics[width=1.0\textwidth]<2>{dates/20130306/figures/wz/WNT_NOM_Q0_stack_lepton_etav_POS}
+\includegraphics[width=1.0\textwidth]<3>{dates/20130306/figures/wz/WNT_NOM_C0_stack_lepton_etav_POS}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130306/figures/wz/WNT_NOM_C1_stack_lepton_etav_POS}
+\includegraphics[width=1.0\textwidth]<5>{dates/20130306/figures/wz/WNT_NOM_C2_stack_lepton_etav_POS}
+\includegraphics[width=1.0\textwidth]<6>{dates/20130306/figures/wz/WNT_NOM_C3_stack_lepton_etav_POS}
+\includegraphics[width=1.0\textwidth]<7>{dates/20130306/figures/wz/WNT_NOM_Q0_stack_lepton_etav_NEG}
+\includegraphics[width=1.0\textwidth]<8>{dates/20130306/figures/wz/WNT_NOM_C0_stack_lepton_etav_NEG}
+\includegraphics[width=1.0\textwidth]<9>{dates/20130306/figures/wz/WNT_NOM_C1_stack_lepton_etav_NEG}
+\includegraphics[width=1.0\textwidth]<10>{dates/20130306/figures/wz/WNT_NOM_C2_stack_lepton_etav_NEG}
+\includegraphics[width=1.0\textwidth]<11>{dates/20130306/figures/wz/WNT_NOM_C3_stack_lepton_etav_NEG}
+
+\column{.5\textwidth}
+\centering
+\only<2>{ \small{ $Z^{+}$ (all $\phi$)}}
+\only<3>{ \small{ $Z^{+}$ ($0 < \phi < PI/2$)}}
+\only<4>{ \small{ $Z^{+}$ ($PI/2 < \phi < PI$)}}
+\only<5>{ \small{ $Z^{+}$ ($-PI < \phi < -PI/2$)}}
+\only<6>{ \small{ $Z^{+}$ ($-PI/2 < \phi < 0$)}}
+\only<7>{ \small{ $Z^{-}$ (all $\phi$)}}
+\only<8>{ \small{ $Z^{-}$ ($0 < \phi < PI/2$)}}
+\only<9>{ \small{ $Z^{-}$ ($PI/2 < \phi < PI$)}}
+\only<10>{ \small{ $Z^{-}$ ($-PI < \phi < -PI/2$)}}
+\only<11>{ \small{ $Z^{-}$ ($-PI/2 < \phi < 0$)}}
+\includegraphics[width=1.0\textwidth]<2>{dates/20130306/figures/wz/ZNT_TMATCHBOTH_stack_leptonP_etav_ALL}
+\includegraphics[width=1.0\textwidth]<3>{dates/20130306/figures/wz/ZNT_TB_C0_stack_leptonP_etav_ALL}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130306/figures/wz/ZNT_TB_C1_stack_leptonP_etav_ALL}
+\includegraphics[width=1.0\textwidth]<5>{dates/20130306/figures/wz/ZNT_TB_C2_stack_leptonP_etav_ALL}
+\includegraphics[width=1.0\textwidth]<6>{dates/20130306/figures/wz/ZNT_TB_C3_stack_leptonP_etav_ALL}
+\includegraphics[width=1.0\textwidth]<7>{dates/20130306/figures/wz/ZNT_TMATCHBOTH_stack_leptonN_etav_ALL}
+\includegraphics[width=1.0\textwidth]<8>{dates/20130306/figures/wz/ZNT_TB_C0_stack_leptonN_etav_ALL}
+\includegraphics[width=1.0\textwidth]<9>{dates/20130306/figures/wz/ZNT_TB_C1_stack_leptonN_etav_ALL}
+\includegraphics[width=1.0\textwidth]<10>{dates/20130306/figures/wz/ZNT_TB_C2_stack_leptonN_etav_ALL}
+\includegraphics[width=1.0\textwidth]<11>{dates/20130306/figures/wz/ZNT_TB_C3_stack_leptonN_etav_ALL}
+
+\cole
+}
+
+
+\slide{ Inside bad bins }
+{
+\only<1> {
+Why would A/C ratio be well-modeled in Z, but not W? \\
+Let's try to look inside one of the ``bad'' eta bins.
+}
+
+\only<2>{
+\colb[T]
+
+\column{.5\textwidth}
+\centering
+\small{ W (nominal), $\mu^{+}$}
+\includegraphics[width=1.0\textwidth]{dates/20130306/figures/wz/W_NOM_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_POS}
+
+\column{.5\textwidth}
+\centering
+\small{ W (nominal), $\mu^{-}$}
+\includegraphics[width=1.0\textwidth]<2>{dates/20130306/figures/wz/W_NOM_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
+
+\cole
+}
+
+\only<3> {
+\colb[T]
+
+\column{.5\textwidth}
+C-side $\mu^{+}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_C_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lP_eta_ALL.pdf}
+
+\column{.5\textwidth}
+A-side $\mu^{+}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_A_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lP_eta_ALL.pdf} 
+
+\cole
+}
+
+\only<4> {
+\colb[T]
+
+\column{.5\textwidth}
+C-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_C_stack_l_eta_NEG} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lN_eta_ALL.pdf}
+
+\column{.5\textwidth}
+A-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_A_stack_l_eta_NEG} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lN_eta_ALL.pdf} 
+
+\cole
+}
+
+\only<5>{
+Remove MET and WMT cuts from W
+}
+
+\only<6> {
+\colb[T]
+
+\column{.5\textwidth}
+C-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Wnometmt_10_C_stack_l_eta_NEG} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lN_eta_ALL.pdf}
+
+\column{.5\textwidth}
+A-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Wnometmt_10_A_stack_l_eta_NEG} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lN_eta_ALL.pdf} 
+
+\cole
+}
+
+\only<7>{
+Bump up pT cut to 35 GeV on both W and Z muons
+}
+
+\only<8> {
+\colb[T]
+
+\column{.5\textwidth}
+C-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Wpt35_10_C_stack_l_eta_NEG} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Zpt35_10_C_stack_lN_eta_ALL.pdf}
+
+\column{.5\textwidth}
+A-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Wpt35_10_A_stack_l_eta_NEG} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Zpt35_10_A_stack_lN_eta_ALL.pdf} 
+
+\cole
+}
+
+
+\only<9>{
+ Conclusion: whenever we see A/C disagreements in a particular bin, we also see a funny $\eta$ bump inside that bin. \\
+ (Plots inside all other measurements $\eta$ bins are in the appendix) \\
+ What's the source of these bumps/dips?
+}
+
+}
+
+
+
+%%%%%%% Back-up slides %%%%%%%%%%
+\appendix
+\newcounter{finalframe}
+\setcounter{finalframe}{\value{framenumber}}
+
+\slide{}
+{
+
+\centering
+\Huge Back-up slides
+}
+
+\slide{}
+{
+\centering
+\Huge Final unfolded cross-section numbers
+}
+
+\slide{ Final numbers: A/C for $W^-$ }
+{
+\small{
+\begin{table}[tbph]
+\centering
+\begin{tabular}{lccccc}
+\hline
+\hline
+$\eta$ bin & $XSEC_{|\eta|}^{ele}$ & $XSEC_{|\eta|}^{\mu}$ & $\delta$ & $XSEC_{Aside} - XSEC_{Cside}$ & $(A-C)/\delta$ \\
+\hline
+
+$0 < |\eta| <0.21$ & 433.0 & 431.5 & 4.0 & -9.4 & -2.3 \\
+$0.21 < |\eta| <0.42$ & 428.9 & 430.3 & 4.1 & -2.1 & -0.5 \\
+$0.42 < |\eta| <0.63$ & 423.8 & 424.6 & 4.7 & -6.8 & -1.5 \\
+$0.63 < |\eta| <0.84$ & 418.8 & 418.7 & 3.7 & 6.8 & 1.8 \\
+$0.84 < |\eta| <1.05$ & 412.0 & 407.8 & 5.1 & 11.5 & 2.3 \\
+$1.05 < |\eta| <1.37$ & 406.2 & 398.8 & 5.1 & 1.4 & 0.3 \\
+$1.37 < |\eta| <1.52$ & XXX.X & 380.9 & 4.5 & 1.3 & 0.3 \\
+$1.52 < |\eta| <1.74$ & XXX.X & 371.9 & 4.1 & 4.9 & 1.2 \\
+$1.74 < |\eta| <1.95$ & 360.4 & 358.0 & 5.1 & 4.3 & 0.9 \\
+$1.95 < |\eta| <2.18$ & 339.9 & 331.5 & 3.9 & 19.4 & \color{red}{5.0} \\
+$2.18 < |\eta| <2.4$ & XXX.X & 316.4 & 3.6 & -0.5 & -0.1 \\
+
+\hline
+\end{tabular}
+\caption{Studying A-side vs C-side differences for $W^{-} \rightarrow \mu^{-} \nu$.}
+\label{tab:NEG}
+\end{table}
+}
+}
+
+\slide{ Final numbers: A/C for $W^+$ }
+{
+\small{
+\begin{table}[tbph]
+\centering
+\begin{tabular}{lccccc}
+\hline
+\hline
+$\eta$ bin & $XSEC_{|\eta|}^{ele}$ & $XSEC_{|\eta|}^{\mu}$ & $\delta$ & $XSEC_{Aside} - XSEC_{Cside}$ & $(A-C)/\delta$ \\
+\hline
+
+$0 < |\eta| <0.21$ & 572.5 & 570.5 & 4.6 & 1.9 & 0.4 \\
+$0.21 < |\eta| <0.42$ & 571.4 & 573.9 & 4.6 & -1.7 & -0.4 \\
+$0.42 < |\eta| <0.63$ & 572.5 & 572.9 & 6.9 & 0.8 & 0.1 \\
+$0.63 < |\eta| <0.84$ & 579.0 & 578.0 & 4.5 & 14.3 & \color{red}{3.2} \\
+$0.84 < |\eta| <1.05$ & 582.6 & 577.9 & 5.2 & 7.1 & 1.4 \\
+$1.05 < |\eta| <1.37$ & 596.2 & 589.2 & 5.7 & 8.9 & 1.6 \\
+$1.37 < |\eta| <1.52$ & XXX.X & 586.2 & 6.2 & 7.3 & 1.2 \\
+$1.52 < |\eta| <1.74$ & XXX.X & 586.9 & 5.4 & 26.5 & \color{red}{4.9} \\
+$1.74 < |\eta| <1.95$ & 596.9 & 591.2 & 4.2 & 13.3 & \color{red}{3.1} \\
+$1.95 < |\eta| <2.18$ & 584.8 & 570.7 & 7.0 & 32.4 & \color{red}{4.6} \\
+$2.18 < |\eta| <2.4$ & XXX.X & 558.3 & 6.4 & 10.2 & 1.6 \\
+
+\hline
+\end{tabular}
+\caption{Studying A-side vs C-side differences for $W^{+} \rightarrow \mu^{+} \nu$.}
+\label{tab:POS}
+\end{table}
+}
+}
+
+\input{dates/20130306/etaphi}
