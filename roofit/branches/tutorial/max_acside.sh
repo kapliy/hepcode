@@ -3,6 +3,8 @@
 # debugging A-C side asymmetry in some of the measurement bins.
 
 source config.sh
+input=/share/t3data3/antonk/ana/ana_v29I_02232013_paper_stacoCB_all/pt20  # FIXME OVERRIDE
+
 source _binning.sh
 fin=${input}
 fintr=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_ztrigboth_stacoCB_all/pt20
@@ -11,7 +13,7 @@ finraw=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_rawmet_stacoCB_all/pt20
 bgqcd=0
 
 # compare QCD0 vs QCD4 vs QCD4-BINS (we want to use QCD0 simplification!)
-if [ 1 -eq 1 ]; then
+if [ 0 -eq 1 ]; then
     for q in 0 1 ; do
 	./stack2.py -q ${q} -o ACSIDE --hsource d3_eta_lpt_met:y:2:-1:z:0:-1 --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} --lvar d3_abseta_lpt_met:x:0:-1:y:2:-1 --lbin 100,0,60 --lrebin 2 -t W_NOM_Q0 -m acside --bgqcd 0 --qcdscale 1.0 --lnofits &
 	#./stack2.py -q ${q} -o ACSIDE --hsource d3_eta_lpt_met:y:2:-1:z:0:-1 --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} --lvar d3_abseta_lpt_met:x:0:-1:y:2:-1 --lbin 100,0,60 --lrebin 2 -t W_NOM_Q4 -m acside --bgqcd 4 --lnofits &
@@ -208,34 +210,151 @@ function badbinZ() {
     done
 }
 
-if [ 0 -eq 1 ]; then
+if [ 1 -eq 1 ]; then
     wpre='ptiso40/l_pt<0.1 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
-    wpre35='ptiso40/l_pt<0.1 && met>25.0 && l_pt>35.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
+    # removing cuts
+    wnoiso='met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
+    wnonmu='ptiso40/l_pt<0.1 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0'
+    wnocuts='fabs(l_eta)<2.4 && idhits==1'
     wpreNOMETMT='ptiso40/l_pt<0.1 && l_pt>25.0 && fabs(l_eta)<2.4 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
-
-    zpre_old='lP_pt>25.0 && fabs(lP_eta)<2.4 && lN_pt>25.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lP_trigEF<0.2 && lN_trigEF<0.2'
-    zpre35_old='lP_pt>35.0 && fabs(lP_eta)<2.4 && lN_pt>35.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lP_trigEF<0.2 && lN_trigEF<0.2'
+    # other
+    wpre35='ptiso40/l_pt<0.1 && met>25.0 && l_pt>35.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
+    wpre2535='ptiso40/l_pt<0.1 && met>25.0 && l_pt>25 && l_pt<35.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
+    wpreidNOMETMT='ptiso40/l_pt_id<0.1 && l_pt_id>25.0 && fabs(l_eta)<2.4 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
+    wpreIDMS='ptiso40/l_pt<0.1 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'
+    # zs
     zpre='lP_ptiso40/lP_pt<0.1 && lN_ptiso40/lN_pt<0.1   &&    lP_pt>25.0 && fabs(lP_eta)<2.4 && lN_pt>25.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lP_trigEF<0.2 && lN_trigEF<0.2'
+    zprenowind='lP_ptiso40/lP_pt<0.1 && lN_ptiso40/lN_pt<0.1   &&    lP_pt>25.0 && fabs(lP_eta)<2.4 && lN_pt>25.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lP_trigEF<0.2 && lN_trigEF<0.2'
     zpre35='lP_ptiso40/lP_pt<0.1 && lN_ptiso40/lN_pt<0.1   &&    lP_pt>35.0 && fabs(lP_eta)<2.4 && lN_pt>35.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lP_trigEF<0.2 && lN_trigEF<0.2'
+    zpre2535='lP_ptiso40/lP_pt<0.1 && lN_ptiso40/lN_pt<0.1   &&    lQ_pt>25.0 && lQ_pt<35.0 && fabs(lP_eta)<2.4 && lO_pt>25.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lP_trigEF<0.2 && lN_trigEF<0.2'
+    zpreIDMS='lP_ptiso40/lP_pt<0.1 && lN_ptiso40/lN_pt<0.1   &&    lP_pt>25.0 && fabs(lP_eta)<2.4 && lN_pt>25.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lP_trigEF<0.2 && lN_trigEF<0.2   &&   fabs(lP_pt_id-lP_pt_exms)/lP_pt_id<0.5 && fabs(lN_pt_id-lN_pt_exms)/lN_pt_id<0.5'
+
+    # bad bins: 10,9,8, 4
 
     # njets>=1 and nometmt in bin 10
-    badbinW 10 "${wpre} && njets>=1" "njets"
-    badbinW 10 "${wpreNOMETMT}" "nometmt"
-    badbinZ 10 "${zpre} && njets>=1" "njets"
-    echo "10 with njets>=1 and nomet"; wait
+    if [ 0 -eq 1 ]; then
+	badbinW 10 "${wpre} && njets>=1" "njets"
+	badbinW 10 "${wpreNOMETMT}" "nometmt"
+	echo "w 10 with njets>=1 and nomet"; wait
+	badbinZ 10 "${zpre} && njets>=1" "njets"
+	badbinW 9 "${wpreNOMETMT}" "nometmt"
+	echo "10,9 with njets>=1 and nomet"; wait
+        # nometmt in other bad bins
+	badbinW 8 "${wpreNOMETMT}" "nometmt"
+	badbinW 4 "${wpreNOMETMT}" "nometmt"
+	echo "9,8,4 and nometmt"; wait
+        # nometmt + ptid
+	badbinW 10 "${wpreidNOMETMT}" "nometmtid"
+	badbinW 9 "${wpreidNOMETMT}" "nometmtid"
+	echo "10,9 and nometmt + ptid"; wait
+	badbinW 8 "${wpreidNOMETMT}" "nometmtid"
+	badbinW 4 "${wpreidNOMETMT}" "nometmtid"
+	echo "8,4 and nometmt + ptid"; wait
+    fi
 
-    # pt>35 in bin 10
-    badbinW 10 "${wpre35}" "pt35"
-    badbinZ 10 "${zpre35}" "pt35"
-    echo "10 with pt=35 cut"; wait
+    # ID-MS quality requirement
+    if [ 0 -eq 1 ]; then
+	badbinW 10 "${wpreIDMS}" "idms"
+	badbinZ 10 "${zpreIDMS}" "idms"
+	echo "10 with IDMS cut"; wait
+	badbinW 9 "${wpreIDMS}" "idms"
+	badbinZ 9 "${zpreIDMS}" "idms"
+	echo "9 with IDMS cut"; wait
+	badbinW 8 "${wpreIDMS}" "idms"
+	badbinZ 8 "${zpreIDMS}" "idms"
+	echo "8 with IDMS cut"; wait
+	badbinW 4 "${wpreIDMS}" "idms"
+	badbinZ 4 "${zpreIDMS}" "idms"
+	echo "4 with IDMS cut"; wait
+    fi
 
+    # noiso
+    if [ 0 -eq 1 ]; then
+	badbinW 10 "${wnoiso}" "noiso"
+	badbinW 9 "${wnoiso}" "noiso"
+	echo "10,9 with noiso cut"; wait
+	badbinW 8 "${wnoiso}" "noiso"
+	badbinW 4 "${wnoiso}" "noiso"
+	echo "8,4 with noiso cut"; wait
+    fi
+    # nonmu
+    if [ 0 -eq 1 ]; then
+	badbinW 10 "${wnonmu}" "nonmu"
+	badbinW 9 "${wnonmu}" "nonmu"
+	echo "10,9 with nonmu cut"; wait
+	badbinW 8 "${wnonmu}" "nonmu"
+	badbinW 4 "${wnonmu}" "nonmu"
+	echo "8,4 with nonmu cut"; wait
+    fi
+    # nocuts
+    if [ 0 -eq 1 ]; then
+	badbinW 10 "${wnocuts}" "nocuts"
+	badbinW 9 "${wnocuts}" "nocuts"
+	echo "10,9 with nocuts cut"; wait
+	badbinW 8 "${wnocuts}" "nocuts"
+	badbinW 4 "${wnocuts}" "nocuts"
+	echo "8,4 with nocuts cut"; wait
+    fi
+    
+    # pt>35 in bin 10,9,8,4
+    if [ 0 -eq 1 ]; then
+	badbinW 10 "${wpre35}" "pt35"
+	badbinZ 10 "${zpre35}" "pt35"
+	echo "10 with pt=35 cut"; wait
+	badbinW 9 "${wpre35}" "pt35"
+	badbinZ 9 "${zpre35}" "pt35";
+	echo "9 with pt=35 cut"; wait
+	badbinW 8 "${wpre35}" "pt35"
+	badbinZ 8 "${zpre35}" "pt35"
+	echo "8 with pt=35 cut"; wait
+	badbinW 4 "${wpre35}" "pt35"
+	badbinZ 4 "${zpre35}" "pt35"
+	echo "4 with pt=35 cut"; wait
+    fi
+
+    # 25<pt<35 in bin 10,9,8,4
+    if [ 0 -eq 1 ]; then
+	badbinW 10 "${wpre2535}" "pt2535"
+	badbinZ 10 "${zpre2535}" "pt2535"
+	echo "10 with pt=2535 cut"; wait
+	badbinW 9 "${wpre2535}" "pt2535"
+	badbinZ 9 "${zpre2535}" "pt2535";
+	echo "9 with pt=2535 cut"; wait
+	badbinW 8 "${wpre2535}" "pt2535"
+	badbinZ 8 "${zpre2535}" "pt2535"
+	echo "8 with pt=2535 cut"; wait
+	badbinW 4 "${wpre2535}" "pt2535"
+	badbinZ 4 "${zpre2535}" "pt2535"
+	echo "4 with pt=2535 cut"; wait
+    fi
+    
     # additional Z variations
-    badbinZ 10 "${zpre} && fabs(lO_eta)<1.0" "lObarrel"
-    badbinZ 10 "${zpre} && fabs(lO_eta)>1.0" "lOendcap"
-    echo "10 with lO in barrel/endcap"; wait
+    if [ 0 -eq 1 ]; then
+	badbinZ 10 "${zpre} && fabs(lO_eta)<1.0" "lObarrel"
+	badbinZ 10 "${zpre} && fabs(lO_eta)>1.0" "lOendcap"
+	echo "10 with lO in barrel/endcap"; wait
+        # no Z window cut
+	badbinZ 10 "${zprenowind}" "nowind"
+	badbinZ 9 "${zprenowind}" "nowind"
+	echo "10,9 with nowind"; wait
+	badbinZ 8 "${zprenowind}" "nowind"
+	badbinZ 4 "${zprenowind}" "nowind"
+	echo "8,4 with nowind"; wait
+    fi
+
+    # asking probe Z muon to be in a particular phi region
+    # additional Z variations
+    if [ 1 -eq 1 ]; then
+	badbinZ 10 "${zpre} && lQ_phi>0 && lQ_phi<3.14/2.0" "lQ1"
+	badbinZ 10 "${zpre} && lQ_phi>3.14/2.0 && lQ_phi<3.14" "lQ2"
+	echo "Z Q1 and Q2"; wait
+	badbinZ 10 "${zpre} && lQ_phi>-3.14 && lQ_phi<-3.14/2.0" "lQ3"
+	badbinZ 10 "${zpre} && lQ_phi>-3.14/2.0 && lQ_phi<0" "lQ4"
+	echo "Z Q3 and Q4"; wait
+    fi    
 
     # RUN W
-    if [ 1 -eq 1 ]; then
+    if [ 0 -eq 1 ]; then
 	badbinW 1 "${wpre}"
 	badbinW 2 "${wpre}"
 	echo "1 2"; wait;
@@ -255,7 +374,7 @@ if [ 0 -eq 1 ]; then
     fi
 
     # RUN Z
-    if [ 1 -eq 1 ]; then
+    if [ 0 -eq 1 ]; then
 	badbinZ 1 "${zpre}"
 	badbinZ 2 "${zpre}"
 	echo "1 2"; wait;
