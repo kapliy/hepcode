@@ -179,13 +179,14 @@ function badbinW() {
     IBIN="$1"
     BPRE="$2"
     TAG="$3"
+    XTRA="$4"
     for cvar in phi eta; do
 	for side in A C; do
 	    thebin="40,-3.15,3.15"
 	    if [ "${cvar}" == "eta" ]; then thebin=`V_getbins ${IBIN} ${side}`; fi
 	    for q in 0 1 ; do
 		BSTR=`W_getpre ${IBIN} ${side}`
-		./stack2.py --rebin 1 -q ${q} -o ACSIDE --hsource l_${cvar} --var l_${cvar} --bin ${thebin} --refline 0.65,1.375 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${BPRE} ${BSTR}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t W${TAG}_${IBIN}_${side} &> logs/LOG.badbinW${TAG}.${IBIN}.${cvar}.${side}.${q} &
+		./stack2.py ${XTRA} --rebin 1 -q ${q} -o ACSIDE --hsource l_${cvar} --var l_${cvar} --bin ${thebin} --refline 0.65,1.375 -b --input ${fin}  -m one_plot_nt --bgqcd 0 --qcdscale 1.0 --lnofits --nomonly --preNN "${BPRE} ${BSTR}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -t W${TAG}_${IBIN}_${side} &> logs/LOG.badbinW${TAG}.${IBIN}.${cvar}.${side}.${q} &
 	    done
 	done
     done
@@ -195,6 +196,7 @@ function badbinZ() {
     IBIN="$1"
     BPRE="$2"
     TAG="$3"
+    XTRA=""
     for cvar in phi eta; do
 	for side in A C; do
 	    thebin="40,-3.15,3.15"
@@ -203,8 +205,7 @@ function badbinZ() {
 		qo=P; if [ "${q}" == "P" ]; then qo="N"; else qo="P"; fi;
 		BSTR=`Z_getpre ${IBIN} ${q} ${side}`
 		FPRE=`echo ${BPRE} | sed -e "s#lO#l${qo}#g" -e "s#lQ#l${q}#g"`
-		# ATTN: add --norm for Z plots since I seem to have an overall 10% deficiency
-		./stack2.py --rebin 1 -q 2 -b -o ACSIDE --ntuple z --hsource l${q}_${cvar} --var l${q}_${cvar} --bin ${thebin} --refline 0.65,1.375 -b --input ${fin} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${FPRE} ${BSTR}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigallw" -t Z${TAG}_${IBIN}_${side} &> logs/LOG.badbinZ${TAG}.${IBIN}.${cvar}.${side}.${q} &
+		./stack2.py ${XTRA} --rebin 1 -q 2 -b -o ACSIDE --ntuple z --hsource l${q}_${cvar} --var l${q}_${cvar} --bin ${thebin} --refline 0.65,1.375 -b --input ${fin} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${FPRE} ${BSTR}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigallw" -t Z${TAG}_${IBIN}_${side} &> logs/LOG.badbinZ${TAG}.${IBIN}.${cvar}.${side}.${q} &
 	    done
 	done
     done
@@ -342,16 +343,28 @@ if [ 1 -eq 1 ]; then
 	echo "8,4 with nowind"; wait
     fi
 
-    # asking probe Z muon to be in a particular phi region
-    # additional Z variations
-    if [ 1 -eq 1 ]; then
+    # asking Z probe muon to be in a particular phi region
+    if [ 0 -eq 1 ]; then
 	badbinZ 10 "${zpre} && lQ_phi>0 && lQ_phi<3.14/2.0" "lQ1"
 	badbinZ 10 "${zpre} && lQ_phi>3.14/2.0 && lQ_phi<3.14" "lQ2"
 	echo "Z Q1 and Q2"; wait
 	badbinZ 10 "${zpre} && lQ_phi>-3.14 && lQ_phi<-3.14/2.0" "lQ3"
 	badbinZ 10 "${zpre} && lQ_phi>-3.14/2.0 && lQ_phi<0" "lQ4"
 	echo "Z Q3 and Q4"; wait
-    fi    
+    fi
+
+    # trying out W on a subset of data periods
+    if [ 1 -eq 1 ]; then
+	badbinW 10 "${wpre}" "pDtoH" "-d D,E,F,G,H --norm"  #--lumi 1257000 
+	badbinW 10 "${wpre}" "pItoK" "-d I,J,K --norm"  #--lumi 1257000 
+	echo "W D-K"; wait
+	badbinW 10 "${wpre}" "pItoI" "-d I --norm"  #--lumi 1257000 
+	badbinW 10 "${wpre}" "pKtoK" "-d K --norm"  #--lumi 1257000
+	echo "W I-I and K-K"; wait
+	badbinW 10 "${wpre}" "pLtoL" "-d L --norm"  #--lumi 1257000 
+	badbinW 10 "${wpre}" "pMtoM" "-d M --norm"  #--lumi 1257000
+	echo "W L-M"; wait
+    fi
 
     # RUN W
     if [ 0 -eq 1 ]; then

@@ -56,8 +56,8 @@ input=/share/t3data3/antonk/ana/ana_v29I_02232013_paper_stacoCB_all/pt20  #added
 DB=DB_02232013_ALL.v12
 
 # TODO: add powheg+pythia wpt target
-#input=/share/t3data3/antonk/ana/ana_v29I_03012013_paper_stacoCB_all/pt20
-#DB=DB_03012013_ALL.v13
+input=/share/t3data3/antonk/ana/ana_v29I_03012013_paper_stacoCB_all/pt20
+DB=DB_03012013_ALL.v13
 
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`
