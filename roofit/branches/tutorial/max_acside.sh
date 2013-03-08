@@ -4,6 +4,7 @@
 
 source config.sh
 input=/share/t3data3/antonk/ana/ana_v29I_02232013_paper_stacoCB_all/pt20  # FIXME OVERRIDE
+input=/share/t3data3/antonk/ana/ana_v29I_03012013_paper_stacoCB_all/pt20  # adds per-trigger weights
 
 source _binning.sh
 fin=${input}
@@ -49,6 +50,14 @@ if [ 0 -eq 1 ]; then
 	    ./stack2.py -q 2 -b -o ACSIDE --ntuple z --hsource lepton${q}_etav --var l${q}_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} -m acside_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreTB} && l${q}_phi>-3.14 && l${q}_phi<-3.14/2.0" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigallw" -t ZNT_TB_C2 &
 	    ./stack2.py -q 2 -b -o ACSIDE --ntuple z --hsource lepton${q}_etav --var l${q}_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} -m acside_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${zpreTB} && l${q}_phi>-3.14/2.0 && l${q}_phi<0" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigallw" -t ZNT_TB_C3 &
 	fi
+    done
+    wait
+fi
+
+# W ntuple before period I
+if [ 1 -eq 1 ]; then
+    for q in 0 1; do
+	./stack2.py -q ${q} -o ACSIDE --hsource lepton_etav --var l_eta --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin}  -m acside_nt --bgqcd 0 --qcdscale 1.0 --lnofits --preNN 'ptiso40/l_pt<0.1 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1' --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*trigw" -d D,E,F,G,H --lumi 1257000 -t WI &
     done
     wait
 fi
@@ -172,6 +181,7 @@ if [ 0 -eq 1 ]; then
     wait
 fi
 
+
 # makes a few plots for W and Z in the "bad" bin.
 function badbinW() {
     local IBIN BPRE cvar side q thebin BSTR TAG
@@ -210,8 +220,28 @@ function badbinZ() {
 	done
     done
 }
+function badbinZ2() { # using per-muon trigger weights
+    local IBIN BPRE cvar side q thebin BSTR TAG
+    IBIN="$1"
+    BPRE="$2"
+    TAG="$3"
+    XTRA=""
+    for cvar in phi eta; do
+	for side in A C; do
+	    thebin="40,-3.15,3.15"
+	    if [ "${cvar}" == "eta" ]; then thebin=`V_getbins ${IBIN} ${side}`; fi
+	    for q in P N ; do
+		qo=P; if [ "${q}" == "P" ]; then qo="N"; else qo="P"; fi;
+		BSTR=`Z_getpre ${IBIN} ${q} ${side}`
+		FPRE=`echo ${BPRE} | sed -e "s#lO#l${qo}#g" -e "s#lQ#l${q}#g"`
+		trigw=`echo lQ_trigw | sed -e "s#lO#l${qo}#g" -e "s#lQ#l${q}#g"`
+		./stack2.py ${XTRA} --rebin 1 -q 2 -b -o ACSIDE --ntuple z --hsource l${q}_${cvar} --var l${q}_${cvar} --bin ${thebin} --refline 0.65,1.375 -b --input ${fin} -m one_plot_nt --qcdscale 1.0 --bgqcd 0 --lnofits --nomonly --preNN "${FPRE} ${BSTR}" --cut "mcw*puw*wzptw*znlow*alpy*vxw*ls1w*ls2w*effw*isow*${trigw}" -t Z${TAG}_${IBIN}_${side} &> logs/LOG.badbinZ${TAG}.${IBIN}.${cvar}.${side}.${q} &
+	    done
+	done
+    done
+}
 
-if [ 1 -eq 1 ]; then
+if [ 0 -eq 1 ]; then
     wpre='ptiso40/l_pt<0.1 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
     # removing cuts
     wnoiso='met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
@@ -223,13 +253,18 @@ if [ 1 -eq 1 ]; then
     wpre2535='ptiso40/l_pt<0.1 && met>25.0 && l_pt>25 && l_pt<35.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
     wpreidNOMETMT='ptiso40/l_pt_id<0.1 && l_pt_id>25.0 && fabs(l_eta)<2.4 && idhits==1 && fabs(z0)<10.0 && nmuons==1'
     wpreIDMS='ptiso40/l_pt<0.1 && met>25.0 && l_pt>25.0 && fabs(l_eta)<2.4 && w_mt>40.0 && idhits==1 && fabs(z0)<10.0 && nmuons==1 && fabs(l_pt_id-l_pt_exms)/l_pt_id<0.5'
+    wzlike='ptiso40/l_pt<0.1 && l_pt>25.0 && fabs(l_eta)<2.4 && idhits==1 && fabs(z0)<10.0 && nmuons==2'
     # zs
     zpre='lP_ptiso40/lP_pt<0.1 && lN_ptiso40/lN_pt<0.1   &&    lP_pt>25.0 && fabs(lP_eta)<2.4 && lN_pt>25.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lP_trigEF<0.2 && lN_trigEF<0.2'
     zprenowind='lP_ptiso40/lP_pt<0.1 && lN_ptiso40/lN_pt<0.1   &&    lP_pt>25.0 && fabs(lP_eta)<2.4 && lN_pt>25.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lP_trigEF<0.2 && lN_trigEF<0.2'
     zpre35='lP_ptiso40/lP_pt<0.1 && lN_ptiso40/lN_pt<0.1   &&    lP_pt>35.0 && fabs(lP_eta)<2.4 && lN_pt>35.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lP_trigEF<0.2 && lN_trigEF<0.2'
     zpre2535='lP_ptiso40/lP_pt<0.1 && lN_ptiso40/lN_pt<0.1   &&    lQ_pt>25.0 && lQ_pt<35.0 && fabs(lP_eta)<2.4 && lO_pt>25.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lP_trigEF<0.2 && lN_trigEF<0.2'
     zpreIDMS='lP_ptiso40/lP_pt<0.1 && lN_ptiso40/lN_pt<0.1   &&    lP_pt>25.0 && fabs(lP_eta)<2.4 && lN_pt>25.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lP_trigEF<0.2 && lN_trigEF<0.2   &&   fabs(lP_pt_id-lP_pt_exms)/lP_pt_id<0.5 && fabs(lN_pt_id-lN_pt_exms)/lN_pt_id<0.5'
-
+    # only require probe to trigger
+    zpre2='lP_ptiso40/lP_pt<0.1 && lN_ptiso40/lN_pt<0.1   &&    lP_pt>25.0 && fabs(lP_eta)<2.4 && lN_pt>25.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lQ_trigEF<0.2'
+    zpre2inv='lP_ptiso40/lP_pt<0.1 && lN_ptiso40/lN_pt<0.1   &&    lP_pt>25.0 && fabs(lP_eta)<2.4 && lN_pt>25.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lQ_trigEF<0.2 && lO_trigEF>0.2'
+    zpre2t='lP_ptiso40/lP_pt<0.1 && lN_ptiso40/lN_pt<0.1   &&    lP_pt>25.0 && fabs(lP_eta)<2.4 && lN_pt>25.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && (lP_q*lN_q)<0 && nmuons==2 && lQ_trigEF<0.05' # tight trig match
+    zpre2noq='lP_ptiso40/lP_pt<0.1 && lN_ptiso40/lN_pt<0.1   &&    lP_pt>25.0 && fabs(lP_eta)<2.4 && lN_pt>25.0 && fabs(lN_eta)<2.4    &&    lP_idhits==1 && fabs(lP_z0)<10.   &&   lN_idhits==1 && fabs(lN_z0)<10.   &&   Z_m>70 && Z_m<110    &&    fabs(lP_phi-lN_phi)>0.0 && nmuons==2 && lQ_trigEF<0.2' # no q
     # bad bins: 10,9,8, 4
 
     # njets>=1 and nometmt in bin 10
@@ -352,19 +387,109 @@ if [ 1 -eq 1 ]; then
 	badbinZ 10 "${zpre} && lQ_phi>-3.14/2.0 && lQ_phi<0" "lQ4"
 	echo "Z Q3 and Q4"; wait
     fi
+    # asking W muon to be in a particular phi region
+    if [ 0 -eq 1 ]; then
+	badbinW 10 "${wpre} && l_phi>0 && l_phi<3.14/2.0" "lQ1" "--norm"
+	badbinW 10 "${wpre} && l_phi>3.14/2.0 && l_phi<3.14" "lQ2" "--norm"
+	echo "W Q1 and Q2"; wait
+	badbinW 10 "${wpre} && l_phi>-3.14 && l_phi<-3.14/2.0" "lQ3" "--norm"
+	badbinW 10 "${wpre} && l_phi>-3.14/2.0 && l_phi<0" "lQ4" "--norm"
+	echo "W Q3 and Q4"; wait
+    fi
+    if [ 0 -eq 1 ]; then
+	badbinW 8 "${wpre} && l_phi>0 && l_phi<3.14/2.0" "lQ1" "--norm"
+	badbinW 8 "${wpre} && l_phi>3.14/2.0 && l_phi<3.14" "lQ2" "--norm"
+	echo "W Q1 and Q2"; wait
+	badbinW 8 "${wpre} && l_phi>-3.14 && l_phi<-3.14/2.0" "lQ3" "--norm"
+	badbinW 8 "${wpre} && l_phi>-3.14/2.0 && l_phi<0" "lQ4" "--norm"
+	echo "W Q3 and Q4"; wait
+    fi
+    if [ 0 -eq 1 ]; then
+	badbinW 9 "${wpre} && l_phi>0 && l_phi<3.14/2.0" "lQ1" "--norm"
+	badbinW 9 "${wpre} && l_phi>3.14/2.0 && l_phi<3.14" "lQ2" "--norm"
+	echo "W Q1 and Q2"; wait
+	badbinW 9 "${wpre} && l_phi>-3.14 && l_phi<-3.14/2.0" "lQ3" "--norm"
+	badbinW 9 "${wpre} && l_phi>-3.14/2.0 && l_phi<0" "lQ4" "--norm"
+	echo "W Q3 and Q4"; wait
+    fi
+    if [ 0 -eq 1 ]; then
+	badbinW 4 "${wpre} && l_phi>0 && l_phi<3.14/2.0" "lQ1" "--norm"
+	badbinW 4 "${wpre} && l_phi>3.14/2.0 && l_phi<3.14" "lQ2" "--norm"
+	echo "W Q1 and Q2"; wait
+	badbinW 4 "${wpre} && l_phi>-3.14 && l_phi<-3.14/2.0" "lQ3" "--norm"
+	badbinW 4 "${wpre} && l_phi>-3.14/2.0 && l_phi<0" "lQ4" "--norm"
+	echo "W Q3 and Q4"; wait
+    fi
 
     # trying out W on a subset of data periods
-    if [ 1 -eq 1 ]; then
+    if [ 0 -eq 1 ]; then
 	badbinW 10 "${wpre}" "pDtoH" "-d D,E,F,G,H --norm"  #--lumi 1257000 
 	badbinW 10 "${wpre}" "pItoK" "-d I,J,K --norm"  #--lumi 1257000 
-	echo "W D-K"; wait
+	echo "10 W D-K"; wait
 	badbinW 10 "${wpre}" "pItoI" "-d I --norm"  #--lumi 1257000 
 	badbinW 10 "${wpre}" "pKtoK" "-d K --norm"  #--lumi 1257000
-	echo "W I-I and K-K"; wait
+	echo "10 W I-I and K-K"; wait
 	badbinW 10 "${wpre}" "pLtoL" "-d L --norm"  #--lumi 1257000 
 	badbinW 10 "${wpre}" "pMtoM" "-d M --norm"  #--lumi 1257000
-	echo "W L-M"; wait
+	echo "10 W L-M"; wait
     fi
+    if [ 0 -eq 1 ]; then
+	badbinW 8 "${wpre}" "pDtoH" "-d D,E,F,G,H --norm"  #--lumi 1257000 
+	badbinW 8 "${wpre}" "pItoK" "-d I,J,K --norm"  #--lumi 1257000 
+	echo "8 W D-K"; wait
+	badbinW 8 "${wpre}" "pItoI" "-d I --norm"  #--lumi 1257000 
+	badbinW 8 "${wpre}" "pKtoK" "-d K --norm"  #--lumi 1257000
+	echo "8 W I-I and K-K"; wait
+	badbinW 8 "${wpre}" "pLtoL" "-d L --norm"  #--lumi 1257000 
+	badbinW 8 "${wpre}" "pMtoM" "-d M --norm"  #--lumi 1257000
+	echo "8 W L-M"; wait
+    fi
+    if [ 0 -eq 1 ]; then
+	badbinW 9 "${wpre}" "pDtoH" "-d D,E,F,G,H --norm"  #--lumi 1257000 
+	badbinW 9 "${wpre}" "pItoK" "-d I,J,K --norm"  #--lumi 1257000 
+	echo "9 W D-K"; wait
+	badbinW 9 "${wpre}" "pItoI" "-d I --norm"  #--lumi 1257000 
+	badbinW 9 "${wpre}" "pKtoK" "-d K --norm"  #--lumi 1257000
+	echo "9 W I-I and K-K"; wait
+	badbinW 9 "${wpre}" "pLtoL" "-d L --norm"  #--lumi 1257000 
+	badbinW 9 "${wpre}" "pMtoM" "-d M --norm"  #--lumi 1257000
+	echo "9 W L-M"; wait
+    fi
+    if [ 0 -eq 1 ]; then
+	badbinW 4 "${wpre}" "pDtoH" "-d D,E,F,G,H --norm"  #--lumi 1257000 
+	badbinW 4 "${wpre}" "pItoK" "-d I,J,K --norm"  #--lumi 1257000 
+	echo "4 W D-K"; wait
+	badbinW 4 "${wpre}" "pItoI" "-d I --norm"  #--lumi 1257000 
+	badbinW 4 "${wpre}" "pKtoK" "-d K --norm"  #--lumi 1257000
+	echo "4 W I-I and K-K"; wait
+	badbinW 4 "${wpre}" "pLtoL" "-d L --norm"  #--lumi 1257000 
+	badbinW 4 "${wpre}" "pMtoM" "-d M --norm"  #--lumi 1257000
+	echo "4 W L-M"; wait
+    fi
+
+    # Making W Z-like
+    if [ 0 -eq 1 ]; then
+	badbinZ 10 "${zpre}"
+	badbinZ2 10 "${zpre2}" "tprobe"
+	badbinZ2 10 "${zpre2t}" "tprobet"
+	echo "10 z tag not triggered"; wait
+	badbinZ2 10 "${zpre2noq}" "tprobenoq"
+	echo "10 no q, tag not triggered"; wait
+	badbinW 10 "${wpre}"
+	badbinW 10 "${wzlike}" "zlike"
+	echo "10 w z-like"; wait
+    fi
+
+    # Z events with trigger inversion (e.g., other leg in barrel crack)
+    if [ 0 -eq 1 ]; then
+	badbinZ2 10 "${zpre2inv}" "tinv"
+	badbinZ2 9 "${zpre2inv}" "tinv"
+	echo "10,9 trigger-elsewhere"; wait
+	badbinZ2 8 "${zpre2inv}" "tinv"
+	badbinZ2 4 "${zpre2inv}" "tinv"
+	echo "8,4 trigger-elsewhere"; wait
+    fi
+    
 
     # RUN W
     if [ 0 -eq 1 ]; then
@@ -382,7 +507,7 @@ if [ 1 -eq 1 ]; then
 	echo "7 8"; wait;
 	badbinW 9 "${wpre}"
 	badbinW 10 "${wpre}"
-	badbinW 11 "${wpre}";
+	badbinW 11 "${wpre}"
 	echo "9 10 11"; wait;
     fi
 
@@ -402,7 +527,7 @@ if [ 1 -eq 1 ]; then
 	echo "7 8"; wait;
 	badbinZ 9 "${zpre}"
 	badbinZ 10 "${zpre}"
-	badbinZ 11 "${zpre}";
+	badbinZ 11 "${zpre}"
 	echo "9 10 11"; wait;
     fi
 
