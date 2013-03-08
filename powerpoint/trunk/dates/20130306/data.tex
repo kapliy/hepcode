@@ -5,6 +5,12 @@
 
 \slide{ A vs C side asymmetry: W vs Z }
 {
+Jump to \hyperlink{MCP}{\beamergotobutton{newer stuff}}. \\
+Jump to \hyperlink{INTERESTING}{\beamergotobutton{most interesting stuff}}.
+}
+
+\slide{ A vs C side asymmetry: W vs Z }
+{
 
  \iteb
  \item 2011 data, MC11c, combined STACO muons
@@ -200,565 +206,747 @@ Another look at Zs...
 \cole
 }
 
+\begin{frame}[label=MCP]
+Next, a few checks suggested by MCP experts.
+\end{frame}
 
-\slide{ Inside bad bins }
-{
-\only<1> {
+\slide{ Inside bad bins } {
 Why would A/C ratio be well-modeled in Z, but not W? \\
 Let's try to look inside one of the ``bad'' eta bins. \\
 Spoiler: whenever we see A/C disagreements in a particular bin, we also see a funny $\eta$ dip inside that bin. \\
 (Plots below consider only second-to-last \eta\ bin; other bins are in the appendix)
-
 }
 
-\only<2>{
+\slide{ A/C plot: second-to-last bin } {
 \colb[T]
-
 \column{.5\textwidth}
 \centering
 \small{ W (nominal), $\mu^{+}$}
 \includegraphics[width=1.0\textwidth]{dates/20130306/figures/wz/W_NOM_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_POS}
-
 \column{.5\textwidth}
 \centering
 \small{ W (nominal), $\mu^{-}$}
-\includegraphics[width=1.0\textwidth]<2>{dates/20130306/figures/wz/W_NOM_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
-
+\includegraphics[width=1.0\textwidth]{dates/20130306/figures/wz/W_NOM_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
 \cole
 }
 
-\only<3> {
+\slide{ $\mu^{+}$: bin 10 ($1.95<\eta<2.18$) } {
 \colb[T]
-
 \column{.5\textwidth}
 C-side $\mu^{+}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_C_stack_l_eta_POS} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lP_eta_ALL.pdf}
-
 \column{.5\textwidth}
 A-side $\mu^{+}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_A_stack_l_eta_POS} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lP_eta_ALL.pdf} 
-
 \cole
 }
 
-\only<4> {
+\slide{ $\mu^{-}$: bin 10 ($1.95<\eta<2.18$) } {
 \colb[T]
-
 \column{.5\textwidth}
 C-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_C_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lN_eta_ALL.pdf}
-
 \column{.5\textwidth}
 A-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_A_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lN_eta_ALL.pdf} 
-
 \cole
 }
 
-\only<5>{
+\slide{ $\mu^{-}$: MET } {
 Well, W has MET. \\
 Let's remove MET and WMT cuts from W. \\
 (notice enhanced QCD in the W plots)
 }
-
-\only<6> {
+\slide{ $\mu^{-}$: MET } {
 \colb[T]
-
 \column{.5\textwidth}
 C-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Wnometmt_10_C_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lN_eta_ALL.pdf}
-
 \column{.5\textwidth}
 A-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Wnometmt_10_A_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lN_eta_ALL.pdf} 
-
 \cole
 }
 
-\only<7>{
+\slide{ $\mu^{-}$: min. pT } {
 Z boson is a little heavier and may give off more energetic muons. \\
 What if the lower-pT muons in the W channel produce the dip? \\
 Let's try to bump up pT cut to 35 GeV on both W and Z muons.
 }
-
-\only<8> {
+\slide{ $\mu^{-}$: min. pT } {
 \colb[T]
-
 \column{.5\textwidth}
 C-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Wpt35_10_C_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Zpt35_10_C_stack_lN_eta_ALL.pdf}
-
 \column{.5\textwidth}
 A-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Wpt35_10_A_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Zpt35_10_A_stack_lN_eta_ALL.pdf} 
-
 \cole
 }
 
-\only<9>{
+\slide{ $\mu^{-}$: max. pT } {
 For completeness, let's try to put an upper cap on pT: \\
 Limit pT range to 25-35 GeV for both W and Z muons
 }
-
-\only<10> {
+\slide{ $\mu^{-}$: max. pT } {
 \colb[T]
-
 \column{.5\textwidth}
 C-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Wpt2535_10_C_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Zpt2535_10_C_stack_lN_eta_ALL.pdf}
-
 \column{.5\textwidth}
 A-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Wpt2535_10_A_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Zpt2535_10_A_stack_lN_eta_ALL.pdf} 
-
 \cole
 }
 
-
-\only<11>{
+\slide{ $\mu^{-}$: njets } {
 Recall that in the A/C slide, there was a hint that $Z+jets$ may exhibit the dip. \\
 (njets cut was added to break the phi correlation between the two Z muons).
 Let's look at $\eta$ and $\phi$ with $njets>=1$ for both W and Z muons.
 }
-
-\only<12> {
+\slide{ $\mu^{-}$: njets } {
 \colb[T]
-
 \column{.5\textwidth}
 C-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Wnjets_10_C_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Znjets_10_C_stack_lN_eta_ALL.pdf}
-
 \column{.5\textwidth}
 A-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Wnjets_10_A_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Znjets_10_A_stack_lN_eta_ALL.pdf} 
-
 \cole
 }
 
-
-\only<13>{
+\slide{ $\mu^{-}$: tag in barrel } {
 Another way to break the Z muon correlations: \\
 Force the other (tag) muon to be in the \red{barrel}.
 }
-
-\only<14> {
+\slide{ $\mu^{-}$: tag in barrel } {
 \colb[T]
-
 \column{.5\textwidth}
 C-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_C_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/ZlObarrel_10_C_stack_lN_eta_ALL.pdf}
-
 \column{.5\textwidth}
 A-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_A_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/ZlObarrel_10_A_stack_lN_eta_ALL.pdf} 
-
 \cole
 }
 
-
-\only<15>{
+\slide{ $\mu^{-}$: tag in endcap } {
 For completeness, let's force the other (tag) muon to be in the \red{endcap}.
 }
-
-\only<16> {
+\slide{ $\mu^{-}$: tag in endcap } {
 \colb[T]
-
 \column{.5\textwidth}
 C-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_C_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/ZlOendcap_10_C_stack_lN_eta_ALL.pdf}
-
 \column{.5\textwidth}
 A-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_A_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/ZlOendcap_10_A_stack_lN_eta_ALL.pdf} 
-
 \cole
 }
 
-
-\only<17>{
+\slide{ $\mu^{-}$: ID-MS quality } {
 What if we have very poorly reconstructed muons around the dip? \\
 In that case, Z tag-and-probe and control plots would not see them \\
 (because of the Z mass constraint) \\
-Here, we apply a muon ID-MS quality cut (ID vs MS pT within 0.5\%)
+Here, we apply a muon \red{ID-MS quality cut} (ID vs MS pT within 0.5\%)
 }
-
-\only<18> {
+\slide{ $\mu^{-}$: ID-MS quality } {
 \colb[T]
-
 \column{.5\textwidth}
 C-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Widms_10_C_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Zidms_10_C_stack_lN_eta_ALL.pdf}
-
 \column{.5\textwidth}
 A-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Widms_10_A_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Zidms_10_A_stack_lN_eta_ALL.pdf} 
-
 \cole
 }
 
-
-\only<19>{
+\slide{ $\mu^{-}$: using ID pT } {
 What if we have very poorly reconstructed muons around the dip? \\
 In that case, Z tag-and-probe and control plots would not see them \\
 (because of the Z mass constraint) \\
-Here, we use the muon pT measurement from ID only (in W channel), plus drop MET/WMT.
+Here, we \red{use the muon pT measurement from ID only} (in W channel)
 }
-
-\only<20> {
+\slide{ $\mu^{-}$: using ID pT } {
 \colb[T]
-
 \column{.5\textwidth}
 C-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Wnometmtid_10_C_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lN_eta_ALL.pdf}
-
 \column{.5\textwidth}
 A-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Wnometmtid_10_A_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lN_eta_ALL.pdf} 
-
 \cole
 }
 
-
-\only<21>{
+\slide{ $\mu^{-}$: Z without inv. mass } {
 What if we have very poorly reconstructed muons around the dip? \\
 In that case, Z tag-and-probe and control plots would not see them \\
 (because of the Z mass constraint) \\
-Here, we completely drop the Z mass constraint
+Here, we \red{completely drop the Z mass constraint}
 }
-
-\only<22> {
+\slide{ $\mu^{-}$: Z without inv. mass } {
 \colb[T]
-
 \column{.5\textwidth}
 C-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_C_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Znowind_10_C_stack_lN_eta_ALL.pdf}
-
 \column{.5\textwidth}
 A-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_A_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Znowind_10_A_stack_lN_eta_ALL.pdf} 
-
 \cole
 }
 
 
-\only<23>{
+\slide{ $\mu^{-}$: W with extra muons } {
 What in the world could cause the dip in W selection? \\
 Let's try dropping various cuts in the W selection. \\
-Drop nmuons==1 cut (i.e. allow additional muons in an event).
+Drop \red{nmuons==1 cut} (i.e. allow additional muons in an event).
 }
-
-\only<24> {
+\slide{ $\mu^{-}$: W with extra muons } {
 \colb[T]
-
 \column{.5\textwidth}
 C-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Wnonmu_10_C_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lN_eta_ALL.pdf}
-
 \column{.5\textwidth}
 A-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Wnonmu_10_A_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lN_eta_ALL.pdf} 
-
 \cole
 }
 
-
-\only<25>{
+\slide{ $\mu^{-}$: W with extra muons } {
 What in the world could cause the dip in W selection? \\
 Let's try dropping various cuts in the W selection. \\
-Drop all cuts, except: one 15-GeV muon (MCP-quality)
+Drop \red{all cuts}, except: one 15-GeV muon (MCP-quality)
 }
-
-\only<26> {
+\slide{ $\mu^{-}$: W with extra muons } {
 \colb[T]
-
 \column{.5\textwidth}
 C-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Wnocuts_10_C_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lN_eta_ALL.pdf}
-
 \column{.5\textwidth}
 A-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Wnocuts_10_A_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lN_eta_ALL.pdf} 
-
 \cole
 }
 
-
-\only<27>{
+\slide{ $\mu^{-}$: sanity check of W ntuple } {
 OK, the dip is still seen. Is there a bug in my W ntuple? \\
 Let's use my W ntuple, but force nmuons==2. This should select mostly Z events. \\
 (in this test, no Z mass or opposite charges constraint is applied)
 }
-
-\only<28> {
+\slide{ $\mu^{-}$: sanity check of W ntuple } {
 \colb[T]
-
 \column{.5\textwidth}
 C-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Wzlike_10_C_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lN_eta_ALL.pdf}
-
 \column{.5\textwidth}
 A-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Wzlike_10_A_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lN_eta_ALL.pdf} 
-
 \cole
 }
 
+\slide{ $\mu^{-}$: fate of the dip in W vs $\phi$ } {
+Let's see what happens with the dip in W in four $\phi$ quadrants.
+}
+\slide{ $\mu^{-}$: $0 < \phi < PI/2$ } {
+\colb[T]
+\column{.5\textwidth}
+C-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WlQ1_10_C_stack_l_eta_NEG} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lN_eta_ALL.pdf}
+\column{.5\textwidth}
+A-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WlQ1_10_A_stack_l_eta_NEG} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lN_eta_ALL.pdf} 
+\cole
+} %%%
+\slide{ $\mu^{-}$: $PI/2 < \phi < PI$ } {
+\colb[T]
+\column{.5\textwidth}
+C-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WlQ2_10_C_stack_l_eta_NEG} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lN_eta_ALL.pdf}
+\column{.5\textwidth}
+A-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WlQ2_10_A_stack_l_eta_NEG} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lN_eta_ALL.pdf} 
+\cole
+} %%%
+\slide{ $\mu^{-}$: $-PI < \phi < -PI/2$ } {
+\colb[T]
+\column{.5\textwidth}
+C-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WlQ3_10_C_stack_l_eta_NEG} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lN_eta_ALL.pdf}
+\column{.5\textwidth}
+A-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WlQ3_10_A_stack_l_eta_NEG} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lN_eta_ALL.pdf} 
+\cole
+} %%%
+\slide{ $\mu^{-}$: $-PI/2 < \phi < 0$ } {
+\colb[T]
+\column{.5\textwidth}
+C-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WlQ4_10_C_stack_l_eta_NEG} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lN_eta_ALL.pdf}
+\column{.5\textwidth}
+A-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WlQ4_10_A_stack_l_eta_NEG} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lN_eta_ALL.pdf} 
+\cole
+}
+\slide{ $\mu^{-}$: fate of the dip in W vs $\phi$ } {
+Conclusion: the dip persists in all four quadrants.
+}
 
-\only<29>{
+\slide{ $\mu^{-}$: Z, tag not required to trigger } {
 In all Z plots, we require that the tag muon has to trigger, too. \\
 (but it's allowed to be anywhere) \\
 Let's drop the requirement that the tag muon triggered. \\
-We expect (and see) no changes in the Z plot...
-
+We expect (and see) no changes in the Z plot.
 }
-
-\only<30> {
+\slide{ $\mu^{-}$: Z, tag not required to trigger } {
 \colb[T]
-
 \column{.5\textwidth}
 C-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_C_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Ztprobe_10_C_stack_lN_eta_ALL.pdf}
-
 \column{.5\textwidth}
 A-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_A_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Ztprobe_10_A_stack_lN_eta_ALL.pdf} 
-
 \cole
 }
 
-
-\only<31>{
-In all Z plots, we require that the tag muon has to trigger, too. \\
-(but it's allowed to be anywhere) \\
-Let's drop the requirement that the tag muon triggered. \\
-Here, we also require that the Z probe muon (the one we're plotting) \\
+\slide{ $\mu^{-}$: narrow trigger match cone } {
+Here, we require that the Z probe muon (the one we're plotting) \\
 matches the trigger in a more narrow cone of 0.05 (vs standard 0.2)
-
 }
-
-\only<32> {
+\slide{ $\mu^{-}$: narrow trigger match cone } {
 \colb[T]
-
 \column{.5\textwidth}
 C-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_C_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Ztprobet_10_C_stack_lN_eta_ALL.pdf}
-
 \column{.5\textwidth}
 A-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_A_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Ztprobet_10_A_stack_lN_eta_ALL.pdf} 
-
 \cole
 }
 
+\begin{frame}[label=INTERESTING]
+Next, a few promising developments on understanding the A/C problem.
+\end{frame}
 
-\only<33>{
-Let's examine period dependence of the dip in W. \\
-Start with period(s) D-H.
+\slide{ Z: require tag muon to \red{fail} trigger } {
+To further check the trigger: \\
+Let's look at a sample of Z events where the other muon (tag) fails the trigger \\
+I.e., it fell into a crack or a badly instrumented region. \\
+(we expect this to happen with about ~20\% of muons). \\
+We are effectively forcing the probe muon to be the one that triggers the event. \\
+\small{ Note: W plots below are unchanged from nominal }
 }
 
-\only<34> {
+\slide{ Z bin 10 $\mu^{-}$: nominal (for reference) } {
 \colb[T]
+\column{.5\textwidth}
+C-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_C_stack_l_eta_NEG} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lN_eta_ALL.pdf}
+\column{.5\textwidth}
+A-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_A_stack_l_eta_NEG} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lN_eta_ALL.pdf} 
+\cole
+}
+\slide{ Z bin 10 $\mu^{-}$: require tag muon to \red{fail} trigger } {
+\colb[T]
+\column{.5\textwidth}
+C-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_C_stack_l_eta_NEG} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Ztinv_10_C_stack_lN_eta_ALL.pdf}
+\column{.5\textwidth}
+A-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_A_stack_l_eta_NEG} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Ztinv_10_A_stack_lN_eta_ALL.pdf} 
+\cole
+}
 
+\slide{ Z bin 10 $\mu^{+}$: nominal (for reference) } {
+\colb[T]
+\column{.5\textwidth}
+C-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_C_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lP_eta_ALL.pdf}
+\column{.5\textwidth}
+A-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_A_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lP_eta_ALL.pdf} 
+\cole
+}
+\slide{ Z bin 10 $\mu^{+}$: require tag muon to \red{fail} trigger } {
+\colb[T]
+\column{.5\textwidth}
+C-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_C_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Ztinv_10_C_stack_lP_eta_ALL.pdf}
+\column{.5\textwidth}
+A-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_A_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Ztinv_10_A_stack_lP_eta_ALL.pdf} 
+\cole
+}
+
+\slide{ Z bin 8 $\mu^{+}$: nominal (for reference) } {
+\colb[T]
+\column{.5\textwidth}
+C-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_8_C_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_8_C_stack_lP_eta_ALL.pdf}
+\column{.5\textwidth}
+A-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_8_A_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_8_A_stack_lP_eta_ALL.pdf} 
+\cole
+}
+\slide{ Z bin 8 $\mu^{+}$: require tag muon to \red{fail} trigger } {
+\colb[T]
+\column{.5\textwidth}
+C-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_8_C_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Ztinv_8_C_stack_lP_eta_ALL.pdf}
+\column{.5\textwidth}
+A-side $\mu^{-}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_8_A_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Ztinv_8_A_stack_lP_eta_ALL.pdf} 
+\cole
+}
+
+\slide{ Z: require tag muon to \red{fail} trigger } {
+Interpretation:
+\iteb
+\item If we require that both Z muons match trigger: \red{no dip}
+\item If we require that probe muon matches trigger (tag may or may not): \red{no dip}
+\item If we require that tag fails trigger (so probe must fire!), we \red{see W-like dip}
+\item This is especially true in second-to-last \eta\ bin (not so much in the 8th bin)
+\iteb
+\item Somehow, requiring the probe muon to match to an EF trigger for muons around the dip \red{at the ntuple level} does not actually imply that this muon triggered?
+\item Note: the dip in Z (when tag is forced to fail trigger) seems less pronounced than in W.
+\item Perhaps a cabling or trigger configuration problem?
+\itee
+\itee
+}
+
+% period, bin 10, -
+\slide{ $\mu^{-}$: bin 10 ($1.95<\eta<2.18$), period dependence } {
+Let's examine period dependence of the dip in W. \\
+\small{ note: Z plots are always full-2011 in plots below }
+}
+\slide{ $\mu^{-}$: bin 10 ($1.95<\eta<2.18$), all 2011 } {
+\colb[T]
+\column{.5\textwidth}
+C-side (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_C_stack_l_eta_NEG} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lN_eta_ALL.pdf}
+\column{.5\textwidth}
+A-side (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_A_stack_l_eta_NEG} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lN_eta_ALL.pdf} 
+\cole
+}
+\slide{ $\mu^{-}$: bin 10 ($1.95<\eta<2.18$), periods D-H } {
+\colb[T]
 \column{.5\textwidth}
 C-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WpDtoH_10_C_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lN_eta_ALL.pdf}
-
 \column{.5\textwidth}
 A-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WpDtoH_10_A_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lN_eta_ALL.pdf} 
-
 \cole
 }
-
-\only<35>{
-AHA! there is no dip. Let's see when it appears \\
-Let's examine period dependence of the dip in W. \\
-Period(s) I only.
-}
-
-\only<36> {
+\slide{ $\mu^{-}$: bin 10 ($1.95<\eta<2.18$), period I } {
 \colb[T]
-
 \column{.5\textwidth}
 C-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WpItoI_10_C_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lN_eta_ALL.pdf}
-
 \column{.5\textwidth}
 A-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WpItoI_10_A_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lN_eta_ALL.pdf} 
-
 \cole
 }
-
-
-\only<37>{
-AHA! the dip is already present \red{in period I}.
-Let's examine period dependence of the dip in W. \\
-Period(s) I-K.
-}
-
-\only<38> {
+\slide{ $\mu^{-}$: bin 10 ($1.95<\eta<2.18$), periods I-K } {
 \colb[T]
-
 \column{.5\textwidth}
 C-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WpItoK_10_C_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lN_eta_ALL.pdf}
-
 \column{.5\textwidth}
 A-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WpItoK_10_A_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lN_eta_ALL.pdf} 
-
 \cole
 }
-
-
-\only<39>{
-Let's examine period dependence of the dip in W. \\
-Period(s) L.
-}
-
-\only<40> {
+\slide{ $\mu^{-}$: bin 10 ($1.95<\eta<2.18$), period L } {
 \colb[T]
-
 \column{.5\textwidth}
 C-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WpLtoL_10_C_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lN_eta_ALL.pdf}
-
 \column{.5\textwidth}
 A-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WpLtoL_10_A_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lN_eta_ALL.pdf} 
-
 \cole
 }
-
-
-\only<41>{
-Let's examine period dependence of the dip in W. \\
-Period(s) M.
-}
-
-\only<42> {
+\slide{ $\mu^{-}$: bin 10 ($1.95<\eta<2.18$), period M} {
 \colb[T]
-
 \column{.5\textwidth}
 C-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WpMtoM_10_C_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lN_eta_ALL.pdf}
-
 \column{.5\textwidth}
 A-side $\mu^{-}$ (top: W; bottom: Z)
 \centering
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WpMtoM_10_A_stack_l_eta_NEG} \\
 \includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lN_eta_ALL.pdf} 
+\cole
+}
 
+% period, bin 10, +
+\slide{ $\mu^{+}$: bin 10 ($1.95<\eta<2.18$), period dependence } {
+Let's look at another bad bin: $\mu^{+}$ bin 10 ($1.95<\eta<2.18$)
+}
+\slide{ $\mu^{-}$: bin 10 ($1.95<\eta<2.18$), period dependence } {
+\colb[T]
+\column{.5\textwidth}
+\centering
+\small{ W (nominal), $\mu^{+}$}
+\includegraphics[width=1.0\textwidth]{dates/20130306/figures/wz/W_NOM_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_POS}
+\column{.5\textwidth}
+\centering
+\small{ W (nominal), $\mu^{+}$}
+\includegraphics[width=1.0\textwidth]{dates/20130306/figures/wz/W_NOM_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
+\cole
+}
+\slide{ $\mu^{+}$: bin 10 ($1.95<\eta<2.18$), all 2011 } {
+\colb[T]
+\column{.5\textwidth}
+C-side (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_C_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lP_eta_ALL.pdf}
+\column{.5\textwidth}
+A-side (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_10_A_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lP_eta_ALL.pdf} 
+\cole
+}
+\slide{ $\mu^{+}$: bin 10 ($1.95<\eta<2.18$), periods D-H } {
+\colb[T]
+\column{.5\textwidth}
+C-side $\mu^{+}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WpDtoH_10_C_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lP_eta_ALL.pdf}
+\column{.5\textwidth}
+A-side $\mu^{+}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WpDtoH_10_A_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lP_eta_ALL.pdf} 
+\cole
+}
+\slide{ $\mu^{+}$: bin 10 ($1.95<\eta<2.18$), period I } {
+\colb[T]
+\column{.5\textwidth}
+C-side $\mu^{+}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WpItoI_10_C_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_C_stack_lP_eta_ALL.pdf}
+\column{.5\textwidth}
+A-side $\mu^{+}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WpItoI_10_A_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_10_A_stack_lP_eta_ALL.pdf} 
 \cole
 }
 
 
-\only<43>{
- Conclusions: \\
+%% period, bin 8, +
+\slide{ $\mu^{+}$: bin 8 ($1.52<\eta<1.74$), period dependence } {
+Let's look at another bad bin: $\mu^{+}$ bin 8 ($1.52<\eta<1.74$)
+}
+\slide{ $\mu^{+}$: bin 8 ($1.52<\eta<1.74$), period dependence } {
+\colb[T]
+\column{.5\textwidth}
+\centering
+\small{ W (nominal), $\mu^{+}$}
+\includegraphics[width=1.0\textwidth]{dates/20130306/figures/wz/W_NOM_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_POS}
+\column{.5\textwidth}
+\centering
+\small{ W (nominal), $\mu^{+}$}
+\includegraphics[width=1.0\textwidth]{dates/20130306/figures/wz/W_NOM_Q0_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
+\cole
+}
+\slide{ $\mu^{+}$: bin 8 ($1.52<\eta<1.74$), all 2011 } {
+\colb[T]
+\column{.5\textwidth}
+C-side (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_8_C_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_8_C_stack_lP_eta_ALL.pdf}
+\column{.5\textwidth}
+A-side (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/W_8_A_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_8_A_stack_lP_eta_ALL.pdf} 
+\cole
+}
+\slide{ $\mu^{+}$: bin 8 ($1.52<\eta<1.74$), periods D-H } {
+\colb[T]
+\column{.5\textwidth}
+C-side $\mu^{+}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WpDtoH_8_C_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_8_C_stack_lP_eta_ALL.pdf}
+\column{.5\textwidth}
+A-side $\mu^{+}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WpDtoH_8_A_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_8_A_stack_lP_eta_ALL.pdf} 
+\cole
+}
+\slide{ $\mu^{+}$: bin 8 ($1.52<\eta<1.74$), period I } {
+\colb[T]
+\column{.5\textwidth}
+C-side $\mu^{+}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WpItoI_8_C_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_8_C_stack_lP_eta_ALL.pdf}
+\column{.5\textwidth}
+A-side $\mu^{+}$ (top: W; bottom: Z)
+\centering
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/WpItoI_8_A_stack_l_eta_POS} \\
+\includegraphics[width=0.66\textwidth]{dates/20130306/figures/etaphi/Z_8_A_stack_lP_eta_ALL.pdf} 
+\cole
+}
+
+
+\slide{ Conclusions } {
  \iteb
- \item Whenever we see A/C disagreements in a particular bin, we also see a funny $\eta$ dip
- \item See plots inside all other measurements $\eta$ bins are in the appendix
+ \item A/C disagreements in a particular bin are associated with a funny $\eta$ dip
+ \item (See plots inside all other measurements $\eta$ bins are in the appendix)
  \item Made attempts to introduce the dip in Z events, or remove in W events
  \iteb
  \item All kinematic and quality cuts have no effect
- \item Dip in W is absent before period I, but present thereafter
+ \item Dips in W are \red{absent before period I}, but present thereafter
  \iteb
  \item Doesn't quite align with shift from mu18MG to mu18MGmedium, which happened \red{in the end of period I}.
- \item I will test other triggers, such as the non-MG version of EFmu18.
+ \item However, it aligns with the \red{technical stop}, which happened between period H and I.
  \itee
  \item Dip disappears whenever there is a second tag muon (even if the probe is required to match trigger!)
  \iteb
- \item This makes me suspicious of trigger matching machinery? Maybe requiring a matching cone of 0.2 does not mean that the trigger actually fired in the DAQ?
+ \item However, the dip re-appears in Z events if the other muon (tag) is explicitly required to fail trigger.
  \itee
  \itee
  \itee
 }
-
-}
-
 
 
 %%%%%%% Back-up slides %%%%%%%%%%
@@ -776,7 +964,7 @@ A-side $\mu^{-}$ (top: W; bottom: Z)
 \slide{}
 {
 \centering
-\Huge Final unfolded cross-section numbers
+\Huge Final cross-sections
 }
 
 \slide{ Final numbers: A/C for $W^-$ }

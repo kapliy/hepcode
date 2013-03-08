@@ -45,4 +45,4 @@ for var in ('eta','phi'):
             sgn = '+' if q==0 else '-'
             qW = 'POS' if q==0 else 'NEG'
             qZ = 'P' if q==0 else 'N'
-            print x%(sgn,b,bmin,var,bmax,  b,var,qW,  b,qZ,var  ,  b,var,qW,  b,qZ,var)
+            print x%(sgn,b,bmin,'eta',bmax,  b,var,qW,  b,qZ,var  ,  b,var,qW,  b,qZ,var)
