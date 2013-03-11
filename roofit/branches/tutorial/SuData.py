@@ -732,6 +732,7 @@ class SuPlot:
         # W pT targets
         if True:
             add2('WptSherpa','WptSherpa','WptSherpa',xadd=qcdadd)
+            add2('WptPythia8','WptPythia8','WptPythia8',xadd=qcdadd) # new: as of 03/06/2013
             #add2('WptPythiaMC10','WptPythiaMC10','WptPythiaMC10',xadd=qcdadd)
             next('WPT_REWEIGHT')
         # PDF reweighting
@@ -767,6 +768,8 @@ class SuPlot:
         Possible upgrade: independent two-sided variations (non-symmetrized)
         if avg=True, it takes the mean up/down variation, as opposed to max
         """
+        # list of systematics that should NOT be averaged no matter what
+        NAVG = [ 'WPT_REWEIGHT' , 'PDF' ]
         if s.hsys and sysonly==True and not force: return s.hsys
         if s.htot and sysonly==False and not force: return s.htot
         stack_mode = False
@@ -782,6 +785,7 @@ class SuPlot:
         s.hsys = s.htot.Clone()
         [s.hsys.SetBinError(ii,0) for ii in xrange(0,s.hsys.GetNbinsX()+2)]
         i = len(s.sys[0])
+        iss = 1
         for hss in s.sys[1:]:
             bdiffs = [[] for z in xrange(0,s.hsys.GetNbinsX()+2)]
             for hs in hss: # loop over systematics in this group
@@ -796,8 +800,9 @@ class SuPlot:
                 for ibin in xrange(0,s.hsys.GetNbinsX()+2):
                     bdiffs[ibin].append ( abs(s.hsys.GetBinContent(ibin)-h.GetBinContent(ibin)) )
                 i+=1
+            davg = (avg==True) and not (s.groups[iss] in NAVG)
             for ibin in xrange(0,s.hsys.GetNbinsX()+2):
-                newerr = (  (bdiffs[ibin][0]+bdiffs[ibin][1])/2.0 if len(bdiffs[ibin])==2 and avg==True else max(bdiffs[ibin])  )   if len(bdiffs[ibin])>0 else 0
+                newerr = (  (bdiffs[ibin][0]+bdiffs[ibin][1])/2.0 if len(bdiffs[ibin])==2 and davg==True else max(bdiffs[ibin])  )   if len(bdiffs[ibin])>0 else 0
                 if False and ibin==4: #DEBUG
                     print i,'%.1f'%s.sys[0][0].stack.GetStack().Last().GetBinError(ibin),['%.1f'%zz for zz in bdiffs[ibin]],'%.1f'%newerr,'%.1f'%s.htot.GetBinError(ibin),'%.1f'%s.hsys.GetBinError(ibin)
                 # hsys
@@ -806,6 +811,7 @@ class SuPlot:
                 # htot
                 olderr = s.htot.GetBinError(ibin)
                 s.htot.SetBinError(ibin,1.0*math.sqrt(olderr*olderr + 1.0*newerr*newerr))
+            iss += 1
         if rebin!=1:
             s.hsys.Rebin(rebin)
             s.htot.Rebin(rebin)

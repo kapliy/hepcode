@@ -1,21 +1,14 @@
-Peter/Mel meeting:
-What some other unprescaled higher pt trigger? EF_mu20_MG?
-
-TODO MCP mtg:
+A/C stuff:
 Number of muon stations on muon track. 2-station muon.
-Plot diff of pt (MS - ID); apply diff cut
-
-
-Redo w MT fits and pT fits in inclusive region and add to appendix!
-Dump scale factors into the note
-Jan/Max: 
+DONE Plot diff of pt (MS - ID); apply diff cut
+DONE What some other unprescaled higher pt trigger? EF_mu20_MG?
 DONE:p.42 make plots of eta inside eta bin with njets requirement
      p.42 - drop MET requirement for Ws
      p.42 - cut at muon pt = 35 GeV
      Plot lepton pT inside the funny region.
      do other bins
 
-TODO: EWUnfoldingH:
+TODO (EWUnfoldingH):
 - Take care of statistical uncertainty stuff when adding/asymmetrizing.
   In particular, clone two copies of central histogram; set uncertainties (computed from diff-to-syst), make asymmetry/sum, adjust central for final error
 - Create Group-of-Groups?
@@ -29,6 +22,12 @@ TODO (MET FITS):
   fits before W m_T cut
   unscaled MC
   MC scaled to minimum-stats monte-carlo (wtaunu or ztautau)
+
+TODO (NOTE)
+* Redo w MT fits and pT fits in inclusive region and add to appendix!
+* Dump scale factors into the note
+* Document A/C asymmetry studies
+
 
 DONE: Send to Jan data/MC vs pt in each eta slice
 DONE: difference between the MET_Muonboy term and the actual muon pt for A and C

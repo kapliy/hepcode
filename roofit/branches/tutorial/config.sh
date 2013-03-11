@@ -55,9 +55,12 @@ DB=DB_02222013_ALL.v12
 input=/share/t3data3/antonk/ana/ana_v29I_02232013_paper_stacoCB_all/pt20  #added trigphi to ntuple. added trigall to ntuple (requires AND of trigger for all muons)
 DB=DB_02232013_ALL.v12
 
-# TODO: add powheg+pythia wpt target
-input=/share/t3data3/antonk/ana/ana_v29I_03012013_paper_stacoCB_all/pt20
-DB=DB_03012013_ALL.v13
+input=/share/t3data3/antonk/ana/ana_v29I_03012013_paper_stacoCB_all/pt20  #start using new nominal W/Z reweighting target (based on Z-to-data)
+DB=DB_03012013_ALL.v13   # excludes wpt pythia8 as systematic
+DB=DB_03012013_ALL.v14   # includes wpt pythia8 AND sherpa as systematics
+
+input=/share/t3data3/antonk/ana/ana_v29I_03062013_paper_stacoCB_all/pt20  #start using new nominal W/Z reweighting target (based on Z-to-data)
+DB=DB_03062013_ALL.v15   # no change - just extra triggers for ntuple
 
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`
