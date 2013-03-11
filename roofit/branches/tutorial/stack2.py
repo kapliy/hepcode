@@ -1128,6 +1128,7 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
     # pt reweighting target
     if True:
         add(qcdfit('WptSherpa',spL.clone(subdir_mc='WptSherpa')))
+        add(qcdfit('WptPythia8',spL.clone(subdir_mc='WptPythia8'))) # new: as of 03/06/2013
         next('p_{T}^{W} reweighting')
 
     # type of anti-isolation
