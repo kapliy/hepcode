@@ -1,6 +1,6 @@
 function dq2() {
     for user in kapliy; do
-	dq2-ls -L ROAMING user.$user.UCNTUP.*.v1_29i/ | grep -v MadGraph
+	dq2-ls -L ROAMING user.$user.UCNTUP.*.v1_i29i/ | grep -v MadGraph
     done
 }
 
