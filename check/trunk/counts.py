@@ -23,12 +23,18 @@ def get_total(line):
     for i in range(10):
         try:
             f=ROOT.TFile.Open(l);
-            break
         except:
+            print >>sys.stderr,'WARNING |%s| exception:'%sys.argv[1],l
+            f = None
+            time.sleep(2)
+            continue
+        if not f:
             print >>sys.stderr,'WARNING |%s| opening:'%sys.argv[1],l
             f = None
             time.sleep(2)
             continue
+        else:
+            break
     if not f:
         print >>sys.stderr,'ERROR |%s| opening:'%sys.argv[1],l
         return (0,0)
