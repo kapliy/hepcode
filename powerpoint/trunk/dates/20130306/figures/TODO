@@ -1,0 +1,3 @@
+wfix:
+- "cutting-out" of the bad bin (both overall A/C plots, and in-eta plots)
+- includes the effect of trigger matching in w events

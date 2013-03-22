@@ -11,6 +11,7 @@
 \usepackage{MnSymbol} 
 \usepackage{multirow}
 \usepackage[multidot]{grffile}
+\usepackage{grfext}
 \usepackage{verbatim}
 \usepackage{hyperref}
 \usepackage[absolute,overlay]{textpos}
@@ -78,6 +79,16 @@
 }
 % e.g. \mybox{3}{18}{Pythia}
 
+\AtBeginDocument{%
+  \PrependGraphicsExtensions*{
+    .mps,.MPS,.pdf,.PDF,.eps,.EPS,.ps,.PS,
+    .png,.PNG,.jpg,.jpeg,.JPG,.JPEG,
+    .funny,.foobar
+  }%
+  \PrintGraphicsExtensions % see .log file
+}
+
+
 \AtBeginSection[]
 {
   \begin{frame}
@@ -114,8 +125,8 @@
 %  Title page
 %===========================================
 
-%\title[]{$\Wboson \rightarrow \mu\nu$}
-\title[]{$\Wboson \rightarrow \mu\nu$: debugging A/C differences}
+\title[]{$\Wboson \rightarrow \mu\nu$}
+%\title[]{$\Wboson \rightarrow \mu\nu$: debugging A/C differences}
 \author {A.~Kapliy\inst{1} }
 \institute {
 \inst{1} University of Chicago 
@@ -132,9 +143,11 @@
 }
 
 
-%\input{dates/20130305/data}
+%\input{dates/20130306/data2}
+\input{dates/20130306/asym}
+
 %\input{dates/20130306/short}
-\input{dates/current/data}
+%\input{dates/current/data}
 
 \setcounter{framenumber}{\value{finalframe}}
 \end{document}
