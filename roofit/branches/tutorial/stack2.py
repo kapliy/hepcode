@@ -1138,7 +1138,7 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
         next('Type of anti-isolation')
 
     # PDF
-    if True:
+    if False: # changed: 03/17/2013
         for x in ['PdfMSTW','PdfHERA','PdfNNPDF','PdfABM']:
             add(qcdfit(x,spL.clone(subdir_mc=x)))
         next('PDF')
@@ -1786,6 +1786,8 @@ if mode in ('acside','acside_nt'):
     if xaxis_info and xaxis_range:
         xaxis_info.append( xaxis_range )
     height = [0.8,1.3]
+    if opts.extra!=None and len(opts.extra.split(','))==2:
+        height = [ float(opts.extra.split(',')[0]) , float(opts.extra.split(',')[1]) ]
     hs = [hdata,hbgsub,hsig]
     [hh.eta_to_AC() for hh in hs]
     M = PlotOptions()

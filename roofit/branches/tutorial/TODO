@@ -1,3 +1,13 @@
+Bootstrapping per Sasha's advice?
+Data reweighting of the distribution we unfold
+
+A/C from Max & co.:
+- DONE W with/without trigger matching
+- DONE Different pileup conditions (vs just periods)
+- event numbers where tag fails and probe in problematic region
+- DONE delta-R to trigger for W and Z (including when tag is matched or not)
+- DONE W selection, using muid trigger - via LOOPER perhaps???
+- Me: think about charge mis-identification in bad eta bin?
 A/C stuff:
 Number of muon stations on muon track. 2-station muon.
 DONE Plot diff of pt (MS - ID); apply diff cut
@@ -18,7 +28,8 @@ TODO (EWUnfoldingH):
 TODO (MET FITS):
   FIRST, find out what's up with chi2. Why DEBUG result looks different from QCD_3D.sh stuff ???
   fits with Alpgen
-  fits for avgmu groups, and then add up. OR: fit subperiods and then add up.
+  IMPORTANT: fits for avgmu groups, and then add up. OR: fit subperiods and then add up.
+             Adrian saw that MET and W_MT fits agree after doing the per-period breakup
   fits before W m_T cut
   unscaled MC
   MC scaled to minimum-stats monte-carlo (wtaunu or ztautau)
@@ -27,7 +38,6 @@ TODO (NOTE)
 * Redo w MT fits and pT fits in inclusive region and add to appendix!
 * Dump scale factors into the note
 * Document A/C asymmetry studies
-
 
 DONE: Send to Jan data/MC vs pt in each eta slice
 DONE: difference between the MET_Muonboy term and the actual muon pt for A and C
@@ -85,19 +95,19 @@ DONE: slimmed ntuples fully work now. But sometimes they run super slowly, not s
 QCD FITS:
 LONG overdue: really need to understand difference in bgqcd=3 and bgqcd=4. Plot normalized templates on top of each other!
 
-BAD BIN: switch to ntuple-based studies with un-normalized bb/cc MC
-     Look at muons in Z events (use QCD heavy flavor MC) - plot eta
-     plot met without cutting met/wmt
-     plot  pt without cutting pt
-     plot wmt without cutting others
-     correlate met-muonboy with met-reffinal [see if met-muonboy at 40 has lots of met at reffinal 25]
-     try adding njet cuts
-     Try it with a somewhat higher pt cut
-     plot met_MuonBoy [raw - corrected]
+DONE: BAD BIN: switch to ntuple-based studies with un-normalized bb/cc MC
+     DONE Look at muons in Z events (use QCD heavy flavor MC) - plot eta
+     DONE plot met without cutting met/wmt
+     DONE plot  pt without cutting pt
+     DONE plot wmt without cutting others
+     DONE correlate met-muonboy with met-reffinal [see if met-muonboy at 40 has lots of met at reffinal 25]
+     DONE try adding njet cuts
+     DONE Try it with a somewhat higher pt cut
+     DONE plot met_MuonBoy [raw - corrected]
      try to use just calo + one selected muon
 Peter: Endcap EE (EEL/EES?) disk chambers went on C side, but not on A side. For production/cost reasons.
 Putting them in bit by bit over time. First installed on C side.
-Trigger chambers? Or reco chambers?
+YES - Trigger chambers
 
 OCT29:
 * Try muon systematics WITHOUT met propagation (have to do that at ntuple level). Shouldn't be a big effect!
