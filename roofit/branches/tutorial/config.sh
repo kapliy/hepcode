@@ -46,21 +46,29 @@ DB=DB_01252013_ALL.v9
 #DB=DB_01292013_ALL.higgsmcp.v10
 #input=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_anyfit_stacoCB_all/pt20 # rerun (met debugging added)
 #DB=DB_01292013_ALL.rerun.v10
-input=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_anyfit_L_stacoCB_all/pt20 # fixed missing statistics in periodL
-DB=DB_01292013_ALL.rerun.v11
 
-input=/share/t3data3/antonk/ana/ana_v29I_02222013_paper_stacoCB_all/pt20  # should be the same. removed anyfit, updated egammaUtils, added pythia11-data rw systematic target. adding new items to ntuple to debug A/C differences. added avgmu to ntuple
-DB=DB_02222013_ALL.v12
-
-input=/share/t3data3/antonk/ana/ana_v29I_02232013_paper_stacoCB_all/pt20  #added trigphi to ntuple. added trigall to ntuple (requires AND of trigger for all muons)
-DB=DB_02232013_ALL.v12
+# input=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_anyfit_L_stacoCB_all/pt20 # fixed missing statistics in periodL
+# DB=DB_01292013_ALL.rerun.v11
+# input=/share/t3data3/antonk/ana/ana_v29I_02222013_paper_stacoCB_all/pt20  # should be the same. removed anyfit, updated egammaUtils, added pythia11-data rw systematic target. adding new items to ntuple to debug A/C differences. added avgmu to ntuple
+# DB=DB_02222013_ALL.v12
+# input=/share/t3data3/antonk/ana/ana_v29I_02232013_paper_stacoCB_all/pt20  #added trigphi to ntuple. added trigall to ntuple (requires AND of trigger for all muons)
+# DB=DB_02232013_ALL.v12
 
 input=/share/t3data3/antonk/ana/ana_v29I_03012013_paper_stacoCB_all/pt20  #start using new nominal W/Z reweighting target (based on Z-to-data)
 DB=DB_03012013_ALL.v13   # excludes wpt pythia8 as systematic
 DB=DB_03012013_ALL.v14   # includes wpt pythia8 AND sherpa as systematics
 
-input=/share/t3data3/antonk/ana/ana_v29I_03062013_paper_stacoCB_all/pt20  #start using new nominal W/Z reweighting target (based on Z-to-data)
+input=/share/t3data3/antonk/ana/ana_v29I_03062013_paper_stacoCB_all/pt20
 DB=DB_03062013_ALL.v15   # no change - just extra triggers for ntuple
+
+input=/share/t3data3/antonk/ana/ana_v29J_03062013_paper_stacoCB_all/pt20
+DB=DB_03062013_ALL.v16   # trigger matching fixed; v29J ntuples
+
+# fixed bad bin
+input=/share/t3data3/antonk/ana/ana_v29J_03172013_paper_stacoCB_all/pt20
+DB=DB_03172013_ALL.v17   # trigger matching fixed; fixed bad bin
+#input=/share/t3data3/antonk/ana/ana_v29J_03172013_paper_mu18_stacoCB_all/pt20
+#DB=DB_03172013_ALL.v18   # use mu18 (non-MG) triggers - only useful for W plots
 
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`

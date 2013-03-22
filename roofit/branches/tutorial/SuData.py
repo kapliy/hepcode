@@ -736,7 +736,7 @@ class SuPlot:
             #add2('WptPythiaMC10','WptPythiaMC10','WptPythiaMC10',xadd=qcdadd)
             next('WPT_REWEIGHT')
         # PDF reweighting
-        if True:
+        if False: # new: as of 03/17/2013
             #add2('PdfCT10nlo','PdfCT10nlo',xadd=qcdadd)
             add2('PdfMSTW','PdfMSTW','PdfMSTW',xadd=qcdadd)
             add2('PdfHERA','PdfHERA','PdfHERA',xadd=qcdadd)
