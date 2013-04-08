@@ -1,0 +1,7 @@
+down filenameA
+down dg
+down comparison_with_truth
+down FTK_wrt_TRUTH
+plot eff_vs_eta! allfiles
+save comparison_eff_vs_eta.png
+quit y
