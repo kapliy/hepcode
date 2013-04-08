@@ -1,0 +1,1 @@
+ana/ana_wasym --noROOT --release 17 -s wasymmetry29I_mc_powheg_pythia_wminmunu.dat -n10200  --save-ntuples 7 --apply-pileup --muon-offset 1 --muon-scale 999 --muon-type 0 --muon-trig 18 --data-range DtoM --pt 20 --noSys
