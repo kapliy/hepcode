@@ -1,0 +1,16 @@
+atlasoff/PhysicsAnalysis/D3PDTools/RootCore/trunk
+atlasgrp/CombPerf/FlavorTag/JetTagAlgorithms/tags
+atlasgrp/CombPerf/JetETMiss/JetCalibrationTools/ApplyJetCalibration/tags
+atlasgrp/CombPerf/JetETMiss/JetCalibrationTools/ApplyJetResolutionSmearing/tags
+atlasoff/DataQuality/GoodRunsLists/tags
+atlasoff/PhysicsAnalysis/AnalysisCommon/PileupReweighting/tags
+atlasoff/PhysicsAnalysis/AnalysisCommon/ReweightUtils/tags
+atlasoff/PhysicsAnalysis/JetTagging/JetTagPerformanceCalibration/CalibrationDataInterface/tags
+atlasoff/PhysicsAnalysis/MuonID/MuonIDAnalysis/MuonEfficiencyCorrections/tags
+atlasoff/PhysicsAnalysis/MuonID/MuonIDAnalysis/MuonMomentumCorrections/tags
+atlasoff/Trigger/TrigAnalysis/TrigMuonEfficiency/tags
+atlasoff/Reconstruction/Jet/JetResolution/tags
+atlasoff/Reconstruction/Jet/JetUncertainties/tags
+atlasoff/Reconstruction/MissingETUtility/tags
+atlasoff/Reconstruction/egamma/egammaAnalysis/egammaAnalysisUtils/tags
+svn+ssh://svn.cern.ch/reps/penn/schae/MuonIsolationCorrection/tags

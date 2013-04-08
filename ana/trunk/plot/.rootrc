@@ -1,0 +1,9 @@
+Plugin.TVirtualPadEditor: ^Ged TQtGedEditor    QtGed          "TQtGedEditor(TCanvas*)"
+Plugin.TPaletteEditor:      *  TQtPaletteEditor  QtImage  "TQtPaletteEditor(TAttImage*,UInt_t,UInt_t)"
+# Plugin.TImage:              *  TQtImage          QtImage  "TQtImage()"
+# GUI specific settings
+Gui.Style:                  windows
+Gui.Backend:                qt
+#Gui.Factory:                qtgui
+Gui.Factory:                qt
+Plugin.TGuiFactory: ^qtgui   TQtGUIFactory  QtRootGui       "TQtGUIFactory()"

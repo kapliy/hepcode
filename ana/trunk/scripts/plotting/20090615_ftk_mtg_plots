@@ -1,0 +1,222 @@
+down
+down dg
+# track parameters differences between versions
+down comparison_with_other_alg 
+down ftk_new_vs_old
+down matching_tracks
+down FTK_NEW_wrt_FTK_OLD
+# curv
+plot dcurv!
+show logy
+save trigftklibsim_comparison_pardiff_dcurv.png
+# phi
+plot dphi_narrow!
+show logy
+save trigftklibsim_comparison_pardiff_dphi.png
+# d0
+plot dd0!
+show logy
+save trigftklibsim_comparison_pardiff_dd0.png
+# z0
+plot dz0!
+show logy
+save trigftklibsim_comparison_pardiff_dz0.png
+# eta
+plot deta!
+show logy
+save trigftklibsim_comparison_pardiff_deta.png
+home
+down
+down dg
+# track parameter resolutions wrt truth
+down comparison_with_truth
+# curv
+down FTK_NEW_wrt_TRUTH
+plot dcurv! noshow
+up
+down FTK_OLD_wrt_TRUTH
+plot dcurv! overlay
+up
+save trigftklibsim_comparison_res_truth_dcurv.png
+# d0
+down FTK_NEW_wrt_TRUTH
+plot dd0! noshow
+up
+down FTK_OLD_wrt_TRUTH
+plot dd0! overlay
+up
+save trigftklibsim_comparison_res_truth_dd0.png
+# z0
+down FTK_NEW_wrt_TRUTH
+plot dz0! noshow
+up
+down FTK_OLD_wrt_TRUTH
+plot dz0! overlay
+up
+save trigftklibsim_comparison_res_truth_dz0.png
+# phi
+down FTK_NEW_wrt_TRUTH
+plot dphi_narrow! noshow
+up
+down FTK_OLD_wrt_TRUTH
+plot dphi_narrow! overlay
+up
+save trigftklibsim_comparison_res_truth_dphi.png
+# eta
+down FTK_NEW_wrt_TRUTH
+plot deta! noshow
+up
+down FTK_OLD_wrt_TRUTH
+plot deta! overlay
+up
+save trigftklibsim_comparison_res_truth_deta.png
+up
+# track parameter comparison for duplicates
+down comparison_with_truth
+# dcurv
+down FTK_NEW_duplicates
+plot dcurv! noshow
+up
+down FTK_OLD_duplicates
+plot dcurv! overlay
+up
+save trigftklibsim_comparison_dup_comp_dcurv.png
+# dphi
+down FTK_NEW_duplicates
+plot dphi_narrow! noshow
+up
+down FTK_OLD_duplicates
+plot dphi_narrow! overlay
+up
+save trigftklibsim_comparison_dup_comp_dphi.png
+# dd0
+down FTK_NEW_duplicates
+plot dd0! noshow
+up
+down FTK_OLD_duplicates
+plot dd0! overlay
+up
+save trigftklibsim_comparison_dup_comp_dd0.png
+# dz0
+down FTK_NEW_duplicates
+plot dz0! noshow
+up
+down FTK_OLD_duplicates
+plot dz0! overlay
+up
+save trigftklibsim_comparison_dup_comp_dz0.png
+# deta
+down FTK_NEW_duplicates
+plot deta! noshow
+up
+down FTK_OLD_duplicates
+plot deta! overlay
+up
+save trigftklibsim_comparison_dup_comp_deta.png
+up
+# duplicate rate
+down comparison_with_truth
+down duplicates
+# vs phi
+down FTK_NEW_wrt_TRUTH
+plot eff_vs_phi noshow
+yrange (0,0.25)
+up
+down FTK_OLD_wrt_TRUTH
+plot eff_vs_phi overlay
+up
+save trigftklibsim_comparison_duplicate_vs_phi.png
+# vs d0
+down FTK_NEW_wrt_TRUTH
+plot eff_vs_d0 noshow
+yrange (0,0.25)
+up
+down FTK_OLD_wrt_TRUTH
+plot eff_vs_d0 overlay
+up
+save trigftklibsim_comparison_duplicate_vs_d0.png
+# vs z0
+down FTK_NEW_wrt_TRUTH
+plot eff_vs_z0 noshow
+yrange (0,0.25)
+up
+down FTK_OLD_wrt_TRUTH
+plot eff_vs_z0 overlay
+up
+save trigftklibsim_comparison_duplicate_vs_z0.png
+# vs pt
+down FTK_NEW_wrt_TRUTH
+plot eff_vs_pt noshow
+yrange (0,0.25)
+up
+down FTK_OLD_wrt_TRUTH
+plot eff_vs_pt overlay
+up
+save trigftklibsim_comparison_duplicate_vs_pt.png
+# vs eta
+down FTK_NEW_wrt_TRUTH
+plot eff_vs_eta noshow
+yrange (0,0.25)
+up
+down FTK_OLD_wrt_TRUTH
+plot eff_vs_eta overlay
+up
+save trigftklibsim_comparison_duplicate_vs_eta.png
+up
+up
+# relative efficiency
+down comparison_with_other_alg
+down ftk_new_vs_old
+down FTK_NEW_wrt_FTK
+plot eff_vs_eta
+save trigftklibsim_comparison_releff_vs_eta.png
+up
+up
+up
+# absolute efficiency
+down comparison_with_truth
+# vs pt
+down FTK_NEW_wrt_TRUTH
+plot eff_vs_pt! noshow
+up
+down FTK_OLD_wrt_TRUTH
+plot eff_vs_pt! overlay
+up
+save trigftklibsim_comparison_eff_vs_pt.png
+# vs phi
+down FTK_NEW_wrt_TRUTH
+plot eff_vs_phi! noshow
+up
+down FTK_OLD_wrt_TRUTH
+plot eff_vs_phi! overlay
+up
+save trigftklibsim_comparison_eff_vs_phi.png
+# vs d0
+down FTK_NEW_wrt_TRUTH
+plot eff_vs_d0! noshow
+up
+down FTK_OLD_wrt_TRUTH
+plot eff_vs_d0! overlay
+up
+save trigftklibsim_comparison_eff_vs_d0.png
+# vs z0
+down FTK_NEW_wrt_TRUTH
+plot eff_vs_z0! noshow
+up
+down FTK_OLD_wrt_TRUTH
+plot eff_vs_z0! overlay
+up
+save trigftklibsim_comparison_eff_vs_z0.png
+# vs eta
+down FTK_NEW_wrt_TRUTH
+plot eff_vs_eta! noshow
+up
+down FTK_OLD_wrt_TRUTH
+plot eff_vs_eta! overlay
+up
+save trigftklibsim_comparison_eff_vs_eta.png
+up
+up
+up
+# issue the clearqueue command to stop batch script execution.
+clearqueue
