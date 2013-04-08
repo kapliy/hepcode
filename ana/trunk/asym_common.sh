@@ -2,14 +2,18 @@
 
 release=17
 PT=20
-#submitter="./submit_wasym.py"
+
 submitter="./condor_wasym.py"
+if [ "${MODE}" == "pbs" ]; then
+    submitter="./submit_wasym.py"
+fi
 
 ntuple=29I
 
 lbl=04012013       # condor
 
-#lbl=04032013_nomg  # trying Carl's first version of non-MG trigger SFs
+lbl=04032013_nomg  # trying Carl's first version of non-MG trigger SFs
+lbl=04032013_nomg_1000toys  # re-running with 1000 toy MCs
 
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
 
@@ -17,13 +21,13 @@ muname[0]="stacoCB"
 muname[1]="stacoLoose"
 muname[100]="muidCB"
 
-coredir=/home/antonk/ana
-coredir=/share/ftkdata1/antonk
 coredir=/share/t3data3/antonk/ana
 
 echo "Setting up X509 proxy"
 export X509_USER_PROXY=/home/antonk/.globus/tmp.proxy
-#(source /share/wlcg-client/setup.sh && voms-proxy-init -pwstdin -voms atlas -valid 999:0 -out ${X509_USER_PROXY} < /home/antonk/setup/info 2>&1)
+if [ "${MODE}" == "pbs" ]; then
+    (source /share/wlcg-client/setup.sh && voms-proxy-init -pwstdin -voms atlas -valid 999:0 -out ${X509_USER_PROXY} < /home/antonk/setup/info 2>&1)
+fi
 echo "Ready to submit jobs"
 
 function compute_nevts() {
