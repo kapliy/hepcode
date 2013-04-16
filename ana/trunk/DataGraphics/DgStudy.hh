@@ -280,11 +280,11 @@ DataGraphics
       _end_block_selected( selected );
       // study n objects
       if( _study_n_objects ) {
-        dg::fillh( "number_of" , 100 , 0 , 100 , nobj );
+        dg::fillh( "number_of" , 100 , 0 , 100 , nobj , "n" );
         unsigned int icat = 0u;
         BOOST_FOREACH( const CategoryPairUnary& catpair , _category_visitor_interfaces ) {
           dg::down( catpair.first , "category study" );
-          dg::fillh( "number_of" , 100 , 0 , 100 , nobj_cat[icat] );
+          dg::fillh( "number_of" , 100 , 0 , 100 , nobj_cat[icat] , "n" );
           dg::up();
           ++icat;
         }
@@ -329,11 +329,11 @@ DataGraphics
       _end_block_selected( selected );
       // study n objects
       if( _study_n_objects ) {
-        dg::fillh( "number_of" , 100 , 0 , 100 , nobj );
+        dg::fillh( "number_of" , 100 , 0 , 100 , nobj , "n" );
         unsigned int icat = 0u;
         BOOST_FOREACH( const CategoryPairUnary& catpair , _category_visitor_interfaces ) {
           dg::down( catpair.first , "category study" );
-          dg::fillh( "number_of" , 100 , 0 , 100 , nobj_cat[icat] );
+          dg::fillh( "number_of" , 100 , 0 , 100 , nobj_cat[icat] , "n" );
           dg::up();
           ++icat;
         }

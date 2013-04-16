@@ -1,1 +1,1 @@
-ana/ana_wasym --noROOT --release 17 -s wasymmetry29I_data_periodD.dat -n20000 --save-ntuples 7 --apply-pileup --muon-offset 1 --muon-type 1 --muon-trig 18 --data-range DtoM --pt 20
+ana/ana_wasym --noROOT --release 17 -s wasymmetry29I_data_periodD.dat -n20000 --save-ntuples 7 --apply-pileup --muon-type 0 --data-range DtoM --pt 20

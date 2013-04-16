@@ -25,7 +25,6 @@
 #include "TrigFTKAna/AnaMET.hpp"
 #include "TrigFTKAna/AnaTrigger.hpp"
 #include "TrigFTKAna/AnaVertex.hpp"
-#include "TrigFTKAna/AnaTruthTable.hpp"
 #include "TrigFTKAna/Trees/D3PDPeterTreeBase.h"
 
 class TBranch;
@@ -70,7 +69,7 @@ private:
   float _mcevt_pdf2;   // pdf probability for second incoming parton
 
   boost::scoped_ptr<TFile> _file;
-  typedef enum { V29, V29g, V29i, V29l, V30, V50, RESERVED=100 } Version;
+  typedef enum { V29, V29g, V29i, V29l, RESERVED=100 } Version;
   Version _madeclass_version;
   boost::scoped_ptr<D3PDPeterTreeBase> _madeclass;
 
@@ -82,7 +81,6 @@ private:
   std::vector< boost::shared_ptr<const AnaTrack> > _offline_tracks;
   std::vector< boost::shared_ptr<const AnaMET> > _met;
   boost::shared_ptr<AnaTrigger> _trigger;
-  boost::shared_ptr<AnaTruthTable> _truth_table;
   std::vector< boost::shared_ptr<const AnaVertex> > _vertices;
 
 private:
@@ -91,8 +89,6 @@ private:
   const bool _get_event_V29g();
   const bool _get_event_V29i();
   const bool _get_event_V29l();
-  const bool _get_event_V30();
-  const bool _get_event_V50();
 
   template<typename ntT> void _make_associated_track_for_electron( boost::shared_ptr<AnaElectron>& mu , ntT nt , const unsigned int& i );
   template<typename ntT> void _make_associated_track_for_muon( boost::shared_ptr<AnaMuon>& mu , ntT nt , const unsigned int& i );
@@ -136,7 +132,6 @@ public:
     , _offline_tracks()
     , _met()
     , _trigger()
-    , _truth_table()
     , _vertices()
     , NtD3PDphys(NtD3PDphys::PETER)
   {}
@@ -187,7 +182,6 @@ public:
   virtual const std::vector< boost::shared_ptr<const AnaVertex> >& vertices() const { return _vertices; }
   virtual const std::vector< boost::shared_ptr<const AnaMET> >& missing_et() const { return _met; }
   virtual const boost::shared_ptr<const AnaTrigger> trigger() const { return boost::const_pointer_cast<const AnaTrigger>(_trigger); }
-  virtual const boost::shared_ptr<const AnaTruthTable> truth_table() const { return boost::const_pointer_cast<const AnaTruthTable>(_truth_table); }
 
 protected:
 
@@ -222,7 +216,6 @@ protected:
     _vertices.clear();
     _met.clear();
     _trigger.reset();
-    _truth_table.reset();
     assert( _truth_particles.empty() );
     assert( _electrons.empty() );
     assert( _photons.empty() );

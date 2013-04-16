@@ -2,6 +2,7 @@
 
 release=17
 PT=20
+NREPLICASF=1000  # nreplicas for wmunu MC
 
 submitter="./condor_wasym.py"
 if [ "${MODE}" == "pbs" ]; then
@@ -10,10 +11,10 @@ fi
 
 ntuple=29I
 
-lbl=04012013       # condor
-
 lbl=04032013_nomg  # trying Carl's first version of non-MG trigger SFs
 lbl=04032013_nomg_1000toys  # re-running with 1000 toy MCs
+
+lbl=04012013_CONDOR       # condor
 
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
 
@@ -23,11 +24,9 @@ muname[100]="muidCB"
 
 coredir=/share/t3data3/antonk/ana
 
-echo "Setting up X509 proxy"
 export X509_USER_PROXY=/home/antonk/.globus/tmp.proxy
-if [ "${MODE}" == "pbs" ]; then
-    (source /share/wlcg-client/setup.sh && voms-proxy-init -pwstdin -voms atlas -valid 999:0 -out ${X509_USER_PROXY} < /home/antonk/setup/info 2>&1)
-fi
+echo "Setting up X509 proxy"
+(source /share/wlcg-client/setup.sh && voms-proxy-init -pwstdin -voms atlas -valid 999:0 -out ${X509_USER_PROXY} < /home/antonk/setup/info 2>&1)
 echo "Ready to submit jobs"
 
 function compute_nevts() {
@@ -45,16 +44,12 @@ function compute_nevts() {
     if [ $n -lt 500 ]; then echo 30; return; fi;
     echo 35
 }
-
-function compute_nevts_L() {
-    n=$1
-    sam=$2
-    if [ $n -lt 5 ]; then echo 1; return; fi;
-    if [ $n -lt 10 ]; then echo 5; return; fi;
-    if [ $n -lt 20 ]; then echo 7; return; fi;
-    if [ $n -lt 50 ]; then echo 15; return; fi;
-    if [ $n -lt 100 ]; then echo 30; return; fi;
-    echo 40
+function compute_replicas() {
+    sam=$1
+    echo $sam | egrep -q -e 'mc_powheg_pythia_wminmunu|mc_powheg_pythia_wplusmunu' && { echo ${NREPLICASF}; return; }
+    echo $sam | egrep -q -e 'mc_powheg_herwig_wminmunu|mc_powheg_herwig_wplusmunu' && { echo ${NREPLICASF}; return; }
+    echo $sam | egrep -q -e 'mc_mcnlo_wminmunu|mc_mcnlo_wplusmunu' && { echo ${NREPLICASF}; return; }
+    echo 1
 }
 
 function submit_sample() {
@@ -63,11 +58,10 @@ function submit_sample() {
     tag=`echo $sample | sed -e "s#wasymmetry${ntuple}_##g" -e 's#.dat##g'`
     ntot=`cat ${sample_path} | grep -c DPETER`
     nsubs=`compute_nevts $ntot $sample`
-    echo $sample $ntot $nsubs
-    pdf_reweight=""
-    echo $tag | grep -q lha && pdf_reweight="--pdf-reweight ${tag: -1}"
+    replicas=`compute_replicas $sample`
+    echo $sample $ntot $nsubs $replicas
     if [ "$nsubs" -gt "0" ]; then
-	${submitter} -o ${out} -s ${sample_path} -t ${tag} --options "${xtra} ${pdf_reweight} --pt ${PT}" -n ${nsubs}
+	${submitter} -o ${out} -s ${sample_path} -t ${tag} --options "${xtra} --pt ${PT} --replicas ${replicas}" -n ${nsubs}
     fi;
     sleep 0.1
 }

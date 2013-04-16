@@ -2,7 +2,8 @@
 
 source asym_common.sh
 
-rm -r /share/t3data3/antonk/ana/ana_v29I_04012013_stacoCB_all/pt20/mc_mcnlo_wt
+rm -rf /atlas/uct3/data/users/antonk/ana/ana_v29I_04012013_CONDOR_stacoCB_all/
+rm -rf /share/t3data3/antonk/ana/ana_v29I_04012013_CONDOR_stacoCB_all/
 
 i=$1
 if [ "$#" -eq "1" ]; then
@@ -29,6 +30,8 @@ echo "Submitting data and MC11C ..."
 ###submit_all
 
 submit_sample wasymmetry29I_mc_mcnlo_wt.dat
+submit_sample wasymmetry29I_data_periodM.dat
+submit_sample wasymmetry29I_mc_powheg_pythia_wminmunu.dat
 
 PT=25
 out=${coredir}/ana_v${ntuple}_${lbl}_${muname[$i]}_all/pt${PT}

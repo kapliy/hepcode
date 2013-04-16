@@ -31,13 +31,6 @@
 #include "TrigFTKAna/IgnoreFileCache.hpp"
 #include "TrigFTKAna/AnaEventNtuple.hpp"
 
-class NtWrapper;
-class NtTrigFTKLib;
-class NtRoad;
-class NtFitter;
-class NtCBNT;
-class NtJetTag;
-class NtPGS;
 class NtD3PDphys;
 
 class
@@ -91,18 +84,7 @@ private:
     SampleNumericFlags sample_numeric_flags;
     SampleStrings sample_strings;
     SampleTags sample_tags;
-    std::map< std::string , std::vector<std::string> > wrapper_filenames;
-    std::map< std::string , std::vector<std::string> > trigftklib_filenames;
-    std::map< std::string , std::vector<std::string> > road_filenames;
-    std::map< std::string , std::vector<unsigned int> > road_banks;
-    std::map< std::string , std::vector<std::string> > fitter_filenames;
-    std::map< std::string , std::vector<int> > fitter_banks;
-    std::map< std::string , std::vector<std::string> > cbntv13_filenames;
-    std::map< std::string , std::vector<std::string> > cbntv14_filenames;
-    std::map< std::string , std::vector<std::string> > jettagnt_filenames;
     std::map< std::string , std::vector<std::string> > d3pdnt_filenames;
-    std::map< std::string , std::vector<std::string> > pgs_filenames;
-    std::string aen_filename;
     DatasetDefinition() 
       : sample_type("")
       , nevents(0)
@@ -110,18 +92,7 @@ private:
       , sample_numeric_flags()
       , sample_strings()
       , sample_tags()
-      , wrapper_filenames()
-      , trigftklib_filenames()
-      , road_filenames()
-      , road_banks()
-      , fitter_filenames()
-      , fitter_banks()
-      , cbntv13_filenames()
-      , cbntv14_filenames()
-      , jettagnt_filenames()
       , d3pdnt_filenames()
-      , pgs_filenames()
-      , aen_filename()
     {}
     struct accNumEventsV { const unsigned long operator()( const unsigned long& a , const DatasetDefinition& b ) { return( a + b.nevents ); } };
     struct zeroEventsV { const bool operator()( const DatasetDefinition& b ) { return( b.nevents==0 ); } };
@@ -143,13 +114,6 @@ private:
   static unsigned long _n_events_processed;
   static std::map<std::string,double> _reweighted_event_counts;
 
-  std::map< std::string , std::vector< boost::shared_ptr<NtWrapper> > > _nt_wrappers;
-  std::map< std::string , std::vector< boost::shared_ptr<NtTrigFTKLib> > > _nt_trigftklibs;
-  std::map< std::string , std::vector< boost::shared_ptr<NtRoad> > > _nt_roads;
-  std::map< std::string , std::vector< boost::shared_ptr<NtFitter> > > _nt_fitters;
-  std::map< std::string , std::vector< boost::shared_ptr<NtCBNT> > > _nt_cbnt;
-  std::map< std::string , std::vector< boost::shared_ptr<NtJetTag> > > _nt_jettag;
-  std::map< std::string , std::vector< boost::shared_ptr<NtPGS> > > _nt_pgs;
   std::map< std::string , std::vector< boost::shared_ptr<NtD3PDphys> > > _nt_d3pd;
 
   static AnaEventMgr* _instance;
@@ -179,14 +143,6 @@ protected:
   const bool next_file();
   // retrieve this event number 
   const boost::shared_ptr<const AnaEvent> get_event( const unsigned long& ievent , const bool tried_next_file = false );
-
-  // merge CBNT offline track info with wrapper offline track info.
-  template< typename insertIterT >
-  void merge_wrapper_cbnt( std::vector< boost::shared_ptr<const AnaTrack> >::const_iterator beginWrapper , 
-                           std::vector< boost::shared_ptr<const AnaTrack> >::const_iterator endWrapper ,
-                           std::vector< boost::shared_ptr<const AnaTrack> >::const_iterator beginCBNT , 
-                           std::vector< boost::shared_ptr<const AnaTrack> >::const_iterator endCBNT ,
-                           insertIterT iOutput );
 
 public:
 
@@ -233,32 +189,7 @@ public:
   // retrieve the run number and event numbers for the given event
   const unsigned long source_run_number( const AnaEventMgr::iterator& i );
   const unsigned long source_event_number( const AnaEventMgr::iterator& i );
-  // retrieve source ntuples (currently only for merging in test/merge_cbnt_ftk.cpp)
-  const boost::shared_ptr<NtCBNT>& source_cbnt( const std::string& source = DEFAULT_SOURCE ) const { 
-    std::map< std::string , std::vector< boost::shared_ptr<NtCBNT> > >::const_iterator i = _nt_cbnt.find(source);
-    if( i==_nt_cbnt.end() ) { 
-      static boost::shared_ptr<NtCBNT> empty;
-      return empty;
-    }
-    return i->second.front();
-  }
-  const boost::shared_ptr<NtFitter>& source_ftk_fitter( const std::string& source = DEFAULT_SOURCE ) const { 
-    std::map< std::string , std::vector< boost::shared_ptr<NtFitter> > >::const_iterator i = _nt_fitters.find(source);
-    if( i==_nt_fitters.end() ) { 
-      static boost::shared_ptr<NtFitter> empty;
-      return empty;
-    }
-    return i->second.front();
-  }
   void save_sample_description() const;
-  
-
-  // skimming/trimming/conversion to AnaEventNtuple
-  const bool create_ana_event_ntuple( const std::string& directory );
-  // call this for every event with the decision on whether or not to keep an event.
-  // this allows the code to track the fraction of rejected events.
-  const bool add_to_ana_event_ntuple( const bool& add_true_not_false );
-  const AnaEventNtuple::Mode ana_event_ntuple_mode() const { return _ana_event_ntuple_write.mode(); }
   
 };
 

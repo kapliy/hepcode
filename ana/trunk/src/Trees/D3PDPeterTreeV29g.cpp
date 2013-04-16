@@ -712,7 +712,7 @@ void D3PDPeterTreeV29g::Init(TTree *tree)
   }
 
   // EXPERIMENTAL: enable TTree cache:
-  Int_t cachesize = 100000000;   //100 MBytes
+  Int_t cachesize = 10000000;   //150 MBytes
   fChain->SetCacheSize(cachesize);
   if(false) { // old way: cache all branches
     fChain->AddBranchToCache("*",kTRUE);

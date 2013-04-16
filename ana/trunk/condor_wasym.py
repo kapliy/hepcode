@@ -3,13 +3,13 @@
 import sys,os,datetime,getpass,stat,re
 import subprocess
 
-ANAMEM_DATA='2700'
-ANAMEM_MC='3800' #3800mb
-ANAMEM_Z='4100' #powheg zmumu
-MRGMEM='4000' #4000mb
+ANAMEM_DATA='1900' #2700
+ANAMEM_MC='2000'   #3800mb
+ANAMEM_Z='2000'    #powheg zmumu
+MRGMEM='1900'      #4000mb
+NRETRY=5
 smart_runner='./smart_runner.sh'
-DGUNION_Z=' -u 1'
-DGUNION=' -u 5'
+smart_runner='time'
 
 CONDOR="""universe = vanilla
 
@@ -20,18 +20,21 @@ log = {log}
 
 Arguments = None
 
-Requirements   = Memory >= {memory}
+Requirements   =  ( (Memory >= {memory}) && (HAS_CVMFS =?= TRUE) )
 
-should_transfer_files = YES
-transfer_input_files = /tmp/antonk/TAR/TrigFTKAna.tar.bz2
-when_to_transfer_output = ON_EXIT
+transfer_input_files = /tmp/antonk/TAR/TrigFTKAna.tar.bz2,/home/antonk/.globus/tmp.proxy
 transfer_output_files = {outputs}
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
 
 +AccountingGroup = \"group_uct3.antonk\"
 
+Queue
 """
 
 SH_PRE="""#!/bin/bash
+
+# setup based on: http://twiki.mwt2.org/bin/view/UCTier3/CondorUCT3
 
 date
 echo 'START <<<<<<<<<<<<<<<<<<<<<<<'
@@ -40,11 +43,20 @@ LOCDIR=results/ana_wasym
 RESHOST=root://uct3-xrd.mwt2.org/
 SHRDIR=%s
 RESDIR=%s
+export HOME=$PWD
 echo ROOTDIR ${ROOTDIR}
 echo HOSTNAME ${HOSTNAME}
+echo USER ${USER}
+if [ -f ${ROOTDIR}/tmp.proxy ]; then
+    export X509_USER_PROXY=${ROOTDIR}/tmp.proxy
+else
+    echo ERROR: cannot locate x509 proxy under: ${ROOTDIR}/tmp.proxy
+    exit 10
+fi
 
 if [ $PWD == '/home/antonk' ]; then
     echo ERROR: invoked from home directory. Exiting...
+    exit 20
 fi
 
 # Unpack code tarball
@@ -54,27 +66,28 @@ if [ -s TrigFTKAna.tar.bz2 ]; then
     tar xfj TrigFTKAna.tar.bz2
     if [ ! -d TrigFTKAna ]; then
 	echo ERROR: extracted TrigFTKAna.tar.bz2, but cannot find TrigFTKAna folder
-	exit 1
+	exit 30
     fi
 else
     echo ERROR: unable to find TrigFTKAna.tar.bz2 in $PWD
-    exit 1
+    exit 40
 fi
 
 # Setup athena environment
 echo 'SOURCE <<<<<<<<<<<<<<<<<<<<<<<'
 date
-export XrdSecGSISRVNAMES=uct2-s5.uchicago.edu\|uct2-s6.uchicago.edu\|uct2-s20.uchicago.edu
 export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
 source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh --quiet
 asetup 17.6.0.1,64,here
-if [ -z $ROOTSYS ]; then echo 'ERROR: ROOTSYS undefined. Exiting...'; exit 2; fi
-if [ -z $SITEROOT ]; then echo 'ERROR: SITEROOT undefined. Exiting...'; exit 2; fi
+if [ -z $ROOTSYS ]; then echo 'ERROR: ROOTSYS undefined. Exiting...'; exit 50; fi
+if [ -z $SITEROOT ]; then echo 'ERROR: SITEROOT undefined. Exiting...'; exit 60; fi
+export XrdSecGSISRVNAMES=uct2-s5.uchicago.edu\|uct2-s6.uchicago.edu\|uct2-s20.uchicago.edu
+export XrdSecGSISRVNAMES='uct2-*.uchicago.edu'
 
 # Set up TrigFTKAna
 echo 'SETUP <<<<<<<<<<<<<<<<<<<<<<<'
 date
-if [ ! -s TrigFTKAna/ana/ana_wasym ]; then echo 'ERROR: cannot find TrigFTKAna/ana/ana_wasym. Exiting...'; exit 3; fi
+if [ ! -s TrigFTKAna/ana/ana_wasym ]; then echo 'ERROR: cannot find TrigFTKAna/ana/ana_wasym. Exiting...'; exit 70; fi
 export uct3_64=1
 export ROOTCORE_NCPUS=24
 source ${ROOTDIR}/TrigFTKAna/scripts/dependencies.sh &> /dev/null
@@ -94,12 +107,12 @@ echo 'EXECUTE <<<<<<<<<<<<<<<<<<<<<<<'
 date
 cd TrigFTKAna
 rm -rf results
+mkdir -p $LOCDIR
 echo $@
 
 """
 
 SH_POST="""
-status=$?
 if [ ${status} != '0' ]; then
     echo ERROR: job failed with status: ${status}
     exit ${status}
@@ -123,7 +136,7 @@ if [ \"$dirchk\" == 'The directory exists.' ]; then
 else
   echo ERROR: failed to create output directory: ${RESDIR}
   echo $dirchk
-  exit 4
+  exit 80
 fi
 nout=0
 for outfile in ${outfiles}; do
@@ -137,13 +150,13 @@ for outfile in ${outfiles}; do
     if [ ${status} != '0' ]; then sleep 30; eval ${cmd}; status=$?; fi
     if [ ${status} != '0' ]; then
 	echo ERROR: failed to transfer files: ${cmd}
-	exit 5
+	exit 90
     fi
     ((nout++))
 done
 if [ ${nout} == '0' ]; then
     echo ERROR: executable finished but failed to produce any ROOT files in the output directory
-    exit 6
+    exit 100
 fi
 
 # Clean up worker so no files are transferred back
@@ -165,10 +178,10 @@ history_file.write(sep.join(sys.argv)+"\n")
 history_file.close()
 
 class Job:
-    def __init__(s):
+    def __init__(s,jobtype):
         s.id = "" # this is only set upon submission
         s.sleep = 1
-        s.jobtype = None
+        s.jobtype = jobtype
     def create(s,tag,workdir,executable,options,submitdir,sample="",nsplits=1,isplit=0,sleep=1,cput=None,mem=None):
         s.workdir = workdir
         s.executable = executable
@@ -206,67 +219,87 @@ class Job:
         return 2000
     def write_submit_script(s):
         assert s.jobtype, 'ERROR: write_submit_script must run after write_ana_script'
-        s.condorfile = os.path.join(s.submitdir, s.tag+"_"+str(isplit)+".submit")
+        s.condorfile = os.path.join(s.submitdir, s.jobtype+'_'+s.tag+"_"+str(s.isplit)+".submit")
         s.cdic = cdic = {}
         cdic['executable'] = s.jobfile
         cdic['stdout'] = s.outOU
         cdic['stderr'] = s.outER
         cdic['log'] = s.outLOG
         cdic['memory'] = s.choose_memory()
-        cdic['outputs'] = ' '.join(s.outputs)
+        cdic['outputs'] = ','.join(s.outputs)
         f = open(s.condorfile, "w")
         print >>f, CONDOR.format(**cdic)
         f.close()
     def write_ana_script(s):
-        s.jobtype = "ANA"
-        s.jobfile = os.path.join(s.submitdir, s.tag+"_"+str(isplit)+".sh")
-        s.outDG = 'wasym_'+s.tag+"_"+str(isplit)
-        s.outDGpath = os.path.join('results','ana_wasym', s.outDG)
-        s.outOU = os.path.join(s.submitdir, "logs", s.tag+"_"+str(isplit)+".OU")
-        s.outER = os.path.join(s.submitdir, "logs", s.tag+"_"+str(isplit)+".ER")
-        s.outLOG = os.path.join(s.submitdir, "logs", s.tag+"_"+str(isplit)+".LG")
+        s.jobfile = os.path.join(s.submitdir, s.tag+"_"+str(s.isplit)+".sh")
+        s.outROOT = 'wasym_'+s.tag+"_"+str(s.isplit)
+        s.outROOTpath = os.path.join('results','ana_wasym', s.outROOT)
+        s.outOU = os.path.join(s.submitdir, "logs", s.tag+"_"+str(s.isplit)+".OU")
+        s.outER = os.path.join(s.submitdir, "logs", s.tag+"_"+str(s.isplit)+".ER")
+        s.outLOG = os.path.join(s.submitdir, "logs", s.tag+"_"+str(s.isplit)+".LG")
+        s.outputs += ['cached_ignore_filenames_%d.xml'%s.isplit]
         f = open(s.jobfile, "w")
         print >>f, SH_PRE%(s.fdic[0],s.fdic[1])
-        print >>f, smart_runner,'ana/%s %s -i %s --force-output-filename %s --nsplits %d --split %d'%(s.executable,s.options,s.sample,s.outDGpath,s.nsplits,s.isplit)
+        print >>f, smart_runner,'ana/%s %s -i %s --force-output-filename %s --nsplits %d --split %d'%(s.executable,s.options,s.sample,s.outROOTpath,s.nsplits,s.isplit)
+        print >>f, "status=$?"
+        print >>f, """
+        fc=cached_ignore_filenames.xml
+        if [ -f ${fc} ]; then
+           nbad=`grep -c '<item>' $fc`
+           if [ $nbad != '0' ]; then
+                echo ERROR: detected $nbad failures in cache file:
+                cat ${fc}
+                rm -f ${fc}
+                exit 200
+           else
+                mv ${fc} ${ROOTDIR}/cached_ignore_filenames_%d.xml
+           fi
+        else
+           echo ERROR: TrigFTKAna failed to produce ${fc}
+           exit 201
+        fi
+        """%(s.isplit)
         print >>f, SH_POST
         f.close()
         os.system('chmod +x %s'%s.jobfile)
         s.write_submit_script()
         return True
-    def write_dgmerge_script(s,inputs=[]):
+    def write_merge_script(s,inputs=[]):
         assert len(inputs)>0
-        s.jobtype = "MRG"
         s.jobfile = os.path.join(s.submitdir, 'merge_wasym.sh')
-        s.outDG = s.tag+".root"
-        s.outDGpath = os.path.join('results','ana_wasym',s.outDG)
         s.outROOT = 'root_'+s.tag+".root"
         s.outROOTpath = os.path.join('results','ana_wasym',s.outROOT)
         s.outOU = os.path.join(s.submitdir, 'merge_wasym.out.log')
         s.outER = os.path.join(s.submitdir, 'merge_wasym.err.log')
         s.outLOG = os.path.join(s.submitdir, 'merge_wasym.log.log')
         flist = 'wasym.root.list'
-        s.outputs += 'TrigFTKAna/'+flist
+        s.outputs += [flist]
         f = open(s.jobfile, "w")
         print >>f, SH_PRE%(s.fdic[0],s.fdic[1])
         print >>f,'nexpected=%d'%len(inputs)
         print >>f,'ntot=0'
-        print >>f,'rm -f %s ; touch %s;'%(flist,flist)
+        print >>f,'rm -f ${ROOTDIR}/%s ; touch ${ROOTDIR}/%s;'%(flist,flist)
         for fin in inputs:
-            print >>f,'f="%s.root"'%fin
+            print >>f,'f="${RESDIR}/%s.root"'%fin
             print >>f,'st=`xrd uct3-xrd.mwt2.org existfile $f`'
             print >>f,'if [ "$st" == "The file exists." ]; then'
-            print >>f,'echo $f >> %s'%flist
+            print >>f,'echo ${RESHOST}/$f >> ${ROOTDIR}/%s'%flist
             print >>f,'((ntot++))'
             print >>f,'else'
             print >>f,'echo ERROR: failed to locate file $f'
             print >>f,'fi'
-        print >>f,'if [ "$ntot" -eq "$nexpected" ]; then echo "ALL DONE"; else echo "Missing `expr $nexpected - $ntot` files"; fi'
-        DGU = DGUNION_Z if (re.search('mc_powheg_pythia_zmumu',s.tag) or re.search('mc_powheg_pythia_wminmunu',s.tag) or re.search('mc_powheg_pythia_wplusmunu',s.tag)) else DGUNION 
-        print >>f, 'plot/dgadd -f 1 %s -d %s -l %s -r %s'%(DGU,s.outDGpath,flist,s.outROOTpath)
+        print >>f,'if [ "$ntot" -eq "$nexpected" ]; then echo "ALL DONE"; else echo "WARNING: missing `expr $nexpected - $ntot` files"; fi'
+        print >>f,'if [ "$ntot" -eq "0" ]; then echo "ERROR: no files to merge"; exit 203; fi'
+        print >>f, 'hadd -O %s `cat ${ROOTDIR}/%s`'%(s.outROOTpath,flist)
+        print >>f, "status=$?"
         print >>f, SH_POST
         f.close()
         os.system('chmod +x %s'%s.jobfile)
         s.write_submit_script()
+        return True
+    def write_unfold_script(s):
+        """ merges RooUnfold files """
+        s.jobfile = os.path.join(s.submitdir, 'merge_unfold.sh')
         return True
 
 class JobSet:
@@ -289,12 +322,6 @@ class JobSet:
         for j in s.jobs:
             out.append(j.outROOT)
         return out
-    def dg_outputs(s):
-        """ Returns a list of ROOT files expected to be created by this JobSet"""
-        out = []
-        for j in s.jobs:
-            out.append(j.outDG)
-        return out
     def write_dag_script(s):
         """ TODO: make it work with recursive dependencies 
         master submit script for condor DAG
@@ -304,6 +331,7 @@ class JobSet:
         Job  Final job.finalize.submit
         PARENT Setup CHILD Work1 Work2
         PARENT Work1 Work2 CHILD Final
+        Retry Work1 8
         """
         assert len(s.jobs)==1,'ERROR: write_dag_script should be called from the final merge JobSet'
         job = s.jobs[0]
@@ -312,6 +340,9 @@ class JobSet:
         for dep in s.get_deps():
             print >>f,'Job   %s %s'%(dep.jobname(),dep.condorfile)
         print >>f,'Job   %s %s'%(job.jobname(),job.condorfile)
+        for dep in s.get_deps():
+            print >>f,'Retry   %s %s'%(dep.jobname(),NRETRY)
+        print >>f,'Retry   %s %s'%(job.jobname(),NRETRY)
         a_parent = ' '.join( [ dep.jobname() for dep in s.get_deps() ] )
         a_child = job.jobname()
         print >>f,'PARENT %s CHILD %s'%(a_parent,a_child)
@@ -319,7 +350,10 @@ class JobSet:
     def submit(s):
         """ DAG submission """
         s.write_dag_script()
-        pipe=os.popen('echo condor_submit_dag -outfile_dir . %s'%s.dag, "r")
+        submitdir = s.jobs[0].submitdir
+        assert os.path.isdir(submitdir)
+        os.chdir(submitdir)
+        pipe=os.popen('condor_submit_dag -outfile_dir . %s'%s.dag, "r")
         for line in pipe.readlines():
             id = line.strip()
             print id
@@ -355,10 +389,6 @@ parser.add_option("--mem",dest="mem",
 parser.add_option("--options",dest="options",
                   default = "",
                   type="string",help="Options that are passed directly to the executable")
-parser.add_option("--root",action="store_true",dest="root",
-                  default=False,help="Produce ROOT output instead of dgplot output")
-
-
 
 if __name__ == '__main__':
     (opts, args) = parser.parse_args()
@@ -389,22 +419,20 @@ if __name__ == '__main__':
         os.makedirs(logdir);
 
     # create ana jobs
-    anaopts = "--noDG"
-    if not opts.root: anaopts = "--noROOT"
+    anaopts = ""
     anaopts += " " + opts.options
     anaset = JobSet()
     for isplit in range(opts.nsplits):
-        j = Job()
-        j.create(opts.tag, opts.workdir, opts.executable, anaopts, submitdir, opts.sample, opts.nsplits, isplit, 20+isplit, opts.cput,opts.mem)
+        j = Job('ANA')
+        j.create(opts.tag, opts.workdir, opts.executable, anaopts, submitdir, opts.sample, opts.nsplits, isplit, 0, opts.cput,opts.mem)
         j.write_ana_script()
         anaset.add( j )
 
     # create merge job
     mergeset = JobSet()
-    mergejob = Job()
+    mergejob = Job('MRG')
     mergejob.create(opts.tag, opts.workdir, opts.executable, anaopts, submitdir, opts.sample, 1, 0, 1, opts.cput, opts.mem)
-    if not opts.root: mergejob.write_dgmerge_script(anaset.dg_outputs())
-    else: mergejob.write_rootmerge_script()
+    mergejob.write_merge_script(anaset.root_outputs())
     mergeset.add( mergejob )
     mergeset.add_dep( anaset )
 

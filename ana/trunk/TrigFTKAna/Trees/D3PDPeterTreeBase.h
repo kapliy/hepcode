@@ -4,6 +4,8 @@
 
 #include <Rtypes.h>
 
+class TTree;
+
 class
 D3PDPeterTreeBase
 {

@@ -32,10 +32,6 @@ public:
     dg::fillh( "m_zregion" , 80 , 81. , 101. , particle->m() , "Mass (GeV/c^{2})" );
     dg::fillh( "m_upsilonregion" , 100 , 5. , 15. , particle->m() , "Mass (GeV/c^{2})" );
     dg::fillh( "m_jpsiregion" , 40 , 2. , 4. , particle->m() , "Mass (GeV/c^{2})" );
-    if( particle->type()==AnaParticle::WBOSON ) { 
-      dg::fillh( "mt" , 200 , 0 , 200 , particle->mt_self() , "Four-vector Transverse Mass (GeV/c^{2})" );
-      dg::fillh( "mt_composite" , 200 , 0 , 200 , particle->transverse_mass() , "W M_{T} (GeV/c^{2})" ); 
-    }
   }
 
 protected:

@@ -11,9 +11,6 @@
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/serialization/access.hpp>
-#include <boost/serialization/nvp.hpp>
-#include <boost/serialization/version.hpp>
 #include "TrigFTKAna/AnaEvent.hpp"
 
 
@@ -32,15 +29,6 @@ public:
     unsigned long _event_number;
     FileIndex _ntuple_file_number;
   private:
-    friend class boost::serialization::access;
-    template<class archiveT>
-    void serialize( archiveT& ar, const unsigned int version )
-    {
-      ar & BOOST_SERIALIZATION_NVP(_run_number);
-      ar & BOOST_SERIALIZATION_NVP(_lumi_block);
-      ar & BOOST_SERIALIZATION_NVP(_event_number);
-      ar & BOOST_SERIALIZATION_NVP(_ntuple_file_number);
-    }
   public:
     EventMetadata()
       : _run_number(std::numeric_limits<unsigned long>::max())
@@ -67,14 +55,6 @@ public:
     unsigned long _nevents_accepted;
     unsigned long _nevents_total;
   private:
-    friend class boost::serialization::access;
-    template<class archiveT>
-    void serialize( archiveT& ar, const unsigned int version )
-    {
-      ar & BOOST_SERIALIZATION_NVP(_filename);
-      ar & BOOST_SERIALIZATION_NVP(_nevents_accepted);
-      ar & BOOST_SERIALIZATION_NVP(_nevents_total);
-    }
   public:
     FileMetadata() 
       : _filename("")
@@ -123,10 +103,10 @@ private:
   const std::string filename_for_index( const FileIndex& index );
   const FileIndex index_for_sequential_event( const unsigned long& ievent );
   const std::string path_to_new_sample_directory( const std::string& directory );
-  void write_event_block( const FileIndex& index );
+  void write_event_block( const FileIndex& index ) { return; }
   void write_metadata();
   const bool read_metadata();
-  const bool read_event_block( const FileIndex& index );
+  const bool read_event_block( const FileIndex& index ) { return true; }
 public:
   AnaEventNtuple() 
     : _directory("")
@@ -175,8 +155,5 @@ public:
   const float fraction_accepted() const { return( _nevents_total>0 ? _nevents_accepted / static_cast<float>(_nevents_total) : 0. ); }
 
 };
-
-BOOST_CLASS_VERSION( AnaEventNtuple::EventMetadata , 1 );
-BOOST_CLASS_VERSION( AnaEventNtuple::FileMetadata , 1 );
 
 #endif // ANAEVENTNTUPLE_HPP
