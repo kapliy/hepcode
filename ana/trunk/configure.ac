@@ -1,6 +1,5 @@
 m4_include([version.m4])
 AC_INIT(TrigFTKAna,VERSION_NUMBER,[A. Boveia <boveia@hep.uchicago.edu>])
-dnl          AC_CONFIG_SRCDIR([src/foo.c])
 AM_CONFIG_HEADER(TrigFTKAna_config.h)
 AM_INIT_AUTOMAKE
 
@@ -60,31 +59,6 @@ dnl                 hash_map included in boost adjacency list.
 fi
 AC_MSG_NOTICE(CXXFLAGS are $CXXFLAGS)
 AC_MSG_NOTICE(LDFLAGS are $LDFLAGS)
-AC_MSG_NOTICE(TrigFTKAna requires a FORTRAN compiler. Checking for it...)
-AC_F77_WRAPPERS
-AC_F77_LIBRARY_LDFLAGS
-AC_F77_MAIN([MAIN__])
-dnl FORTRAN linking for CTVMFT
-if test -n "${FLIBS}"; then
-   FFLAGS="$XTRAARCHFLAGS"
-   FLIBS="$XTRAARCHLDFLAGS"
-   dnl AK FIXME - remove /usr/lib/gcc/* stuff from FLIBS on 64-bit uct3-c001 (TODO - make more general - maybe in m4)
-   dnl FLIBS="$(FLIBS) $XTRAARCHLDFLAGS -L./ -lfrtbegin -lg2c -lm -lgcc_s"   
-   dnl FLIBS="-lfrtbegin -lm $XTRAARCHLDFLAGS"
-   FLIBS="-lfrtbegin -lg2c -lm -lgcc_s $XTRAARCHLDFLAGS"
-   dnl FLIBS="-L/usr/local/lib -lgfortran $XTRAARCHLDFLAGS"
-   AC_MSG_NOTICE(FFLAGS set to $FFLAGS)
-   AC_MSG_NOTICE(FLIBS set to $FLIBS)
-else
-   AC_MSG_NOTICE(setting FLIBS and FFLAGS)
-   FFLAGS="$(FFLAGS) $XTRAARCHFLAGS"
-   FLIBS="$(FLIBS) $XTRAARCHLDFLAGS -L./ -lfrtbegin -lg2c -lm -lgcc_s"
-   dnl FLIBS="$(FLIBS) $XTRAARCHLDFLAGS -L./ -L/usr/local/lib -lgfortran"
-   dnl FLIBS="$(FLIBS) $XTRAARCHLDFLAGS -L./ -lfrtbegin -lm"
-fi
-if test "x$F77" = "xgfortran" ; then
-   AC_DEFINE(HAVE_GFORTRAN,,[define using gfortran to compile ctvmft])
-fi
 
 dnl check for ROOT.
 dnl see root-config man page.
@@ -107,14 +81,8 @@ AC_MSG_NOTICE(TrigFTKAna can use libdcap to access dCache filesystems. Checking 
 AX_DCAP(["$enable_64bit"])
 
 dnl check for libxml2
-dnl AC_MSG_NOTICE("TrigFTKAna can use libXML to read XML good run lists.")
-dnl AC_MSG_NOTICE("If not found, the reads will return empty lists.")
-dnl AC_MSG_NOTICE("Checking for it...")
+dnl AC_MSG_NOTICE("Checking for libxml2")
 AX_XML
-
-dnl disabled check for CTVMFT. 
-dnl the source for CTVMFT is now included within TrigFTKAna.
-dnl AX_CTVMFT
 
 dnl check for TrigFTKSim
 AC_MSG_NOTICE(TrigFTKAna can use TrigFTKSim output TObject libraries. Checking for them...)
@@ -122,9 +90,6 @@ AX_TRIGFTKSIM
 
 dnl check for libreadline
 AX_READLINE
-
-dnl check for plplot
-dnl AX_PLPLOT
 
 use_enable_all_ana=false
 AC_ARG_ENABLE([allana],
@@ -155,15 +120,10 @@ AC_CONFIG_FILES([
                 Makefile
                 m4/Makefile
                 dg/Makefile
-                plot/Makefile
                 src/Makefile
-                src/egamma/Makefile
                 src/mcp/Makefile
-                src/jetetmiss/Makefile
                 src/misc/Makefile
-                src/ctvmft/Makefile
                 src/Trees/Makefile
-                test/Makefile
                 ana/Makefile
            ])
 

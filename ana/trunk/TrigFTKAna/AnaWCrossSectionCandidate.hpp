@@ -11,9 +11,6 @@
 #include <numeric>
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
-#include <boost/serialization/access.hpp>
-#include <boost/serialization/nvp.hpp>
-#include <boost/serialization/version.hpp>
 #include <boost/math/special_functions/fpclassify.hpp>
 #include <TLorentzVector.h>
 #include "TrigFTKAna/AnaW.hpp"
@@ -23,12 +20,6 @@
 #include "TrigFTKAna/AnaJet.hpp"
 #include "TrigFTKAna/AnaVertex.hpp"
 #include "TrigFTKAna/AnaMET.hpp"
-
-// BDT stuff
-#include <TMVA/Factory.h>
-#include <TMVA/Tools.h>
-#include <TMVA/Reader.h>
-#include <TMVA/MethodCuts.h>
 
 class
 AnaWCrossSectionCandidate : public AnaW
@@ -51,20 +42,6 @@ private:
   bool _is_mc;
   mutable bool _cached;
 private:
-  friend class boost::serialization::access;
-  template<class archiveT>
-  void serialize( archiveT& ar, const unsigned int version ) {
-    ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP( AnaW );
-    ar & boost::serialization::make_nvp("event_leptons",_event_leptons);
-    ar & boost::serialization::make_nvp("event_jets",_event_jets);
-    ar & boost::serialization::make_nvp("event_met",_event_met);
-    ar & boost::serialization::make_nvp("event_vertices",_event_vertices);
-    ar & boost::serialization::make_nvp("event_all_vertices",_event_all_vertices);
-    ar & boost::serialization::make_nvp("event_vlq_truth",_event_vlq_truth);
-    ar & boost::serialization::make_nvp("event_w_truth",_event_w_truth);
-    ar & boost::serialization::make_nvp("event_nu_truth",_event_nu_truth);
-    ar & boost::serialization::make_nvp("event_fj_truth",_event_fj_truth);
-  }
   void _refresh_cache() const {
     if( _cached ) { return; }
     // nothing done here yet
@@ -598,59 +575,6 @@ public:
     //if( std::fabs(w_bdt_eta()) >= 2.5 ) return false;
     return true;
   }
-  const double bdt_response( const std::string& bdtmethod = "BDT method W 900" ) const {
-    if( !bdt_common() ) return -666.;
-    static TMVA::Reader *cc_bdt_reader;
-    static float cut_delta_eta_w_j1_n , cut_delta_phi_w_j1 , cut_delta_eta_w_j2_n , cut_delta_phi_lep_nu , cut_delta_eta_j1_j2;
-    if( !cc_bdt_reader ) {
-      cc_bdt_reader = new TMVA::Reader();
-      cc_bdt_reader->AddVariable("cut_delta_eta_w_j1_n[0]", &cut_delta_eta_w_j1_n);
-      cc_bdt_reader->AddVariable("cut_delta_phi_w_j1[0]", &cut_delta_phi_w_j1);
-      cc_bdt_reader->AddVariable("cut_delta_eta_w_j2_n[0]", &cut_delta_eta_w_j2_n);
-      cc_bdt_reader->AddVariable("cut_delta_eta_j1_j2[0]", &cut_delta_eta_j1_j2);
-      cc_bdt_reader->AddVariable("cut_delta_phi_lep_nu[0]", &cut_delta_phi_lep_nu);
-      cc_bdt_reader->BookMVA( "BDT method W 400" , "bdt_weights/VLQ_CC/TMVAClassificationHQ_115513.Pythia_MadGraph_vlq_qd_cc_400.merge.NTUP_SMWZ.e887_s1372_s1370_r3043_r2993_p833_BDT.weights.xml" );
-      cc_bdt_reader->BookMVA( "BDT method W 900" , "bdt_weights/VLQ_CC/TMVAClassificationHQ_115518.Pythia_MadGraph_vlq_qd_cc_900.merge.NTUP_SMWZ.e887_s1372_s1370_r3043_r2993_p833_BDT.weights.xml" );
-      cc_bdt_reader->BookMVA( "BDT method W 1200" , "bdt_weights/VLQ_CC/TMVAClassificationHQ_145083.Pythia_MadGraph_vlq_qd_cc_1200.merge.NTUP_SMWZ.e997_s1372_s1370_r3043_r2993_p833_BDT.weights.xml" );
-    }
-    // set the cut variables
-    //float this_w_bdt_eta = w_bdt_eta();
-    float this_w_bdt_eta = float(w_eta());
-    float j2_eta = far_jet()->eta();
-    cut_delta_eta_w_j1_n = std::fabs(this_w_bdt_eta - leading_jet()->eta());
-    cut_delta_phi_w_j1 = std::fabs( detector::delta_phi( AnaW::phi() , leading_jet()->phi() ) );
-    cut_delta_eta_w_j2_n = std::fabs(this_w_bdt_eta - j2_eta);
-    cut_delta_eta_j1_j2 = std::fabs(leading_jet()->eta() - j2_eta);
-    cut_delta_phi_lep_nu = std::fabs( detector::delta_phi( lepton()->phi() , met()->phi() ) );
-    return cc_bdt_reader->EvaluateMVA( bdtmethod.c_str() );
-  }
-  void dump_bdt_vars( const unsigned long ev_number = 0 ) const {
-    if( ev_number==0 || ev_number==_event_number ) {
-      std::cout << "BDT DEBUGGING OUTPUT:" << std::endl
-		<< " event_number = " << _event_number << std::endl
-		<< " w_mt = " << mt() << std::endl
-		<< " njets = " << njets() << std::endl
-		<< " met = " << met()->pt() << " ( " << met()->uncorrected_parent()->pt() << " )" << std::endl
-		<< " leading_jet_pt = " << leading_jet()->pt() << std::endl
-		<< "   bdt_common_base = " << bdt_common_base() << std::endl
-		<< " w_eta = " << w_eta() << " ( " << w_low_eta() << " , " << w_high_eta() << " )" << std::endl
-		<< " leading_jet_eta = " << leading_jet()->eta() << std::endl
-		<< "   bdt_common = " << bdt_common() << std::endl;
-      if( bdt_common() ) {
-	std::cout << " cut_delta_eta_w_j1_n = " << w_eta() - leading_jet()->eta() << std::endl
-		  << " cut_delta_phi_w_j1 = " << detector::delta_phi( AnaW::phi() , leading_jet()->phi() ) << std::endl
-		  << " cut_delta_eta_w_j2_n = " << w_eta() - far_jet()->eta() << std::endl
-		  << " cut_delta_eta_j1_j1 = " << leading_jet()->eta() - far_jet()->eta() << std::endl
-		  << " cut_delta_phi_lep_nu = " << detector::delta_phi( lepton()->phi() , met()->phi() ) << std::endl
-		  << "   bdt_response_400 = " << bdt_response( "BDT method W 400" ) << std::endl
-		  << "   bdt_response_900 = " << bdt_response( "BDT method W 900" ) << std::endl
-		  << "   bdt_response_1200 = " << bdt_response( "BDT method W 1200" ) << std::endl;
-      }
-    }
-  }
-
-  const bool bdt_CR( const std::string& bdtmethod = "BDT method W 900" , const double& cut = -0.4 ) const { return bdt_common() && bdt_response(bdtmethod) < cut; }
-  const bool bdt_SR( const std::string& bdtmethod = "BDT method W 900" , const double& cut = -0.4 ) const { return bdt_common() && bdt_response(bdtmethod) > cut; }
   const bool opt_400() const { return false; }
   const bool opt_900() const {
     float this_w_eta = float(w_eta());
@@ -985,7 +909,5 @@ public:
   };
 
 };
-
-BOOST_CLASS_VERSION( AnaWCrossSectionCandidate , 4 );
 
 #endif // ANAWCROSSSECTIONCANDIDATE_HPP

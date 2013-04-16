@@ -89,15 +89,15 @@ echo "Symlinking libg2c.so and libz.so ..."
 rm -f libg2c.so libz.so
 lib=lib
 if [ ${uct3_64} -eq 1 ]; then lib=lib64; fi
-symlink_lib /usr/${lib}/libg2c.so
+#symlink_lib /usr/${lib}/libg2c.so
 symlink_lib /usr/${lib}/libz.so
 
-echo "Building libfrtbegin.a..."
+#echo "Building libfrtbegin.a..."
 rm -f libfrtbegin.a deps/frtbegin.o
-make -C deps/
+#make -C deps/
 
 echo "List of local libraries:"
-ls -l *.{a,so}
+ls -l *.{a,so} 2>/dev/null
 
 if [ -f /usr/share/libtool/ltmain.sh ]; then 
     ln -fs /usr/share/libtool/ltmain.sh .

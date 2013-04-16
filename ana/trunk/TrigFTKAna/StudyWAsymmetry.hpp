@@ -80,117 +80,117 @@ protected:
 
     if(_do_metonly) {
       if(_run_qcd_slices && met && lepton) {
-	dg::fillvh2( "d3_abseta_lpt_met" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_pt.size()-1, dg::bin().D_pt , std::abs(lepton->eta()) , L(lepton->pt()) , met->pt() ,  "|leta|","lpt","met" );
-	dg::fillvh2( "d3_abseta_lpt_wmt" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_pt.size()-1, dg::bin().D_pt , std::abs(lepton->eta()) , L(lepton->pt()) , w->transverse_mass() ,  "|leta|","lpt","wmt" );
+	dg::fillvh( "d3_abseta_lpt_met" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_pt.size()-1, dg::bin().D_pt , std::abs(lepton->eta()) , L(lepton->pt()) , met->pt() ,  "|leta|","lpt","met" );
+	dg::fillvh( "d3_abseta_lpt_wmt" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_pt.size()-1, dg::bin().D_pt , std::abs(lepton->eta()) , L(lepton->pt()) , w->transverse_mass() ,  "|leta|","lpt","wmt" );
       }
       return;
     }
 
     // minimal set of plots
     if(met && lepton) {
-      dg::fillh2( "wmt" , 200 , 0 , 200 , w->transverse_mass() , "W Transverse Mass (GeV/c^{2})" );
-      dg::fillh2( "met" , 200 , 0 , 200 , met->pt() , "W Missing ET (GeV)" );
-      dg::fillh2( "lpt" , 200 , 0 , 200 , L(lepton->pt()) , "W Lepton p_{T} (GeV/c)" );
-      dg::fillvh2( "lepton_absetav" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta, std::abs(lepton->eta()) , "W Lepton |#eta|" );
-      dg::fillvh2( "lepton_etav" , dg::bin().D_eta.size()-1, dg::bin().D_eta, lepton->eta() , "W Lepton #eta" );
-      dg::fillh2( "int"   , 1 , 0 , 2.4 , std::abs(lepton->eta()) , "Integrated event counts, pt20" );
-      dg::fillh2( "uint"   , 1 , 0 , 1.0 , 0.50 , "Integrated event counts, pt20" );
+      dg::fillh( "wmt" , 200 , 0 , 200 , w->transverse_mass() , "W Transverse Mass (GeV/c^{2})" );
+      dg::fillh( "met" , 200 , 0 , 200 , met->pt() , "W Missing ET (GeV)" );
+      dg::fillh( "lpt" , 200 , 0 , 200 , L(lepton->pt()) , "W Lepton p_{T} (GeV/c)" );
+      dg::fillvh( "lepton_absetav" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta, std::abs(lepton->eta()) , "W Lepton |#eta|" );
+      dg::fillvh( "lepton_etav" , dg::bin().D_eta.size()-1, dg::bin().D_eta, lepton->eta() , "W Lepton #eta" );
+      dg::fillh( "int"   , 1 , 0 , 2.4 , std::abs(lepton->eta()) , "Integrated event counts, pt20" );
+      dg::fillh( "uint"   , 1 , 0 , 1.0 , 0.50 , "Integrated event counts, pt20" );
       if(lepton->pt() > 25.0) { // for integrated measurement in pt>25 GeV region
-	dg::fillh2( "int25" , 1 , 0 , 2.4 , std::abs(lepton->eta()) , "Integrated event counts, pt25" );
-	dg::fillh2( "uint25" , 1 , 0 , 1.0 , 0.50 , "Integrated event counts, pt25" );
+	dg::fillh( "int25" , 1 , 0 , 2.4 , std::abs(lepton->eta()) , "Integrated event counts, pt25" );
+	dg::fillh( "uint25" , 1 , 0 , 1.0 , 0.50 , "Integrated event counts, pt25" );
       }
     }
     if(minimal) return;
     vector< boost::shared_ptr<const AnaJet> > jets_by_pt( w->begin_jets() , w->end_jets() );
     // make plots
-    dg::fillh2( "nvtxs_all" , 20 , 0 , 20 , w->nvtxs_all() , "N_{vtxs} (before cuts)" );
-    dg::fillh2( "njets" , 10 , 0 , 10 , w->njets() , "N_{jets} with pt>30 GeV" );
-    dg::fillh2( "wpt" , 200 , 0 , 200 , w->pt() , "W Transverse Momentum (GeV/c)" );
+    dg::fillh( "nvtxs_all" , 20 , 0 , 20 , w->nvtxs_all() , "N_{vtxs} (before cuts)" );
+    dg::fillh( "njets" , 10 , 0 , 10 , w->njets() , "N_{jets} with pt>30 GeV" );
+    dg::fillh( "wpt" , 200 , 0 , 200 , w->pt() , "W Transverse Momentum (GeV/c)" );
     if( false && lepton && met) {
-      dg::fillh2( "event_mt" , 500 , 0 , 500 , w->event_mt() , "Transverse Mass of Lepton, MET, and Jets (GeV/c^{2})" );
-      dg::fillh2( "event_m" , 500 , 0 , 500 , w->event_m() , "Invariant Mass of Lepton, MET, and Jets (GeV/c^{2})" );
-      dg::fillh2( "w_m" , 200 , 0 , 200 , w->w_m() , "Invariant Mass of W (GeV/c^{2})" );
-      dg::fillh2( "w_eta" , 100 , -3. , 3. , w->w_eta() , "W #eta" );
+      dg::fillh( "event_mt" , 500 , 0 , 500 , w->event_mt() , "Transverse Mass of Lepton, MET, and Jets (GeV/c^{2})" );
+      dg::fillh( "event_m" , 500 , 0 , 500 , w->event_m() , "Invariant Mass of Lepton, MET, and Jets (GeV/c^{2})" );
+      dg::fillh( "w_m" , 200 , 0 , 200 , w->w_m() , "Invariant Mass of W (GeV/c^{2})" );
+      dg::fillh( "w_eta" , 100 , -3. , 3. , w->w_eta() , "W #eta" );
     }
     // final plots for unfolding
     if(study_2d && met && lepton) {
-      dg::fillvh2( "d2_abseta_lpt" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , std::abs(lepton->eta()) , L(lepton->pt()),"|leta|","lpt" );
-      dg::fillvh2( "d2_eta_lpt" , dg::bin().D_eta.size()-1, dg::bin().D_eta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , lepton->eta() , L(lepton->pt()),"leta","lpt" );
+      dg::fillvh( "d2_abseta_lpt" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , std::abs(lepton->eta()) , L(lepton->pt()),"|leta|","lpt" );
+      dg::fillvh( "d2_eta_lpt" , dg::bin().D_eta.size()-1, dg::bin().D_eta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , lepton->eta() , L(lepton->pt()),"leta","lpt" );
       // QCD normalization in slices: utilize 3d histograms to store everything
       if(_run_qcd_slices) {
-	dg::fillvh2( "d3_abseta_lpt_met" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_pt.size()-1, dg::bin().D_pt , std::abs(lepton->eta()) , L(lepton->pt()) , met->pt() ,  "|leta|","lpt","met" );
-	dg::fillvh2( "d3_abseta_lpt_wmt" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_pt.size()-1, dg::bin().D_pt , std::abs(lepton->eta()) , L(lepton->pt()) , w->transverse_mass() ,  "|leta|","lpt","wmt" );
-	dg::fillvh2( "d3_eta_lpt_met" , dg::bin().D_eta.size()-1, dg::bin().D_eta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_pt.size()-1, dg::bin().D_pt , lepton->eta() , L(lepton->pt()) , met->pt() ,"leta","lpt","met" );
+	dg::fillvh( "d3_abseta_lpt_met" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_pt.size()-1, dg::bin().D_pt , std::abs(lepton->eta()) , L(lepton->pt()) , met->pt() ,  "|leta|","lpt","met" );
+	dg::fillvh( "d3_abseta_lpt_wmt" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_pt.size()-1, dg::bin().D_pt , std::abs(lepton->eta()) , L(lepton->pt()) , w->transverse_mass() ,  "|leta|","lpt","wmt" );
+	dg::fillvh( "d3_eta_lpt_met" , dg::bin().D_eta.size()-1, dg::bin().D_eta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_pt.size()-1, dg::bin().D_pt , lepton->eta() , L(lepton->pt()) , met->pt() ,"leta","lpt","met" );
 	if(false) {  //02/08/2013: disabled
-	  dg::fillvh2( "d3_eta_lpt_wmt" , dg::bin().D_eta.size()-1, dg::bin().D_eta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_pt.size()-1, dg::bin().D_pt , lepton->eta() , L(lepton->pt()) , w->transverse_mass() ,"leta","lpt","wmt" );
+	  dg::fillvh( "d3_eta_lpt_wmt" , dg::bin().D_eta.size()-1, dg::bin().D_eta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_pt.size()-1, dg::bin().D_pt , lepton->eta() , L(lepton->pt()) , w->transverse_mass() ,"leta","lpt","wmt" );
 	}
 	if(true) { // additional plots for systematic plots in eta/phi slices
-	  dg::fillvh2( "d3_abseta_lpt_wpt" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_pt.size()-1, dg::bin().D_pt , std::abs(lepton->eta()) , L(lepton->pt()) , w->pt() ,  "|leta|","lpt","wpt" );
-	  dg::fillvh2( "d3_abseta_lpt_lpt" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_pt.size()-1, dg::bin().D_pt , std::abs(lepton->eta()) , L(lepton->pt()) , lepton->pt() ,  "|leta|","lpt","lpt" );
-	  dg::fillvh2( "d3_abseta_lpt_phi" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_lphi.size()-1, dg::bin().D_lphi , std::abs(lepton->eta()) , L(lepton->pt()) , lepton->phi() ,  "|leta|","lpt","phi" );
-	  dg::fillvh2( "d3_abseta_lpt_eta" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_leta.size()-1, dg::bin().D_leta , std::abs(lepton->eta()) , L(lepton->pt()) , lepton->eta() ,  "|leta|","lpt","phi" );
+	  dg::fillvh( "d3_abseta_lpt_wpt" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_pt.size()-1, dg::bin().D_pt , std::abs(lepton->eta()) , L(lepton->pt()) , w->pt() ,  "|leta|","lpt","wpt" );
+	  dg::fillvh( "d3_abseta_lpt_lpt" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_pt.size()-1, dg::bin().D_pt , std::abs(lepton->eta()) , L(lepton->pt()) , lepton->pt() ,  "|leta|","lpt","lpt" );
+	  dg::fillvh( "d3_abseta_lpt_phi" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_lphi.size()-1, dg::bin().D_lphi , std::abs(lepton->eta()) , L(lepton->pt()) , lepton->phi() ,  "|leta|","lpt","phi" );
+	  dg::fillvh( "d3_abseta_lpt_eta" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_leta.size()-1, dg::bin().D_leta , std::abs(lepton->eta()) , L(lepton->pt()) , lepton->eta() ,  "|leta|","lpt","phi" );
 	}
       }
     }
     // general 1D plots
     if( false ) {  //02/08/2013: disabled
       if(false &&  met ) {
-        dg::fillh2( "met_phi", 100 , -M_PI , M_PI , met->phi() , "MET #phi (rad)" );
+        dg::fillh( "met_phi", 100 , -M_PI , M_PI , met->phi() , "MET #phi (rad)" );
       } // end met plots
       if( lepton ) {
-        dg::fillh2( "lepton_phi" , 100 , -M_PI , M_PI , lepton->phi() , "W Lepton #phi (rad)" );
-	//dg::fillh2( "lepton_eta_fine" , 128 , -2.5 , 2.5 , lepton->eta() , "W Lepton #eta" );
-	//dg::fillh2( "lepton_abseta" , 10 , 0 , 2.5 , std::abs(lepton->eta()) , "W Lepton |#eta|" );
-	//dg::fillh2( "lepton_abseta_fine" , 128 , 0 , 2.5 , std::abs(lepton->eta()) , "W Lepton |#eta|" );
-	//dg::fillvh2( "lepton_ptv" , dg::bin().D_lpt.size()-1, dg::bin().D_lpt, L(lepton->pt()) , "W Lepton #pt" );
-	//dg::fillvh2( "w_wmtv" , dg::bin().D_wmt.size()-1 , dg::bin().D_wmt , w->transverse_mass() , "W Transverse Mass (GeV/c^{2})" );
+        dg::fillh( "lepton_phi" , 100 , -M_PI , M_PI , lepton->phi() , "W Lepton #phi (rad)" );
+	//dg::fillh( "lepton_eta_fine" , 128 , -2.5 , 2.5 , lepton->eta() , "W Lepton #eta" );
+	//dg::fillh( "lepton_abseta" , 10 , 0 , 2.5 , std::abs(lepton->eta()) , "W Lepton |#eta|" );
+	//dg::fillh( "lepton_abseta_fine" , 128 , 0 , 2.5 , std::abs(lepton->eta()) , "W Lepton |#eta|" );
+	//dg::fillvh( "lepton_ptv" , dg::bin().D_lpt.size()-1, dg::bin().D_lpt, L(lepton->pt()) , "W Lepton #pt" );
+	//dg::fillvh( "w_wmtv" , dg::bin().D_wmt.size()-1 , dg::bin().D_wmt , w->transverse_mass() , "W Transverse Mass (GeV/c^{2})" );
 	if(false &&  met) {
-	  dg::fillh2( "dphi_lepton_met" , 100 , 0 , M_PI , std::abs( lepton->dist_phi( met ) ) , "#Delta #phi Lepton - MET (rad)" );
-	  dg::fillh2( "deta_lepton_met" , 100 , -5 , 5 , lepton->dist_eta( w->met_eta( w->met_pz_vlq() ) ) , "#Delta #eta Lepton - MET" );
-	  dg::fillh2( "dr_lepton_met" , 100 , 0 , 5 , lepton->dist_eta_phi( w->met_eta( w->met_pz_vlq() ) , met->phi() ) , "#Delta r(#eta,#phi) Lepton - MET" );
+	  dg::fillh( "dphi_lepton_met" , 100 , 0 , M_PI , std::abs( lepton->dist_phi( met ) ) , "#Delta #phi Lepton - MET (rad)" );
+	  dg::fillh( "deta_lepton_met" , 100 , -5 , 5 , lepton->dist_eta( w->met_eta( w->met_pz_vlq() ) ) , "#Delta #eta Lepton - MET" );
+	  dg::fillh( "dr_lepton_met" , 100 , 0 , 5 , lepton->dist_eta_phi( w->met_eta( w->met_pz_vlq() ) , met->phi() ) , "#Delta r(#eta,#phi) Lepton - MET" );
 	} // end lepton-met plots
 	if( muon ) {
 	  // asymmetry from ID or MS muons
-	  //dg::fillvh2( "muonID_absetav" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta, std::abs(muon->id_eta()) , "W muon ID-only |#eta|" );
-	  //dg::fillvh2( "muonMS_absetav" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta, std::abs(muon->exms_eta()) , "W muon MS-only |#eta|" );
+	  //dg::fillvh( "muonID_absetav" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta, std::abs(muon->id_eta()) , "W muon ID-only |#eta|" );
+	  //dg::fillvh( "muonMS_absetav" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta, std::abs(muon->exms_eta()) , "W muon MS-only |#eta|" );
 	  // d0/z0/iso
 	  if(false) {
-	    dg::fillh2( "exPV_z0" ,200, -1 , 1 , muon->exPV_z0() ,"W muon z0 wrt PV" );
-	    dg::fillh2( "exPV_d0" ,200, -0.1 , 0.1 , muon->exPV_d0() ,"W muon d0 signifiance wrt PV" );
-	    dg::fillh2( "exPV_d0_sig" ,200, -4 , 4 , muon->exPV_d0_signif() ,"W muon d0 signifiance wrt PV" );
+	    dg::fillh( "exPV_z0" ,200, -1 , 1 , muon->exPV_z0() ,"W muon z0 wrt PV" );
+	    dg::fillh( "exPV_d0" ,200, -0.1 , 0.1 , muon->exPV_d0() ,"W muon d0 signifiance wrt PV" );
+	    dg::fillh( "exPV_d0_sig" ,200, -4 , 4 , muon->exPV_d0_signif() ,"W muon d0 signifiance wrt PV" );
 	  }
-	  dg::fillh2( "lepton_ptiso40r" ,200, 0 , 0.3 , muon->pt_cone_ratio(AnaMuon::CONE40) ,"W Lepton ptcone40" );
-	  //dg::fillh2( "lepton_ptiso30r" ,200, 0 , 0.3 , muon->pt_cone_ratio(AnaMuon::CONE30) ,"W Lepton ptcone30" );
-	  //dg::fillh2( "lepton_ptiso20r" ,200, 0 , 0.3 , muon->pt_cone_ratio(AnaMuon::CONE20) ,"W Lepton ptcone20" );
-	  //dg::fillh2( "lepton_etiso30rcorr" ,200, 0 , 0.3 , muon->et_cone_corr_ratio(AnaMuon::CONE30,w->nvtxs_all()) ,"W Lepton etcone30 corr" );
-	  //dg::fillh2( "lepton_etiso40rcorr" ,200, 0 , 0.3 , muon->et_cone_corr_ratio(AnaMuon::CONE40,w->nvtxs_all()) ,"W Lepton etcone40 corr" );
+	  dg::fillh( "lepton_ptiso40r" ,200, 0 , 0.3 , muon->pt_cone_ratio(AnaMuon::CONE40) ,"W Lepton ptcone40" );
+	  //dg::fillh( "lepton_ptiso30r" ,200, 0 , 0.3 , muon->pt_cone_ratio(AnaMuon::CONE30) ,"W Lepton ptcone30" );
+	  //dg::fillh( "lepton_ptiso20r" ,200, 0 , 0.3 , muon->pt_cone_ratio(AnaMuon::CONE20) ,"W Lepton ptcone20" );
+	  //dg::fillh( "lepton_etiso30rcorr" ,200, 0 , 0.3 , muon->et_cone_corr_ratio(AnaMuon::CONE30,w->nvtxs_all()) ,"W Lepton etcone30 corr" );
+	  //dg::fillh( "lepton_etiso40rcorr" ,200, 0 , 0.3 , muon->et_cone_corr_ratio(AnaMuon::CONE40,w->nvtxs_all()) ,"W Lepton etcone40 corr" );
 	} // end muon plots
       } // end lepton plots
     }
     // plot the yield if flag is set to true
     if( _do_yield ) {
-      dg::fillhw2( "yield" , 
+      dg::fillhw( "yield" , 
 		  int( _yield_max - _yield_min ) , _yield_min , _yield_max ,
 		  _yield_runnumber , dg::global_weight() / _yield_lumi , "run number" );
     }
     if( false && w->njets()>0 ) {
-      dg::fillh2( "jets_m" , 200 , 0 , 200 , w->jets_m() , "Invariant Mass of Jets (GeV/c^{2})" );
+      dg::fillh( "jets_m" , 200 , 0 , 200 , w->jets_m() , "Invariant Mass of Jets (GeV/c^{2})" );
     }
     if(false) {
       std::sort( jets_by_pt.begin() , jets_by_pt.end() , bind(&AnaJet::pt,_1) > bind(&AnaJet::pt,_2) );
     }
     if( false && w->njets()>0 && lepton ) {
-      //dg::fillh2( "dphi_lepton_jet0" , 100 , 0 , M_PI , std::abs( lepton->dist_phi( *(jets_by_pt.begin()) ) ) , "#Delta #phi Lepton - Leading Jet (rad)" );
-      //dg::fillh2( "deta_lepton_jet0" , 100 , -5 , 5 , lepton->dist_eta( *(jets_by_pt.begin()) ) , "#Delta #eta Lepton - Leading Jet" );
-      dg::fillh2( "dr_lepton_jet0" , 50 , 0 , 5 , lepton->dist_eta_phi( *(jets_by_pt.begin()) ) , "#Delta r(#eta,#phi) Lepton - Leading Jet" );
+      //dg::fillh( "dphi_lepton_jet0" , 100 , 0 , M_PI , std::abs( lepton->dist_phi( *(jets_by_pt.begin()) ) ) , "#Delta #phi Lepton - Leading Jet (rad)" );
+      //dg::fillh( "deta_lepton_jet0" , 100 , -5 , 5 , lepton->dist_eta( *(jets_by_pt.begin()) ) , "#Delta #eta Lepton - Leading Jet" );
+      dg::fillh( "dr_lepton_jet0" , 50 , 0 , 5 , lepton->dist_eta_phi( *(jets_by_pt.begin()) ) , "#Delta r(#eta,#phi) Lepton - Leading Jet" );
     }
     if( false && w->njets()>0 && met ) {
-      //dg::fillh2( "dphi_met_jet0" , 100 , 0 , M_PI , std::abs( (*(jets_by_pt.begin()))->dist_phi( met ) ) , "#Delta #phi MET - Leading Jet (rad)" );
-      //dg::fillh2( "deta_met_jet0" , 100 , -5 , 5 , (*(jets_by_pt.begin()))->dist_eta( w->met_eta( w->met_pz_vlq() ) ) , "#Delta #eta MET - Leading Jet" );
-      dg::fillh2( "dr_met_jet0" , 50 , 0 , 5 , (*(jets_by_pt.begin()))->dist_eta_phi( w->met_eta( w->met_pz_vlq() ) , met->phi() ) , "#Delta r(#eta,#phi) MET - Leading Jet" );
+      //dg::fillh( "dphi_met_jet0" , 100 , 0 , M_PI , std::abs( (*(jets_by_pt.begin()))->dist_phi( met ) ) , "#Delta #phi MET - Leading Jet (rad)" );
+      //dg::fillh( "deta_met_jet0" , 100 , -5 , 5 , (*(jets_by_pt.begin()))->dist_eta( w->met_eta( w->met_pz_vlq() ) ) , "#Delta #eta MET - Leading Jet" );
+      dg::fillh( "dr_met_jet0" , 50 , 0 , 5 , (*(jets_by_pt.begin()))->dist_eta_phi( w->met_eta( w->met_pz_vlq() ) , met->phi() ) , "#Delta r(#eta,#phi) MET - Leading Jet" );
     }
     if( false && w->njets()>1 ) {
-      dg::fillh2( "dijet_m" , 200 , 0  , 200 , w->dijet_m() , "Invariant Mass of 2 Hardest Jets (GeV/c^{2})" );
+      dg::fillh( "dijet_m" , 200 , 0  , 200 , w->dijet_m() , "Invariant Mass of 2 Hardest Jets (GeV/c^{2})" );
     }
     if( false ) { 
       // Get delta-R between lepton and nearest jet
@@ -201,14 +201,14 @@ protected:
       for( vector< boost::shared_ptr<const AnaJet> >::iterator ijet=jets_by_pt.begin(), fjet=jets_by_pt.end(); ijet!=fjet; ++ijet, ++ithjet ) {
         const boost::shared_ptr<const AnaJet>& j( *ijet );
 	if(ithjet<3) { // don't waste memory on fourth and higher pt jets
-	  dg::fillh2( (format("jet_%|d|thpt_pt") % ithjet ).str() , 200 , 0 , 200 , j->pt() );
-	  //dg::fillh2( (format("jet_%|d|thpt_phi") % ithjet ).str() , 100 , -M_PI , M_PI , j->phi() );
-	  dg::fillh2( (format("jet_%|d|thpt_eta") % ithjet ).str() , 100 , -8 , 8 , j->eta() );
+	  dg::fillh( (format("jet_%|d|thpt_pt") % ithjet ).str() , 200 , 0 , 200 , j->pt() );
+	  //dg::fillh( (format("jet_%|d|thpt_phi") % ithjet ).str() , 100 , -M_PI , M_PI , j->phi() );
+	  dg::fillh( (format("jet_%|d|thpt_eta") % ithjet ).str() , 100 , -8 , 8 , j->eta() );
 	}
 	float tmp_dR = lepton->dist_eta_phi( j );
 	if( tmp_dR < min_dR ) { min_dR = tmp_dR; }
       }
-      dg::fillh2( "dr_lepton_jet" , 100 , 0 , 5 , min_dR , "#Delta r(#eta,#phi) Lepton - Nearest Jet" );
+      dg::fillh( "dr_lepton_jet" , 100 , 0 , 5 , min_dR , "#Delta r(#eta,#phi) Lepton - Nearest Jet" );
     }
   } // end study W cross section event candidate
 

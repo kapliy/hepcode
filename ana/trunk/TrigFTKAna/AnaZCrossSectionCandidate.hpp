@@ -12,9 +12,6 @@
 #include <numeric>
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
-#include <boost/serialization/access.hpp>
-#include <boost/serialization/nvp.hpp>
-#include <boost/serialization/version.hpp>
 #include "TrigFTKAna/AnaZ.hpp"
 #include "TrigFTKAna/AnaElectron.hpp"
 #include "TrigFTKAna/AnaMuon.hpp"
@@ -40,18 +37,6 @@ private:
   std::vector< boost::shared_ptr<const AnaTruthParticle> > _event_fj_truth; // unsorted
   mutable bool _cached;
 private:
-  friend class boost::serialization::access;
-  template<class archiveT>
-  void serialize( archiveT& ar, const unsigned int version ) {
-    ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP( AnaZ );
-    ar & boost::serialization::make_nvp("event_leptons",_event_leptons);
-    ar & boost::serialization::make_nvp("event_jets",_event_jets);
-    ar & boost::serialization::make_nvp("event_met",_event_met);
-    ar & boost::serialization::make_nvp("event_vertices",_event_vertices);
-    ar & boost::serialization::make_nvp("event_all_vertices",_event_all_vertices);
-    ar & boost::serialization::make_nvp("event_vlq_truth",_event_vlq_truth);
-    ar & boost::serialization::make_nvp("event_fj_truth",_event_fj_truth);
-  }
   void _refresh_cache() const {
     if( _cached ) { return; }
     // nothing done here yet
@@ -497,7 +482,5 @@ public:
   };
 
 };
-
-BOOST_CLASS_VERSION( AnaZCrossSectionCandidate , 3 );
 
 #endif // ANAZCROSSSECTIONCANDIDATE_HPP

@@ -380,7 +380,7 @@ void D3PDPeterTreeV29l::Init(TTree *tree)
   if( fChain->GetBranchStatus("mcevt_pdf2") ) { fChain->SetBranchAddress("mcevt_pdf2", &mcevt_pdf2, &b_mcevt_pdf2); }
 
   // EXPERIMENTAL: enable TTree cache:
-  Int_t cachesize = 200000000;   //200 MBytes
+  Int_t cachesize = 10000000;   //200 MBytes
   fChain->SetCacheSize(cachesize);
   if(false) { // old way: cache all branches
     fChain->AddBranchToCache("*",kTRUE);

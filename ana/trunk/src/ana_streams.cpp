@@ -447,13 +447,8 @@ ana_streams::root_dcap_filename( const std::string& filename )
   // update 20110314: xrootd now preferred for ROOT file /pnfs/uchicago.edu access.
   if( boost::istarts_with( filename , "root://" ) ) { return filename; }
   if( boost::contains( filename , "/pnfs/uchicago.edu" ) && boost::icontains( filename , ".root" ) ) {
-    // "dcap://dcap.mwt2.org/pnfs/uchicago.edu/path/to/file" or "/pnfs/uchicago.edu/path/to/file" should
-    // now read "root://uct2-grid5.uchicago.edu//atlas/pnfs/uchicago.edu/path/to/file"
     string xrootname( filename );
-    if(false) { // old version (doesn't work as of June 2012)
-      //boost::replace_regex( xrootname , boost::regex(".*/pnfs/uchicago.edu") , string("root://uct2-grid5.uchicago.edu//atlas/pnfs/uchicago.edu") );
-      boost::replace_regex( xrootname , boost::regex(".*/pnfs/uchicago.edu") , string("root://xrd.mwt2.org//atlas/pnfs/uchicago.edu") );
-    } else {    // new version, via instructions on: http://twiki.mwt2.org/bin/view/UCTier3/UsingXrootDTier3
+    {  // new version, via instructions on: http://twiki.mwt2.org/bin/view/UCTier3/UsingXrootDTier3
       static const std::string gate1 = "root://xrddc.mwt2.org:1096//atlas/dq2";
       static const std::string gate2 = "root://xrd-central.usatlasfacility.org//atlas/dq2";
       static const std::string gate3 = "root://uct2-grid5.uchicago.edu//atlas/dq2";

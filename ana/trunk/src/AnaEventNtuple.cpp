@@ -11,20 +11,6 @@
 #include <boost/make_shared.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/date_time.hpp>
-#include <boost/archive/xml_oarchive.hpp>
-#include <boost/archive/xml_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/serialization/string.hpp>
-#include <boost/serialization/map.hpp>
-#include <boost/serialization/set.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/list.hpp>
-#include "TrigFTKAna/serialize_bitset.hpp" // backport from boost 1.43
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/scoped_ptr.hpp>
-#include <boost/serialization/optional.hpp>
-#include <boost/serialization/nvp.hpp>
 #include <boost/bimap.hpp>
 #include <vector>
 #include "TrigFTKAna/AnaEvent.hpp"
@@ -159,65 +145,12 @@ AnaEventNtuple::filename_for_index( const FileIndex& index )
 void
 AnaEventNtuple::write_metadata()
 {
-  const std::string filename = _directory + "/" + "metadata.xml.bz2";
-  boost::shared_ptr<ana_streams::ostream> outf( ana_streams::open_for_write(filename) );
-  if( !outf || !(*outf) ) { 
-    cout << "warning: could not write metadata for " << _directory << "; ntuple is now corrupt." << endl;
-    return;
-  }
-  boost::shared_ptr<archive::xml_oarchive> aro( new archive::xml_oarchive(*outf) );
-  try { 
-    (*aro) << BOOST_SERIALIZATION_NVP(_directory);
-    (*aro) << BOOST_SERIALIZATION_NVP(_file_map);
-    (*aro) << BOOST_SERIALIZATION_NVP(_meta_map);
-    (*aro) << BOOST_SERIALIZATION_NVP(_next_file_index);
-  } catch( archive::archive_exception& e ) {
-    std::cout << e.code << std::endl;
-    std::cout << e.what() << std::endl;
-  }
-  outf->flush();
-  aro.reset(); // destroy the iarchive before the stream closes.
-  outf.reset(); // inf passed by reference to text_oarchive; destroy after archive.
+  return;
 }
 
 const bool
 AnaEventNtuple::read_metadata()
 {
-  filesystem::path filename = filesystem::path(_directory) / "metadata.xml.bz2";
-  boost::shared_ptr<boost::iostreams::filtering_istream> inf( ana_streams::open_for_read(filename.string()) );
-  // if( inf ) { inf->reset(); }
-  // inf.reset(); 
-  if( !inf ) {
-    cout << " AnaEventNtuple: could not read metadata " << filename.string() << endl;
-    return false;
-  }
-  if( !(*inf) || !(inf->good()) ) {
-    cout << " AnaEventNtuple: file read error: metadata " << filename.string() << " not open." << endl;
-    return false; 
-  }
-  boost::shared_ptr<archive::xml_iarchive> ari( new archive::xml_iarchive(*inf) );
-  try {
-    (*ari) >> BOOST_SERIALIZATION_NVP(_directory);
-    (*ari) >> BOOST_SERIALIZATION_NVP(_file_map);
-    (*ari) >> BOOST_SERIALIZATION_NVP(_meta_map);
-    (*ari) >> BOOST_SERIALIZATION_NVP(_next_file_index);
-  } catch( archive::archive_exception& e ) {
-    std::cout << e.code << std::endl;
-    std::cout << e.what() << std::endl;
-  }  
-  ari.reset(); // destroy the iarchive before the stream closes.
-  inf.reset(); // inf passed by reference to text_iarchive; it must be destroyed after archive.
-  // rebuild event map
-  _nevents_accepted = 0ul;
-  _nevents_total = 0ul;
-  for( FileMap::const_iterator i=_file_map.begin(), f=_file_map.end(); i!=f; ++i ) {
-    const FileIndex& index( i->first );
-    const FileMetadata& meta( i->second );
-    _event_map[ _nevents_accepted ] = index;
-    _nevents_accepted += meta.nevents_accepted();
-    _nevents_total += meta.nevents_total();
-  }
-  cout << " AnaEventNtuple: loaded metadata " << filename.string() << " with " << _nevents_accepted << " events " << endl;
   return true;
 }
 
@@ -360,73 +293,3 @@ AnaEventNtuple::path_to_new_sample_directory( const std::string& directory )
 }
 
 DEFINE_DGHEAP(AnaEventNtuple,"AnaEventNtuple");
-
-// ================================================================================================================================================  
-
-// // test program.
-// //
-// // compile like
-// // g++ -g -I/usr/local/boost/include -L/usr/local/boost/lib -lboost_serialization -o AnaEventNtuple src/AnaEventNtuple.cpp dg/DgMemory.cpp
-
-// DEFINE_DGHEAP(AnaEvent,"AnaEvent");
-
-// AnaEventNtuple ntuple;
-// const std::string directory_name = "./test_ntuple";
-
-// AnaEventNtuple ntuple_read;
-
-// #include <iostream>
-// #include <boost/format.hpp>
-// #include <iterator>
-// #include <algorithm>
-
-// void
-// fill_ntuple()
-// {
-//   for( unsigned int i=0; i!=100; ++i ) {
-//     AnaEvent* ev = new AnaEvent;
-//     ev->_ets.clear();
-//     for( unsigned int j=0; j!=i; ++j ) {
-//       ev->_ets.push_back( j*((i%10)+1)*1. );
-//     }
-//     ev->_run_number = 1;
-//     ev->_lumi_block = i % 10;
-//     ev->_event_number = i;
-//     ntuple.add_event( ev );
-//     delete ev;
-//   }
-// }
-
-// void
-// read_ntuple()
-// {
-//   for( unsigned int ievent=0, fevent=ntuple_read.nevents(); ievent!=fevent; ++ievent ) {
-//     const AnaEvent* ev = ntuple_read.get_event( ievent );
-//     assert( ev );
-//     cout << format( "ev %|5d| n %|5d| i %|5d| et %|5f| " ) 
-//       % ievent % ev->_ets.size() % -1 % 0 << endl;
-//     for( vector<double>::const_iterator i=ev->_ets.begin(), f=ev->_ets.end(); i!=f; ++i ) {
-//       cout << format( "ev %|5d| n %|5d| i %|5d| et %|5f| " ) 
-//         % ievent % ev->_ets.size() % std::distance(ev->_ets.begin(),i) % (*i) << endl;
-//     }
-//   }
-// }
-
-// int
-// main( void )
-// {
-
-//   ntuple.open_sample( directory_name , AnaEventNtuple::WRITE );
-//   fill_ntuple();
-//   ntuple.close_sample();
-
-//   DgMemoryManager::print( std::cout );
-
-//   ntuple_read.open_sample( directory_name , AnaEventNtuple::READ );
-//   read_ntuple();
-//   ntuple_read.close_sample();
-
-//   DgMemoryManager::print( std::cout );
-//   DgMemoryManager::leak_check( std::cout );
-  
-// }

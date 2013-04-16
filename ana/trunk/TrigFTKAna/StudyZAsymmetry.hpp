@@ -64,63 +64,63 @@ protected:
     // jet ordering
     vector< boost::shared_ptr<const AnaJet> > jets_by_pt( z->begin_jets() , z->end_jets() );
     // make plots
-    dg::fillh2( "z_m" , 200 , 0 , 200 , z->mass() , "Z Mass (GeV/c^{2})" );
-    dg::fillh2( "z_pt" , 200 , 0 , 200 , z->pt() , "Z Momentum (GeV/c)" );
-    dg::fillh2( "njets" , 10 , 0 , 10 , z->njets() , "N_{jets}" );
-    dg::fillh2( "nvtxs_all" , 20 , 0 , 20 , z->nvtxs_all() , "N_{vtxs} (before cuts)" );
-    //dg::fillh2( "jet_sumpt" , 200 , 0 , 200 , jet_sumpt , "Jet #Sigma p_{T} (GeV)" );
+    dg::fillh( "z_m" , 200 , 0 , 200 , z->mass() , "Z Mass (GeV/c^{2})" );
+    dg::fillh( "z_pt" , 200 , 0 , 200 , z->pt() , "Z Momentum (GeV/c)" );
+    dg::fillh( "njets" , 10 , 0 , 10 , z->njets() , "N_{jets}" );
+    dg::fillh( "nvtxs_all" , 20 , 0 , 20 , z->nvtxs_all() , "N_{vtxs} (before cuts)" );
+    //dg::fillh( "jet_sumpt" , 200 , 0 , 200 , jet_sumpt , "Jet #Sigma p_{T} (GeV)" );
     if( met ) {
-      dg::fillh2( "met" , 200 , 0 , 200 , met->pt() , "Z Missing ET (GeV)" );
-      //dg::fillh2( "met_phi", 100 , -M_PI , M_PI , met->phi() , "MET #phi (rad)" );
-      //if( _do_2d_plots ) dg::fillh2( "zm_vs_met" , 200,0,200,200,0,200,met->pt(),z->m(),"MET", "Z Mass (GeV/c^{2})" );
+      dg::fillh( "met" , 200 , 0 , 200 , met->pt() , "Z Missing ET (GeV)" );
+      //dg::fillh( "met_phi", 100 , -M_PI , M_PI , met->phi() , "MET #phi (rad)" );
+      //if( _do_2d_plots ) dg::fillh( "zm_vs_met" , 200,0,200,200,0,200,met->pt(),z->m(),"MET", "Z Mass (GeV/c^{2})" );
     } // end met plots
     if( leptonP && leptonN) {
       // mu+
-      dg::fillh2( "leptonP_pt" , 200 , 0 , 200 , leptonP->pt() , "l+ p_{T} (GeV/c)" ); 
-      //dg::fillh2( "leptonP_eta" , 100 , -8 , 8 , leptonP->eta() , "l+ #eta" );
-      dg::fillh2( "leptonP_phi" , 100 , -M_PI , M_PI , leptonP->phi() , "l+ #phi (rad)" );
-      dg::fillvh2( "leptonP_absetav" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta, std::abs(leptonP->eta()) , "Z l+ |#eta|" );
-      dg::fillvh2( "leptonP_etav" , dg::bin().D_eta.size()-1, dg::bin().D_eta, leptonP->eta() , "Z l+ #eta" );
+      dg::fillh( "leptonP_pt" , 200 , 0 , 200 , leptonP->pt() , "l+ p_{T} (GeV/c)" ); 
+      //dg::fillh( "leptonP_eta" , 100 , -8 , 8 , leptonP->eta() , "l+ #eta" );
+      dg::fillh( "leptonP_phi" , 100 , -M_PI , M_PI , leptonP->phi() , "l+ #phi (rad)" );
+      dg::fillvh( "leptonP_absetav" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta, std::abs(leptonP->eta()) , "Z l+ |#eta|" );
+      dg::fillvh( "leptonP_etav" , dg::bin().D_eta.size()-1, dg::bin().D_eta, leptonP->eta() , "Z l+ #eta" );
       // mu-
-      dg::fillh2( "leptonN_pt" , 200 , 0 , 500 , leptonN->pt() , "l- p_{T} (GeV/c)" );
-      //dg::fillh2( "leptonN_eta" , 100 , -8 , 8 , leptonN->eta() , "l- #eta" );
-      dg::fillh2( "leptonN_phi" , 100 , -M_PI , M_PI , leptonN->phi() , "l- #phi (rad)" );
-      dg::fillvh2( "leptonN_absetav" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta, std::abs(leptonN->eta()) , "Z l- |#eta|" );
-      dg::fillvh2( "leptonN_etav" , dg::bin().D_eta.size()-1, dg::bin().D_eta, leptonN->eta() , "Z l- #eta" );
+      dg::fillh( "leptonN_pt" , 200 , 0 , 500 , leptonN->pt() , "l- p_{T} (GeV/c)" );
+      //dg::fillh( "leptonN_eta" , 100 , -8 , 8 , leptonN->eta() , "l- #eta" );
+      dg::fillh( "leptonN_phi" , 100 , -M_PI , M_PI , leptonN->phi() , "l- #phi (rad)" );
+      dg::fillvh( "leptonN_absetav" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta, std::abs(leptonN->eta()) , "Z l- |#eta|" );
+      dg::fillvh( "leptonN_etav" , dg::bin().D_eta.size()-1, dg::bin().D_eta, leptonN->eta() , "Z l- #eta" );
       // joint quantities for mu+ & mu-
-      //dg::fillh2( "dphi_leptonP_leptonN" , 100 , -M_PI , M_PI , leptonP->dist_phi( leptonN ) , "#Delta #phi between leptons (rad)" );
-      //dg::fillh2( "deta_leptonP_leptonN" , 100 , -M_PI , M_PI , leptonP->dist_eta( leptonN ) , "#Delta #eta between leptons (rad)" );
-      //dg::fillh2( "dr_leptonP_leptonN" , 100 , -M_PI , M_PI , leptonP->dist_eta_phi( leptonN ) , "#Delta r(#phi,#phi) between leptons (rad)" );
+      //dg::fillh( "dphi_leptonP_leptonN" , 100 , -M_PI , M_PI , leptonP->dist_phi( leptonN ) , "#Delta #phi between leptons (rad)" );
+      //dg::fillh( "deta_leptonP_leptonN" , 100 , -M_PI , M_PI , leptonP->dist_eta( leptonN ) , "#Delta #eta between leptons (rad)" );
+      //dg::fillh( "dr_leptonP_leptonN" , 100 , -M_PI , M_PI , leptonP->dist_eta_phi( leptonN ) , "#Delta r(#phi,#phi) between leptons (rad)" );
       // special quantities for muons
       if(false && muonP && muonN) {
-	dg::fillh2( "leptonP_id_pt" , 200 , 0 , 200 , muonP->id_pt() , "mu+ ID p_{T} (GeV/c)" );
-	dg::fillh2( "leptonP_exms_pt" , 200 , 0 , 200 , muonP->exms_pt() , "mu+ ex. MS p_{T} (GeV/c)" ); 
-	dg::fillh2( "leptonN_id_pt" , 200 , 0 , 200 , muonN->id_pt() , "mu- ID p_{T} (GeV/c)" );
-	dg::fillh2( "leptonN_exms_pt" , 200 , 0 , 200 , muonN->exms_pt() , "mu- ex. MS p_{T} (GeV/c)" ); 
-	dg::fillh2( "leptonP_id_invpt" , 200 , 5e-3 , 5e-2 , 1.0/muonP->id_pt() , "mu+ ID p_{T} (GeV/c)" );
-	dg::fillh2( "leptonP_exms_invpt" , 200 , 5e-3 , 5e-2 , 1.0/muonP->exms_pt() , "mu+ ex. MS p_{T} (GeV/c)" ); 
-	dg::fillh2( "leptonN_id_invpt" , 200 , 5e-3 , 5e-2 , 1.0/muonN->id_pt() , "mu- ID p_{T} (GeV/c)" );
-	dg::fillh2( "leptonN_exms_invpt" , 200 , 5e-3 , 5e-2 , 1.0/muonN->exms_pt() , "mu- ex. MS p_{T} (GeV/c)" ); 
+	dg::fillh( "leptonP_id_pt" , 200 , 0 , 200 , muonP->id_pt() , "mu+ ID p_{T} (GeV/c)" );
+	dg::fillh( "leptonP_exms_pt" , 200 , 0 , 200 , muonP->exms_pt() , "mu+ ex. MS p_{T} (GeV/c)" ); 
+	dg::fillh( "leptonN_id_pt" , 200 , 0 , 200 , muonN->id_pt() , "mu- ID p_{T} (GeV/c)" );
+	dg::fillh( "leptonN_exms_pt" , 200 , 0 , 200 , muonN->exms_pt() , "mu- ex. MS p_{T} (GeV/c)" ); 
+	dg::fillh( "leptonP_id_invpt" , 200 , 5e-3 , 5e-2 , 1.0/muonP->id_pt() , "mu+ ID p_{T} (GeV/c)" );
+	dg::fillh( "leptonP_exms_invpt" , 200 , 5e-3 , 5e-2 , 1.0/muonP->exms_pt() , "mu+ ex. MS p_{T} (GeV/c)" ); 
+	dg::fillh( "leptonN_id_invpt" , 200 , 5e-3 , 5e-2 , 1.0/muonN->id_pt() , "mu- ID p_{T} (GeV/c)" );
+	dg::fillh( "leptonN_exms_invpt" , 200 , 5e-3 , 5e-2 , 1.0/muonN->exms_pt() , "mu- ex. MS p_{T} (GeV/c)" ); 
       }
     }
     if( _do_yield ) {
-      dg::fillhw2( "yield" , int( _yield_max - _yield_min ) ,
+      dg::fillhw( "yield" , int( _yield_max - _yield_min ) ,
 		   _yield_min , _yield_max , _yield_runnumber ,
 		   dg::global_weight() / _yield_lumi , "run number" );
     }
     if( false && z->njets() >=2) {
-      dg::fillh2( "max_deta_jets" , 100 , -8 , 8 , z->max_deta_jets() , "max #Delta #eta ( leading jet , next two highest pT jets )" );
+      dg::fillh( "max_deta_jets" , 100 , -8 , 8 , z->max_deta_jets() , "max #Delta #eta ( leading jet , next two highest pT jets )" );
     }
     if(false) {
       std::sort( jets_by_pt.begin() , jets_by_pt.end() , bind(&AnaJet::pt,_1) > bind(&AnaJet::pt,_2) );
     }
     if( false && z->njets() > 0 && leptonP && leptonN) {
-      dg::fillh2( "dphi_leptonP_jet0" , 100 , -M_PI , M_PI , leptonP->dist_phi( *(jets_by_pt.begin()) ) , "#Delta #phi LeptonP - Leading Jet (rad)" );
-      dg::fillh2( "deta_leptonP_jet0" , 100 , -8 , 8 , leptonP->dist_eta( *(jets_by_pt.begin()) ) , "#Delta #eta LeptonP - Leading Jet" );
-      dg::fillh2( "dr_leptonP_jet0" , 50 , 0 , 5 , leptonP->dist_eta_phi( *(jets_by_pt.begin()) ) , "#Delta r(#eta,#phi) LeptonP - Leading Jet" );
-      dg::fillh2( "dphi_leptonN_jet0" , 100 , -M_PI , M_PI , leptonN->dist_phi( *(jets_by_pt.begin()) ) , "#Delta #phi LeptonN - Leading Jet (rad)" );
-      dg::fillh2( "deta_leptonN_jet0" , 100 , -8 , 8 , leptonN->dist_eta( *(jets_by_pt.begin()) ) , "#Delta #eta LeptonN - Leading Jet" );
-      dg::fillh2( "dr_leptonN_jet0" , 50 , 0 , 5 , leptonN->dist_eta_phi( *(jets_by_pt.begin()) ) , "#Delta r(#eta,#phi) LeptonN - Leading Jet" );
+      dg::fillh( "dphi_leptonP_jet0" , 100 , -M_PI , M_PI , leptonP->dist_phi( *(jets_by_pt.begin()) ) , "#Delta #phi LeptonP - Leading Jet (rad)" );
+      dg::fillh( "deta_leptonP_jet0" , 100 , -8 , 8 , leptonP->dist_eta( *(jets_by_pt.begin()) ) , "#Delta #eta LeptonP - Leading Jet" );
+      dg::fillh( "dr_leptonP_jet0" , 50 , 0 , 5 , leptonP->dist_eta_phi( *(jets_by_pt.begin()) ) , "#Delta r(#eta,#phi) LeptonP - Leading Jet" );
+      dg::fillh( "dphi_leptonN_jet0" , 100 , -M_PI , M_PI , leptonN->dist_phi( *(jets_by_pt.begin()) ) , "#Delta #phi LeptonN - Leading Jet (rad)" );
+      dg::fillh( "deta_leptonN_jet0" , 100 , -8 , 8 , leptonN->dist_eta( *(jets_by_pt.begin()) ) , "#Delta #eta LeptonN - Leading Jet" );
+      dg::fillh( "dr_leptonN_jet0" , 50 , 0 , 5 , leptonN->dist_eta_phi( *(jets_by_pt.begin()) ) , "#Delta r(#eta,#phi) LeptonN - Leading Jet" );
     }
     // study ith-highest pt jet(s)
     if(false) {
@@ -129,9 +129,9 @@ protected:
       for( vector< boost::shared_ptr<const AnaJet> >::iterator ijet=jets_by_pt.begin(), fjet=jets_by_pt.end(); ijet!=fjet; ++ijet, ++ithjet ) {
 	const boost::shared_ptr<const AnaJet>& j( *ijet );
 	if(ithjet<2) { // don't waste memory on fourth and higher pt jets
-	  dg::fillh2( (format("jet_%|d|thpt_pt") % ithjet ).str() , 200 , 0 , 200 , j->pt() );
-	  //dg::fillh2( (format("jet_%|d|thpt_phi") % ithjet ).str() , 100 , -M_PI , M_PI , j->phi() );
-	  dg::fillh2( (format("jet_%|d|thpt_eta") % ithjet ).str() , 100 , -8 , 8 , j->eta() );
+	  dg::fillh( (format("jet_%|d|thpt_pt") % ithjet ).str() , 200 , 0 , 200 , j->pt() );
+	  //dg::fillh( (format("jet_%|d|thpt_phi") % ithjet ).str() , 100 , -M_PI , M_PI , j->phi() );
+	  dg::fillh( (format("jet_%|d|thpt_eta") % ithjet ).str() , 100 , -8 , 8 , j->eta() );
 	}
       }
     }

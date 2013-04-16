@@ -13,7 +13,7 @@ const bool UNFOLD_TREE_REDUCE = true;  // remove all optional branches from unfo
 const int PDF_REWEIGHTING = 1;         // 0=None, 1=CT10(members), 2=CT10(members)+5(families)
 const int pdf_offset = (PDF_REWEIGHTING==2) ? 5 : 0;
 const bool ZMUMU_FIX = true;           // Fix ZMUMU sample overlap with DYAN?
-const unsigned int NREPLICASF = 100;   // statistical error replicas
+unsigned int NREPLICASF = 100;         // statistical error replicas
 const unsigned int NREPLICASP = 53;    // PDF uncertainty replicas
 // Control application of certain weights to histograms. All should be "true"
 const bool HIST_VXZ_WEIGHT = true;     // vertex z0 weight - needs V1_29i ntuple
@@ -515,21 +515,16 @@ void UNF_FILL(const std::string& key ) {
 
 ////////////////////////////////////////////////////////////////
 
-#ifdef __cplusplus
-extern "C"
-#endif
-int
-F77_MAIN( int argc , char* argv[] )
+int main( int argc , char* argv[] )
 {
 
   AnaConfiguration::configure("ana_wasym",argc,argv);
   if( !AnaConfiguration::configured() ) { exit(0); }
-  dg::root()->no_save_at_exit();
-  dg::set_global_weight( 1. ); // turn on 
-  DgCollection::save_unique = false;
-  BOOST_SCOPE_EXIT() { dg::root()->do_save_at_exit(); } BOOST_SCOPE_EXIT_END;
+  TH1::AddDirectory(kTRUE);
 
   // enable AnaMuon replicas
+  NREPLICASF = AnaConfiguration::replicas();
+  std::cout << "SF replicas = " << NREPLICASF << std::endl;
   AnaMuon::NREPLICASF = NREPLICASF;
 
   // determine athena release version
@@ -543,7 +538,7 @@ F77_MAIN( int argc , char* argv[] )
   std::cout << "Data Range = " << AnaConfiguration::data_range() << std::endl;
   std::cout << "Conference code = " << conf << std::endl;
   // set muon pt cut
-  double MU_PT_CUT = AnaConfiguration::minimum_track_pt_cut();
+  double MU_PT_CUT = AnaConfiguration::pt_cut();
   assert(MU_PT_CUT>19.99 && MU_PT_CUT < 25.01);
   std::cout << "Minimum PT cut (only applies to W selection; Z is fixed at 20) is: " << MU_PT_CUT << std::endl;
   // see if we are running wmunu/zmumu [hardcoded!]
@@ -2178,8 +2173,9 @@ F77_MAIN( int argc , char* argv[] )
     dg::set_global_weight( 1. );
   } // end for each event
 
-  // save dg collection
+  // SAVE ROOT DATA
   AnaEventMgr::instance()->close_sample();
+  dg::save();
 
   // SAVE UNFOLDING DATA
   if(is_unfold) {
@@ -2203,7 +2199,8 @@ F77_MAIN( int argc , char* argv[] )
   }
   
   std::cout << "==================== FINISHED MAIN ====================" << std::endl;
-} // end analysis
+  return 0;
+}
 
 // complete study of w's and z's from a given muon and met collection
 void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
@@ -2695,9 +2692,9 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
 
   // Special event quantities
   dg::fillh( "avgmu" , 30 , 0 , 30 , avgmu , "average_mu" );
-  dg::fillhw( "avgmu_unw" , 30,0,30, avgmu , 1.0 );
+  dg::fillhw( "avgmu_unw" , 30,0,30, avgmu , 1.0 , "average_mu" );
   dg::fillh( "actmu" , 30 , 0 , 30 , actmu , "actual_mu" );
-  dg::fillhw( "actmu_unw" , 30,0,30, actmu , 1.0 );
+  dg::fillhw( "actmu_unw" , 30,0,30, actmu , 1.0 , "actual_mu" );
 
   return;
 }
@@ -3109,10 +3106,3 @@ bool getBosonBornLeptons(const std::vector< boost::shared_ptr<const AnaTruthPart
   }
   return false;
 }
-
-#ifdef F77_DUMMY_MAIN
-#ifdef __cplusplus
-extern "C"
-#endif
-int F77_DUMMY_MAIN() { abort(); return 1; }
-#endif
