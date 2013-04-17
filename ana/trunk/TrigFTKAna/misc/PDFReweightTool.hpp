@@ -89,9 +89,9 @@ void PDFReweightTool::AddDefaultPDFSets() {
   AddPDFSet(10800,"CT10.LHgrid");
   //AddPDFSet(11000,"CT10nlo.LHgrid");
   AddPDFSet(21100,"MSTW2008nlo68cl.LHgrid");
-  AddPDFSet(60700,"HERAPDF15NLO_EIG.LHgrid");
-  AddPDFSet(229800,"NNPDF23_nlo_as_0118.LHgrid");
-  AddPDFSet(42060,"abm11_5n_nlo.LHgrid");
+  AddPDFSet(60700,"HERAPDF15NLO_EIG.LHgrid");     // not in 17.6.0
+  AddPDFSet(229800,"NNPDF23_nlo_as_0118.LHgrid"); // not in 17.6.0
+  AddPDFSet(42060,"abm11_5n_nlo.LHgrid");         // not in 17.6.0
 }
 
 void PDFReweightTool::AddCT10PDFSet() {

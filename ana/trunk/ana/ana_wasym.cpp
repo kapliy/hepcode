@@ -1565,8 +1565,8 @@ int main( int argc , char* argv[] )
       if( !rwpdf ) {
 	const std::string LHAPATH = "/share/ftkdata/software/pdfsets";
 	rwpdf = new PDFReweightTool();
-	rwpdf->SetLHAPATH(LHAPATH);
 	if(PDF_REWEIGHTING>1) {
+	  rwpdf->SetLHAPATH(LHAPATH);  // need for NNPDF and some other latest-version PDFs
 	  rwpdf->AddDefaultPDFSets();
 	} else {
 	  assert(PDF_REWEIGHTING==1);

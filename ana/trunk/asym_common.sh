@@ -14,7 +14,7 @@ ntuple=29I
 lbl=04032013_nomg  # trying Carl's first version of non-MG trigger SFs
 lbl=04032013_nomg_1000toys  # re-running with 1000 toy MCs
 
-lbl=04012013_CONDOR       # condor
+lbl=04032013_nomg_condor   # 3rd condor version
 
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
 
@@ -44,6 +44,23 @@ function compute_nevts() {
     if [ $n -lt 500 ]; then echo 30; return; fi;
     echo 35
 }
+
+# condor supports many many more subjobs per samples
+function compute_nevts_condor() {
+    n=$1
+    sam=$2
+    echo $sam | egrep -q -e 'periodG|periodK' && { echo 50; return; }
+    echo $sam | egrep -q -e 'periodL|periodM' && { echo 100; return; }
+    echo $sam | egrep -q -e 'mc_powheg_pythia_wminmunu|mc_powheg_pythia_wplusmunu|mc_powheg_herwig_wminmunu|mc_powheg_herwig_wplusmunu|mc_mcnlo_wminmunu|mc_mcnlo_wplusmunu|mc_powheg_pythia_zmumu' && { echo 150; return; }
+    if [ $n -lt 5 ]; then echo 1; return; fi;
+    if [ $n -lt 10 ]; then echo 5; return; fi;
+    if [ $n -lt 20 ]; then echo 10; return; fi;
+    if [ $n -lt 50 ]; then echo 10; return; fi;
+    if [ $n -lt 100 ]; then echo 20; return; fi;
+    if [ $n -lt 300 ]; then echo 50; return; fi;
+    echo 100
+}
+
 function compute_replicas() {
     sam=$1
     echo $sam | egrep -q -e 'mc_powheg_pythia_wminmunu|mc_powheg_pythia_wplusmunu' && { echo ${NREPLICASF}; return; }
@@ -57,7 +74,11 @@ function submit_sample() {
     sample_path="samples/$sample"
     tag=`echo $sample | sed -e "s#wasymmetry${ntuple}_##g" -e 's#.dat##g'`
     ntot=`cat ${sample_path} | grep -c DPETER`
-    nsubs=`compute_nevts $ntot $sample`
+    if [ "${MODE}" == "pbs" ]; then
+	nsubs=`compute_nevts $ntot $sample`
+    else
+	nsubs=`compute_nevts_condor $ntot $sample`
+    fi
     replicas=`compute_replicas $sample`
     echo $sample $ntot $nsubs $replicas
     if [ "$nsubs" -gt "0" ]; then

@@ -7,7 +7,7 @@ ANAMEM_DATA='1900' #2700
 ANAMEM_MC='2000'   #3800mb
 ANAMEM_Z='2000'    #powheg zmumu
 MRGMEM='1900'      #4000mb
-NRETRY=5
+NRETRY=7
 smart_runner='./smart_runner.sh'
 smart_runner='time'
 
@@ -23,7 +23,7 @@ Arguments = None
 Requirements   =  ( (Memory >= {memory}) && (HAS_CVMFS =?= TRUE) )
 
 transfer_input_files = /tmp/antonk/TAR/TrigFTKAna.tar.bz2,/home/antonk/.globus/tmp.proxy
-transfer_output_files = {outputs}
+#transfer_output_files = {outputs}
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 
@@ -115,7 +115,7 @@ echo $@
 SH_POST="""
 if [ ${status} != '0' ]; then
     echo ERROR: job failed with status: ${status}
-    exit ${status}
+    exit `expr 100 + ${status}`
 fi
 
 # Copy output with xrdcp
@@ -141,7 +141,7 @@ fi
 nout=0
 for outfile in ${outfiles}; do
     fbase=`basename ${outfile}`
-    cmd=\"xrdcp -f $PWD/${outfile} ${RESHOST}/${RESDIR}/${fbase}\"
+    cmd=\"xrdcp -np -v -f $PWD/${outfile} ${RESHOST}/${RESDIR}/${fbase}\"
     echo ${cmd}
     eval ${cmd}
     status=$?

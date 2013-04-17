@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export MODE=pbs
+#export MODE=pbs
 source asym_common.sh
 
 i=$1
