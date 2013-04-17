@@ -58,17 +58,22 @@ input=/share/t3data3/antonk/ana/ana_v29I_03012013_paper_stacoCB_all/pt20  #start
 DB=DB_03012013_ALL.v13   # excludes wpt pythia8 as systematic
 DB=DB_03012013_ALL.v14   # includes wpt pythia8 AND sherpa as systematics
 
-input=/share/t3data3/antonk/ana/ana_v29I_03062013_paper_stacoCB_all/pt20
-DB=DB_03062013_ALL.v15   # no change - just extra triggers for ntuple
+#input=/share/t3data3/antonk/ana/ana_v29I_03062013_paper_stacoCB_all/pt20
+#DB=DB_03062013_ALL.v15   # no change - just extra triggers for ntuple
 
-input=/share/t3data3/antonk/ana/ana_v29J_03062013_paper_stacoCB_all/pt20
-DB=DB_03062013_ALL.v16   # trigger matching fixed; v29J ntuples
-
+# first version with J
+#input=/share/t3data3/antonk/ana/ana_v29J_03062013_paper_stacoCB_all/pt20
+#DB=DB_03062013_ALL.v16   # trigger matching fixed; v29J ntuples
 # fixed bad bin
-input=/share/t3data3/antonk/ana/ana_v29J_03172013_paper_stacoCB_all/pt20
-DB=DB_03172013_ALL.v17   # trigger matching fixed; fixed bad bin
+#input=/share/t3data3/antonk/ana/ana_v29J_03172013_paper_stacoCB_all/pt20
+#DB=DB_03172013_ALL.v17   # trigger matching fixed; fixed bad bin
 #input=/share/t3data3/antonk/ana/ana_v29J_03172013_paper_mu18_stacoCB_all/pt20
 #DB=DB_03172013_ALL.v18   # use mu18 (non-MG) triggers - only useful for W plots
+
+# first version of non-MG trigger scale factors from Carl
+input=/share/t3data3/antonk/ana/ana_v29I_04032013_nomg_stacoCB_all/pt20
+DB=DB_04032013_NOMG.v20
+DB=DB_04032013_NOMG.v21
 
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`

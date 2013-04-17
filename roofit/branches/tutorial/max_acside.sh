@@ -3,8 +3,6 @@
 # debugging A-C side asymmetry in some of the measurement bins.
 
 source config.sh
-#input=/share/t3data3/antonk/ana/ana_v29I_02232013_paper_stacoCB_all/pt20
-#input=/share/t3data3/antonk/ana/ana_v29I_03012013_paper_stacoCB_all/pt20  # adds per-trigger weights
 
 source _binning.sh
 fin=${input}
@@ -12,7 +10,7 @@ fin=${input}
 bgqcd=0
 
 # compare QCD0 vs QCD4 vs QCD4-BINS (we want to use QCD0 simplification!)
-if [ 0 -eq 1 ]; then
+if [ 1 -eq 1 ]; then
     for q in 0 1 ; do
 	./stack2.py -q ${q} -o ACSIDE --hsource d3_eta_lpt_met:y:2:-1:z:0:-1 --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} --lvar d3_abseta_lpt_met:x:0:-1:y:2:-1 --lbin 100,0,60 --lrebin 2 -t W_NOM_Q0 -m acside --bgqcd 0 --qcdscale 1.0 --lnofits &
 	#./stack2.py -q ${q} -o ACSIDE --hsource d3_eta_lpt_met:y:2:-1:z:0:-1 --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} --lvar d3_abseta_lpt_met:x:0:-1:y:2:-1 --lbin 100,0,60 --lrebin 2 -t W_NOM_Q4 -m acside --bgqcd 4 --lnofits &

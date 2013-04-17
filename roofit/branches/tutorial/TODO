@@ -1,3 +1,17 @@
+MET-scale: check that up/down is not switched.
+Check the direction of Up variation is different with/without QCD (since it's different with Wenu)
+TODO: check wmunu/wenu channel merging
+Check MuonTriggerSF systematic
+TODO: restore mT fits
+Consider: skipping MET cut
+
+
+TODO: check truth-level asymmetry when applying W polarization weight
+dump all muon-related scale factors
+
+* Make eta/phi trigger plots in ABSOLUTE: without requiring that the other one failed.
+* More muid matching studies (?)
+
 Bootstrapping per Sasha's advice?
 Data reweighting of the distribution we unfold
 
