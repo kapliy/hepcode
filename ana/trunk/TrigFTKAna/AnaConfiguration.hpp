@@ -31,6 +31,7 @@ private:
   static std::string _full_output_path;
   static bool _force_full_output_path;
   static std::string _full_sample_definition_path;
+  static bool _verbose;
   static bool _skip_systematics;
   static bool _apply_pileup_weights;
   static float _pileup_data_scale;
@@ -69,6 +70,7 @@ public:
   static const std::string full_output_path() { return _full_output_path; }
   static const bool force_full_output_path() { return _force_full_output_path; }
   static const std::string full_sample_definition_path() { return _full_sample_definition_path; }
+  static const bool verbose() { return _verbose; }
   static const bool skip_systematics() { return _skip_systematics; }
   static const bool apply_pileup_weights() { return _apply_pileup_weights; }
   static const float pileup_data_scale() { return _pileup_data_scale; }
@@ -93,6 +95,7 @@ public:
   static void full_output_path( const std::string& val ) { _full_output_path = val; }
   static void force_full_output_path( const bool& val ) { _force_full_output_path = val; }
   static void full_sample_definition_path( const std::string& val ) { _full_sample_definition_path = val; }
+  static void verbose( const bool& val ) { _verbose = val; }
   static void skip_systematics( const bool& val ) { _skip_systematics = val; }
   static void apply_pileup_weights( const bool& val ) { _apply_pileup_weights = val; }
   static void pileup_data_scale( const float& val ) { _pileup_data_scale = val; }

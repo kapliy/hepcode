@@ -93,10 +93,8 @@ protected:
       dg::fillh( "lpt" , 200 , 0 , 200 , L(lepton->pt()) , "W Lepton p_{T} (GeV/c)" );
       dg::fillvh( "lepton_absetav" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta, std::abs(lepton->eta()) , "W Lepton |#eta|" );
       dg::fillvh( "lepton_etav" , dg::bin().D_eta.size()-1, dg::bin().D_eta, lepton->eta() , "W Lepton #eta" );
-      dg::fillh( "int"   , 1 , 0 , 2.4 , std::abs(lepton->eta()) , "Integrated event counts, pt20" );
       dg::fillh( "uint"   , 1 , 0 , 1.0 , 0.50 , "Integrated event counts, pt20" );
       if(lepton->pt() > 25.0) { // for integrated measurement in pt>25 GeV region
-	dg::fillh( "int25" , 1 , 0 , 2.4 , std::abs(lepton->eta()) , "Integrated event counts, pt25" );
 	dg::fillh( "uint25" , 1 , 0 , 1.0 , 0.50 , "Integrated event counts, pt25" );
       }
     }
@@ -285,7 +283,7 @@ protected:
 	names += "met","met_phi";
 	values += met->pt(),met->phi() ;
 	// MET debugging:
-	if(true) {
+	if(false) { // 04/23/2013: disabled
 #define MT(x,y) detector::mtFromTLorentzVector<float>(x,y)
 	  TLorentzVector mu_corr;
 	  mu_corr.SetPtEtaPhiM( muon->pt() , 0. , muon->phi() , 0. );

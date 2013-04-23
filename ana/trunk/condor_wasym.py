@@ -265,14 +265,18 @@ class Job:
         s.write_submit_script()
         return True
     def write_merge_script(s,inputs=[]):
+        """ A merge script either for main files, or for unfolding """
         assert len(inputs)>0
-        s.jobfile = os.path.join(s.submitdir, 'merge_wasym.sh')
-        s.outROOT = 'root_'+s.tag+".root"
+        # hadd determines if we are merging main histograms file, or unfolding files
+        hadd = True if s.jobtype == "MRG" else False
+        s.jobfile = os.path.join(s.submitdir, 'merge_wasym.sh' if hadd else 'munfold_wasym.sh')
+        s.outROOT = ('root_' if hadd else 'unfold_')+s.tag+".root"
         s.outROOTpath = os.path.join('results','ana_wasym',s.outROOT)
-        s.outOU = os.path.join(s.submitdir, 'merge_wasym.out.log')
-        s.outER = os.path.join(s.submitdir, 'merge_wasym.err.log')
-        s.outLOG = os.path.join(s.submitdir, 'merge_wasym.log.log')
-        flist = 'wasym.root.list'
+        pre = 'merge' if hadd else 'munfold'
+        s.outOU = os.path.join(s.submitdir, pre+'_wasym.out.log')
+        s.outER = os.path.join(s.submitdir, pre+'_wasym.err.log')
+        s.outLOG = os.path.join(s.submitdir, pre+'_wasym.log.log')
+        flist = 'wasym.root.list' if hadd else 'wasym.unfold.list'
         s.outputs += [flist]
         f = open(s.jobfile, "w")
         print >>f, SH_PRE%(s.fdic[0],s.fdic[1])
@@ -280,17 +284,22 @@ class Job:
         print >>f,'ntot=0'
         print >>f,'rm -f ${ROOTDIR}/%s ; touch ${ROOTDIR}/%s;'%(flist,flist)
         for fin in inputs:
-            print >>f,'f="${RESDIR}/%s.root"'%fin
+            fname = fin if hadd else '%s.unfold'%fin
+            print >>f,'f="${RESDIR}/%s.root"'%fname
             print >>f,'st=`xrd uct3-xrd.mwt2.org existfile $f`'
             print >>f,'if [ "$st" == "The file exists." ]; then'
-            print >>f,'echo ${RESHOST}/$f >> ${ROOTDIR}/%s'%flist
+            # xrootd files: reduce cache size, since hadd is stupid and will eat 100% of RAM
+            print >>f,'echo ${RESHOST}/$f?cachesz=1000000 >> ${ROOTDIR}/%s'%flist
             print >>f,'((ntot++))'
             print >>f,'else'
             print >>f,'echo ERROR: failed to locate file $f'
             print >>f,'fi'
         print >>f,'if [ "$ntot" -eq "$nexpected" ]; then echo "ALL DONE"; else echo "WARNING: missing `expr $nexpected - $ntot` files"; fi'
         print >>f,'if [ "$ntot" -eq "0" ]; then echo "ERROR: no files to merge"; exit 203; fi'
-        print >>f, 'hadd -O %s `cat ${ROOTDIR}/%s`'%(s.outROOTpath,flist)
+        if hadd:
+            print >>f, 'hadd -O %s `cat ${ROOTDIR}/%s`'%(s.outROOTpath,flist)
+        else:
+            print >>f, 'hadd -T %s `cat ${ROOTDIR}/%s`'%(s.outROOTpath,flist)
         print >>f, "status=$?"
         print >>f, SH_POST
         f.close()
@@ -323,7 +332,7 @@ class JobSet:
             out.append(j.outROOT)
         return out
     def write_dag_script(s):
-        """ TODO: make it work with recursive dependencies 
+        """
         master submit script for condor DAG
         Job  Setup job.setup.submit
         Job  Work1 job.work1.submit
@@ -334,18 +343,22 @@ class JobSet:
         Retry Work1 8
         """
         assert len(s.jobs)==1,'ERROR: write_dag_script should be called from the final merge JobSet'
-        job = s.jobs[0]
-        s.dag = os.path.join( job.submitdir, 'global.dag')
+        s.dag = os.path.join( s.jobs[0].submitdir, 'global.dag')
         f = open(s.dag,'w')
+        # condor submit scripts
         for dep in s.get_deps():
             print >>f,'Job   %s %s'%(dep.jobname(),dep.condorfile)
-        print >>f,'Job   %s %s'%(job.jobname(),job.condorfile)
+        for job in s.jobs:
+            print >>f,'Job   %s %s'%(job.jobname(),job.condorfile)
+        # retry instructions
         for dep in s.get_deps():
             print >>f,'Retry   %s %s'%(dep.jobname(),NRETRY)
-        print >>f,'Retry   %s %s'%(job.jobname(),NRETRY)
+        for job in s.jobs:
+            print >>f,'Retry   %s %s'%(job.jobname(),NRETRY)
         a_parent = ' '.join( [ dep.jobname() for dep in s.get_deps() ] )
-        a_child = job.jobname()
-        print >>f,'PARENT %s CHILD %s'%(a_parent,a_child)
+        for job in s.jobs:
+            a_child = job.jobname()
+            print >>f,'PARENT %s CHILD %s'%(a_parent,a_child)
         f.close()
     def submit(s):
         """ DAG submission """
@@ -435,5 +448,12 @@ if __name__ == '__main__':
     mergejob.write_merge_script(anaset.root_outputs())
     mergeset.add( mergejob )
     mergeset.add_dep( anaset )
+
+    # create unfolding-merge job - only if this is signal MC
+    if re.search('wminmunu',opts.tag) or re.search('wplusmunu',opts.tag):
+        unfoldjob = Job('UNF')
+        unfoldjob.create(opts.tag, opts.workdir, opts.executable, anaopts, submitdir, opts.sample, 1, 0, 1, opts.cput, opts.mem)
+        unfoldjob.write_merge_script(anaset.root_outputs())
+        mergeset.add(unfoldjob)
 
     mergeset.submit()

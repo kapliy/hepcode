@@ -11,7 +11,6 @@ const int TRIGSCALE_CHOICE = 20;       // 2=EtaPt binning; 20=Oct25 version from
 const bool UNFOLD_TREE        = false; // besides histograms, save ufolding tree?
 const bool UNFOLD_TREE_REDUCE = true;  // remove all optional branches from unfolding tree?
 const int PDF_REWEIGHTING = 1;         // 0=None, 1=CT10(members), 2=CT10(members)+5(families)
-const int pdf_offset = (PDF_REWEIGHTING==2) ? 5 : 0;
 const bool ZMUMU_FIX = true;           // Fix ZMUMU sample overlap with DYAN?
 unsigned int NREPLICASF = 100;         // statistical error replicas
 const unsigned int NREPLICASP = 53;    // PDF uncertainty replicas
@@ -24,10 +23,9 @@ const bool HIST_ALPY_WEIGHT = true;    // alpgen reweighting
 const bool WPOL_PHYS_CONSTRAIN = true;
 const bool HIST_LS_WEIGHT = true;      // W/Z lineshape weight
 
-#define WZPT_WEIGHT_TARGET "PowhegPythia8MC11_ZData2011" // was: 3
+#define WZPT_WEIGHT_TARGET "PowhegPythia8MC11_ZData2011" // nominal
 #define WZPT_WEIGHT_TARGET2 "Sherpa14MC11"
-#define WZPT_WEIGHT_TARGET3 "PowhegPythia8MC11" // was: nominal
-#define WZPT_WEIGHT_TARGET4 "AlpgenMC11"
+#define WZPT_WEIGHT_TARGET3 "PowhegPythia8MC11"
 
 #include <set>
 #include <string>
@@ -173,18 +171,20 @@ bool getBosonBornLeptons(const std::vector< boost::shared_ptr<const AnaTruthPart
   do {} while(false)
 
 // weights
-const int NWEIGHTS = PDF_REWEIGHTING ? NREPLICASP + 5 + (PDF_REWEIGHTING>1 ? 5 : 0) : 5;
-// current,  wzpt1,wzpt2,wzpt3,wzpt4, pdf1,pdf2,pdf3,pdf4,pdf5 ,  pdf_memberx x 53
+const int NWPU = 2; // number of pileup variations
+const int NWPT = 2; // number of wzpt variations
+const int NWEIGHTS = PDF_REWEIGHTING ? 1+NWPU+NWPT + NREPLICASP + (PDF_REWEIGHTING>1 ? 5 : 0) : 1+NWPU+NWPT;
+const int pdf_offset = (PDF_REWEIGHTING==2) ? 5 : 0;
+// nominal,  pu2,pu3,  wzpt2,wzpt3,  pdf[1..5],  pdf_member[53]
 double event_weight[NWEIGHTS];
 double truth_weight[NWEIGHTS];
 double mc_weight = 1.0;
-double pu_weight = 1.0;
+double pu_weight[] = { 1.0 , 1.0 , 1.0 };
 double vx_weight = 1.0;
 // unitize, multiply or copy all weights
 #define WS1(x) for(int iii=0; iii<NWEIGHTS; iii++) x[iii]=1.0
 #define WSX(x,v) for(int iii=0; iii<NWEIGHTS; iii++) x[iii] *= v
 #define WSE(tr,re) for(int iii=0; iii<NWEIGHTS; iii++) tr[iii] = re[iii]
-#define WCP(x) event_weight[0]=event_weight[x]; truth_weight[0]=truth_weight[x]
 
 // flags
 bool is_mc = false;
@@ -265,39 +265,22 @@ typedef struct {
 // list of keys [initialized later] - systematic variations
 std::vector<std::string> unf_keys;     // all variations
 std::vector<std::string> unf_keys_nom; // all variations within Nominal (e.g., scale factors)
-std::vector<std::string> unf_keys_tru; // truth-level scale factors ( wpt, pdf) within Nominal. Excludes pdf variations
+std::vector<std::string> unf_keys_tru; // truth-level scale factors ( wpt, pdf, pu) within Nominal. Excludes pdf variations
 std::vector<std::string> unf_keys_rec; // reco-level scale factors within Nominal
 std::vector<std::string> unf_keys_rep; // stat. replicas scale factors within Nominal
 std::vector<std::string> unf_keys_pdf; // pdf member sets within Nominal
-// list of unfolding sets [POS,NEG] * [int,uint,abseta,eta,abseta-pt,eta-pt] - for each systematic variation
-const int unf_nh = 6;
+// list of unfolding sets [POS,NEG] * [uint,abseta,eta,abseta-pt,eta-pt] - for each systematic variation
+const int unf_nh = 5;
 const int unf_nq = 2;
 // unfolding data structure (indexed by unf_keys)
 typedef std::map<std::string,UNFDATA>unfdata_type;
 unfdata_type unfdata;
-// EXTRA GLOBAL HISTOGRAMS (to be saved-along in the unfolding file)
-const int nglb_lpt = 10;
-double GLB_LPT_NOM = 0; // will store "nominal" case pT
-double GLB_ETA_NOM = 0; // will store "nominal" case eta
-TH2D* HGLB_LPT[nglb_lpt];
 
 void create_response(const std::string& key , bool hastree, unsigned int nreplicas, TFile* fout) {
   static bool histos_inited = false;
   // update global histogram pointers
   if(!histos_inited) {
     histos_inited = true;
-    // debug histograms
-    HGLB_LPT[0] = (TH2D*)(dg::bin().h2_x_lpt->Clone("HGLB_MuonKScaleUp"));
-    HGLB_LPT[1] = (TH2D*)(dg::bin().h2_x_lpt->Clone("HGLB_MuonKScaleDown"));
-    HGLB_LPT[2] = (TH2D*)(dg::bin().h2_x_lpt->Clone("HGLB_MuonCScaleUp"));
-    HGLB_LPT[3] = (TH2D*)(dg::bin().h2_x_lpt->Clone("HGLB_MuonCScaleDown"));
-    HGLB_LPT[4] = (TH2D*)(dg::bin().h2_x_lpt->Clone("HGLB_MuonNoScale"));
-    // particularly bad eta region of +1.37 .. +1.52
-    HGLB_LPT[5] = (TH2D*)(dg::bin().h2_x_lpt->Clone("HGLB_MuonCScaleUp_bin37"));
-    HGLB_LPT[6] = (TH2D*)(dg::bin().h2_x_lpt->Clone("HGLB_MuonCScaleDown_bin37"));
-    HGLB_LPT[7] = (TH2D*)(dg::bin().h2_x_lpt->Clone("HGLB_MuonKScaleUp_bin37"));
-    HGLB_LPT[8] = (TH2D*)(dg::bin().h2_x_lpt->Clone("HGLB_MuonKScaleDown_bin37"));
-    for(int ii=9; ii<nglb_lpt; ii++) HGLB_LPT[ii] = 0;
   }
   // Unfolding data and tree
   unfdata[key] = UNFDATA();
@@ -335,7 +318,6 @@ void create_response(const std::string& key , bool hastree, unsigned int nreplic
     std::string sdir = iq==0 ? "POS/" : (iq==1 ? "NEG/" : "ALL/");
     int itot=0;
     // integrated vs abseta
-    tmp.push_back(  UnfoldingHistogramTool(fout,sdir+key+"/int",dg::bin().D_intabseta.size()-1,&(dg::bin().D_intabseta[0]) , nreplicas )  ); itot++;
     tmp.push_back(  UnfoldingHistogramTool(fout,sdir+key+"/uint",dg::bin().D_uintabseta.size()-1,&(dg::bin().D_uintabseta[0]) , nreplicas )  ); itot++;
     // abseta and eta
     tmp.push_back(  UnfoldingHistogramTool(fout,sdir+key+"/abseta",dg::bin().D_abseta.size()-1,&(dg::bin().D_abseta[0]) , nreplicas )  ); itot++;
@@ -394,34 +376,27 @@ void UNF_MISS() {
 	assert( std::abs(-999.0 - d.Truth_Weight_Replicas[replica]) > 0.000001 );
 	if(d.Reco_isReconstructed) assert( std::abs(-999.0 - d.Reco_Weight_Replicas[replica]) > 0.000001 );
 	d.response[ q*unf_nh + 0 ].fill(d.Reco_isReconstructed,
-					d.Reco_EtaLep==-999 ? d.Reco_EtaLep : std::abs(d.Reco_EtaLep),
-					d.Reco_Weight_Replicas[replica],
-					d.Truth_Is_Fiducial,
-					d.Truth_EtaLep==-999 ? d.Truth_EtaLep : std::abs(d.Truth_EtaLep),
-					d.Truth_Weight_Replicas[replica],
-					replica);
-	d.response[ q*unf_nh + 1 ].fill(d.Reco_isReconstructed,
 					d.Reco_EtaLep==-999 ? d.Reco_EtaLep : (std::abs(d.Reco_EtaLep)<2.4 ? 0.5 : 1.1),
 					d.Reco_Weight_Replicas[replica],
 					d.Truth_Is_Fiducial,
 					d.Truth_EtaLep==-999 ? d.Truth_EtaLep : (std::abs(d.Truth_EtaLep)<2.4 ? 0.5 : 1.1),
 					d.Truth_Weight_Replicas[replica],
 					replica);
-	d.response[ q*unf_nh + 2 ].fill(d.Reco_isReconstructed,
+	d.response[ q*unf_nh + 1 ].fill(d.Reco_isReconstructed,
 					d.Reco_EtaLep==-999 ? d.Reco_EtaLep : std::abs(d.Reco_EtaLep),
 					d.Reco_Weight_Replicas[replica],
 					d.Truth_Is_Fiducial,
 					d.Truth_EtaLep==-999 ? d.Truth_EtaLep : std::abs(d.Truth_EtaLep),
 					d.Truth_Weight_Replicas[replica],
 					replica);
-	d.response[ q*unf_nh + 3 ].fill(d.Reco_isReconstructed,
+	d.response[ q*unf_nh + 2 ].fill(d.Reco_isReconstructed,
 					d.Reco_EtaLep,
 					d.Reco_Weight_Replicas[replica],
 					d.Truth_Is_Fiducial,
 					d.Truth_EtaLep,
 					d.Truth_Weight_Replicas[replica],
 					replica);
-	d.response[ q*unf_nh + 4 ].fill(d.Reco_isReconstructed,
+	d.response[ q*unf_nh + 3 ].fill(d.Reco_isReconstructed,
 					d.Reco_EtaLep==-999 ? d.Reco_EtaLep : std::abs(d.Reco_EtaLep),
 					d.Reco_PtLep,
 					d.Reco_Weight_Replicas[replica],
@@ -430,7 +405,7 @@ void UNF_MISS() {
 					d.Truth_PtLep,
 					d.Truth_Weight_Replicas[replica],
 					replica);
-	d.response[ q*unf_nh + 5 ].fill(d.Reco_isReconstructed,
+	d.response[ q*unf_nh + 4 ].fill(d.Reco_isReconstructed,
 					d.Reco_EtaLep,
 					d.Reco_PtLep,
 					d.Reco_Weight_Replicas[replica],
@@ -463,34 +438,27 @@ void UNF_FILL(const std::string& key ) {
       assert( std::abs(-999.0 - d.Truth_Weight_Replicas[replica]) > 0.000001 );
       if(d.Reco_isReconstructed) assert( std::abs(-999.0 - d.Reco_Weight_Replicas[replica]) > 0.000001 );
       d.response[ q*unf_nh + 0 ].fill(d.Reco_isReconstructed,
-				      d.Reco_EtaLep==-999 ? d.Reco_EtaLep : std::abs(d.Reco_EtaLep),
-				      d.Reco_Weight_Replicas[replica],
-				      d.Truth_Is_Fiducial,
-				      d.Truth_EtaLep==-999 ? d.Truth_EtaLep : std::abs(d.Truth_EtaLep),
-				      d.Truth_Weight_Replicas[replica],
-				      replica);
-      d.response[ q*unf_nh + 1 ].fill(d.Reco_isReconstructed,
 				      d.Reco_EtaLep==-999 ? d.Reco_EtaLep : (std::abs(d.Reco_EtaLep)<2.4 ? 0.5 : 1.1),
 				      d.Reco_Weight_Replicas[replica],
 				      d.Truth_Is_Fiducial,
 				      d.Truth_EtaLep==-999 ? d.Truth_EtaLep : (std::abs(d.Truth_EtaLep)<2.4 ? 0.5 : 1.1),
 				      d.Truth_Weight_Replicas[replica],
 				      replica);
-      d.response[ q*unf_nh + 2 ].fill(d.Reco_isReconstructed,
+      d.response[ q*unf_nh + 1 ].fill(d.Reco_isReconstructed,
 				      d.Reco_EtaLep==-999 ? d.Reco_EtaLep : std::abs(d.Reco_EtaLep),
 				      d.Reco_Weight_Replicas[replica],
 				      d.Truth_Is_Fiducial,
 				      d.Truth_EtaLep==-999 ? d.Truth_EtaLep : std::abs(d.Truth_EtaLep),
 				      d.Truth_Weight_Replicas[replica],
 				      replica);
-      d.response[ q*unf_nh + 3 ].fill(d.Reco_isReconstructed,
+      d.response[ q*unf_nh + 2 ].fill(d.Reco_isReconstructed,
 				      d.Reco_EtaLep,
 				      d.Reco_Weight_Replicas[replica],
 				      d.Truth_Is_Fiducial,
 				      d.Truth_EtaLep,
 				      d.Truth_Weight_Replicas[replica],
 				      replica);
-      d.response[ q*unf_nh + 4 ].fill(d.Reco_isReconstructed,
+      d.response[ q*unf_nh + 3 ].fill(d.Reco_isReconstructed,
 				      d.Reco_EtaLep==-999 ? d.Reco_EtaLep : std::abs(d.Reco_EtaLep),
 				      d.Reco_PtLep,
 				      d.Reco_Weight_Replicas[replica],
@@ -499,7 +467,7 @@ void UNF_FILL(const std::string& key ) {
 				      d.Truth_PtLep,
 				      d.Truth_Weight_Replicas[replica],
 				      replica);
-      d.response[ q*unf_nh + 5 ].fill(d.Reco_isReconstructed,
+      d.response[ q*unf_nh + 4 ].fill(d.Reco_isReconstructed,
 				      d.Reco_EtaLep,
 				      d.Reco_PtLep,
 				      d.Reco_Weight_Replicas[replica],
@@ -604,11 +572,12 @@ int main( int argc , char* argv[] )
   UNA("Nominal");
   if(!NOMONLY) {
     UNA("Rawmet");
+    // pileup reweighting variations
+    UNT("PileupDown");
+    UNT("PileupUp");
     // other generators
-    UNT("WptPythia8Data2011");
     UNT("WptSherpa");
     UNT("WptPythia8");
-    UNT("WptAlpgenMC11");
     // other PDFs
     if(PDF_REWEIGHTING) {
       // pdf families
@@ -1129,8 +1098,8 @@ int main( int argc , char* argv[] )
   // Whether METUtility should scream at you over every little thing
   metutil->setVerbosity(false);
 
-  // W boson pt and polarization reweighting: 4 vpt targets; 1 alpgen y reweighting tool
-  BosonPtReweightingTool* wzptutil[6] = {0, 0,0,0,0, 0};
+  // W boson pt and polarization reweighting: 1 nominal vpt;  2 variations; 1 alpgen y reweighting tool
+  BosonPtReweightingTool* wzptutil[] = {0, 0,0, 0};
   // Vertex reweighting
   VertexPositionReweightingTool *vtxutil = 0;
   // W and Z lineshape reweighting
@@ -1189,54 +1158,65 @@ int main( int argc , char* argv[] )
     WSX(event_weight,mc_weight);
     // MC pileup reweighting
     static boost::shared_ptr<Root::TPileupReweighting> pw( new Root::TPileupReweighting( "pw" ) );
+    static boost::shared_ptr<Root::TPileupReweighting> pw_up( new Root::TPileupReweighting( "pw_up" ) );
+    static boost::shared_ptr<Root::TPileupReweighting> pw_down( new Root::TPileupReweighting( "pw_down" ) );
+#define PINIT(p,s) p->SetDefaultChannel(0);				\
+    p->SetUnrepresentedDataAction(2);					\
+    p->DisableWarnings(true);						\
+    p->SetDataScaleFactors( s );					\
+    if(pileup_config_file.empty()) {					\
+      if(evt->check_tag("mc11c")) {					\
+	p->AddConfigFile("pileup_histos/MC11c.prw.root");		\
+	p->AddConfigFile("CommonAnalysis/RootCore/data/PileupReweighting/mc11b_defaults.prw.root"); \
+	std::cout << "Initializing TPileupReweighting for MC11C" << std::endl; \
+      }									\
+      else {								\
+	assert(0&&"Bad MC type");					\
+      }									\
+    } else {								\
+      p->AddConfigFile(pileup_config_file.c_str());			\
+    }									\
+    p->AddLumiCalcFile(pileup_data_file);				\
+    p->Initialize()
     if( (evt->check_tag("mc11b") || evt->check_tag("mc11c")) && pileup_reweighting_mode!=PU_MC11B ) {
-      pw.reset( new Root::TPileupReweighting( "pw" ) );
-      pw->SetDefaultChannel(0);
-      pw->SetUnrepresentedDataAction(2); // just keep the data
-      pw->DisableWarnings(true);
-      pw->SetDataScaleFactors( AnaConfiguration::pileup_data_scale() );
-      if(pileup_config_file.empty()) {
-	if(evt->check_tag("mc11c")) {
-	  //pw->AddConfigFile("pileup_histos/mc11c_custom2.root");
-	  pw->AddConfigFile("pileup_histos/MC11c.prw.root");
-	  pw->AddConfigFile("CommonAnalysis/RootCore/data/PileupReweighting/mc11b_defaults.prw.root");
-	  std::cout << "Initializing TPileupReweighting for MC11C" << std::endl;
-	}
-	else {
-	  assert(0&&"Bad MC type");
-	}
-      } else {
-	pw->AddConfigFile(pileup_config_file.c_str());
-      }
-      pw->AddLumiCalcFile(pileup_data_file);
-      pw->Initialize();
+      PINIT(pw,AnaConfiguration::pileup_data_scale());
+      PINIT(pw_down,0.97);
+      PINIT(pw_up,1.03);
       int_lumi = pw->getIntegratedLumiVector();
       double lumi_tot = pw->GetIntegratedLumi();
       std::cout << "Total lumi = " << lumi_tot << std::endl;
       pileup_reweighting_mode=PU_MC11B;
     } else if( !evt->check_tag( "mc11b" ) && !evt->check_tag( "mc11c" ) && pileup_reweighting_mode!=PU_NONE ) {
-      pw.reset();
+      pw.reset(); pw_up.reset(); pw_down.reset();
       pileup_reweighting_mode=PU_NONE;
     }
-    if(is_mc) pw->SetRandomSeed(314159 + evt->mc_channel()*2718 + evnum);
+    if(is_mc) {
+      pw->SetRandomSeed(314159 + evt->mc_channel()*2718 + evnum);
+      pw_up->SetRandomSeed(314159 + evt->mc_channel()*2718 + evnum);
+      pw_down->SetRandomSeed(314159 + evt->mc_channel()*2718 + evnum);
+    }
+#undef PINIT
     // for MC, calculate pileup weight
     if(is_mc && do_pileup) {
-      pu_weight = pw ? pw->GetCombinedWeight( raw_rnum , evt->mc_channel() , avgmu ) : 1. ;
+      pu_weight[0] = pw ? pw->GetCombinedWeight( raw_rnum , evt->mc_channel() , avgmu ) : 1. ;
+      pu_weight[1] = pw_down ? pw_down->GetCombinedWeight( raw_rnum , evt->mc_channel() , avgmu ) : 1. ;
+      pu_weight[2] = pw_up ? pw_up->GetCombinedWeight( raw_rnum , evt->mc_channel() , avgmu ) : 1. ;
       // skip event; negative pileup weight means we don't know the weight (rare event)
-      if(pu_weight<0) {
-	pu_weight=0.0;
-	std::cerr << "WARNING: found event with negative pileup weight: " << pu_weight << std::endl;
+      if(pu_weight[2]<0) pu_weight[2]=0.0;
+      if(pu_weight[1]<0) pu_weight[1]=0.0;
+      if(pu_weight[0]<0) {
+	pu_weight[0]=0.0;
+	std::cerr << "WARNING: found event with negative pileup weight: " << pu_weight[0] << std::endl;
       }
-      dg::fillh( "pu_weight" , 100 , -2 , 2 , pu_weight );
-      dg::fillh( "pu_weight_log10" , 100 , -2 , 2 , detector::safe_log10(pu_weight) );
+      dg::fillh( "pu_weight" , 100 , -2 , 2 , pu_weight[0] );
       dg::fillh( "mc_weight" , 100 , -2 , 2 , mc_weight );
-      WSX(event_weight,pu_weight);
+      event_weight[0] *= pu_weight[0]; // nominal
+      event_weight[1] *= pu_weight[1]; // down
+      event_weight[2] *= pu_weight[2]; // up
+      for(int iii=1+NWPU;iii<NWEIGHTS;iii++) event_weight[iii] *= pu_weight[0];
       dg::set_global_weight( event_weight[0] );
       dg::event_info().set_mc_weight(mc_weight);
-      dg::event_info().set_pu_weight(pu_weight);
-    }
-    if(false) {
-      std::cout << "Weights: " << pu_weight << "\t" << mc_weight << std::endl;
+      dg::event_info().set_pu_weight(pu_weight[0]);
     }
 
     // NUMBER OF EVENTS. Note that weights below this are NOT included in nevts normalization!
@@ -1306,29 +1286,24 @@ int main( int argc , char* argv[] )
 	  std::string wzpt_destination;
 	  wzpt_destination = WZPT_WEIGHT_TARGET;
 	  BosonPtReweightingTool::ePtWeightType vtype = (is_wmunu || is_wtaunu) ? BosonPtReweightingTool::PeakWeight : BosonPtReweightingTool::MassBinnedWeight;
-	  wzptutil[1] = new BosonPtReweightingTool(wzpt_source,wzpt_destination,vtype,rw_path);
-	  wzptutil[1]->SetImposePhysicalWpolConstraint(WPOL_PHYS_CONSTRAIN);
-	  wzptutil[0] = wzptutil[1];
+	  wzptutil[0] = new BosonPtReweightingTool(wzpt_source,wzpt_destination,vtype,rw_path);
+	  wzptutil[0]->SetImposePhysicalWpolConstraint(WPOL_PHYS_CONSTRAIN);
 	  wzpt_destination = WZPT_WEIGHT_TARGET2;
 	  assert(std::string("Sherpa14MC11") == wzpt_destination);
-	  wzptutil[2] = new BosonPtReweightingTool(wzpt_source,wzpt_destination,vtype,rw_path);
-	  wzptutil[2]->SetImposePhysicalWpolConstraint(WPOL_PHYS_CONSTRAIN);
+	  wzptutil[1] = new BosonPtReweightingTool(wzpt_source,wzpt_destination,vtype,rw_path);
+	  wzptutil[1]->SetImposePhysicalWpolConstraint(WPOL_PHYS_CONSTRAIN);
 	  wzpt_destination = WZPT_WEIGHT_TARGET3;
 	  assert(std::string("PowhegPythia8MC11") == wzpt_destination);
-	  wzptutil[3] = new BosonPtReweightingTool(wzpt_source,wzpt_destination,BosonPtReweightingTool::PeakWeight,rw_path);
-	  wzptutil[3]->SetImposePhysicalWpolConstraint(WPOL_PHYS_CONSTRAIN);
-	  wzpt_destination = WZPT_WEIGHT_TARGET4;
-	  assert(std::string("AlpgenMC11") == wzpt_destination);
-	  wzptutil[4] = new BosonPtReweightingTool(wzpt_source,wzpt_destination,BosonPtReweightingTool::PeakWeight,rw_path);
-	  wzptutil[4]->SetImposePhysicalWpolConstraint(WPOL_PHYS_CONSTRAIN);
+	  wzptutil[2] = new BosonPtReweightingTool(wzpt_source,wzpt_destination,BosonPtReweightingTool::PeakWeight,rw_path);
+	  wzptutil[2]->SetImposePhysicalWpolConstraint(WPOL_PHYS_CONSTRAIN);
 	}
       }
-      if(!wzptutil[5] && is_alpgen && !is_wgamma) {
+      if(!wzptutil[3] && is_alpgen && !is_wgamma) {
 	// set up for alpgen reweighting
 	std::string alpgen_source = BosonPtReweightingTool::MapMCName(current_filename);
 	if(alpgen_source != current_filename) {
 	  std::string alpgen_target = alpgen_source+"_CT10";
-	  wzptutil[5] = new BosonPtReweightingTool(alpgen_source,alpgen_target,
+	  wzptutil[3] = new BosonPtReweightingTool(alpgen_source,alpgen_target,
 						   BosonPtReweightingTool::PeakWeight,rw_path);
 	}
       }
@@ -1359,20 +1334,16 @@ int main( int argc , char* argv[] )
 	  dg::event_info().set_wzpt_weight(wpt_weight);   // main signal weight
 	  // apply to histograms, too?
 	  if(HIST_WZPT_WEIGHT) {
-	    event_weight[0] *= wpt_weight;
-	    event_weight[1] *= wpt_weight;
-	    for(int iii=5;iii<NWEIGHTS;iii++) event_weight[iii] *= wpt_weight;
+	    for(int iii=0;iii<1+NWPU;iii++) event_weight[iii] *= wpt_weight;
+	    for(int iii=1+NWPU+NWPT;iii<NWEIGHTS;iii++) event_weight[iii] *= wpt_weight;
 	    dg::set_global_weight( event_weight[0] );
 	    // additional weights
-	    wpt_weight = v->charge()>0 ? wzptutil[2]->GetPtWeightWplus(fwpt) : wzptutil[2]->GetPtWeightWminus(fwpt);
-	    event_weight[2] *= wpt_weight;
+	    wpt_weight = v->charge()>0 ? wzptutil[1]->GetPtWeightWplus(fwpt) : wzptutil[1]->GetPtWeightWminus(fwpt);
+	    event_weight[1+NWPU+0] *= wpt_weight;
 	    dg::event_info().set_wzpt_weight2(wpt_weight);
-	    wpt_weight = v->charge()>0 ? wzptutil[3]->GetPtWeightWplus(fwpt) : wzptutil[3]->GetPtWeightWminus(fwpt);
-	    event_weight[3] *= wpt_weight;
+	    wpt_weight = v->charge()>0 ? wzptutil[2]->GetPtWeightWplus(fwpt) : wzptutil[2]->GetPtWeightWminus(fwpt);
+	    event_weight[1+NWPU+1] *= wpt_weight;
 	    dg::event_info().set_wzpt_weight3(wpt_weight);
-	    wpt_weight = v->charge()>0 ? wzptutil[4]->GetPtWeightWplus(fwpt) : wzptutil[4]->GetPtWeightWminus(fwpt);
-	    event_weight[4] *= wpt_weight;
-	    dg::event_info().set_wzpt_weight4(wpt_weight);
 	  }
 	}
 	// w polarization
@@ -1386,8 +1357,8 @@ int main( int argc , char* argv[] )
 	  }
 	}
 	// Alpgen rapidity reweighting
-	if( wzptutil[5] && is_alpgen ) {
-	  const double alpy_weight = v->charge()>0 ? wzptutil[5]->GetRapidityWeightWplus( v->rapidity() ) : wzptutil[5]->GetRapidityWeightWminus( v->rapidity() );
+	if( wzptutil[3] && is_alpgen ) {
+	  const double alpy_weight = v->charge()>0 ? wzptutil[3]->GetRapidityWeightWplus( v->rapidity() ) : wzptutil[3]->GetRapidityWeightWminus( v->rapidity() );
 	  dg::event_info().set_alpy_weight(alpy_weight);
 	  // apply to histograms, too?
 	  if(HIST_ALPY_WEIGHT) {
@@ -1479,20 +1450,16 @@ int main( int argc , char* argv[] )
 	  dg::event_info().set_wzpt_weight(zpt_weight);
 	  // apply to histograms, too?
 	  if(HIST_WZPT_WEIGHT) {
-	    event_weight[0] *= zpt_weight;
-	    event_weight[1] *= zpt_weight;
-	    for(int iii=5;iii<NWEIGHTS;iii++) event_weight[iii] *= zpt_weight;
+	    for(int iii=0;iii<1+NWPU;iii++) event_weight[iii] *= zpt_weight;
+	    for(int iii=1+NWPU+NWPT;iii<NWEIGHTS;iii++) event_weight[iii] *= zpt_weight;
 	    dg::set_global_weight( event_weight[0] );
 	    // additional weights
-	    zpt_weight = wzptutil[2]->GetPtWeightZ(fzpt,fzm);
-	    event_weight[2] *= zpt_weight;
+	    zpt_weight = wzptutil[1]->GetPtWeightZ(fzpt,fzm);
+	    event_weight[1+NWPU+0] *= zpt_weight;
 	    dg::event_info().set_wzpt_weight2(zpt_weight);
-	    zpt_weight = wzptutil[3]->GetPtWeightZ(fzpt,fzm);
-	    event_weight[3] *= zpt_weight;
+	    zpt_weight = wzptutil[2]->GetPtWeightZ(fzpt,fzm);
+	    event_weight[1+NWPU+1] *= zpt_weight;
 	    dg::event_info().set_wzpt_weight3(zpt_weight);
-	    zpt_weight = wzptutil[4]->GetPtWeightZ(fzpt,fzm);
-	    event_weight[4] *= zpt_weight;
-	    dg::event_info().set_wzpt_weight4(zpt_weight);
 	  }
 	}
 	// Z mc@nlo deficit around 60 GeV
@@ -1506,8 +1473,8 @@ int main( int argc , char* argv[] )
 	  }
 	}
 	// Alpgen rapidity reweighting
-	if(wzptutil[5] && is_alpgen) {
-	  const double alpy_weight = wzptutil[5]->GetRapidityWeightZ( v->rapidity() );
+	if(wzptutil[3] && is_alpgen) {
+	  const double alpy_weight = wzptutil[3]->GetRapidityWeightZ( v->rapidity() );
 	  dg::event_info().set_alpy_weight(alpy_weight);
 	  // apply to histograms, too?
 	  if(HIST_ALPY_WEIGHT) {
@@ -1594,8 +1561,8 @@ int main( int argc , char* argv[] )
 	pdf_weight.push_back( rwpdf->GetEventWeight(4,mcevt_pdf_scale,mcevt_id1,mcevt_id2,x1,x2,pdf1,pdf2,false) );
 	pdf_weight.push_back( rwpdf->GetEventWeight(5,mcevt_pdf_scale,mcevt_id1,mcevt_id2,x1,x2,pdf1,pdf2,false) );
 	// 5 PDF variations
-	for(int ii=5; ii<5+pdf_offset; ii++) {
-	  const int ipdf = ii-5;
+	for(int ii=1+NWPU+NWPT; ii<1+NWPU+NWPT+pdf_offset; ii++) {
+	  const int ipdf = ii-(1+NWPU+NWPT);
 	  assert(  ipdf >= 0 && ipdf<pdf_weight.size()  );
 	  event_weight[ii] *= pdf_weight[ipdf];
 	  ntpdf.push_back(pdf_weight[ipdf]);
@@ -1606,8 +1573,8 @@ int main( int argc , char* argv[] )
 	assert(pdf_offset==0);
       }
       // reweight to each member of CT10 family
-      for(int ii=5+pdf_offset; ii<NWEIGHTS; ii++) {
-	const int member = ii - 5 - pdf_offset;
+      for(int ii=1+NWPU+NWPT+pdf_offset; ii<NWEIGHTS; ii++) {
+	const int member = ii - (1+NWPU+NWPT) - pdf_offset;
 	assert(member>=0 && member<= 52);
 	event_weight[ii] *= rwpdf->GetEventWeight(1,member,mcevt_pdf_scale,mcevt_id1,mcevt_id2,x1,x2,pdf1,pdf2,false);
       }
@@ -1621,7 +1588,7 @@ int main( int argc , char* argv[] )
 #define FT(ix,x) it->second.Truth_Weight_Replicas[ix]=x; it->second.Truth_Weight=x
     if(is_mc || is_unfold) {
       for(unfdata_type::iterator it = unfdata.begin(); it!=unfdata.end(); it++) { // loop over systematics
-	it->second.Truth_PileUp_Weight=pu_weight;
+	it->second.Truth_PileUp_Weight=pu_weight[0];
 	bool found_key_tru = false;
 	// check if this is one of the truth-level SF systematics [ excluding PDF ]
 	for(int ii=0; ii<unf_keys_tru.size(); ii++) {
@@ -1636,14 +1603,14 @@ int main( int argc , char* argv[] )
 	if(it->first == "PDFMEM") {
 	  assert( it->second.Truth_Weight_Replicas.size() == NREPLICASP );
 	  for(int member = 0; member < NREPLICASP; member++) { // [0..52]
-	    it->second.Truth_Weight_Replicas[member]=event_weight[5 + pdf_offset + member];
+	    it->second.Truth_Weight_Replicas[member]=event_weight[1+NWPU+NWPT + pdf_offset + member];
 	  }
-	  it->second.Truth_Weight=event_weight[5+pdf_offset];
+	  it->second.Truth_Weight=event_weight[1+NWPU+NWPT+pdf_offset];
 	}
-	// everything else
+	// everything else: fall back on nominal
 	else {
-	  it->second.Truth_Weight=event_weight[1];
-	  for(int ii=0; ii<it->second.Truth_Weight_Replicas.size(); ii++) { it->second.Truth_Weight_Replicas[ii]=event_weight[1]; }
+	  it->second.Truth_Weight=event_weight[0];
+	  for(int ii=0; ii<it->second.Truth_Weight_Replicas.size(); ii++) { it->second.Truth_Weight_Replicas[ii]=event_weight[0]; }
 	}
       }
     }
@@ -1656,7 +1623,7 @@ int main( int argc , char* argv[] )
 
     // dump verbose event info
     if(false) {
-      std::cout << "WEIGHTS: " << evnum << " " << mc_weight << " " << event_weight[0] << " " << avgmu << " " << pu_weight << std::endl;
+      std::cout << "WEIGHTS: " << evnum << " " << mc_weight << " " << event_weight[0] << " " << avgmu << " " << pu_weight[0] << std::endl;
     }
     if( false ) {
       cout << boost::format( "%|d| - run %|d| event %|d| lumi block %|d|") % n_events % rnum % evnum % lbnum << endl;
@@ -2084,8 +2051,6 @@ int main( int argc , char* argv[] )
 // 	     met_ ##met## _col,						\
 // 	     st_w, st_z)
 
-    assert(event_weight[0] == event_weight[1]);
-    
     // regular histograms and ntuples
     if(is_data) {
       // nominal
@@ -2096,6 +2061,15 @@ int main( int argc , char* argv[] )
       st_w.run_debug_studies(true);
       STUDYQCD("",raw,caljet_em_nominal,rawjet_nominal);
       st_w.run_debug_studies(false);
+      // split into nmu subcategories
+      if(!NOMONLY) {
+	if(rnum<=pK[1]) {
+	  STUDYDEF("NominalDtoK",0,0,0,raw,caljet_em_nominal,rawjet_nominal);
+	} else {
+	  assert(rnum >= pL[0]);
+	  STUDYDEF("NominalLtoM",0,0,0,raw,caljet_em_nominal,rawjet_nominal);
+	}
+      }
       if(STUDY_CALJET && !NOMONLY) {
 	STUDYDEF("NominalCalJet",0,0,0,raw,caljet_em_nominal,caljet_nominal);
       }
@@ -2114,6 +2088,13 @@ int main( int argc , char* argv[] )
       }
       // systematic variations
       if(!NOMONLY) {
+	// split into nmu subcategories
+	if(rnum<=pK[1]) {
+	  STUDYDEF("NominalDtoK",0,0,0,smeared,caljet_em_nominal,rawjet_mcp_smeared);
+	} else {
+	  assert(rnum >= pL[0]);
+	  STUDYDEF("NominalLtoM",0,0,0,smeared,caljet_em_nominal,rawjet_mcp_smeared);
+	}
 	STUDYDEF("Rawmet",0,                0,1,smeared,caljet_em_nominal,rawjet_nominal); // without MET recalculation
 	STUDYDEF("ResoSoftTermsUp_ptHard",0,0,1,smeared,caljet_em_nominal,rawjet_resosofttermsup);
 	STUDYDEF("ResoSoftTermsDown_ptHard",0,0,1,smeared,caljet_em_nominal,rawjet_resosofttermsdown);
@@ -2175,7 +2156,7 @@ int main( int argc , char* argv[] )
 
   // SAVE ROOT DATA
   AnaEventMgr::instance()->close_sample();
-  dg::save();
+  dg::save( AnaConfiguration::verbose() );
 
   // SAVE UNFOLDING DATA
   if(is_unfold) {
@@ -2189,9 +2170,6 @@ int main( int argc , char* argv[] )
     }
     // save some general-purpose histograms
     funfold->cd();
-    for(int ii=0; ii<nglb_lpt;ii++) {
-      if(HGLB_LPT[ii]) HGLB_LPT[ii]->Write(HGLB_LPT[ii]->GetName());
-    }
     // close the file
     funfold->Write();
     funfold->Close();
@@ -2265,7 +2243,6 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
   double eff = 1.0;
   double eff_errstat = 0.0;
   double eff_errsys = 0.0;
-  double eff_err = 0.0;
   double trig = 1.0;
   double trigall = 1.0;  // multiplies trigger SF of each muon (i.e. ALL are required to fire, as opposed to an OR)
   double trigphi = 1.0;  // systematic: addition of phi on top
@@ -2281,7 +2258,6 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
     // compute efficiency scale factors on final selected muons
     // (which happens to be "iso" muons - whether isolated or anti-isolated
     mu_eff_scale( mu_iso_col , eff , eff_errstat , eff_errsys );
-    eff_err = sqrt( eff_errstat*eff_errstat + eff_errsys*eff_errsys );
     mu_trig_scale( mu_iso_col , trig    , trig_err   , 20);
     mu_trig_scale( mu_iso_col , trigphi , trig_dummy , 21);
     mu_trig_scale( mu_iso_col , trigall , trig_dummy , 22);
@@ -2526,7 +2502,7 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
 	      it2->second.Reco_EtaLep = w_tmp_col[0]->lepton_eta();
 	    }
 	  }
-	  // this loop only includes truth sf variations (wpt, PDF)
+	  // this loop only includes truth sf variations (pu, wpt, PDF)
 	  assert((unf_keys_tru.size()==4+pdf_offset) || NOMONLY);
 	  for(unsigned int ik=0; ik<unf_keys_tru.size(); ik++) {
 	    unfdata_type::iterator it2 = unfdata.find(unf_keys_tru[ik]);
@@ -2562,52 +2538,11 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
 	    assert( it2->second.Reco_Weight_Replicas.size() == NREPLICASP );
 	    // compute efficiency scale factors on final selected muons, for each replica
 	    for(int replica=0; replica<it2->second.Reco_Weight_Replicas.size(); replica++) {
-	      it2->second.Reco_Weight_Replicas[replica] =  event_weight[5+pdf_offset+replica]*eff*trig*siso ;
+	      it2->second.Reco_Weight_Replicas[replica] =  event_weight[1+NWPU+NWPT+pdf_offset+replica]*eff*trig*siso ;
 	    }
 	  }
 	}
-	// extra study: migration between PT bins due to muon scale systematics
-	if(is_nominal && good) {
-	  GLB_LPT_NOM = w_tmp_col[0]->lepton_pt();
-	  GLB_ETA_NOM = w_tmp_col[0]->lepton_eta();
-	  if(false) {
-	    std::cout << "AKK NOM " << evnum << " " << w_tmp_col[0]->lepton_eta() << " " << w_tmp_col[0]->lepton_pt() 
-		      << " " << w_tmp_col[0]->muon_id_pt() << " " << w_tmp_col[0]->muon_exms_pt()
-		      << " | " << w_tmp_col[0]->muon_pt_uncorrected() 
-		      << " "  << w_tmp_col[0]->muon_id_pt_uncorrected() 
-		      << " " << w_tmp_col[0]->muon_exms_pt_uncorrected()
-		      << " | " << w_tmp_col[0]->met_pt() << std::endl;
-	  }
-	}
-	else if (label=="MuonKScaleUp" && good) {
-	  HGLB_LPT[0]->Fill(GLB_LPT_NOM,w_tmp_col[0]->lepton_pt());
-	  if(GLB_ETA_NOM>1.37 && GLB_ETA_NOM<1.52) HGLB_LPT[7]->Fill(GLB_LPT_NOM,w_tmp_col[0]->lepton_pt());
-	}
-	else if (label=="MuonKScaleDown" && good) {
-	  HGLB_LPT[1]->Fill(GLB_LPT_NOM,w_tmp_col[0]->lepton_pt());
-	  if(GLB_ETA_NOM>1.37 && GLB_ETA_NOM<1.52) HGLB_LPT[8]->Fill(GLB_LPT_NOM,w_tmp_col[0]->lepton_pt());
-	}
-	else if (label=="MuonCScaleUp" && good) {
-	  HGLB_LPT[2]->Fill(GLB_LPT_NOM,w_tmp_col[0]->lepton_pt());
-	  if(GLB_ETA_NOM>1.37 && GLB_ETA_NOM<1.52) HGLB_LPT[5]->Fill(GLB_LPT_NOM,w_tmp_col[0]->lepton_pt());
-	  if(false) {
-	    std::cout << "AKK CUP " << evnum << " " << w_tmp_col[0]->lepton_eta() << " " << w_tmp_col[0]->lepton_pt() 
-		      << " " << w_tmp_col[0]->muon_id_pt() << " " << w_tmp_col[0]->muon_exms_pt()
-		      << " | " << w_tmp_col[0]->muon_pt_uncorrected() 
-		      << " "  << w_tmp_col[0]->muon_id_pt_uncorrected() 
-		      << " " << w_tmp_col[0]->muon_exms_pt_uncorrected()
-		      << " | " << w_tmp_col[0]->met_pt() << std::endl;
-	  }
-	}
-	else if (label=="MuonCScaleDown" && good) {
-	  HGLB_LPT[3]->Fill(GLB_LPT_NOM,w_tmp_col[0]->lepton_pt());
-	  if(GLB_ETA_NOM>1.37 && GLB_ETA_NOM<1.52) HGLB_LPT[6]->Fill(GLB_LPT_NOM,w_tmp_col[0]->lepton_pt());
-	}
-	else if (label=="MuonNoScale" && good) {
-	  HGLB_LPT[4]->Fill(GLB_LPT_NOM,w_tmp_col[0]->lepton_pt());
-	}
       }
-
     }    // end {unfolding exercise}
 
     // systematic variations of efficiency/trigger scale factors
@@ -2622,11 +2557,13 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
     } while(false)
     if(do_eff && !NOMONLY) {
       assert(is_nominal);
-      // optional section to save tru SF variations [ PDF families; Wpt ]
+      // optional section to save tru SF variations [ PDF families; Wpt; puw ]
       for(int ii=0; ii<unf_keys_tru.size(); ii++) {
 	unfdata_type::iterator it2 = unfdata.find(unf_keys_tru[ii]);
 	assert(it2!=unfdata.end());
-	if( wchk.find(it2->first) == wchk.end() ) { std::cerr << "ERROR: weight missing for: " << label << " - " << unf_keys_tru[ii] << std::endl; }
+	if( wchk.find(it2->first) == wchk.end() ) {
+	  std::cerr << "ERROR: weight missing for: " << label << " - " << unf_keys_tru[ii] << std::endl;
+	}
 	assert( wchk.find(it2->first) != wchk.end());
 	st_w.repurpose( unf_keys_tru[ii] , "W" );
 	dg::set_global_weight( it2->second.Reco_Weight );

@@ -37,6 +37,7 @@ std::string AnaConfiguration::_output_filename = "%DATE";
 std::string AnaConfiguration::_full_output_path = "";
 bool AnaConfiguration::_force_full_output_path = false;
 std::string AnaConfiguration::_full_sample_definition_path = "";
+bool AnaConfiguration::_verbose = false;
 bool AnaConfiguration::_skip_systematics = false;
 bool AnaConfiguration::_apply_pileup_weights = false;
 float AnaConfiguration::_pileup_data_scale = 1.0;
@@ -82,6 +83,7 @@ AnaConfiguration::configure( const std::string& executable_name , int argc , cha
       ( "pileup-scale" , po::value<float>() , "A scale factor for TPileupReweighting::SetDataScaleFactor()" )
       ( "pileup-map" , po::value<string>() , "a ROOT file containing average_mu for data - use iLumiCalc --plots to generate one" )
       ( "pileup-config" , po::value<string>() , "a ROOT file to configure TPileupReweighting" )
+      ( "verbose" , "provide verbose printouts for debugging")
       ( "noSys" , "only run the nominal analysis, skipping all systematic variations")
       ( "precompute-event-totals" , "determine the number of events per file before processing" )
       ( "out-ntuple" , po::value<string>() , "write AnaEventNtuple to this directory (default no output)" )
@@ -123,6 +125,7 @@ AnaConfiguration::configure( const std::string& executable_name , int argc , cha
       if( cmdline.count( "rootdir" ) ) { _output_dir = cmdline["rootdir"].as<string>(); }
       if( cmdline.count( "root" ) ) { _output_filename = cmdline["root"].as<string>(); }
       if( cmdline.count( "pt" ) ) { _pt_cut = cmdline["pt"].as<float>(); }
+      if( cmdline.count( "verbose" ) ) { _verbose = true; }
       if( cmdline.count( "noSys" ) ) { _skip_systematics = true; }
       if( cmdline.count( "apply-pileup" ) ) { _apply_pileup_weights = true; }
       if( cmdline.count( "pileup-scale" ) ) { _pileup_data_scale = cmdline["pileup-scale"].as<float>(); }
