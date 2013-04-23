@@ -342,7 +342,7 @@ class JobSet:
         PARENT Work1 Work2 CHILD Final
         Retry Work1 8
         """
-        assert len(s.jobs)==1,'ERROR: write_dag_script should be called from the final merge JobSet'
+        assert len(s.jobs) in (1,2),'ERROR: write_dag_script should be called from the final merge JobSet'
         s.dag = os.path.join( s.jobs[0].submitdir, 'global.dag')
         f = open(s.dag,'w')
         # condor submit scripts
