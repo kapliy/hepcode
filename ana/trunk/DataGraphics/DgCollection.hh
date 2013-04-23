@@ -44,13 +44,15 @@ DataGraphics
     // event-wide binning templates
     static DgBin _binning;
     // in-memory metadata
-    static std::map< std::string , std::vector<std::string> > _map;
+    static std::map< std::string , std::vector<std::string> > _mapH;   // histograms
+    static std::map< std::string , std::vector<std::string> > _mapT;  // trees
   public:
     DgCollection() { return;  }
     ~DgCollection() { return; }
   public:
     static void set_save_filename( const std::string& _filename , bool force_unique = false);
     static void dump_names();
+    static void finalize();
     static void save(bool verbose=false);
     // construction / destruction
     static DgCollection* root() { return &_base; }

@@ -47,20 +47,50 @@ DgCollection::set_save_filename( const std::string& _filename , bool force_uniqu
   _file = TFile::Open(unique_name.c_str() , "RECREATE");
   _current = _file->GetDirectory("/");
   _current->cd();
-  _map[ _current->GetPath() ] = std::vector<std::string>();
+  _mapH[ _current->GetPath() ] = std::vector<std::string>();
+  _mapT[ _current->GetPath() ] = std::vector<std::string>();
 }
 
 void
 DgCollection::dump_names() {
   std::map<std::string, std::vector<string> >::iterator imB;
   std::cout << "================== DUMP HISTOGRAM NAMES ==================" << std::endl;
-  for(imB=_map.begin(); imB!=_map.end(); imB++) {
-    std::cout << " --> " << imB->first;
+  for(imB=_mapH.begin(); imB!=_mapH.end(); imB++) {
+    std::cout << " ----> " << imB->first << std::endl;
     for(int i=0; i<imB->second.size(); i++) {
-      std::cout << " ----> " << imB->second.at(i);
+      std::cout << " --> " << imB->second.at(i) << std::endl;
     }
   }
-  std::cout << "================== DUMP HISTOGRAM NAMES ==================" << std::endl;
+  std::cout << "================== DUMP NTUPLE NAMES ==================" << std::endl;
+  for(imB=_mapT.begin(); imB!=_mapT.end(); imB++) {
+    if( !imB->second.empty() ) {
+      std::cout << " ----> " << imB->first << std::endl;
+      for(int i=0; i<imB->second.size(); i++) {
+	std::cout << " --> " << imB->second.at(i) << std::endl;
+      }
+    }
+  }
+  std::cout << "================== DUMP DONE ==================" << std::endl;
+}
+
+// make sure TTrees are saved as disk-resident
+void
+DgCollection::finalize() {
+  std::map<std::string, std::vector<string> >::iterator imB;
+  for(imB=_mapT.begin(); imB!=_mapT.end(); imB++) {
+    for(int i=0; i<imB->second.size(); i++) {
+      TNamed *o = (TNamed*) _file->Get( (std::string(imB->first) + "/" + std::string(imB->second.at(i))).c_str() );
+      if( o && o->InheritsFrom("TNtuple") ) {
+	const bool st = _file->cd((imB->first).c_str());
+	assert( st && "error: unable to cd into a directory during finalize() ");
+	if(true) {
+	  std::cout << "Flushing ntuple: " << (std::string(imB->first) + "/" + std::string(imB->second.at(i))) << std::endl;
+	}
+	TNtuple *T = (TNtuple*)o;
+	T->FlushBaskets();
+      }
+    }
+  }
 }
 
 void
@@ -70,6 +100,7 @@ DgCollection::save(bool verbose)
   std::string unique_name ( _file->GetName() );
   cout << " [ dg write: " << unique_name << " ] " << endl;
   cout << " view output with " << endl << "   root -l " << unique_name << endl;
+  finalize();
   _file->Write();
   _file->Close();
   delete _file;
@@ -83,10 +114,13 @@ DgCollection::down( const std::string& sname , const std::string& description ) 
   assert( sname != "" );
   assert( _current && "ERROR: cwd is not set" );
   TDirectory *next = (TDirectory*)_current->Get(sname.c_str());
-  if(!next) next = _current->mkdir( sname.c_str() , description.c_str() );
+  if(!next) {
+    next = _current->mkdir( sname.c_str() , description.c_str() );
+    _mapH[ next->GetPath() ] = std::vector<std::string>();
+    _mapT[ next->GetPath() ] = std::vector<std::string>();
+  }
   _current = next;
   _current->cd();
-  _map[ _current->GetPath() ] = std::vector<std::string>();
 }
 void
 DgCollection::up() {
@@ -117,7 +151,7 @@ DgCollection::fillhw( const std::string& sname , const BinSize& nbins , const Va
     h = new TH1D(sname.c_str(),axis_label.c_str(),nbins,min,max);
     h->SetDirectory( _current );
     h->Sumw2();
-    _map[ _current->GetPath() ].push_back( h->GetName() );
+    _mapH[ _current->GetPath() ].push_back( h->GetName() );
   }
   h->Fill( x , weight );
   return;
@@ -131,7 +165,7 @@ DgCollection::fillvhw( const std::string& sname , const BinSize& nbins , const s
     h = new TH1D(sname.c_str(),axis_label.c_str(),nbins,&bins[0]);
     h->SetDirectory( _current );
     h->Sumw2();
-    _map[ _current->GetPath() ].push_back( h->GetName() );
+    _mapH[ _current->GetPath() ].push_back( h->GetName() );
   }
   h->Fill( x , weight );
   return;
@@ -167,7 +201,7 @@ DgCollection::fillhw( const std::string& sname ,
 		 nbinsx,minx,miny,nbinsy,miny,maxy);
     h->SetDirectory( _current );
     h->Sumw2();
-    _map[ _current->GetPath() ].push_back( h->GetName() );
+    _mapH[ _current->GetPath() ].push_back( h->GetName() );
   }
   h->Fill( x , y , weight );
   return;
@@ -185,7 +219,7 @@ DgCollection::fillvhw( const std::string& sname ,
 		 nbinsx,&binsx[0],nbinsy,&binsy[0]);
     h->SetDirectory( _current );
     h->Sumw2();
-    _map[ _current->GetPath() ].push_back( h->GetName() );
+    _mapH[ _current->GetPath() ].push_back( h->GetName() );
   }
   h->Fill( x , y , weight );
   return;
@@ -226,7 +260,7 @@ DgCollection::fillhw( const std::string& sname ,
 		 nbinsx,minx,maxx,nbinsy,miny,maxy,nbinsz,minz,maxz);
     h->SetDirectory( _current );
     h->Sumw2();
-    _map[ _current->GetPath() ].push_back( h->GetName() );
+    _mapH[ _current->GetPath() ].push_back( h->GetName() );
   }
   h->Fill( x , y , z, weight );
   return;
@@ -246,7 +280,7 @@ DgCollection::fillvhw( const std::string& sname ,
 		 nbinsx,&binsx[0],nbinsy,&binsy[0],nbinsz,&binsz[0]);
     h->SetDirectory( _current );
     h->Sumw2();
-    _map[ _current->GetPath() ].push_back( h->GetName() );
+    _mapH[ _current->GetPath() ].push_back( h->GetName() );
   }
   h->Fill( x , y , z, weight );
   return;
@@ -298,6 +332,7 @@ DgCollection::fillntw( const std::string& sname ,
     nn.insert(nn.end(),names.begin(),names.end());
     const string varlist_str = nt_get_varlist(nn);
     h = new TNtuple(sname.c_str(), "" , varlist_str.c_str());
+    _mapT[ _current->GetPath() ].push_back( h->GetName() );
   }
   std::vector<float> xx = w.get_values();
   xx.insert(xx.end(),x.begin(),x.end());
@@ -334,11 +369,11 @@ DgCollection::filleffw( const std::string& sname , const bool& pass , const Weig
     hnum = new TH1D(snum.c_str(),snum.c_str(),1,0,1);
     hnum->SetDirectory( _current );
     hnum->Sumw2();
-    _map[ _current->GetPath() ].push_back( hnum->GetName() );
+    _mapH[ _current->GetPath() ].push_back( hnum->GetName() );
     hden = new TH1D(sden.c_str(),sden.c_str(),1,0,1);
     hden->SetDirectory( _current );
     hden->Sumw2();
-    _map[ _current->GetPath() ].push_back( hden->GetName() );
+    _mapH[ _current->GetPath() ].push_back( hden->GetName() );
   }
   hden->Fill( 0.5 , weight );
   if(pass) hnum->Fill( 0.5 , weight );
@@ -359,10 +394,10 @@ DgCollection::filleff( const std::string& sname , const BinSize& nbins , const V
     assert(!hden);
     hnum = new TH1D(snum.c_str(),snum.c_str(),nbins,min,max);
     hnum->SetDirectory( _current );
-    _map[ _current->GetPath() ].push_back( hnum->GetName() );
+    _mapH[ _current->GetPath() ].push_back( hnum->GetName() );
     hden = new TH1D(sden.c_str(),sden.c_str(),nbins,min,max);
     hden->SetDirectory( _current );
-    _map[ _current->GetPath() ].push_back( hden->GetName() );
+    _mapH[ _current->GetPath() ].push_back( hden->GetName() );
   }
   hden->Fill( x );
   if(pass) hnum->Fill( x );
@@ -385,10 +420,10 @@ DgCollection::filleff( const std::string& sname ,
     assert(!hden);
     hnum = new TH2D(snum.c_str(),snum.c_str(),nbinsx,minx,maxx,nbinsy,miny,maxy);
     hnum->SetDirectory( _current );
-    _map[ _current->GetPath() ].push_back( hnum->GetName() );
+    _mapH[ _current->GetPath() ].push_back( hnum->GetName() );
     hden = new TH2D(sden.c_str(),sden.c_str(),nbinsx,minx,maxx,nbinsy,miny,maxy);
     hden->SetDirectory( _current );
-    _map[ _current->GetPath() ].push_back( hden->GetName() );
+    _mapH[ _current->GetPath() ].push_back( hden->GetName() );
   }
   hden->Fill( x , y );
   if(pass) hnum->Fill( x , y );
@@ -401,4 +436,5 @@ TDirectory* DgCollection::_current = 0;
 WeightedCount DgCollection::_global_weight = 1.0;
 DgEventInfo DgCollection::_event_info = DgEventInfo();
 DgBin DgCollection::_binning = DgBin();
-std::map< std::string , std::vector<std::string> > DgCollection::_map = std::map< std::string , std::vector<std::string> >();
+std::map< std::string , std::vector<std::string> > DgCollection::_mapH = std::map< std::string , std::vector<std::string> >();
+std::map< std::string , std::vector<std::string> > DgCollection::_mapT = std::map< std::string , std::vector<std::string> >();

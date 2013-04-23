@@ -28,7 +28,6 @@ DataGraphics
     Value _wzpt_weight;
     Value _wzpt_weight2;
     Value _wzpt_weight3;
-    Value _wzpt_weight4;
     Value _wpol_weight;
     Value _znlo_weight; // reweight observed MC@NLO generator deficit in "Z samples" in ~60-65 GeV mass region
     Value _alpy_weight; // alpgen rapidity reweighting (similar to PDF reweighting, really)
@@ -60,7 +59,6 @@ DataGraphics
       _wzpt_weight = 1.0;
       _wzpt_weight2 = 1.0;
       _wzpt_weight3 = 1.0;
-      _wzpt_weight4 = 1.0;
       _wpol_weight = 1.0;
       _znlo_weight = 1.0;
       _alpy_weight = 1.0;
@@ -85,11 +83,11 @@ DataGraphics
 
     // vectors for DgNtuple
     const std::vector<std::string>& get_names() const {
-      static std::vector<std::string> v = boost::assign::list_of("run")("event")("fid")("mcw")("puw")("wzptw")("wzptw2")("wzptw3")("wzptw4")("wpolw")("znlow")("alpy")("vxw")("ls1w")("ls2w")("effw")("trigw")("trigallw")("trigphiw")("mcpw")("mcpallw")("isow")("lha_CT10")("lha_MSTW")("lha_HERA")("lha_NNPDF")("lha_ABM");
+      static std::vector<std::string> v = boost::assign::list_of("run")("event")("fid")("mcw")("puw")("wzptw")("wzptw2")("wzptw3")("wpolw")("znlow")("alpy")("vxw")("ls1w")("ls2w")("effw")("trigw")("trigallw")("trigphiw")("mcpw")("mcpallw")("isow")("lha_CT10")("lha_MSTW")("lha_HERA")("lha_NNPDF")("lha_ABM");
       return v;
     };
     const std::vector<float> get_values() const {
-      std::vector<float> v = boost::assign::list_of(static_cast<float>(_run_number))(static_cast<float>(_event_number))(static_cast<float>(_is_fiducial))(_mc_weight)(_pu_weight)(_wzpt_weight)(_wzpt_weight2)(_wzpt_weight3)(_wzpt_weight4)(_wpol_weight)(_znlo_weight)(_alpy_weight)(_vx_weight)(_ls1_weight)(_ls2_weight)(_eff_weight)(_trig_weight)(_trigall_weight)(_trigphi_weight)(_mcp_weight)(_mcpall_weight)(_iso_weight);
+      std::vector<float> v = boost::assign::list_of(static_cast<float>(_run_number))(static_cast<float>(_event_number))(static_cast<float>(_is_fiducial))(_mc_weight)(_pu_weight)(_wzpt_weight)(_wzpt_weight2)(_wzpt_weight3)(_wpol_weight)(_znlo_weight)(_alpy_weight)(_vx_weight)(_ls1_weight)(_ls2_weight)(_eff_weight)(_trig_weight)(_trigall_weight)(_trigphi_weight)(_mcp_weight)(_mcpall_weight)(_iso_weight);
       const std::vector<float>& w = _pdf_weights;
       static std::vector<float> wones = boost::assign::list_of(1)(1)(1)(1)(1);
       if (w.size()==5) {
@@ -130,7 +128,6 @@ DataGraphics
     void set_wzpt_weight(Value val) { _wzpt_weight = val; }
     void set_wzpt_weight2(Value val) { _wzpt_weight2 = val; }
     void set_wzpt_weight3(Value val) { _wzpt_weight3 = val; }
-    void set_wzpt_weight4(Value val) { _wzpt_weight4 = val; }
     void set_wpol_weight(Value val) { _wpol_weight = val; }
     void set_znlo_weight(Value val) { _znlo_weight = val; }
     void set_alpy_weight(Value val) { _alpy_weight = val; }
@@ -172,7 +169,6 @@ DataGraphics
     const Value get_wzpt_weight() const { return _wzpt_weight; }
     const Value get_wzpt_weight2() const { return _wzpt_weight2; }
     const Value get_wzpt_weight3() const { return _wzpt_weight3; }
-    const Value get_wzpt_weight4() const { return _wzpt_weight4; }
     const Value get_wpol_weight() const { return _wpol_weight; }
     const Value get_znlo_weight() const { return _znlo_weight; }
     const Value get_alpy_weight() const { return _alpy_weight; }
