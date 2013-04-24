@@ -294,7 +294,7 @@ class Job:
             print >>f,'else'
             print >>f,'echo ERROR: failed to locate file $f'
             print >>f,'fi'
-        print >>f,'if [ "$ntot" -eq "$nexpected" ]; then echo "ALL DONE"; else echo "WARNING: missing `expr $nexpected - $ntot` files"; fi'
+        print >>f,'if [ "$ntot" -eq "$nexpected" ]; then echo "ALL DONE"; else echo "ERROR: missing `expr $nexpected - $ntot` files"; exit 202; fi'
         print >>f,'if [ "$ntot" -eq "0" ]; then echo "ERROR: no files to merge"; exit 203; fi'
         if hadd:
             print >>f, 'hadd -O %s `cat ${ROOTDIR}/%s`'%(s.outROOTpath,flist)
