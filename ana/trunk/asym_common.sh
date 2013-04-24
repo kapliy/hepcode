@@ -16,7 +16,8 @@ lbl=04032013_nomg_1000toys  # re-running with 1000 toy MCs
 
 lbl=04032013_nomg_condor   # 3rd condor version
 
-lbl=04232013_condor        # same as 04032013, but: added DtoK and LtoM systematics. added pileupUp and pileupDown systematics. commented out ntuple studies of A/C side. fixed double-saving of TNtuples. removed int, leaving only unint.
+lbl=04232013_condor        # same as 04032013, but: added DtoK and LtoM systematics. added pileupUp and pileupDown systematics. commented out ntuple studies of A/C side. fixed double-saving of TNtuples. removed int, leaving only unint. - BAD RUN (files on t3data)
+lbl=04242013_condor        # same as 04032013, but: added DtoK and LtoM systematics. added pileupUp and pileupDown systematics. commented out ntuple studies of A/C side. fixed double-saving of TNtuples. removed int, leaving only unint.
 
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
 
