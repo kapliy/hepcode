@@ -518,36 +518,19 @@ ana_streams::open_root_file( const std::string& filename )
     int slp = std::rand();
     slp = slp < 50000 ? 50000 : (slp>1000000 ? 1000000 : slp);
     // attempt TFile::Open
-    const bool USE_FILE_LOCK = false;
-    if(USE_FILE_LOCK) { // use file locking to moderate the rate of TFile::Open requests
-      try { 
-	boost::interprocess::file_lock lock( "./.file_open_lock" );
-	boost::interprocess::scoped_lock<boost::interprocess::file_lock> sc_lock( lock );
-	if( gSystem ) { gSystem->IgnoreSignal(kSigPipe); }
-	if( debug ) { 
-	  if( gEnv ) { gEnv->SetValue("XNet.Debug",2); }
-	  cout << " attempting to open file: " << filename << endl; 
-	}
-	result = TFile::Open( filename.c_str() );
-	usleep(slp);
-      } catch( ... ) {
-	cerr << "WARNING: open_root_file failure for file: " << filename << endl;
-	// do nothing and hope for the best.
-	if( gSystem ) { gSystem->IgnoreSignal(kSigPipe); }
-	if( debug ) { 
-	  if( gEnv ) { gEnv->SetValue("XNet.Debug",2); }
-	  cout << " attempting to open file: " << filename << endl; 
-	}
-	result = TFile::Open( filename.c_str() );
+    result = TFile::Open( filename.c_str() );
+    if(!result) {
+      if(iterations%20==0) {
+	cerr << "WARNING: open_root_file attempt # " << iterations << " failed for file: " << filename << endl;
       }
-    } else { // simply open the file
-      result = TFile::Open( filename.c_str() );
-      if(!result) {
-	cerr << "WARNING: open_root_file failure for file: " << filename << endl;
-	usleep(slp);
-      }
+      usleep(slp);
     }
   } // end of TFile::Open attempts
+
+  if(!result) {
+    cerr << "ERROR: open_root_file failure for file: " << filename << endl;
+    exit(29);
+  }
 
   return result;
 }
