@@ -49,3 +49,18 @@ lbl=03152013_paper # removed different pdf systematics. Downloaded missing wmunu
 
 lbl=03172013_paper # exclude bad bin (but not in ntuple)
 lbl=03172013_paper_mu18 # exclude bad bin; use another mu18 trigger
+
+
+
+function rerun20() {
+    submit_sample wasymmetry29I_mc_alpgen_herwig_wmunu_np0.dat
+    submit_sample wasymmetry29I_mc_alpgen_herwig_wmunu_np2.dat
+    submit_sample wasymmetry29I_mc_mcnlo_ttbar.dat
+    submit_sample wasymmetry29I_mc_mcnlo_wt.dat
+    submit_sample wasymmetry29I_mc_powheg_pythia_wminmunu.dat
+    submit_sample wasymmetry29I_mc_powheg_pythia_zmumu.dat
+    submit_sample wasymmetry29I_mc_pythia_zmumu.dat
+}
+function rerun25() {
+    submit_sample wasymmetry29I_mc_powheg_pythia_wminmunu.dat
+}
