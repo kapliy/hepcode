@@ -977,10 +977,10 @@ class SuSample:
         """ descend down the root file in case it's the output of single-file dgplot merge """
         topdir = 'dg'
         if not f.Get(topdir):
-            ldirs = [z.GetName() for z in f.GetListOfKeys()]
-            assert len(ldirs)==1, 'Expecting one folder here: '+' '.join(ldirs)
-            topdir=ldirs[0]+'/dg'
-            print 'Rewriting topdir from [/dg] to [%s]'%topdir
+            topdir = ''
+            #ldirs = [z.GetName() for z in f.GetListOfKeys()]
+        else:
+            topdir = topdir+'/'
         return topdir
     def auto(s):
         """ add all files satisfying a glob pattern - using rootpath"""
@@ -993,7 +993,7 @@ class SuSample:
     def get_from_file(s,hpath,i=0):
         """ Returns TFile::Get(hpath) from i'th file """
         assert i<len(s.files)
-        return s.files[i].Get( s.topdir(s.files[i])+'/'+hpath )
+        return s.files[i].Get( s.topdir(s.files[i])+hpath )
     def xrootdize(s,l):
         """ Prepends root:// prefix and server if the file is on XROOTD """
         if re.match('/atlas',l):
@@ -1004,23 +1004,24 @@ class SuSample:
         return l
     def add(s,file_raw):
         """ add a file or list of files to all declared TChain's """
-        file = s.xrootdize(file_raw)
-        if type(file)==type([]) or type(file)==type(()):
+        if type(file_raw)==type([]) or type(file_raw)==type(()):
+            file = [s.xrootdize(ff) for ff in file_raw]
             [s.add(f) for f in file]
             return
         else:
+            file = s.xrootdize(file_raw)
             s.files.append(ROOT.TFile.Open(file))
             f = s.files[-1]
             # add files to ntuple:
             for path,nt in s.nt.iteritems():
-                nadd = nt.AddFile(file,ROOT.TChain.kBigNumber,s.topdir(f)+'/'+path)
+                nadd = nt.AddFile(file,ROOT.TChain.kBigNumber,s.topdir(f)+path)
                 if not nadd>0:
                     print 'WARNING: failed to find chain %s in file %s'%(path,file)
                 if SuSample.debug:
                     print 'Added %d file(s) to TChain [%s]: %s'%(nadd,nt.GetName(),file)
             # update total nevt counts for xsec normalization
             for ii,ev in enumerate(s._evcounts):
-                hname = '%s/%s'%(s.topdir(f),ev)
+                hname = '%s%s'%(s.topdir(f),ev)
                 hist = f.Get(hname)
                 n = 0
                 if hist:
@@ -1081,23 +1082,23 @@ class SuSample:
             assert f.IsOpen()
             if not h:
                 if SuSample.debug:
-                    print 'GetHisto:: %s \t %s/%s'%(os.path.basename(f.GetName()),s.topdir(f),hpath),
+                    print 'GetHisto:: %s \t %s%s'%(os.path.basename(f.GetName()),s.topdir(f),hpath),
                 try:
-                    fgot = f.Get('%s/%s'%(s.topdir(f),hpath))
+                    fgot = f.Get('%s%s'%(s.topdir(f),hpath))
                 except:
-                    print 'Failed to get: ','%s/%s'%(s.topdir(f),hpath)
+                    print 'Failed to get: ','%s%s'%(s.topdir(f),hpath)
                     raise
                 if not fgot:
                     if SuSample.debug: print ''
                     return None
-                fpath = '%s/%s'%(s.topdir(f),hpath)
+                fpath = '%s%s'%(s.topdir(f),hpath)
                 fname = re.sub(r'[^\w]', '_',s.name+'_'+hname+'_'+fpath+'_'+common.rand_name())
                 h = f.Get(fpath).Clone(fname)
                 h.Sumw2()
                 if SuSample.debug:
                     print ' Int: %.1f  N: %d  x: %.3f'%(h.Integral(),h.GetEntries(),h.GetMean(1))
             else:
-                h.Add( f.Get('%s/%s'%(s.topdir(f),hpath)) )
+                h.Add( f.Get('%s%s'%(s.topdir(f),hpath)) )
         if h:
             h.SetTitle(os.path.basename(s.files[0].GetName())+' : '+hname+" "+hpath)
         return h

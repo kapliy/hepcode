@@ -77,6 +77,10 @@ DB=DB_04032013_NOMG.v21  # 1000 toys
 DB=DB_04032013_NOMG.v22  # 1000 toys; returning w mT fits; fixing wpt reweighting
 DB=DB_04032013_NOMG.v23  # ditto, but using QCD fit error as QCD stat uncertainty
 
+# first version running via condor
+input=/atlas/uct3/data/users/antonk/ana/ana_v29I_04242013_condor_stacoCB_all/pt20
+DB=DB_04242013_NOMG.v24  # proper hadd; adding: DtoK and LtoM; pileupdown
+
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`
 iq=0
