@@ -104,6 +104,7 @@ def make_qcd(name):
     # quick hack to create some naming aliases for the systematics
     REPMAP = {}
     REPMAP['Nominal_qcd_fitrange'] = 'met_range'
+    REPMAP['Nominal_qcd_fitvar'] = 'fit_var'
     REPMAP['Nominal_qcd_iso1'] = 'IsoWind20m'
     REPMAP['Nominal_qcd_iso2'] = 'IsoWind40'
     mname = REPMAP[name] if name in REPMAP else name
@@ -111,6 +112,7 @@ def make_qcd(name):
     if cname in CACHE: return [CACHE[cname],]
     out = qcd.Clone(mname)
     out.Reset()
+    assert out.GetSumw2(),'ERROR: Sumw2 missing in qcd histogram'
     out.SetTitle(out.GetTitle()+'_'+name)
     ipts = range(1,len(ptbins)) if DIM==2 else ['ALL%d'%PT,]
     ietas = ['ALL',] if DIM==0 else range(1,len(etabins))
@@ -118,12 +120,16 @@ def make_qcd(name):
         for ieta in ietas:
             MSYS,MGROUPS = get(ieta,ipt)
             MSYS_FLAT = common.qcdfit_sys_flatten(MSYS,MGROUPS)
+            # derive QCD statistical error from fit stat. uncertainty
+            # 04/18/2013: ve is now always taken from here (and commented out below)
+            devs = common.qcdfit_sys_deviations_subset(MSYS,MGROUPS,['fit_error',])
+            ve = math.sqrt( sum([ xx*xx for xx in devs ]) )
             v = 0
             # if requesting a particular systematic, just take it directly
             if mname in MSYS_FLAT:
                 v  = MSYS_FLAT[mname][11]
-                ve = MSYS_FLAT[mname][12]
-            elif mname in ('Nominal_qcd_up','Nominal_qcd_down'):
+                #ve = MSYS_FLAT[mname][12]
+            elif mname in ('Nominal_qcd_up','Nominal_qcd_down'): # DEPRECATED
                 # Hardcoded list of QCD systematics not propagated through EWUnfold (so we need to add them in quadrature here)
                 # That includes: fit error; met fit range  + choice of anti-isolation (previously missing)
                 _ERRORS = ['fit_error','met_range','IsoWind20m','IsoWind40']
@@ -131,20 +137,22 @@ def make_qcd(name):
                 dev2 = math.sqrt( sum([ xx*xx for xx in devs ]) )
                 err  = 1.0*dev2 if mname=='Nominal_qcd_up' else -1.0*dev2
                 v  = MSYS_FLAT['Nominal'][11] + err
-                ve = MSYS_FLAT['Nominal'][12]
-            elif mname in ('Nominal_qcd_statup','Nominal_qcd_statdown'):
+                #ve = MSYS_FLAT['Nominal'][12]
+            elif mname in ('Nominal_qcd_statup','Nominal_qcd_statdown'): # DEPRECATED
                 _ERRORS = ['fit_error',]
                 devs = common.qcdfit_sys_deviations_subset(MSYS,MGROUPS,_ERRORS)
                 dev2 = math.sqrt( sum([ xx*xx for xx in devs ]) )
                 err  = 1.0*dev2 if mname=='Nominal_qcd_statup' else -1.0*dev2
                 v  = MSYS_FLAT['Nominal'][11] + err
-                ve = MSYS_FLAT['Nominal'][12]
+                #ve = MSYS_FLAT['Nominal'][12]
+                if False: # make sure the fit uncertainty is larger than sqrt(N)
+                    print cname,ipt,ieta,'FIT ERR:',err,'HISTO ERR:',ve
             else:
-                assert False,'Comment out this line if you are OK with falling back to Nominal systemtics for: %s'%mname
+                #assert False,'Comment out this line if you are OK with falling back to Nominal systemtics for: %s'%mname
                 if ipt==ipts[0] and ieta==ietas[0]:
                     print 'Falling back to Nominal for systematic:',mname
                 v  = MSYS_FLAT['Nominal'][11]
-                ve = MSYS_FLAT['Nominal'][12]
+                #ve = MSYS_FLAT['Nominal'][12]
             if v<0:
                 print 'WARNING: negative qcd contribution:',ipt,ieta,v
             if DIM==0:
@@ -266,7 +274,7 @@ if __name__=='__main__':
             sigL = [adir.Get('wmunu_'+system),]
             for qsys in ['Nominal_qcd_up','Nominal_qcd_down',
                          'Nominal_qcd_statup','Nominal_qcd_statdown',
-                         'Nominal_qcd_fitrange',
+                         'Nominal_qcd_fitrange','Nominal_qcd_fitvar',
                          'Nominal_qcd_iso1','Nominal_qcd_iso2']:
                 allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + make_qcd(qsys) + sigL
                 [ make_total(system,allsamples,fout_D[q],qsys,q==2 and iq==1) for q in (iq,2) ]

@@ -994,8 +994,17 @@ class SuSample:
         """ Returns TFile::Get(hpath) from i'th file """
         assert i<len(s.files)
         return s.files[i].Get( s.topdir(s.files[i])+'/'+hpath )
-    def add(s,file):
+    def xrootdize(s,l):
+        """ Prepends root:// prefix and server if the file is on XROOTD """
+        if re.match('/atlas',l):
+            l = 'root://uct3-xrd.mwt2.org/%s'%l
+        elif re.match('/pnfs',l):
+            #l = 'dcache://%s'%l
+            l = 'root://xrddc.mwt2.org:1096%s'%l
+        return l
+    def add(s,file_raw):
         """ add a file or list of files to all declared TChain's """
+        file = s.xrootdize(file_raw)
         if type(file)==type([]) or type(file)==type(()):
             [s.add(f) for f in file]
             return
