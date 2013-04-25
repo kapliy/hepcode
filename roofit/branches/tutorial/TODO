@@ -1,16 +1,19 @@
+Muon reco SF - compare with Max's instructions.
+
+DO: update checklogs to parse DAG files
+
+IN PROGRESS: restore mT fits
+
 MET-scale: check that up/down is not switched.
 Check the direction of Up variation is different with/without QCD (since it's different with Wenu)
-TODO: check wmunu/wenu channel merging
-Check MuonTriggerSF systematic
-TODO: restore mT fits
-Consider: skipping MET cut
+Check MuonTriggerSF and recoSF systematic
 
+TODO: check wmunu/wenu channel merging
+
+Consider: skipping MET cut (too late?)
 
 TODO: check truth-level asymmetry when applying W polarization weight
 dump all muon-related scale factors
-
-* Make eta/phi trigger plots in ABSOLUTE: without requiring that the other one failed.
-* More muid matching studies (?)
 
 Bootstrapping per Sasha's advice?
 Data reweighting of the distribution we unfold
@@ -22,6 +25,8 @@ A/C from Max & co.:
 - DONE delta-R to trigger for W and Z (including when tag is matched or not)
 - DONE W selection, using muid trigger - via LOOPER perhaps???
 - Me: think about charge mis-identification in bad eta bin?
+* Make eta/phi trigger plots in ABSOLUTE: without requiring that the other one failed.
+* More muid matching studies (?)
 A/C stuff:
 Number of muon stations on muon track. 2-station muon.
 DONE Plot diff of pt (MS - ID); apply diff cut

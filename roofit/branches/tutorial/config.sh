@@ -72,8 +72,10 @@ DB=DB_03012013_ALL.v14   # includes wpt pythia8 AND sherpa as systematics
 
 # first version of non-MG trigger scale factors from Carl
 input=/share/t3data3/antonk/ana/ana_v29I_04032013_nomg_stacoCB_all/pt20
-DB=DB_04032013_NOMG.v20
-DB=DB_04032013_NOMG.v21
+DB=DB_04032013_NOMG.v20  # 100 toys
+DB=DB_04032013_NOMG.v21  # 1000 toys
+DB=DB_04032013_NOMG.v22  # 1000 toys; returning w mT fits; fixing wpt reweighting
+DB=DB_04032013_NOMG.v23  # ditto, but using QCD fit error as QCD stat uncertainty
 
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`

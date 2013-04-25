@@ -1036,7 +1036,7 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
     else: # default as of jan 22:
         qcdadd={'var':'d3_%s_lpt_met'%(eword)+ltail,'min':0,'max':60,'rebin':2} # adrian's new nominal
         qcdadd_range={'var':'d3_%s_lpt_met'%(eword)+ltail,'min':5,'max':50,'rebin':2}
-    qcdadd_var={'var':'d3_%s_lpt_wmt'%(eword)+ltail,'min':50,'max':85,'rebin':2}
+    qcdadd_var={'var':'d3_%s_lpt_wmt'%(eword)+ltail,'min':40,'max':90,'rebin':2}
     # clone the stack maker
     spL = spL2.clone(q=iq, histo = opts.var + ltail , qcdadd = qcdadd)
 
@@ -1069,8 +1069,8 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
         next('Fit range')
 
     # fit variable [careful - big swings]
-    if False:
-        add(qcdfit('wmt',spL.clone(qcdadd=qcdadd_var) ))
+    if True and etamode==2: # FIXME: 04/17/2013
+        add(qcdfit('fit_var',spL.clone(qcdadd=qcdadd_var) ))
         next('Fit variable')
 
     # tau backgrounds [ careful - low statistics, saw a big swing ]
