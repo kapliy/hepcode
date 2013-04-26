@@ -985,11 +985,13 @@ class SuSample:
     def auto(s):
         """ add all files satisfying a glob pattern - using rootpath"""
         assert s.rootpath, 'Please set rootpath variable to use autoloading'
-        pattern = os.path.join(s.rootpath,s.name,'root_%s*.root'%s.name)
+        pattern = os.path.join(s.rootpath,s.name,'root_%s.root'%s.name)
         return s.addglob(pattern)
     def addglob(s,pattern):
-        """ add all files satisfying a glob pattern """
-        return s.add(glob.glob(pattern))
+        """ add all files satisfying a glob pattern
+        WARNING: a missing file will cause a hanged process
+        """
+        return s.add(pattern) if True else s.add(glob.glob(pattern))
     def get_from_file(s,hpath,i=0):
         """ Returns TFile::Get(hpath) from i'th file """
         assert i<len(s.files)
