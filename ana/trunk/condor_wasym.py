@@ -78,7 +78,7 @@ echo 'SOURCE <<<<<<<<<<<<<<<<<<<<<<<'
 date
 export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
 source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh --quiet
-asetup 17.6.0.1,64,here
+source $AtlasSetup/scripts/asetup.sh 17.6.0.1,64,here
 if [ -z $ROOTSYS ]; then echo 'ERROR: ROOTSYS undefined. Exiting...'; exit 50; fi
 if [ -z $SITEROOT ]; then echo 'ERROR: SITEROOT undefined. Exiting...'; exit 60; fi
 export XrdSecGSISRVNAMES=uct2-s5.uchicago.edu\|uct2-s6.uchicago.edu\|uct2-s20.uchicago.edu
@@ -240,6 +240,7 @@ class Job:
         s.outputs += ['cached_ignore_filenames_%d.xml'%s.isplit]
         f = open(s.jobfile, "w")
         print >>f, SH_PRE%(s.fdic[0],s.fdic[1])
+        print >>f, 'echo ana/%s %s -i %s --force-output-filename %s --nsplits %d --split %d'%(s.executable,s.options,s.sample,s.outROOTpath,s.nsplits,s.isplit)
         print >>f, smart_runner,'ana/%s %s -i %s --force-output-filename %s --nsplits %d --split %d'%(s.executable,s.options,s.sample,s.outROOTpath,s.nsplits,s.isplit)
         print >>f, "status=$?"
         print >>f, """
@@ -296,10 +297,52 @@ class Job:
             print >>f,'fi'
         print >>f,'if [ "$ntot" -eq "$nexpected" ]; then echo "ALL DONE"; else echo "ERROR: missing `expr $nexpected - $ntot` files"; exit 202; fi'
         print >>f,'if [ "$ntot" -eq "0" ]; then echo "ERROR: no files to merge"; exit 203; fi'
-        if hadd:
-            print >>f, 'hadd -O %s `cat ${ROOTDIR}/%s`'%(s.outROOTpath,flist)
+        print >>f,"""
+# a special version of hadd that adds files in chunks of 20
+function hadd2() {
+    local per
+    per=20
+    fin=$1
+    opts=$2
+    fout=$3
+    shift
+    n=`cat $fin | wc -l`
+    ngrp=`expr $n / $per`
+    nrem=`expr $n % $per`
+    if [ \"$nrem\" == \"0\" ]; then ngrp=`expr $ngrp - 1`; fi
+    for igrp in `seq 0 $ngrp`; do
+	imin=`expr $per \* $igrp`
+	imax=`expr $per \* $igrp + $per`
+	if [ \"$imax\" -gt \"$n\" ]; then imax=`expr $per \* $igrp + $nrem`; fi
+	# offset by 1
+	imin=`expr $imin + 1`
+	imax=`expr $imax`
+	idel=`expr $imax - $imin + 1`
+	echo \"===== Part $igrp : $imin to $imax\"
+	echo hadd ${opts} \"${fout}.TMPHADD_${igrp}.root\" `cat $fin | head -n $imax | tail -n $idel`
+	hadd ${opts} \"${fout}.TMPHADD_${igrp}.root\" `cat $fin | head -n $imax | tail -n $idel`
+	st=$?
+	if [ \"$st\" != \"0\" ]; then
+	    echo \"ERROR: merge step $igrp failed. Bailing out...\"
+	    return $st
+	fi
+    done
+    echo hadd ${opts} ${fout} ${fout}.TMPHADD_*root*
+    hadd ${opts} ${fout} ${fout}.TMPHADD_*root*
+    st=$?
+    rm -f ${fout}.TMPHADD_*root*
+    return $st
+}
+        """
+        if False:
+            if hadd:
+                print >>f, 'echo hadd -O %s `cat ${ROOTDIR}/%s`'%(s.outROOTpath,flist)
+                print >>f, 'hadd -O %s `cat ${ROOTDIR}/%s`'%(s.outROOTpath,flist)
+            else:
+                print >>f, 'echo hadd -T %s `cat ${ROOTDIR}/%s`'%(s.outROOTpath,flist)
+                print >>f, 'hadd -T %s `cat ${ROOTDIR}/%s`'%(s.outROOTpath,flist)
         else:
-            print >>f, 'hadd -T %s `cat ${ROOTDIR}/%s`'%(s.outROOTpath,flist)
+            print >>f, 'hadd2 ${ROOTDIR}/%s "%s" %s'%(flist,"-O" if hadd else "-T",s.outROOTpath)
         print >>f, "status=$?"
         print >>f, SH_POST
         f.close()
