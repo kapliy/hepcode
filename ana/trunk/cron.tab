@@ -1,0 +1,2 @@
+0,30 * * * * condor_release antonk
+0,30 * * * * condor_qedit antonk RequestMemory "2000"

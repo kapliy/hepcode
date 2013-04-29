@@ -2050,6 +2050,14 @@ int main( int argc , char* argv[] )
 // 	     rawjet_em_nominal_bad_col, jet## _final_col,		\
 // 	     met_ ##met## _col,						\
 // 	     st_w, st_z)
+// abbreviated version (only nominal)
+#define STUDYQCS(TAG,mu,jet,met) study_wz("IsoWind20" TAG,0,0,0,	\
+					  mu_ ##mu## _type_col, mu_ ##mu## _ntuple_col, mu_ ##mu## _qual_col, \
+					  mu_ ##mu## _pt_col, mu_ ##mu## _eta_col, mu_ ##mu## _qcdwind20_col, \
+					  vtx_base_col, vtx_col,	\
+					  rawjet_em_nominal_bad_col, jet## _final_col, \
+					  met_ ##met## _col,		\
+					  st_w, st_z)
 
     // regular histograms and ntuples
     if(is_data) {
@@ -2065,9 +2073,11 @@ int main( int argc , char* argv[] )
       if(!NOMONLY) {
 	if(rnum<=pK[1]) {
 	  STUDYDEF("NominalDtoK",0,0,0,raw,caljet_em_nominal,rawjet_nominal);
+	  STUDYQCS("DtoK",             raw,caljet_em_nominal,rawjet_nominal);
 	} else {
 	  assert(rnum >= pL[0]);
 	  STUDYDEF("NominalLtoM",0,0,0,raw,caljet_em_nominal,rawjet_nominal);
+	  STUDYQCS("LtoM",             raw,caljet_em_nominal,rawjet_nominal);
 	}
       }
       if(STUDY_CALJET && !NOMONLY) {
@@ -2091,9 +2101,11 @@ int main( int argc , char* argv[] )
 	// split into nmu subcategories
 	if(rnum<=pK[1]) {
 	  STUDYDEF("NominalDtoK",0,0,0,smeared,caljet_em_nominal,rawjet_mcp_smeared);
+	  STUDYQCS("DtoK",             smeared,caljet_em_nominal,rawjet_mcp_smeared);
 	} else {
 	  assert(rnum >= pL[0]);
 	  STUDYDEF("NominalLtoM",0,0,0,smeared,caljet_em_nominal,rawjet_mcp_smeared);
+	  STUDYQCS("LtoM",             smeared,caljet_em_nominal,rawjet_mcp_smeared);
 	}
 	STUDYDEF("Rawmet",0,                0,1,smeared,caljet_em_nominal,rawjet_nominal); // without MET recalculation
 	STUDYDEF("ResoSoftTermsUp_ptHard",0,0,1,smeared,caljet_em_nominal,rawjet_resosofttermsup);
@@ -2168,15 +2180,15 @@ int main( int argc , char* argv[] )
 	d.response[i].write();
       }
     }
-    // save some general-purpose histograms
-    funfold->cd();
-    // close the file
     funfold->Write();
-    funfold->Close();
-    delete funfold;
+//     funfold->Close();
+//     delete funfold;
   }
   
   std::cout << "==================== FINISHED MAIN ====================" << std::endl;
+  std::cout.flush();
+  std::_Exit(0);
+
   return 0;
 }
 
