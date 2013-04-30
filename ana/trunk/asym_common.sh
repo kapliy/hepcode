@@ -90,6 +90,8 @@ function submit_sample() {
     echo $sample $ntot $nsubs $replicas
     if [ "$nsubs" -gt "0" ]; then
 	${submitter} -o ${out} -s ${sample_path} -t ${tag} --options "${xtra} --pt ${PT} --replicas ${replicas}" -n ${nsubs}
+	# forced version (to retry jobs failed in the same directory)
+	#${submitter} -f -o ${out} -s ${sample_path} -t ${tag} --options "${xtra} --pt ${PT} --replicas ${replicas}" -n ${nsubs}
     fi;
     sleep 0.1
 }
