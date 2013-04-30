@@ -420,6 +420,9 @@ parser = OptionParser()
 parser.add_option("-s","--sample",dest="sample",
                   default = None,
                   type="string",help="Data input sample")
+parser.add_option("-f","--force", default=False,
+                  action="store_true",dest="force",
+                  help="If set to true, allows submission into existing directories")
 parser.add_option("-o", "--output",dest="output",
                   default = None,
                   type="string",help="Output directory")
@@ -464,10 +467,11 @@ if __name__ == '__main__':
     date = datetime.date.today().isoformat().replace('-','')
     submitdir = os.path.join(opts.output,opts.tag)
     if os.path.exists(submitdir):
-        print submitdir,'already exists'
-        print 'Maybe you want to remove it?'
-        print '     rm -r',submitdir
-        sys.exit(1)
+        print 'WARNING:',submitdir,'already exists'
+        if not opts.force:
+            print 'Maybe you want to remove it?'
+            print '     rm -r',submitdir
+            sys.exit(1)
     else:
         os.makedirs(submitdir)
     logdir = os.path.join(submitdir,'logs')
