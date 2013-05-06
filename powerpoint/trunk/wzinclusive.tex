@@ -5,6 +5,8 @@
 %  Preamble
 %===========================================
 \usepackage{MnSymbol}
+\usepackage{graphicx}
+\usepackage{subfigure}
 \usepackage{atlasphysics}
 \usepackage{rotating}
 \usepackage{booktabs}
@@ -59,6 +61,16 @@
 \newcommand{\intlumnb}[1]{$\mathcal{L} \sim #1$~nb$^{-1}$}
 \newcommand{\intlumpb}[1]{$\mathcal{L} \sim #1$~pb$^{-1}$}
 \newcommand{\raw}[0]{\purple{$\Rightarrow$}}
+\newcommand{\Wmunup}{$W^+ \rightarrow \mu^+ \nu$}
+\newcommand{\Wmunum}{$W^- \rightarrow \mu^- \nu$}
+\newcommand{\Wmunupm}{$W^{\pm} \rightarrow \mu^{\pm} \nu$}
+\newcommand{\ptZero}{\tiny{$20 < p_T < 25$ GeV}}
+\newcommand{\ptOne}{\tiny{$25 < p_T < 30$ GeV}}
+\newcommand{\ptTwo}{\tiny{$30 < p_T < 35$ GeV}}
+\newcommand{\ptThree}{\tiny{$35 < p_T < 40$ GeV}}
+\newcommand{\ptFour}{\tiny{$40 < p_T < 45$ GeV}}
+\newcommand{\ptFive}{\tiny{$45 < p_T < 50$ GeV}}
+\newcommand{\ptSix}{\tiny{$p_T > 50$ GeV}}
 \setbeamercolor{frametitle}{fg=red}
 \setbeamercolor{itemize/enumerate subbody}{fg=Blue,bg=white}
 \setbeamercolor{itemize subitem}{fg=Blue}
@@ -126,7 +138,6 @@
 %===========================================
 
 \title[]{$\Wboson \rightarrow \mu\nu$}
-%\title[]{$\Wboson \rightarrow \mu\nu$: debugging A/C differences}
 \author {A.~Kapliy\inst{1} }
 \institute {
 \inst{1} University of Chicago 
@@ -139,15 +150,15 @@
 \frame{
 \titlepage
 \centering
-\red{W/Z inslusive}   \\
+\red{W/Z inclusive}   \\
 }
 
 
 %\input{dates/20130306/data2}
 %\input{dates/20130306/asym}
-\input{dates/20130306/short}
+%\input{dates/20130306/short}
 
-%\input{dates/current/data}
+\input{dates/current/data}
 
 \setcounter{framenumber}{\value{finalframe}}
 \end{document}
