@@ -342,14 +342,15 @@ class SuSys:
         res =  copy.copy(s)
         # do not clone the actual histograms
         #res.h,res.stack = None,None
+        # global over-rides for MC/data/QCD folder paths
+        if sysdir!=None: res.sysdir = s.qlist(sysdir)
+        if subdir!=None: res.subdir = s.qlist(subdir)
+        if basedir!=None: res.basedir = s.qlist(basedir)
         # only replace in MC or in QCD anti-isolation
         if sysdir_mc!=None: res.sysdir = s.qlist([res.sysdir[0],sysdir_mc,res.sysdir[2]])
         if sysdir_qcd!=None: res.sysdir = s.qlist([res.sysdir[0],res.sysdir[1],sysdir_qcd])
         if subdir_mc!=None: res.subdir = s.qlist([res.subdir[0],subdir_mc,res.subdir[2]])
         # other replacements
-        if sysdir!=None: res.sysdir = s.qlist(sysdir)
-        if subdir!=None: res.subdir = s.qlist(subdir)
-        if basedir!=None: res.basedir = s.qlist(basedir)
         if qcderr!=None: res.qcderr = qcderr
         if qcdadd!=None: # addition to qcd map for fine-control of QCD fits
             qcd = copy.copy(res.qcd)
@@ -690,6 +691,10 @@ class SuPlot:
             add2('MuonRecoSFUp','MuonRecoSFUp','MuonRecoSFUp',xadd=qcdadd)
             add2('MuonRecoSFDown','MuonRecoSFDown','MuonRecoSFDown',xadd=qcdadd)
             next('MCP_EFF')
+        # Pileup rescaling of mu=0.97 (or 1.03 when applied to data)
+        if True:
+            add2('PileupScale','PileupUp','PileupUp',xadd=qcdadd)
+            next('PILEUP_SCALE')
         # trigger systematic
         if True:
             add2('MuonTriggerSFPhi','MuonTriggerSFPhi','MuonTriggerSFPhi',xadd=qcdadd)
@@ -1369,6 +1374,8 @@ class SuStackElm:
         return [e.addchain(path) for e in s.samples]
     def auto(s):
         """ add all files satisfying a glob pattern - using rootpath"""
+        if SuSample.debug:
+            print 'Auto-load:',s.label,s.name,':',','.join([e.name for e in s.samples])
         return [e.auto() for e in s.samples]
     def histo(s,hname,d,unitize=False,rebin=1.0):
         """ sum histogram of all subsamples """

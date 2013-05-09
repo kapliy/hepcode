@@ -966,6 +966,22 @@ if mode in ('prepare_qcd_2d','prepare_qcd_1d','prepare_qcd_0d'):
         po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),dname='POS_sig%d_tau%d_ewk%d_xsecdown'%(sig,tau,ewk)); itot+=1
         po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_sig%d_tau%d_ewk%d_xsecdown'%(sig,tau,ewk));  itot+=1
 
+def format_qcdfit(x):
+    """ Formats the result printed by qcdfit into a nice printout """
+    assert len(x)>=16
+    nn = x[0]
+    if len(nn)<10:
+        nn = nn + ' '*(10-len(nn))
+    return '%s:\tD=%d\tD-BG=%.1f\tMC=%.1f\tSIG=%.1f\tBG=%.1f\tQCD=%.1f\t(%.1f)'%( nn,x[1],x[3],x[5],x[7],x[9],x[11],x[13])
+def add_qcdfit(x,y,nname=None):
+    """ Adds two outputs of qcdfit """
+    assert len(x)>=16 and len(y)>=16
+    assert x[16]==y[16]
+    if not nname: nname=x[0]+'_'+y[0]
+    def S(i): return x[i]+y[i]
+    def A(i): return (x[i]+y[i])/2.0
+    def E(i): return math.sqrt(x[i]*x[i]+y[i]*y[i])
+    return [ nname,S(1),E(2),S(3),E(4),S(5),E(6),S(7),E(8),S(9),E(10),S(11),E(12),E(13),A(14),A(15),x[16] ]
 def qcdfit(name,spR2,iref=0,apply_stat=False):
     """ Performs a single QCD fit and returns the data, breakdown of stack numbers, and fit quality
     apply_stat==True modifies nqcd by adjusting it up up by 1 fit error
@@ -1037,6 +1053,13 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
         qcdadd={'var':'d3_%s_lpt_met'%(eword)+ltail,'min':0,'max':60,'rebin':2} # adrian's new nominal
         qcdadd_range={'var':'d3_%s_lpt_met'%(eword)+ltail,'min':5,'max':50,'rebin':2}
     qcdadd_var={'var':'d3_%s_lpt_wmt'%(eword)+ltail,'min':40,'max':90,'rebin':2}
+    qcdadd_x = [] # other possible variations to consider (for rms)
+    qcdadd_x.append({'var':'d3_%s_lpt_wmt'%(eword)+ltail,'min':40,'max':90,'rebin':2}) #0  (my old range)
+    qcdadd_x.append({'var':'d3_%s_lpt_wmt'%(eword)+ltail,'min':30,'max':100,'rebin':2}) #1 (Adrian's range)
+    qcdadd_x.append({'var':'d3_%s_lpt_wmt'%(eword)+ltail,'min':40,'max':70,'rebin':2}) #2
+    qcdadd_x.append({'var':'d3_%s_lpt_wmt'%(eword)+ltail,'min':35,'max':80,'rebin':2}) #3
+    qcdadd_x.append({'var':'d3_%s_lpt_wmt'%(eword)+ltail,'min':35,'max':100,'rebin':2}) #4
+    qcdadd_x.append({'var':'d3_%s_lpt_wmt'%(eword)+ltail,'min':40,'max':110,'rebin':2}) #5
     # clone the stack maker
     spL = spL2.clone(q=iq, histo = opts.var + ltail , qcdadd = qcdadd)
 
@@ -1053,7 +1076,8 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
         res[nn] = fitresult
         
     # nominal
-    add( qcdfit('Nominal',spL.clone()) )
+    NOMINAL = qcdfit('Nominal',spL.clone())
+    add( NOMINAL )
     next('Nominal')
 
     if nomonly:
@@ -1069,9 +1093,42 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
         next('Fit range')
 
     # fit variable [careful - big swings]
-    if True and etamode==2: # FIXME: 04/17/2013
+    if False and etamode==2: # 04/17/2013
         add(qcdfit('fit_var',spL.clone(qcdadd=qcdadd_var) ))
         next('Fit variable')
+    if True and etamode==2: # 04/25/2013 (try several variations and choose smaller ones to work around stat fluctuations)
+        import operator
+        abunch = [ qcdfit('fit_var_%d'%ii,spL.clone(qcdadd=qadd) ) for ii,qadd in enumerate(qcdadd_x) ]
+        assert len(NOMINAL)>11,'ERROR: NOMINAL ill-defined'
+        bunch = sorted( abunch , key = lambda x: abs(x[11]-NOMINAL[11]) ) # sort
+        if False:
+            min_index, min_value = min( enumerate([ abs(bb[11]-NOMINAL[11]) for bb in bunch]) , key=operator.itemgetter(1) )
+            add( ['fit_var']+bunch[min_index][1:] )
+            next('Fit variable')
+        else:
+            vvar = ['fit_var'] + NOMINAL[1:]
+            # drop two highest outliers
+            vvar[11] = sum( [bb[11] for bb in bunch[:-2]] ) / len(bunch[:-2])
+            add( vvar )
+            next('Fit variable')
+
+    # sum of DtoK and LtoM
+    if True:
+        DtoK = qcdfit('DtoK',spL.clone(sysdir='NominalDtoK',sysdir_qcd='IsoWind20DtoK') )
+        LtoM = qcdfit('LtoM',spL.clone(sysdir='NominalLtoM',sysdir_qcd='IsoWind20LtoM') )
+        DtoM = add_qcdfit(DtoK,LtoM,'fit_periods')
+        add(DtoM)
+        next('DtoK+LtoM fits')
+        if False:
+            print format_qcdfit(NOMINAL)
+            print format_qcdfit(DtoM)
+            print format_qcdfit(DtoK)
+            print format_qcdfit(LtoM)
+
+    # pileup scaling
+    if True:
+        add(qcdfit('PileupScale',spL.clone(subdir_mc='PileupUp'))) # Up because applied to data
+        next('Pileup scale 0.97')
 
     # tau backgrounds [ careful - low statistics, saw a big swing ]
     if False:
@@ -1233,8 +1290,8 @@ if mode in ('qcdfit','qcdfit_sys'):
             for zz in xrange(NC):
                 hname = 'h%d_Total'%zz
                 h = SuSample.make_habseta(hname) if opts.etamode==2 else SuSample.make_heta(hname)
-                if zz==0:
-                    print 'FIXME: hadding',len(hs[0]),'TOT'
+                if zz==0 and False:
+                    print 'INFO: hadding',len(hs[0]),'TOT'
                 hs[zz].append(h)
                 if zz==NC-2:
                     hs[zz].append(h.Clone(h.GetName()+'_ewk%d'%zz))
@@ -1247,7 +1304,7 @@ if mode in ('qcdfit','qcdfit_sys'):
                 else:
                     M[zz].ad('Total',style=20,color=ROOT.kBlack)
         brange = xrange(0,hs[0][0].GetNbinsX()+1) if ieta=='ALL' else ([ieta,0] if ieta==1 else [ieta,])
-        print 'FIXME2: after tots:',len(hs[0])
+        print 'INFO: after tots:',len(hs[0])
         # total error
         if True:
             STOT = math.sqrt( sum([ xx*xx for xx in SREL ]) )
@@ -1263,8 +1320,8 @@ if mode in ('qcdfit','qcdfit_sys'):
                     M[zz].ad('%s'%SLAB[i])
                     hname = 'h%d_%s'%(zz,SLAB[i])
                     h = SuSample.make_habseta(hname) if opts.etamode==2 else SuSample.make_heta(hname)
-                    if zz==0:
-                        print 'FIXME: hadding',len(hs[zz]),SLAB[i]
+                    if zz==0 and False:
+                        print 'INFO: hadding',len(hs[zz]),SLAB[i]
                     hs[zz].append(h)
             [ hs[0][i+1].SetBinContent(ibin, val ) for ibin in brange ]
             [ hs[1][i+1].SetBinContent(ibin, val/NOM[11]*100.0 ) for ibin in brange ]
@@ -1282,7 +1339,7 @@ if mode in ('qcdfit','qcdfit_sys'):
             [hs[4][1].SetBinContent(ibin,NOM[11]/NOM[5]*100.0) for ibin in brange ]
             [hs[4][1].SetBinError(ibin,QCDE/NOM[5]*100.0) for ibin in brange ]
             # counts
-            print 'FIXME AK',NOM[9],NOM[11]
+            print 'INFO: counts',NOM[9],NOM[11]
             [hs[5][0].SetBinContent(ibin,NOM[9]) for ibin in brange ]
             [hs[5][0].SetBinError(ibin,EWKE) for ibin in brange ]
             [hs[5][1].SetBinContent(ibin,NOM[11]) for ibin in brange ]
@@ -1322,7 +1379,7 @@ if mode in ('qcdfit','qcdfit_sys'):
             height = maxp
             if zz in (0,NC-1): height=2.5
             elif opts.ieta=='LOOP' and opts.ipt=='ALL25' and zz in (2,3): height = 'abs2.0'
-            elif opts.ieta=='LOOP' and opts.ipt=='ALL20' and zz in (2,3): height = 'abs2.5'
+            elif opts.ieta=='LOOP' and opts.ipt=='ALL20' and zz in (2,3): height = 'abs3.5'
             elif opts.ieta=='LOOP' and opts.ipt=='ALL25' and zz in (4,): height = 'abs12.5'
             print 'SAVING:',zz,xaxis_info+ys[zz],height
             c[zz].plotAny(hs[zz],M=M[zz],height=height,drawopt='LP',xaxis_info=xaxis_info+ys[zz],pave=pave)

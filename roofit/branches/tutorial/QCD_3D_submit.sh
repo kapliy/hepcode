@@ -26,8 +26,10 @@ transfer_input_files = /home/antonk/roofit/antondb.py,/home/antonk/roofit/binnin
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 
-Requirements   =  ( (Memory >= 900) && (HAS_CVMFS =?= TRUE) )
-#Requirements   =  ( (Memory >= 900) && (HAS_CVMFS =?= TRUE) && (HAS_TIER3_DATA =?= TRUE) )
+#Requirements   =  ( (Memory >= 900) && (HAS_CVMFS =?= TRUE) )
+Requirements   =  ( (Memory >= 900) && (HAS_CVMFS =?= TRUE) && (HAS_TIER3_DATA =?= TRUE) )
+
+priority = 10
 
 +AccountingGroup = \"group_uct3.antonk\"
 

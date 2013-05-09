@@ -79,7 +79,11 @@ DB=DB_04032013_NOMG.v23  # ditto, but using QCD fit error as QCD stat uncertaint
 
 # first version running via condor
 input=/atlas/uct3/data/users/antonk/ana/ana_v29I_04242013_condor_stacoCB_all/pt20
-DB=DB_04242013_NOMG.v24  # proper hadd; adding: DtoK and LtoM; pileupdown
+DB=DB_04242013_NOMG.v24  # proper hadd
+DB=DB_04242013_NOMG.v25  # proper hadd; reduce wmt by trying ranges; adding: pileupdown
+
+input=/share/t3data3/antonk/ana/ana_v29I_04252013_rep_stacoCB_all/pt20
+DB=DB_04242013_NOMG.v26  # proper hadd; reduce wmt by trying ranges; adding: DtoK and LtoM; pileupdown
 
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`

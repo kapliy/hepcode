@@ -8,29 +8,7 @@ due to different signal MC or different fit variables.
 """
 
 memo = """
-v1: first version to be placed in common afs area. January 6 2013.
-v2: added integrated measurement. January 7 2013.
-v3: saving all background components. Added charge-summed integrated measurement. January 7 2013.
-v4: qcd fits are performed in 0..60 range
-v6: Jan 15-21 2013
-    Fixed bug where QCD was charge-symmetric (always taken from mu+)
-    Fixed bug that disabled wmunu signal xsec_up variation
-    Fixed bug whereas charged-combined histos (POS+NEG) were sometimes saved as NEG+NEG
-    lbl=01152013_paper   # large rewrite of sf systematics: all st_w_XXX are renamed; wptw and pdf are moved to st_w folder; saving PDF vars for each CT10 member.
-    lbl=01152013_paper_fix  # retrying MC runs in an attempt to fix broken systematics. dgadd -u1
-    lbl=01182013_paper      # latest trigger phi corrections (works for multiple muons!). dgadd -u5 (again). stability fix from adrian.
-v7: same as v6, but qcd fits performed to 60 GeV.
-    Also fixed a bug in charge-combined ScaleSoftTermsDown_ptHard histograms
-    Also fixed a bug in 0D qcd calculation - it was not grabbing the right number
-v8: unscrambled fit and control region uncertainties on QCD
-    now, these get unfolded independently to preserve bin-by-bin correlations
-v9: simply re-running with additional histograms (mcp_noscale; uint).
-    also adding a test with etamode=1 (i.e., signed eta)
-    this is version v2 in common afs area
-v10: just re-running with extra debug stuff.
-    this is version v3 in common afs area
-v11: added missing 0.2% of events in periodL.
-    now ALL event counts agree with what is reported in AMI for the AODs
+Check version log in /home/antonk/roofit/config.sh
 """
 
 import sys,os,re,math,copy
@@ -105,6 +83,7 @@ def make_qcd(name):
     REPMAP = {}
     REPMAP['Nominal_qcd_fitrange'] = 'met_range'
     REPMAP['Nominal_qcd_fitvar'] = 'fit_var'
+    REPMAP['Nominal_qcd_fitperiods'] = 'fit_periods'
     REPMAP['Nominal_qcd_iso1'] = 'IsoWind20m'
     REPMAP['Nominal_qcd_iso2'] = 'IsoWind40'
     mname = REPMAP[name] if name in REPMAP else name
@@ -274,7 +253,7 @@ if __name__=='__main__':
             sigL = [adir.Get('wmunu_'+system),]
             for qsys in ['Nominal_qcd_up','Nominal_qcd_down',
                          'Nominal_qcd_statup','Nominal_qcd_statdown',
-                         'Nominal_qcd_fitrange','Nominal_qcd_fitvar',
+                         'Nominal_qcd_fitrange','Nominal_qcd_fitvar','Nominal_qcd_fitperiods',
                          'Nominal_qcd_iso1','Nominal_qcd_iso2']:
                 allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + make_qcd(qsys) + sigL
                 [ make_total(system,allsamples,fout_D[q],qsys,q==2 and iq==1) for q in (iq,2) ]

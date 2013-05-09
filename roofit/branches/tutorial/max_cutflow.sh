@@ -11,9 +11,15 @@ if [ "$#" -ge "1" ]; then
     cd ${bdir}
     for pt in 20 25; do
 	sdir=${bdir}/pt${pt}
+	if [ -f "${sdir}/ALLDATA.root" ]; then
+	    echo "WARNING: merged ntuple already exists. Delete it if you want to regenerate"
+	    echo ${sdir}/ALLDATA.root
+	    continue
+	fi
 	echo "Processing PT=${pt}"
-	/bin/ls ${sdir}/data_period*/data*root > ${sdir}/ALLDATA.list
-	~/TrigFTKAna/plot/dgadd -f 1 -d ${sdir}/ALLDATA.root -l ${sdir}/ALLDATA.list
+	/bin/ls ${sdir}/data_period*/root_data*root > ${sdir}/ALLDATA.list
+	hadd -T ${sdir}/ALLDATA.root `cat ${sdir}/ALLDATA.list`
+	#~/TrigFTKAna/plot/dgadd -f 1 -d ${sdir}/ALLDATA.root -l ${sdir}/ALLDATA.list
     done
 else
     echo "Printing latex tables:"
