@@ -24,11 +24,14 @@ if len(sys.argv)>=5:
 assert os.path.isdir(datadir),'ERROR: cannot locate directory %s'%datadir
 
 data = None
+dataR = None
 qword = 'plus' if charge==0 else 'min'
 if is_data:
     data = datadir + '/' + 'ALLDATA.root'
+    dataR = data
 else:
     data = datadir + '/' + 'mc_powheg_pythia_w%smunu/mc_powheg_pythia_w%smunu.root'%(qword,qword)
+    dataR = datadir + '/' + 'mc_powheg_pythia_w%smunu/root_mc_powheg_pythia_w%smunu.root'%(qword,qword)
     
 print >>sys.stderr, 'SETTINGS: ',is_data,charge,data
 
@@ -110,17 +113,51 @@ def tot(v,aft,xtra=''):
 DATAU = []
 DATAV = []
 DATAW = []
-p = os.popen(cmd,"r")
-while True:
-    line = p.readline()
-    if not line: break
-    words = line.split()
-    if len(words)>0 and words[0]=='u':
-        DATAU.append(words)
-    if len(words)>0 and words[0]=='v':
-        DATAV.append(words)
-    if len(words)>0 and words[0]=='w':
-        DATAW.append(words)
+
+import common
+import ROOT
+ff = None
+if os.path.isfile(data):
+    ff = ROOT.TFile.Open(data,'READ')
+else:
+    assert os.path.isfile(dataR), 'ERROR: failed to load either:\n%s \nor:\n%s'%(data,dataR)
+    ff = ROOT.TFile.Open(dataR,'READ')
+if ff.Get('dg'): # parsing dgplot
+    print 'Opened as dgplot'
+    p = os.popen(cmd,"r")
+    while True:
+        line = p.readline()
+        if not line: break
+        words = line.split()
+        if len(words)>0 and words[0]=='u':
+            DATAU.append(words)
+        if len(words)>0 and words[0]=='v':
+            DATAV.append(words)
+        if len(words)>0 and words[0]=='w':
+            DATAW.append(words)
+else: # parsing root output
+    assert ff.Get('wcut')
+    assert ff.Get('Nominal/wcut')
+    print 'Opened as ROOT'
+    def make_xx(t,DATA):
+        """ t is one of: u,v,w """
+        xx = sorted([ z.GetName().replace('_num','') for z in ff.Get('wcut').GetListOfKeys() if z.GetName()[0]==t and z.GetName()[-3:]=='num'])
+        xy = sorted([ z.GetName().replace('_num','') for z in ff.Get('Nominal/wcut').GetListOfKeys() if z.GetName()[0]==t and z.GetName()[-3:]=='num'])
+        for x in (xx+xy):
+            sfold = 'wcut' if (x in xx) else 'Nominal/wcut'
+            assert ff.Get(sfold).Get(x+'_den')
+            assert ff.Get(sfold).Get(x+'_num')
+            words = [t, 'NONE', 'NONE', 'NONE', 'NONE',
+                     ff.Get(sfold).Get(x+'_den').GetBinContent(1),
+                     ff.Get(sfold).Get(x+'_num').GetBinContent(1),
+                     x[4:] ]
+            DATA.append( words )
+        return xx
+    make_xx('u',DATAU)
+    make_xx('v',DATAV)
+    make_xx('w',DATAW)
+    pass
+ff.Close()
 
 NUM,DEN,NAME = 6,5,7
 def find(cut,DATA):

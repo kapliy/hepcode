@@ -1,150 +1,26 @@
-Muon reco SF - compare with Max's instructions.
+DOING: Muon reco SF - compare with Max's instructions.
+DOING: MET-scale: check that up/down is not switched.
 
-DO: update checklogs to parse DAG files
-
-IN PROGRESS: restore mT fits
-
-MET-scale: check that up/down is not switched.
+Add some more words in supporting document about the curvature parametrization.
 Check the direction of Up variation is different with/without QCD (since it's different with Wenu)
-Check MuonTriggerSF and recoSF systematic
 
 TODO: check wmunu/wenu channel merging
-
-Consider: skipping MET cut (too late?)
-
-TODO: check truth-level asymmetry when applying W polarization weight
 dump all muon-related scale factors
 
-Bootstrapping per Sasha's advice?
 Data reweighting of the distribution we unfold
-
-A/C from Max & co.:
-- DONE W with/without trigger matching
-- DONE Different pileup conditions (vs just periods)
-- event numbers where tag fails and probe in problematic region
-- DONE delta-R to trigger for W and Z (including when tag is matched or not)
-- DONE W selection, using muid trigger - via LOOPER perhaps???
-- Me: think about charge mis-identification in bad eta bin?
-* Make eta/phi trigger plots in ABSOLUTE: without requiring that the other one failed.
-* More muid matching studies (?)
-A/C stuff:
-Number of muon stations on muon track. 2-station muon.
-DONE Plot diff of pt (MS - ID); apply diff cut
-DONE What some other unprescaled higher pt trigger? EF_mu20_MG?
-DONE:p.42 make plots of eta inside eta bin with njets requirement
-     p.42 - drop MET requirement for Ws
-     p.42 - cut at muon pt = 35 GeV
-     Plot lepton pT inside the funny region.
-     do other bins
-
-TODO (EWUnfoldingH):
-- Take care of statistical uncertainty stuff when adding/asymmetrizing.
-  In particular, clone two copies of central histogram; set uncertainties (computed from diff-to-syst), make asymmetry/sum, adjust central for final error
-- Create Group-of-Groups?
-  Outer group = sum in quadrature of these systematics
-  Inner group = Up/Down or toys or PDF variations or ME-PS difference
-
-TODO (MET FITS):
-  FIRST, find out what's up with chi2. Why DEBUG result looks different from QCD_3D.sh stuff ???
-  fits with Alpgen
-  IMPORTANT: fits for avgmu groups, and then add up. OR: fit subperiods and then add up.
-             Adrian saw that MET and W_MT fits agree after doing the per-period breakup
-  fits before W m_T cut
-  unscaled MC
-  MC scaled to minimum-stats monte-carlo (wtaunu or ztautau)
-
-TODO (NOTE)
-* Redo w MT fits and pT fits in inclusive region and add to appendix!
-* Dump scale factors into the note
-* Document A/C asymmetry studies
-
-DONE: Send to Jan data/MC vs pt in each eta slice
-DONE: difference between the MET_Muonboy term and the actual muon pt for A and C
-DONE: plot LocHadTopo raw, before any muon stuff
-DONE: Z plots with njets cut (to de-correlate phi)
-
-ANSATZ: PROPAGATE MET CORRECTION
-<---- jet 4
-            muon 2  -->
-      met 2 --> 
-========= MCP ==========
-            MCP 4 ---->
-       met=0
-mx = MCP - raw = 4-2 = 2 -->
-met = orig - mx = 2 - 2 = 0
-
-
-Eta debugging:
-* DONE: Different signal generators
-* DONE: Plot W A/C in quarters of phi space
-* DONE make w plots with trigger matching requirements.
-* DONE make z plots with trigger matching requirements.
-* DONE make z plots requiring both muons to fall in the same eta bin
-* DONE: make plots for MC WITHOUT scale factors (using the ntuple!)
-* DONE: Plot zmumu plots requiring both muons to be close.
-* DONE: plot A-C side differences for MET correction.
-  DONE: use a different type of MET (LocHadTopo)
-* DONE: do the differences in every step through the procedure. data, data-bgsub, scale factors,
-  DONE: Make script that translates a 1D eta histo into 1D abseta histo + ratio
-* DONE: wmunu stack, avoiding MET fits via QCD MC
-  DONE: zmumu eta stack
-
-* Make scripts to create integrated cross-section tables.
-cat NOW | awk '{v=2.4*2; print $1*v,$2,$3*v,$4,$5,$6*v,$7,$8,$9*v}'
-* understand why 1D unfolding does not do proper division by bin width in Plot.C. DOING: new integrated files
-
-* Peter: double ratio plots of control plots: mean discrepancy weighted by efficiency
-- check stat eff uncertainty on integrated W measurement compared to 2010.
-- OPTIONAL: QCD plot - make a plot of 3 generators vs qcd fit range
-- DONE: d0sig < 3.5
-
-* Investigate why the MC@NLO relative uncertainty is almost twice as large *after* unfolding.
-  Actually first think about, perhaps it makes sense???
 
 TABLES:
 - QCD uncertainties in table form
 - Plot QCD chi2/ndf for different systematics
 
-Do MCP eff/reco corrections use pt scaling?
-TH1 phi - try fourier spectrum
-
 DONE: CHECK if muon reco corrections correct in phi - NO
-DONE: slimmed ntuples fully work now. But sometimes they run super slowly, not sure why!
 
 QCD FITS:
-LONG overdue: really need to understand difference in bgqcd=3 and bgqcd=4. Plot normalized templates on top of each other!
-
-DONE: BAD BIN: switch to ntuple-based studies with un-normalized bb/cc MC
-     DONE Look at muons in Z events (use QCD heavy flavor MC) - plot eta
-     DONE plot met without cutting met/wmt
-     DONE plot  pt without cutting pt
-     DONE plot wmt without cutting others
-     DONE correlate met-muonboy with met-reffinal [see if met-muonboy at 40 has lots of met at reffinal 25]
-     DONE try adding njet cuts
-     DONE Try it with a somewhat higher pt cut
-     DONE plot met_MuonBoy [raw - corrected]
-     try to use just calo + one selected muon
-Peter: Endcap EE (EEL/EES?) disk chambers went on C side, but not on A side. For production/cost reasons.
-Putting them in bit by bit over time. First installed on C side.
-YES - Trigger chambers
+LONG overdue: really need to understand difference in bgqcd=3 and bgqcd=4.
+Plot normalized templates on top of each other?
 
 OCT29:
-* Try muon systematics WITHOUT met propagation (have to do that at ntuple level). Shouldn't be a big effect!
 * Look at MCP systematics by-hand: is statistical uncertainty dominant? If not, can we reduce it by averaging?
-* Apply d0/z0 cuts in ntuple format and see if eta spectrum smoothness improves
-
-OCTOBER:
-MAX: repeat unfolded distribution errors
-* DONE: Re-run October 4 version in TrigFTKAna_trunk with new MCP-curvature offsets.
-  Perhaps this will/can fix the ugly hole? - NOPE
-
-Peter:
-Make a stack plot of W reconstruction vs phi in the specific bin that gives trouble.
-
-Idea: fit in delta-phi between MET and muon
-TODO: understand the Z MC veto and drell-yan
-
-MEL TODO:
 MCP corrections: is most of uncertainty statistical? Then no point messing with the systematics!
 MCP corrections: split in phi bins, for the barrel case where there is large C offset?
 
@@ -153,71 +29,29 @@ it factors out w pt. Overlay templates for different generators - expect better 
 
 Consider EtMissRel instead of etmiss?
 /home/antonk/ElectroweakBosons/AnalysisZmumu/HFrame/src
-* Add dressed muons for C_W factors!
 
 MET propagation: see if KC corrections are actually valid for low-pt muons, which are used for MET propagation!
-Peter: isolation is very different between b and c. Need to worry about the mix.
-
-Peter: Photos  -> Dressed truth should be the same
-FEWZ has no ewk FSR term. -> FEWZ 3.0
-* CM: ABCD = isolation and MULTIJET_LIKE{met<X && mT<X && nlepton=small}
-* LATER: Add FSR tool; add FSR-present flag; add FSR-corrected Z
-* LATER: add dressed truth leptons
-* Mel: compare Pythia and Alpgen pre-FSR distributions.
-  Peter: identify and veto events that have an FSR photon around the mu
-  Mel: Make reco plots of w pt, see if generator differences wash away
 
 charge mis-id - won't work from Z's. Flip probability. Can't look at same-sign Z's
-+ add bins of lepton pt
-* TODO: use calo muons in tag-and-probe.
-
-MCP mtg:
-* understand systematics using special MC !!Validate the method by putting a shift by hand. Massimo will make samples
-* run this method on MC directly
-effect on the order of 0.2 TeV-1.
-
-KS toy-MC study (performing a fit) - see if errors are correct. If yes, drop chi2 method.
-For the "bad" cmb bin, look at a variation of akluit where the other muon is forced into a particular region.
-Peter: does z resolution improve in data following the correction?
 
 MCP:
+* understand systematics using special MC. Validate the method by putting a shift by hand. Massimo will make samples
+effect on the order of 0.2 TeV-1.
+KS toy-MC study (performing a fit) - see if errors are correct. If yes, drop chi2 method.
+Peter: does z resolution improve in data following the correction?
 TODO: Z mass fit in bins of eta/phi - including on MC (confirm Kluit's problem)
       Z mass peak fit with alpgen; fit with/without pileup factors.
       Z mass peak at particle level (which is, however, after FSR/ISR)
-
-TrigFTKAna:
-* ID efficiency via tag and probe (lX, lY, lZ)
-  Create a completely separate ntuple (manually turned on though). The idea is to create mu-ID candidates. The AOD::id muons would 
-  have a link to the closest-matched full muon (if any). Make sure smearing class can smear ID muons, too!
-
-conversion to truth level. Resolution is not negligible in MET. unfolding.
-Peter: METRefFinal - METTruth; split into parallel and perpendicular to lepton axis components (later)
-Handle bad charge-dependent modeling - even though QCD is fit in a charge-dependent fasion.
-
-Suggestions for analysis:
-* z0/d0 vs nvtx plots
-* charge mis-id plots
-* z tag-probe vs muon p (not pt)
-* add yields
-* Efficiency unfolding - careful with different generators.
-
 Suggestions for MCP:
 * Add fitted-z-mass in phi/eta bins plot!
   https://indico.cern.ch/getFile.py/access?subContId=3&contribId=7&resId=1&materialId=slides&confId=157170
 * Add p_cmb-p_ID feature
   https://indico.cern.ch/getFile.py/access?subContId=0&contribId=7&resId=0&materialId=slides&confId=157170
-
 print keysfit id/exms string modification to make sure it is correct.
 * Et-miss resolution study: use Z events; project on Z pt axis (Sam Whitehead's thesis)
-
-
-Muon scales:
 * Investigate RooEggePdf - see if it is indeed compatible with my implementation!
   Test by fitting the same event!
-* Applying absolute scale: perhaps going about it the wrong way? Use the KS statistic between data and MC
-  to find the location of the peak?
 * in zpeak.py: automatically apply defaults depending on region and type of muon!
-
 MCP scales:
 * Check if RooKeysPDF rho can be chosen smartly - Jahred's thesis.
 * Repeat a study to verify sqrt(A*B) works if one leg in barrel, another in endcap
