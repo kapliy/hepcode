@@ -323,172 +323,11 @@ AnaMuon::GetTriggerSF_v17_custom2( const CONF::ConfType& conf, const detector::M
 #endif
 }
 
-// a THIRD custom version of trigger scale factors that can be used with the ScaleFactorProvider package
-// this implementation uses histograms from the MCP trigger group, but we are implementing all machinery by-hand.
-// These particular histograms were made in October 2012, and should be used with 2011 data ONLY
-// compared to AnaMuon::GetTriggerSF_v17_custom2, AnaMuon::GetTriggerSF_v17_custom3 adds eta-phi corrections
-// on top of eta-pt. This version multiplies out scale factors for each muon!
-void
-AnaMuon::GetTriggerSF_v17_custom3( const CONF::ConfType& conf, const detector::MCP_TYPE& mu_type , const detector::EGAMMA_TYPE& el_type ,
-				   std::vector<TLorentzVector>& muons,
-				   std::vector<TLorentzVector>& electrons,
-				   std::vector<ftype>& muon_charges,
-				   const unsigned long& run_number , const int& mu_trig ,
-				   double& eff, double& err, int replica) {
-#ifdef HAVE_COMMONANALYSIS
-
-  assert(false && "Depracated - use GetTriggerSF_v17_custom4 instead");
-
-  eff = 1.0;
-  err = 0;
-
-  assert(conf==CONF::LATEST && "Unsupported --conf for GetTriggerSF_v17 scaling");
-  static SFProvider* m_sfProvTrig_DG5_pos_barrel = 0;
-  static SFProvider* m_sfProvTrig_G6I_pos_barrel = 0;
-  static SFProvider* m_sfProvTrig_JM_pos_barrel = 0;
-  static SFProvider* m_sfProvTrig_L3L4_pos_barrel = 0;
-  static SFProvider* m_sfProvTrig_DG5_pos_endcap = 0;
-  static SFProvider* m_sfProvTrig_G6I_pos_endcap = 0;
-  static SFProvider* m_sfProvTrig_JM_pos_endcap = 0;
-  static SFProvider* m_sfProvTrig_L3L4_pos_endcap = 0;
-  static SFProvider* m_sfProvTrig_DG5_neg_barrel = 0;
-  static SFProvider* m_sfProvTrig_G6I_neg_barrel = 0;
-  static SFProvider* m_sfProvTrig_JM_neg_barrel = 0;
-  static SFProvider* m_sfProvTrig_L3L4_neg_barrel = 0;
-  static SFProvider* m_sfProvTrig_DG5_neg_endcap = 0;
-  static SFProvider* m_sfProvTrig_G6I_neg_endcap = 0;
-  static SFProvider* m_sfProvTrig_JM_neg_endcap = 0;
-  static SFProvider* m_sfProvTrig_L3L4_neg_endcap = 0;
-  
-  // init on first event
-  if(!m_sfProvTrig_DG5_pos_barrel) {
-    const std::string file="data/mu18_eta_phi_SF_hists.root";
-    // positive muons
-    m_sfProvTrig_DG5_pos_barrel  = new SFProvider(file, "charge_pos_SF_rescaled_eta_phi_barrel",
-						  "","",
-						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_G6I_pos_barrel  = new SFProvider(file, "mu18_pos_SF_rescaled_eta_phi_barrel",
-						  "","",
-						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_JM_pos_barrel   = new SFProvider(file, "medium_pos_SF_rescaled_eta_phi_barrel",
-						  "","",
-						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_L3L4_pos_barrel = new SFProvider(file, "rpc_pos_SF_rescaled_eta_phi_barrel",
-						  "","",
-						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_DG5_pos_endcap  = new SFProvider(file, "charge_pos_SF_rescaled_eta_phi_endcap",
-						  "","",
-						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_G6I_pos_endcap  = new SFProvider(file, "mu18_pos_SF_rescaled_eta_phi_endcap",
-						  "","",
-						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_JM_pos_endcap   = new SFProvider(file, "medium_pos_SF_rescaled_eta_phi_endcap",
-						  "","",
-						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_L3L4_pos_endcap = new SFProvider(file, "rpc_pos_SF_rescaled_eta_phi_endcap",
-						  "","",
-						  SFProvider::EtaPhi,1.0);
-    // negative muons
-    m_sfProvTrig_DG5_neg_barrel  = new SFProvider(file, "charge_neg_SF_rescaled_eta_phi_barrel",
-						  "","",
-						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_G6I_neg_barrel  = new SFProvider(file, "mu18_neg_SF_rescaled_eta_phi_barrel",
-						  "","",
-						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_JM_neg_barrel   = new SFProvider(file, "medium_neg_SF_rescaled_eta_phi_barrel",
-						  "","",
-						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_L3L4_neg_barrel = new SFProvider(file, "rpc_neg_SF_rescaled_eta_phi_barrel",
-						  "","",
-						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_DG5_neg_endcap  = new SFProvider(file, "charge_neg_SF_rescaled_eta_phi_endcap",
-						  "","",
-						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_G6I_neg_endcap  = new SFProvider(file, "mu18_neg_SF_rescaled_eta_phi_endcap",
-						  "","",
-						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_JM_neg_endcap   = new SFProvider(file, "medium_neg_SF_rescaled_eta_phi_endcap",
-						  "","",
-						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_L3L4_neg_endcap = new SFProvider(file, "rpc_neg_SF_rescaled_eta_phi_endcap",
-						  "","",
-						  SFProvider::EtaPhi,1.0);
-  }
-  
-  const unsigned long myRunNumber = run_number;
-
-  // code below adapted from Max Bellomo, and from TrigMuonEfficiency (to combine multiple muons)
-  for(unsigned i=0; i<muons.size(); i++) {
-    const int q = muon_charges[i]>0 ? 1 : -1;
-    SFProvider *m_sfProvTrig = 0;
-    TLorentzVector& muon = muons[i];
-    if(q>0) {
-      if(fabs(muon.Eta())<1.05) {
-	if(myRunNumber>=179710 && myRunNumber<=183347)
-	  m_sfProvTrig=m_sfProvTrig_DG5_pos_barrel;
-	else if(myRunNumber>=183391 && myRunNumber<=186493)
-	  m_sfProvTrig=m_sfProvTrig_G6I_pos_barrel;
-	else if( (myRunNumber>=186516 && myRunNumber<=189090) || (myRunNumber>=189639 && myRunNumber<=191933) )
-	  m_sfProvTrig=m_sfProvTrig_JM_pos_barrel;
-	else if(myRunNumber>=189184 && myRunNumber<=189610)
-	  m_sfProvTrig=m_sfProvTrig_L3L4_pos_barrel;
-	else assert(0&&" unknown run number "&&BOOST_CURRENT_FUNCTION);
-      } else {
-	if(myRunNumber>=179710 && myRunNumber<=183347)
-	  m_sfProvTrig=m_sfProvTrig_DG5_pos_endcap;
-	else if(myRunNumber>=183391 && myRunNumber<=186493)
-	  m_sfProvTrig=m_sfProvTrig_G6I_pos_endcap;
-	else if( (myRunNumber>=186516 && myRunNumber<=189090) || (myRunNumber>=189639 && myRunNumber<=191933) )
-	  m_sfProvTrig=m_sfProvTrig_JM_pos_endcap;
-	else if(myRunNumber>=189184 && myRunNumber<=189610)
-	  m_sfProvTrig=m_sfProvTrig_L3L4_pos_endcap;
-	else assert(0&&" unknown run number "&&BOOST_CURRENT_FUNCTION);
-      }
-    } else {    // q<0
-      if(fabs(muon.Eta())<1.05) {
-	if(myRunNumber>=179710 && myRunNumber<=183347)
-	  m_sfProvTrig=m_sfProvTrig_DG5_neg_barrel;
-	else if(myRunNumber>=183391 && myRunNumber<=186493)
-	  m_sfProvTrig=m_sfProvTrig_G6I_neg_barrel;
-	else if( (myRunNumber>=186516 && myRunNumber<=189090) || (myRunNumber>=189639 && myRunNumber<=191933) )
-	  m_sfProvTrig=m_sfProvTrig_JM_neg_barrel;
-	else if(myRunNumber>=189184 && myRunNumber<=189610)
-	  m_sfProvTrig=m_sfProvTrig_L3L4_neg_barrel;
-	else assert(0&&" unknown run number "&&BOOST_CURRENT_FUNCTION);
-      } else {
-	if(myRunNumber>=179710 && myRunNumber<=183347)
-	  m_sfProvTrig=m_sfProvTrig_DG5_neg_endcap;
-	else if(myRunNumber>=183391 && myRunNumber<=186493)
-	  m_sfProvTrig=m_sfProvTrig_G6I_neg_endcap;
-	else if( (myRunNumber>=186516 && myRunNumber<=189090) || (myRunNumber>=189639 && myRunNumber<=191933) )
-	  m_sfProvTrig=m_sfProvTrig_JM_neg_endcap;
-	else if(myRunNumber>=189184 && myRunNumber<=189610)
-	  m_sfProvTrig=m_sfProvTrig_L3L4_neg_endcap;
-	else assert(0&&" unknown run number "&&BOOST_CURRENT_FUNCTION);
-      }
-    }
-
-    // calculate central values and uncertainties
-    assert(m_sfProvTrig);
-    const double wt = m_sfProvTrig->getSF(muon);
-    const double wt_err = m_sfProvTrig->getSFError(muon);
-    eff *= wt;
-    err += pow(wt_err/wt,2);
-  } // loop over muons
-
-  err = eff*sqrt(err); // error propagation
-  return;
-  
-#else
-  assert(0&&NO_ANALYSIS_MSG);
-#endif
-}
-
 // a FOURTH custom version of trigger scale factors that can be used with the ScaleFactorProvider package
 // this implementation uses histograms from the MCP trigger group, but we are implementing all machinery by-hand.
 // These particular histograms were made in December 2012, and should be used with 2011 data ONLY
 // compared to AnaMuon::GetTriggerSF_v17_custom2, AnaMuon::GetTriggerSF_v17_custom4 adds eta-phi corrections
-// on top of eta-pt. Unlike AnaMuon::GetTriggerSF_v17_custom3, this version works with multiple muons.
+// on top of eta-pt. This version works with multiple muons (e.g., for Z selection).
 void
 AnaMuon::GetTriggerSF_v17_custom4( const CONF::ConfType& conf, const detector::MCP_TYPE& mu_type , const detector::EGAMMA_TYPE& el_type ,
 				   std::vector<TLorentzVector>& muons,
@@ -498,6 +337,7 @@ AnaMuon::GetTriggerSF_v17_custom4( const CONF::ConfType& conf, const detector::M
 				   double& eff, double& err , int replica) {
 #ifdef HAVE_COMMONANALYSIS
   assert(conf==CONF::LATEST && "Unsupported --conf for GetTriggerSF_v17 scaling");
+  assert(replica<0);
   static SFProvider* m_sfProvTrig_DG5_pos_barrel = 0;
   static SFProvider* m_sfProvTrig_G6I_pos_barrel = 0;
   static SFProvider* m_sfProvTrig_JM_pos_barrel = 0;
@@ -523,68 +363,52 @@ AnaMuon::GetTriggerSF_v17_custom4( const CONF::ConfType& conf, const detector::M
     m_sfProvTrig_DG5_pos_barrel  = new SFProvider(file, "charge_pos_data_matched_barrel", "charge_pos_data_probe_barrel",
 						  file, "charge_pos_mc_matched_barrel", "charge_pos_mc_probe_barrel",
 						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_DG5_pos_barrel->generateReplicas(NREPLICASF);
     m_sfProvTrig_G6I_pos_barrel  = new SFProvider(file, "mu18_pos_data_matched_barrel", "mu18_pos_data_probe_barrel",
 						  file, "mu18_pos_mc_matched_barrel", "mu18_pos_mc_probe_barrel",
 						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_G6I_pos_barrel->generateReplicas(NREPLICASF);
     m_sfProvTrig_JM_pos_barrel   = new SFProvider(file, "medium_pos_data_matched_barrel", "medium_pos_data_probe_barrel",
 						  file, "medium_pos_mc_matched_barrel", "medium_pos_mc_probe_barrel",
 						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_JM_pos_barrel->generateReplicas(NREPLICASF);
     m_sfProvTrig_L3L4_pos_barrel = new SFProvider(file, "rpc_pos_data_matched_barrel", "rpc_pos_data_probe_barrel",
 						  file, "rpc_pos_mc_matched_barrel", "rpc_pos_mc_probe_barrel",
 						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_L3L4_pos_barrel->generateReplicas(NREPLICASF);
     m_sfProvTrig_DG5_pos_endcap  = new SFProvider(file, "charge_pos_data_matched_endcap", "charge_pos_data_probe_endcap",
 						  file, "charge_pos_mc_matched_endcap", "charge_pos_mc_probe_endcap",
 						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_DG5_pos_endcap->generateReplicas(NREPLICASF);
     m_sfProvTrig_G6I_pos_endcap  = new SFProvider(file, "mu18_pos_data_matched_endcap", "mu18_pos_data_probe_endcap",
 						  file, "mu18_pos_mc_matched_endcap", "mu18_pos_mc_probe_endcap",
 						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_G6I_pos_endcap->generateReplicas(NREPLICASF);
     m_sfProvTrig_JM_pos_endcap   = new SFProvider(file, "medium_pos_data_matched_endcap", "medium_pos_data_probe_endcap",
 						  file, "medium_pos_mc_matched_endcap", "medium_pos_mc_probe_endcap",
 						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_JM_pos_endcap->generateReplicas(NREPLICASF);
     m_sfProvTrig_L3L4_pos_endcap = new SFProvider(file, "rpc_pos_data_matched_endcap", "rpc_pos_data_probe_endcap",
 						  file, "rpc_pos_mc_matched_endcap", "rpc_pos_mc_probe_endcap",
 						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_L3L4_pos_endcap->generateReplicas(NREPLICASF);
     // negative muons
     m_sfProvTrig_DG5_neg_barrel  = new SFProvider(file, "charge_neg_data_matched_barrel", "charge_neg_data_probe_barrel",
 						  file, "charge_neg_mc_matched_barrel", "charge_neg_mc_probe_barrel",
 						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_DG5_neg_barrel->generateReplicas(NREPLICASF);
     m_sfProvTrig_G6I_neg_barrel  = new SFProvider(file, "mu18_neg_data_matched_barrel", "mu18_neg_data_probe_barrel",
 						  file, "mu18_neg_mc_matched_barrel", "mu18_neg_mc_probe_barrel",
 						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_G6I_neg_barrel->generateReplicas(NREPLICASF);
     m_sfProvTrig_JM_neg_barrel   = new SFProvider(file, "medium_neg_data_matched_barrel", "medium_neg_data_probe_barrel",
 						  file, "medium_neg_mc_matched_barrel", "medium_neg_mc_probe_barrel",
 						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_JM_neg_barrel->generateReplicas(NREPLICASF);
     m_sfProvTrig_L3L4_neg_barrel = new SFProvider(file, "rpc_neg_data_matched_barrel", "rpc_neg_data_probe_barrel",
 						  file, "rpc_neg_mc_matched_barrel", "rpc_neg_mc_probe_barrel",
 						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_L3L4_neg_barrel->generateReplicas(NREPLICASF);
     m_sfProvTrig_DG5_neg_endcap  = new SFProvider(file, "charge_neg_data_matched_endcap", "charge_neg_data_probe_endcap",
 						  file, "charge_neg_mc_matched_endcap", "charge_neg_mc_probe_endcap",
 						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_DG5_neg_endcap->generateReplicas(NREPLICASF);
     m_sfProvTrig_G6I_neg_endcap  = new SFProvider(file, "mu18_neg_data_matched_endcap", "mu18_neg_data_probe_endcap",
 						  file, "mu18_neg_mc_matched_endcap", "mu18_neg_mc_probe_endcap",
 						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_G6I_neg_endcap->generateReplicas(NREPLICASF);
     m_sfProvTrig_JM_neg_endcap   = new SFProvider(file, "medium_neg_data_matched_endcap", "medium_neg_data_probe_endcap",
 						  file, "medium_neg_mc_matched_endcap", "medium_neg_mc_probe_endcap",
 						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_JM_neg_endcap->generateReplicas(NREPLICASF);
     m_sfProvTrig_L3L4_neg_endcap = new SFProvider(file, "rpc_neg_data_matched_endcap", "rpc_neg_data_probe_endcap",
 						  file, "rpc_neg_mc_matched_endcap", "rpc_neg_mc_probe_endcap",
 						  SFProvider::EtaPhi,1.0);
-    m_sfProvTrig_L3L4_neg_endcap->generateReplicas(NREPLICASF);
   }
   
   const unsigned long myRunNumber = run_number;
@@ -651,8 +475,8 @@ AnaMuon::GetTriggerSF_v17_custom4( const CONF::ConfType& conf, const detector::M
 
     // calculate central values and uncertainties
     assert(m_sfProvTrig);
-    const double eff_data = replica<0 ? m_sfProvTrig->getEffDATA(muon) : m_sfProvTrig->getEffDATAreplica(muon,replica);
-    const double eff_mc = replica<0 ? m_sfProvTrig->getEffMC(muon) : m_sfProvTrig->getEffMCreplica(muon,replica);
+    const double eff_data = m_sfProvTrig->getEffDATA(muon);
+    const double eff_mc = m_sfProvTrig->getEffMC(muon);
     const double err_data = m_sfProvTrig->getEffDATAError(muon);
     const double err_mc = m_sfProvTrig->getEffMCError(muon);
     if(false) {
@@ -751,21 +575,13 @@ AnaMuon::GetIsolationSF_v17_old( const CONF::ConfType& conf, const detector::MCP
 void
 AnaMuon::mcp_effscale( const CONF::ConfType& conf, const DATARANGE::DataRange& data_range, 
 		       const boost::shared_ptr<const AnaMuon>& muon , const detector::MCP_TYPE& mu_type,
-		       const unsigned long& run_number, const std::vector<double>& int_lumi, const std::vector<std::string>& run_periods,
+		       const unsigned long& run_number, const int runRange,
+		       const std::vector<double>& int_lumi, const std::vector<std::string>& run_periods,
 		       double& eff, double& errstat, double& errsys , int replica ) {
 #ifdef HAVE_COMMONANALYSIS
   using namespace detector;
-  switch(conf) {
-  case CONF::SUSI:
-    return AnaMuon::mcp_effscale_apply_v17<Analysis::AnalysisMuonConfigurableScaleFactors>(muon,mu_type,run_number,int_lumi,run_periods,"2012",eff,errstat,errsys,replica);
-    break;
-  case CONF::LATEST:
-    return AnaMuon::mcp_effscale_apply_v17<Analysis::AnalysisMuonConfigurableScaleFactors>(muon,mu_type,run_number,int_lumi,run_periods,"2011",eff,errstat,errsys,replica);
-    break;
-  default:
-    assert(false && "Unsupported --conf for efficiency scaling");
-  }
-  assert(0);
+  assert(conf==CONF::LATEST);
+  return AnaMuon::mcp_effscale_apply_v17<Analysis::AnalysisMuonConfigurableScaleFactors>(muon,mu_type,run_number,runRange,int_lumi,run_periods,"2011",eff,errstat,errsys,replica);
 #else
   assert(0&&NO_ANALYSIS_MSG);
 #endif
@@ -778,16 +594,8 @@ AnaMuon::mcp_smeared( const CONF::ConfType& conf, const DATARANGE::DataRange& da
 		      const unsigned long& event_number , const size_t& muon_number ,
 		      const int& scale, const std::string& fun ) {
 #ifdef HAVE_COMMONANALYSIS
-  switch(conf) {
-  case CONF::SUSI:
-    return AnaMuon::mcp_smeared_apply_v17<MuonSmear::SmearingClass>(muon,mu_type,event_number,muon_number,scale,"Data12","Rel17.2_preliminary",fun);
-    break;
-  case CONF::LATEST:
-    return AnaMuon::mcp_smeared_apply_v17<MuonSmear::SmearingClass>(muon,mu_type,event_number,muon_number,scale,"Data11","Rel17",fun);
-    break;
-  default:
-    assert(0&&"Unsupported --conf");
-  }
+  assert(conf==CONF::LATEST);
+  return AnaMuon::mcp_smeared_apply_v17<MuonSmear::SmearingClass>(muon,mu_type,event_number,muon_number,scale,"Data11","Rel17",fun);
 #else
   assert(0&&NO_ANALYSIS_MSG);
 #endif

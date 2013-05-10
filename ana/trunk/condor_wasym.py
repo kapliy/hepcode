@@ -327,8 +327,9 @@ function hadd2() {
 	    return $st
 	fi
     done
-    echo hadd ${opts} ${fout} ${fout}.TMPHADD_*root*
-    hadd ${opts} ${fout} ${fout}.TMPHADD_*root*
+    # remove opts to speed up the last step and prevent creation of additional ntuple cycles;2
+    echo hadd ${fout} ${fout}.TMPHADD_*root*
+    hadd ${fout} ${fout}.TMPHADD_*root*
     st=$?
     rm -f ${fout}.TMPHADD_*root*
     return $st

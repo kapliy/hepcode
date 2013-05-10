@@ -13,6 +13,7 @@ function compact() {
     find . -type f -name \*.a | xargs rm -f
     find . -type f -name \*.o | xargs rm -f
     find . -type f -name \*.d | xargs rm -f
+    find . -maxdepth 1 -mindepth 1 -type f -name \*root\* | xargs rm -f
     #strip ana/ana_* 2>/dev/null
 }
 

@@ -77,6 +77,7 @@ const bool HIST_LS_WEIGHT = true;      // W/Z lineshape weight
 #include <DataGraphics/DgTools.hh>
 #include <DataGraphics/DgBin.hh>
 #include <TTree.h>
+#include <TCanvas.h>
 
 // special classes
 #include "PileupReweighting/TPileupReweighting.h"
@@ -179,7 +180,7 @@ const int pdf_offset = (PDF_REWEIGHTING==2) ? 5 : 0;
 double event_weight[NWEIGHTS];
 double truth_weight[NWEIGHTS];
 double mc_weight = 1.0;
-double pu_weight[] = { 1.0 , 1.0 , 1.0 };
+double pu_weight[] = { 1.0 , 1.0 , 1.0 , 1.0 , 1.0};
 double vx_weight = 1.0;
 // unitize, multiply or copy all weights
 #define WS1(x) for(int iii=0; iii<NWEIGHTS; iii++) x[iii]=1.0
@@ -200,13 +201,19 @@ bool is_alpgen = false;
 bool is_pdfrw = false;
 // event metadata
 unsigned long evnum = 0;
-unsigned long rnum = 0;     // for MC, this becomes the pseudo-run number from TPileupReweighting
-unsigned long raw_rnum = 0; // for MC, this stores the actual, original run number
+unsigned long rnum = 0;        // for MC, this becomes the pseudo-run number from TPileupReweighting
+unsigned long rnum_DtoM = 0;   // for MC, this becomes the pseudo-run number from TPileupReweighting
+unsigned long rnum_DtoK = 0;   // for MC, this becomes the pseudo-run number from TPileupReweighting
+unsigned long rnum_LtoM = 0;   // for MC, this becomes the pseudo-run number from TPileupReweighting
+unsigned long raw_rnum = 0;    // for MC, this stores the actual, original run number
 double avgmu = 0;
 double actmu = 0;
 float truth_met_pt = -1.0;
 // various globals
 std::vector<double> int_lumi;
+std::vector<double> int_lumi_DtoM;
+std::vector<double> int_lumi_DtoK;
+std::vector<double> int_lumi_LtoM;
 std::vector<std::string> run_periods;
 DATARANGE::DataRange drange;
 detector::MCP_TYPE mu_type = detector::MCP_STACO_COMBINED;
@@ -221,9 +228,9 @@ const unsigned long pG[] = {182726,183462};
 const unsigned long pH[] = {183544,184169};
 const unsigned long pI[] = {185353,186493};
 const unsigned long pJ[] = {186516,186755};
-const unsigned long pK[] = {186873,187815};
-const unsigned long pL[] = {188902,190343};
-const unsigned long pM[] = {190503,191933};
+const unsigned long pK[] = {186873,187815}; // DtoK
+const unsigned long pL[] = {188902,190343}; // 188921..190343
+const unsigned long pM[] = {190503,191933}; // LtoM
 const int STATUS_123_124 = 123124;
 const int PDG_MU = 13;
 const int PDG_NU = 14;
@@ -703,6 +710,8 @@ int main( int argc , char* argv[] )
 
   // PILEUP DISTRIBUTION HISTOGRAMS IN DATA
   std::string pileup_data_file =  "./pileup_histos/asym_data11_7TeV."+PROSTRING+"."+DRANGESTRING+".root";
+  const std::string pileup_data_fileDtoK =  "./pileup_histos/asym_data11_7TeV."+PROSTRING+"."+"DtoK"+".root";
+  const std::string pileup_data_fileLtoM =  "./pileup_histos/asym_data11_7TeV."+PROSTRING+"."+"LtoM"+".root";
   if(!AnaConfiguration::pileup_weights_map().empty()) {
     std::cout << "WARNING: adding custom mu distributions file: " << AnaConfiguration::pileup_weights_map() << std::endl;    
     pileup_data_file = AnaConfiguration::pileup_weights_map();
@@ -1110,17 +1119,17 @@ int main( int argc , char* argv[] )
   PDFReweightTool *rwpdf = 0; 
 
   // this lists all the run periods included in your pileup reweighting histogram... need it for muon efficiency calculation
-  run_periods.push_back( "B" );
-  run_periods.push_back( "D" );
-  run_periods.push_back( "E" );
-  run_periods.push_back( "F" );
-  run_periods.push_back( "G" );
-  run_periods.push_back( "H" );
-  run_periods.push_back( "I" );
-  run_periods.push_back( "J" );
-  run_periods.push_back( "K" );
-  run_periods.push_back( "L" );
-  run_periods.push_back( "M" );
+  run_periods.push_back( "B" ); //0
+  run_periods.push_back( "D" ); //1
+  run_periods.push_back( "E" ); //2
+  run_periods.push_back( "F" ); //3
+  run_periods.push_back( "G" ); //4
+  run_periods.push_back( "H" ); //5
+  run_periods.push_back( "I" ); //6
+  run_periods.push_back( "J" ); //7
+  run_periods.push_back( "K" ); //8
+  run_periods.push_back( "L" ); //9
+  run_periods.push_back( "M" ); //10
 
   // ================================================================
 
@@ -1160,7 +1169,10 @@ int main( int argc , char* argv[] )
     static boost::shared_ptr<Root::TPileupReweighting> pw( new Root::TPileupReweighting( "pw" ) );
     static boost::shared_ptr<Root::TPileupReweighting> pw_up( new Root::TPileupReweighting( "pw_up" ) );
     static boost::shared_ptr<Root::TPileupReweighting> pw_down( new Root::TPileupReweighting( "pw_down" ) );
-#define PINIT(p,s) p->SetDefaultChannel(0);				\
+    // special period-separated files
+    static boost::shared_ptr<Root::TPileupReweighting> pw_DtoK( new Root::TPileupReweighting( "pw_DtoK" ) );
+    static boost::shared_ptr<Root::TPileupReweighting> pw_LtoM( new Root::TPileupReweighting( "pw_LtoM" ) );
+#define PINIT(p,s,df) p->SetDefaultChannel(0);				\
     p->SetUnrepresentedDataAction(2);					\
     p->DisableWarnings(true);						\
     p->SetDataScaleFactors( s );					\
@@ -1176,14 +1188,20 @@ int main( int argc , char* argv[] )
     } else {								\
       p->AddConfigFile(pileup_config_file.c_str());			\
     }									\
-    p->AddLumiCalcFile(pileup_data_file);				\
-    p->Initialize()
+    p->AddLumiCalcFile(df);						\
+    p->Initialize();							\
+    std::cout << "   ---> total lumi = " << p->GetIntegratedLumi() << " from " << df << std::endl
     if( (evt->check_tag("mc11b") || evt->check_tag("mc11c")) && pileup_reweighting_mode!=PU_MC11B ) {
-      PINIT(pw,AnaConfiguration::pileup_data_scale());
-      PINIT(pw_down,0.97);
-      PINIT(pw_up,1.03);
-      int_lumi = pw->getIntegratedLumiVector();
-      double lumi_tot = pw->GetIntegratedLumi();
+      PINIT(pw,AnaConfiguration::pileup_data_scale(),pileup_data_file);
+      PINIT(pw_down,0.97,pileup_data_file);
+      PINIT(pw_up,1.03,pileup_data_file);
+      PINIT(pw_DtoK,AnaConfiguration::pileup_data_scale(),pileup_data_fileDtoK);
+      PINIT(pw_LtoM,AnaConfiguration::pileup_data_scale(),pileup_data_fileLtoM);
+      int_lumi_DtoM = pw->getIntegratedLumiVector();
+      int_lumi_DtoK = pw_DtoK->getIntegratedLumiVector();
+      int_lumi_LtoM = pw_LtoM->getIntegratedLumiVector();
+      int_lumi = int_lumi_DtoM; // default
+      const double lumi_tot = pw->GetIntegratedLumi();
       std::cout << "Total lumi = " << lumi_tot << std::endl;
       pileup_reweighting_mode=PU_MC11B;
     } else if( !evt->check_tag( "mc11b" ) && !evt->check_tag( "mc11c" ) && pileup_reweighting_mode!=PU_NONE ) {
@@ -1194,6 +1212,8 @@ int main( int argc , char* argv[] )
       pw->SetRandomSeed(314159 + evt->mc_channel()*2718 + evnum);
       pw_up->SetRandomSeed(314159 + evt->mc_channel()*2718 + evnum);
       pw_down->SetRandomSeed(314159 + evt->mc_channel()*2718 + evnum);
+      pw_DtoK->SetRandomSeed(314159 + evt->mc_channel()*2718 + evnum);
+      pw_LtoM->SetRandomSeed(314159 + evt->mc_channel()*2718 + evnum);
     }
 #undef PINIT
     // for MC, calculate pileup weight
@@ -1201,9 +1221,12 @@ int main( int argc , char* argv[] )
       pu_weight[0] = pw ? pw->GetCombinedWeight( raw_rnum , evt->mc_channel() , avgmu ) : 1. ;
       pu_weight[1] = pw_down ? pw_down->GetCombinedWeight( raw_rnum , evt->mc_channel() , avgmu ) : 1. ;
       pu_weight[2] = pw_up ? pw_up->GetCombinedWeight( raw_rnum , evt->mc_channel() , avgmu ) : 1. ;
+      pu_weight[3] = pw_DtoK ? pw_DtoK->GetCombinedWeight( raw_rnum , evt->mc_channel() , avgmu ) : 1. ;
+      pu_weight[4] = pw_LtoM ? pw_LtoM->GetCombinedWeight( raw_rnum , evt->mc_channel() , avgmu ) : 1. ;
       // skip event; negative pileup weight means we don't know the weight (rare event)
-      if(pu_weight[2]<0) pu_weight[2]=0.0;
-      if(pu_weight[1]<0) pu_weight[1]=0.0;
+      for(int ii=1; ii<5; ii++) {
+	if(pu_weight[ii]<0) pu_weight[ii]=0.0;
+      }
       if(pu_weight[0]<0) {
 	pu_weight[0]=0.0;
 	std::cerr << "WARNING: found event with negative pileup weight: " << pu_weight[0] << std::endl;
@@ -1255,7 +1278,16 @@ int main( int argc , char* argv[] )
     dg::fillh("nevts2_vtx",1,1,2,1);  // pileup and MC and vertex
 
     // retrieve more metadata
-    rnum = is_data ? raw_rnum : pw->GetRandomRunNumber(raw_rnum);
+    rnum_DtoM = is_data ? raw_rnum : pw->GetRandomRunNumber(raw_rnum);
+    rnum_DtoK = is_data ? raw_rnum : pw_DtoK->GetRandomRunNumber(raw_rnum);
+    rnum_LtoM = is_data ? raw_rnum : pw_LtoM->GetRandomRunNumber(raw_rnum);
+    rnum = rnum_DtoM; // default
+    /* Comment on rnum in MC:
+       Pseudo-run numbers in aggregate give the right fraction of events in each run.
+       However, they don't directly maintain the correlations to <nmu> for a given MC event.
+       In other words, usign rnum to split into DtoK and LtoM does not put events with the right
+       nmu, so DtoK and LtoM MET distributions won't be updated correctly.
+     */
     dg::event_info().set_run_number(rnum);
     dg::event_info().set_event_number(evnum);
     std::string srnum = detector::to_string(raw_rnum);
@@ -1705,8 +1737,7 @@ int main( int argc , char* argv[] )
     const boost::shared_ptr<const AnaTrigger>& trigger = evt->trigger();
     assert(trigger);
     // apply trigger
-    bool e_trigger = trigger->wz_asym_muon_trigger_2012(rnum);
-    e_trigger = trigger->wz_asym_muon_trigger_2012_nomg(rnum); // testing: use the wrong trigger
+    bool e_trigger = trigger->wz_asym_muon_trigger_2012_nomg(rnum); // switched to mu18 muid chains
     CUTFLOW(w,05,true,e_trigger);
     CUTFLOW(z,05,true,e_trigger);
     if ( !e_trigger ) {
@@ -1876,6 +1907,55 @@ int main( int argc , char* argv[] )
     }
 #undef SELMU
 
+
+    // debugging stat scale factors with Max Bellomo (10 or 10k replicas only!)
+    if(AnaConfiguration::verbose() && is_mc && n_events<100 && mu_smeared_iso_col.size()==1 ) {
+      std::cout << "======  EVENT: " << evnum << " " << rnum << " TYPE=" << mu_smeared_type_col.size() << " QUAL=" << mu_smeared_qual_col.size()
+	 	<< " ETA=" << mu_smeared_eta_col.size() << " ISO=" << mu_smeared_iso_col.size() 
+		<< " LPT=" << mu_smeared_iso_col[0]->pt() << std::endl;
+      // evnum 0 reco trig iso |
+      // rep1
+      // rep10
+      // muon
+      // this loop only includes stat. replicas
+      for(unsigned int ik=0; ik<unf_keys_rep.size(); ik++) {
+	unfdata_type::iterator it2 = unfdata.find(unf_keys_rep[ik]);
+	assert( it2 != unfdata.end() );
+	assert(it2->first == "SFUncorr");
+	assert( it2->second.Reco_Weight_Replicas.size() == NREPLICASF );
+	double _eff = 1.0;
+	double _trig = 1.0;
+	double _siso = 1.0;
+	double _a , _b;
+	// default (replica-less)
+	mu_eff_scale(  mu_smeared_iso_col , _eff  , _a , _b);
+	mu_trig_scale( mu_smeared_iso_col , _trig , _a , 20);
+	mu_isol_scale( mu_smeared_iso_col , _siso , _a , 0);
+	std::cout << "N " << 0 << " : " << _eff << " " << _trig << " " << _siso << std::endl;
+	std::string pl = TString::Format("pt=%.1f eta=%.2f",mu_smeared_iso_col[0]->pt(),mu_smeared_iso_col[0]->eta()).Data();
+	TCanvas cc("cc","cc",1024,400); cc.Divide(3);
+	TH1D h1("hreco",TString::Format("%s: %s",pl.c_str(),"reco").Data(),100,_eff-0.1,_eff+0.1);
+	TH1D h2("htrig",TString::Format("%s: %s",pl.c_str(),"trig").Data(),100,_trig-0.1,_trig+0.1);
+	TH1D h3("hiso",TString::Format("%s: %s",pl.c_str(),"iso").Data(),100,_siso-0.1,_siso+0.1);
+	// compute efficiency scale factors on final selected muons, for each replica
+	for(int replica=0; replica<it2->second.Reco_Weight_Replicas.size(); replica++) {
+	  mu_eff_scale(  mu_smeared_iso_col , _eff  , _a , _b , replica);
+	  h1.Fill(_eff);
+	  mu_trig_scale( mu_smeared_iso_col , _trig , _a , 20 , replica);
+	  h2.Fill(_trig);
+	  mu_isol_scale( mu_smeared_iso_col , _siso , _a , 0, replica);
+	  h3.Fill(_siso);
+	  if(replica<100) {
+	    std::cout << "R " << replica << " : " << _eff << " " << _trig << " " << _siso << std::endl;
+	  }
+	}
+	cc.cd(1); h1.Draw();
+	cc.cd(2); h2.Draw();
+	cc.cd(3); h3.Draw();
+	cc.SaveAs(TString::Format("results/EVENT_%d.png",evnum).Data());
+      }
+    }
+
     // MET recomputation for various systematics
     dgSTL::copy_if( evt->missing_et().begin(),evt->missing_et().end(),back_inserter(met_ref_col),CUT_ALL(AnaMET,met_ref_cut) );
     dgSTL::copy_if( evt->missing_et().begin(),evt->missing_et().end(),back_inserter(met_truth_nonint_col),CUT_ALL(AnaMET,met_truth_nonint_cut) );
@@ -1885,7 +1965,11 @@ int main( int argc , char* argv[] )
     metutil->reset();
     float MeV = 1000.;
     // set truth-level met terms (for new softmet systematics)
-    metutil->setNvtx(nvtxsoftmet);
+    if(true) {
+      metutil->setNvtx(nvtxsoftmet);
+    } else { // update 05/10/2013: use avgmu instead of nvtx
+      metutil->setAverageIntPerXing(avgmu);
+    }
     if(have_nonint) {
       metutil->setMETTerm(METUtil::Truth, met->truth_nonint_etx()*MeV , met->truth_nonint_ety()*MeV , met->truth_nonint_sumet()*MeV );
     }
@@ -1911,6 +1995,12 @@ int main( int argc , char* argv[] )
       FILLMET(resosofttermsdownup,evt->electrons(),false,mu_smeared_mcp_col,false,nominal,false,METUtil::ResoSoftTermsDownUp_ptHard);
       FILLMET(scalesofttermsup,evt->electrons(),false,mu_smeared_mcp_col,false,nominal,false,METUtil::ScaleSoftTermsUp_ptHard);
       FILLMET(scalesofttermsdown,evt->electrons(),false,mu_smeared_mcp_col,false,nominal,false,METUtil::ScaleSoftTermsDown_ptHard);
+      if(false){
+	std::cout << "AKK: " << met_rawjet_nominal_col[0]->pt() << " " 
+		  << met_rawjet_scalesofttermsup_col[0]->pt() << " "
+		  << met_rawjet_scalesofttermsdown_col[0]->pt() << " " 
+		  << endl;
+      }
       // old met uncertainties
       if(false) {
 	FILLMET(resosoftup,evt->electrons(),false,mu_smeared_mcp_col,false,nominal,false,METUtil::ResoSoftTermsUp);
@@ -2168,7 +2258,7 @@ int main( int argc , char* argv[] )
 
   // SAVE ROOT DATA
   AnaEventMgr::instance()->close_sample();
-  dg::save( AnaConfiguration::verbose() );
+  dg::save( false && AnaConfiguration::verbose() );
 
   // SAVE UNFOLDING DATA
   if(is_unfold) {
@@ -2906,9 +2996,9 @@ void mu_eff_scale( MUCOL& mucoll , double& eff_weight , double& eff_stat_error ,
     const shared_ptr<const AnaMuon> mu(*imu);
     double wt , stat_err , sys_err;
     if(true) { // propagate period luminosities
-      AnaMuon::mcp_effscale( AnaConfiguration::conf() , AnaConfiguration::data_range() , mu , mu_type , rnum , int_lumi , run_periods , wt , stat_err , sys_err , replica );
+      AnaMuon::mcp_effscale( AnaConfiguration::conf() , AnaConfiguration::data_range() , mu , mu_type , rnum , 0, int_lumi , run_periods , wt , stat_err , sys_err , replica );
     } else {    // just use the default luminosities
-      AnaMuon::mcp_effscale( AnaConfiguration::conf() , AnaConfiguration::data_range() , mu , mu_type , rnum , vecD , vecS , wt , stat_err , sys_err );
+      AnaMuon::mcp_effscale( AnaConfiguration::conf() , AnaConfiguration::data_range() , mu , mu_type , rnum , 0, vecD , vecS , wt , stat_err , sys_err );
     }
     eff_weight *= wt;
     eff_stat_error += pow(stat_err/wt,2);
@@ -2947,7 +3037,7 @@ void mu_trig_scale( MUCOL& mucoll , double& trig_weight , double& trig_stat_erro
 					 rnum , 0 , cweight , cerror );
       trig_weight *= cweight;
     }
-  } else if (choice==22) { // same as choice==20, BUT taking a product of all per-muon weights
+  } else if (choice==22) { // same as choice==20, BUT taking a product of all per-muon weights (for Z both-match)
     trig_weight = 1.0;
     trig_stat_error = 0.0;
     for(int ii=0; ii<vmuons.size(); ii++) {
