@@ -50,6 +50,15 @@ lbl=03152013_paper # removed different pdf systematics. Downloaded missing wmunu
 lbl=03172013_paper # exclude bad bin (but not in ntuple)
 lbl=03172013_paper_mu18 # exclude bad bin; use another mu18 trigger
 
+lbl=04032013_nomg  # trying Carl's first version of non-MG trigger SFs
+lbl=04032013_nomg_1000toys  # re-running with 1000 toy MCs
+
+lbl=04032013_nomg_condor   # 3rd condor version
+
+lbl=04232013_condor        # same as 04032013, but: added DtoK and LtoM systematics. added pileupUp and pileupDown systematics. commented out ntuple studies of A/C side. fixed double-saving of TNtuples. removed int, leaving only unint. - BAD RUN (files on t3data)
+lbl=04242013_condor        # same as 04032013, but: added DtoK and LtoM systematics. added pileupUp and pileupDown systematics. commented out ntuple studies of A/C side. fixed double-saving of TNtuples. removed int, leaving only unint.
+lbl=04252013               # added missing DtoK and LtoM histograms
+lbl=04252013_rep           # just repeating with memory and speed optimizations
 
 
 function rerun20() {
@@ -64,3 +73,4 @@ function rerun20() {
 function rerun25() {
     submit_sample wasymmetry29I_mc_powheg_pythia_wminmunu.dat
 }
+

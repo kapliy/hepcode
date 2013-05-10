@@ -14,15 +14,9 @@ fi
 
 ntuple=29I
 
-lbl=04032013_nomg  # trying Carl's first version of non-MG trigger SFs
-lbl=04032013_nomg_1000toys  # re-running with 1000 toy MCs
+source asym_archive.sh
+lbl=05102013_newmet    # updated met util (soft terms systematics). Use separate random seed for each period range for trigger SF.
 
-lbl=04032013_nomg_condor   # 3rd condor version
-
-lbl=04232013_condor        # same as 04032013, but: added DtoK and LtoM systematics. added pileupUp and pileupDown systematics. commented out ntuple studies of A/C side. fixed double-saving of TNtuples. removed int, leaving only unint. - BAD RUN (files on t3data)
-lbl=04242013_condor        # same as 04032013, but: added DtoK and LtoM systematics. added pileupUp and pileupDown systematics. commented out ntuple studies of A/C side. fixed double-saving of TNtuples. removed int, leaving only unint.
-lbl=04252013               # added missing DtoK and LtoM histograms
-lbl=04252013_rep           # just repeating with memory and speed optimizations
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
 
 muname[0]="stacoCB"
