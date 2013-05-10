@@ -1965,7 +1965,7 @@ int main( int argc , char* argv[] )
     metutil->reset();
     float MeV = 1000.;
     // set truth-level met terms (for new softmet systematics)
-    if(true) {
+    if(false) {
       metutil->setNvtx(nvtxsoftmet);
     } else { // update 05/10/2013: use avgmu instead of nvtx
       metutil->setAverageIntPerXing(avgmu);
