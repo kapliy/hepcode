@@ -485,7 +485,8 @@ public:
   static void
   mcp_effscale( const CONF::ConfType& conf, const DATARANGE::DataRange& data_range, 
 		const boost::shared_ptr<const AnaMuon>& muon , const detector::MCP_TYPE& mu_type,
-		const unsigned long& run_number, const std::vector<double>& int_lumi, const std::vector<std::string>& run_periods,
+		const unsigned long& run_number, const int runRange,
+		const std::vector<double>& int_lumi, const std::vector<std::string>& run_periods,
 		double& eff, double& errstat, double& errsys ,
 		int replica = -1 );
   
@@ -493,73 +494,75 @@ public:
   template <typename EFFCLASS>
   static void
   mcp_effscale_apply_v17( const boost::shared_ptr<const AnaMuon>& muon , const detector::MCP_TYPE& mu_type,
-			  const unsigned long& run_number , const std::vector<double>& int_lumi, const std::vector<std::string>& run_periods,
+			  const unsigned long& run_number , const int runRange,
+			  const std::vector<double>& int_lumi, const std::vector<std::string>& run_periods,
 			  const std::string& flag ,
 			  double& eff, double& errstat, double& errsys ,
 			  int replica = -1 )
   {
     static std::string datadir("CommonAnalysis/RootCore/data/MuonEfficiencyCorrections/");
     static EFFCLASS *mcp_staco_cb = 0;
-    static EFFCLASS *mcp_staco_cb2 = 0;
+    static EFFCLASS *mcp_staco_cb_DtoK = 0;
+    static EFFCLASS *mcp_staco_cb_LtoM = 0;
     static EFFCLASS *mcp_staco_loose = 0;
     static EFFCLASS *mcp_muid_cb = 0;
     static EFFCLASS *mcp_muid_loose = 0;
-    if( !mcp_staco_cb ) {
-      if( flag=="2011" ) {
-	mcp_staco_cb = new EFFCLASS( datadir , "STACO_CB_2011_SF.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
-	mcp_staco_cb2 = new EFFCLASS( datadir , "STACO_CB_2011_SF_fineEtaBinning.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
-	mcp_staco_loose = new EFFCLASS( datadir , "STACO_CB_plus_ST_2011_SF.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
-	mcp_muid_cb = new EFFCLASS( datadir , "Muid_CB_2011_SF.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
-	mcp_muid_loose = new EFFCLASS( datadir , "Muid_CB_plus_ST_2011_SF.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
-	assert( int_lumi.size() == run_periods.size() && "probably need to edit run_periods vector in your analysis file" );
-	std::cout << "Inserting run periods into muon efficiency tool:" << std::endl;
-	for( int i = 0 ; i < run_periods.size() ; ++i ) {
-	  std::cout << "EFFSCALE WEIGHTS: " << run_periods[i] << " " << int_lumi[i] << std::endl;
-	  mcp_staco_cb->addPeriod( run_periods[i] , int_lumi[i] );
-	  mcp_staco_cb2->addPeriod( run_periods[i] , int_lumi[i] );
-	  mcp_staco_loose->addPeriod( run_periods[i] , int_lumi[i] );
-	  mcp_muid_cb->addPeriod( run_periods[i] , int_lumi[i] );
-	  mcp_muid_loose->addPeriod( run_periods[i] , int_lumi[i] );
-	}
-	mcp_staco_cb2->Initialise();
-	mcp_staco_cb2->generateReplicas(NREPLICASF , 1721);
-      } else if( flag=="2012" ) {
-	mcp_staco_cb = new EFFCLASS( datadir , "STACO_CB_2012_SF.txt" , "GeV" , EFFCLASS::PerRun );
-	mcp_staco_cb2 = mcp_staco_cb; // compatibility
-	mcp_staco_loose = new EFFCLASS( datadir , "STACO_CB_plus_ST_2012_SF.txt" , "GeV" , EFFCLASS::PerRun );
-	mcp_muid_cb = new EFFCLASS( datadir , "Muid_CB_2012_SF.txt" , "GeV" , EFFCLASS::PerRun );
-	mcp_muid_loose = new EFFCLASS( datadir , "Muid_CB_plus_ST_2012_SF.txt" , "GeV" , EFFCLASS::PerRun );
-      } else assert( false && "mu eff scale flag not found" );
+    if( !mcp_staco_cb && runRange==0) { //DtoM
+      // mcp_staco_cb = new EFFCLASS( datadir , "STACO_CB_2011_SF.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
+      mcp_staco_cb = new EFFCLASS( datadir , "STACO_CB_2011_SF_fineEtaBinning.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
+      mcp_staco_loose = new EFFCLASS( datadir , "STACO_CB_plus_ST_2011_SF.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
+      mcp_muid_cb = new EFFCLASS( datadir , "Muid_CB_2011_SF.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
+      mcp_muid_loose = new EFFCLASS( datadir , "Muid_CB_plus_ST_2011_SF.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
+      assert( int_lumi.size() == run_periods.size() && "probably need to edit run_periods vector in your analysis file" );
+      std::cout << "Inserting run periods into muon efficiency tool: " << runRange << std::endl;
+      for( int i = 0 ; i < run_periods.size() ; ++i ) {
+	std::cout << "EFFSCALE WEIGHTS: " << run_periods[i] << " " << int_lumi[i] << std::endl;
+	mcp_staco_cb->addPeriod( run_periods[i] , int_lumi[i] );
+	mcp_staco_loose->addPeriod( run_periods[i] , int_lumi[i] );
+	mcp_muid_cb->addPeriod( run_periods[i] , int_lumi[i] );
+	mcp_muid_loose->addPeriod( run_periods[i] , int_lumi[i] );
+      }
       mcp_staco_cb->Initialise();
+      mcp_staco_cb->generateReplicas(NREPLICASF , 1721);
       mcp_staco_loose->Initialise();
       mcp_muid_cb->Initialise();
       mcp_muid_loose->Initialise();
     }
+    if( !mcp_staco_cb_DtoK && runRange==1 ) { //DtoK
+      mcp_staco_cb_DtoK = new EFFCLASS( datadir , "STACO_CB_2011_SF_fineEtaBinning.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
+      assert( int_lumi.size() == run_periods.size() && "probably need to edit run_periods vector in your analysis file" );
+      assert( int_lumi[9]==0 && int_lumi[10]==0 );
+      std::cout << "Inserting run periods into muon efficiency tool: " << runRange << std::endl;
+      for( int i = 0 ; i < run_periods.size() ; ++i ) {
+	std::cout << "EFFSCALE WEIGHTS: " << run_periods[i] << " " << int_lumi[i] << std::endl;
+	mcp_staco_cb_DtoK->addPeriod( run_periods[i] , int_lumi[i] );
+      }
+      mcp_staco_cb_DtoK->Initialise();
+    }
+    if( !mcp_staco_cb_LtoM && runRange==2 ) { //LtoM
+      mcp_staco_cb_LtoM = new EFFCLASS( datadir , "STACO_CB_2011_SF_fineEtaBinning.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
+      assert( int_lumi.size() == run_periods.size() && "probably need to edit run_periods vector in your analysis file" );
+      assert( int_lumi[1]==0 && int_lumi[8]==0 );
+      std::cout << "Inserting run periods into muon efficiency tool: " << runRange << std::endl;
+      for( int i = 0 ; i < run_periods.size() ; ++i ) {
+	std::cout << "EFFSCALE WEIGHTS: " << run_periods[i] << " " << int_lumi[i] << std::endl;
+	mcp_staco_cb_LtoM->addPeriod( run_periods[i] , int_lumi[i] );
+      }
+      mcp_staco_cb_LtoM->Initialise();
+    }
     EFFCLASS *mcp = 0;
-    // NOTE: for 2011, this enables *improved* muon reco STACO scale factors. For 2012, it uses the default reco STACO scale factors.
-    //    if(mu_type==detector::MCP_STACO_COMBINED) mcp = mcp_staco_cb;
-    if(mu_type==detector::MCP_STACO_COMBINED) mcp = mcp_staco_cb2;
+    if(mu_type==detector::MCP_STACO_COMBINED) {
+      mcp = runRange==2 ? mcp_staco_cb_LtoM : ( runRange==1 ? mcp_staco_cb_DtoK : mcp_staco_cb);
+    }
     if(mu_type==detector::MCP_STACO_LOOSE || mu_type==detector::MCP_STACO_TIGHT) mcp = mcp_staco_loose;
     if(mu_type==detector::MCP_MUID_COMBINED) mcp = mcp_muid_cb;
     if(mu_type==detector::MCP_MUID_LOOSE || mu_type==detector::MCP_MUID_TIGHT) mcp = mcp_muid_loose;
     assert(mcp);
-    if(mcp) {
-      // run number can be used to use eff constants from a particular run or data_range
-      if( flag=="2011" ) {
-	eff = replica<0 ? mcp->scaleFactor(muon->scharge(),muon->four_vector()) : mcp->scaleFactorReplica(muon->scharge(),muon->four_vector(),replica);
-	errstat = mcp->scaleFactorUncertainty(muon->scharge(),muon->four_vector());
-	errsys = mcp->scaleFactorSystematicUncertainty(muon->scharge(),muon->four_vector());
-      } else {
-	eff = mcp->scaleFactor(muon->scharge(),muon->four_vector(),run_number);
-	errstat = mcp->scaleFactorUncertainty(muon->scharge(),muon->four_vector(),run_number);
-	errsys = mcp->scaleFactorSystematicUncertainty(muon->scharge(),muon->four_vector(),run_number);
-      }
-    }
-    else {
-      eff = 1.0;
-      errstat = 1.0;
-      errsys = 1.0;
-    }
+    if(replica>=0) assert(runRange==0); // replicas are only used for runRange=0 (DtoM)
+    eff = replica<0 ? mcp->scaleFactor(muon->scharge(),muon->four_vector()) : mcp->scaleFactorReplica(muon->scharge(),muon->four_vector(),replica);
+    errstat = mcp->scaleFactorUncertainty(muon->scharge(),muon->four_vector());
+    errsys = mcp->scaleFactorSystematicUncertainty(muon->scharge(),muon->four_vector());
+    return;
   }
 
   // TRIGGER SCALE FACTORS
@@ -574,7 +577,7 @@ public:
 		    double& eff, double& err ,
 		    int replica=-1 );
 
-  // a custom version of trigger scale factors that can be used with the ScaleFactorProvider package
+  // a custom version (from Max) of trigger scale factors that can be used with the ScaleFactorProvider package
   static void
   GetTriggerSF_v17_custom( const CONF::ConfType& conf, const detector::MCP_TYPE& mu_type , const detector::EGAMMA_TYPE& el_type , 
 			   std::vector<TLorentzVector>& muons,
@@ -584,7 +587,7 @@ public:
 			   double& eff, double& err , int choice ,
 			   int replica=-1 );
 
-  // a custom version of trigger scale factors that can be used with the ScaleFactorProvider package
+  // Eta x Pt: a custom version (from Carl) of trigger scale factors that can be used with the ScaleFactorProvider package
   // these scale factors are provided by MCP trigger group *unofficially* for the 2011 measurement.
   static Double_t GetSFError( Double_t a, Double_t b, Double_t c, Double_t d);
   static void
@@ -596,19 +599,7 @@ public:
 			    double& eff, double& err,
 			    int replica=-1 );
 
-  // a custom version of trigger scale factors that can be used with the ScaleFactorProvider package
-  // these scale factors are provided by MCP trigger group *unofficially* for the 2011 measurement.
-  // THIS version adds eta-phi corrections on top of eta-pt in GetTriggerSF_v17_custom2 - only works for one muon
-  static void
-  GetTriggerSF_v17_custom3( const CONF::ConfType& conf, const detector::MCP_TYPE& mu_type , const detector::EGAMMA_TYPE& el_type , 
-			    std::vector<TLorentzVector>& muons,
-			    std::vector<TLorentzVector>& electrons,
-			    std::vector<ftype>& muon_charges,
-			    const unsigned long& run_number , const int& mu_trig ,
-			    double& eff, double& err,
-			    int replica=-1);
-
-  // a custom version of trigger scale factors that can be used with the ScaleFactorProvider package
+  // Eta x Phi: a custom version (from Carl) of trigger scale factors that can be used with the ScaleFactorProvider package
   // these scale factors are provided by MCP trigger group *unofficially* for the 2011 measurement.
   // THIS version adds eta-phi corrections on top of eta-pt in GetTriggerSF_v17_custom2 - works for many muons
   static void
