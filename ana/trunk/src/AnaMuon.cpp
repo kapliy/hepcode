@@ -174,6 +174,10 @@ AnaMuon::GetTriggerSF_v17_custom2( const CONF::ConfType& conf, const detector::M
   // value for initial seed, with a unique offset for each period
   // (we do not want to correlate stat. errors between periods!)
   const int seed = 1721;
+  // charge offset
+  const int opos = 0;
+  const int oneg = 10;
+  // period offset
   const int oDG5 = 0;
   const int oG6I = 1;
   const int oJM = 2;
@@ -187,68 +191,68 @@ AnaMuon::GetTriggerSF_v17_custom2( const CONF::ConfType& conf, const detector::M
     m_sfProvTrig_DG5_pos_barrel  = new SFProvider(file, "charge_pos_data_matched_barrel", "charge_pos_data_probe_barrel",
 						  file, "charge_pos_mc_matched_barrel", "charge_pos_mc_probe_barrel",
 						  SFProvider::EtaPt,1.0);
-    m_sfProvTrig_DG5_pos_barrel->generateReplicas( NREPLICASF,  seed+oDG5 );
+    m_sfProvTrig_DG5_pos_barrel->generateReplicas( NREPLICASF,  seed+oDG5+opos );
     m_sfProvTrig_G6I_pos_barrel  = new SFProvider(file, "mu18_pos_data_matched_barrel", "mu18_pos_data_probe_barrel",
 						  file, "mu18_pos_mc_matched_barrel", "mu18_pos_mc_probe_barrel",
 						  SFProvider::EtaPt,1.0);
-    m_sfProvTrig_G6I_pos_barrel->generateReplicas( NREPLICASF,  seed+oG6I );
+    m_sfProvTrig_G6I_pos_barrel->generateReplicas( NREPLICASF,  seed+oG6I+opos );
     m_sfProvTrig_JM_pos_barrel   = new SFProvider(file, "medium_pos_data_matched_barrel", "medium_pos_data_probe_barrel",
 						  file, "medium_pos_mc_matched_barrel", "medium_pos_mc_probe_barrel",
 						  SFProvider::EtaPt,1.0);
-    m_sfProvTrig_JM_pos_barrel->generateReplicas( NREPLICASF,  seed+oJM );
+    m_sfProvTrig_JM_pos_barrel->generateReplicas( NREPLICASF,  seed+oJM+opos );
     m_sfProvTrig_L3L4_pos_barrel = new SFProvider(file, "rpc_pos_data_matched_barrel", "rpc_pos_data_probe_barrel",
 						  file, "rpc_pos_mc_matched_barrel", "rpc_pos_mc_probe_barrel",
 						  SFProvider::EtaPt,1.0);
-    m_sfProvTrig_L3L4_pos_barrel->generateReplicas( NREPLICASF,  seed+oL3L4 );
+    m_sfProvTrig_L3L4_pos_barrel->generateReplicas( NREPLICASF,  seed+oL3L4+opos );
     m_sfProvTrig_DG5_pos_endcap  = new SFProvider(file, "charge_pos_data_matched_endcap", "charge_pos_data_probe_endcap",
 						  file, "charge_pos_mc_matched_endcap", "charge_pos_mc_probe_endcap",
 						  SFProvider::EtaPt,1.0);
-    m_sfProvTrig_DG5_pos_endcap->generateReplicas( NREPLICASF,  seed+oDG5 );
+    m_sfProvTrig_DG5_pos_endcap->generateReplicas( NREPLICASF,  seed+oDG5+opos );
     m_sfProvTrig_G6I_pos_endcap  = new SFProvider(file, "mu18_pos_data_matched_endcap", "mu18_pos_data_probe_endcap",
 						  file, "mu18_pos_mc_matched_endcap", "mu18_pos_mc_probe_endcap",
 						  SFProvider::EtaPt,1.0);
-    m_sfProvTrig_G6I_pos_endcap->generateReplicas( NREPLICASF,  seed+oG6I );
+    m_sfProvTrig_G6I_pos_endcap->generateReplicas( NREPLICASF,  seed+oG6I+opos );
     m_sfProvTrig_JM_pos_endcap   = new SFProvider(file, "medium_pos_data_matched_endcap", "medium_pos_data_probe_endcap",
 						  file, "medium_pos_mc_matched_endcap", "medium_pos_mc_probe_endcap",
 						  SFProvider::EtaPt,1.0);
-    m_sfProvTrig_JM_pos_endcap->generateReplicas( NREPLICASF,  seed+oJM );
+    m_sfProvTrig_JM_pos_endcap->generateReplicas( NREPLICASF,  seed+oJM+opos );
     m_sfProvTrig_L3L4_pos_endcap = new SFProvider(file, "rpc_pos_data_matched_endcap", "rpc_pos_data_probe_endcap",
 						  file, "rpc_pos_mc_matched_endcap", "rpc_pos_mc_probe_endcap",
 						  SFProvider::EtaPt,1.0);
-    m_sfProvTrig_L3L4_pos_endcap->generateReplicas( NREPLICASF,  seed+oL3L4 );
+    m_sfProvTrig_L3L4_pos_endcap->generateReplicas( NREPLICASF,  seed+oL3L4+opos );
     // negative muons
     m_sfProvTrig_DG5_neg_barrel  = new SFProvider(file, "charge_neg_data_matched_barrel", "charge_neg_data_probe_barrel",
 						  file, "charge_neg_mc_matched_barrel", "charge_neg_mc_probe_barrel",
 						  SFProvider::EtaPt,1.0);
-    m_sfProvTrig_DG5_neg_barrel->generateReplicas( NREPLICASF,  seed+oDG5 );
+    m_sfProvTrig_DG5_neg_barrel->generateReplicas( NREPLICASF,  seed+oDG5+oneg );
     m_sfProvTrig_G6I_neg_barrel  = new SFProvider(file, "mu18_neg_data_matched_barrel", "mu18_neg_data_probe_barrel",
 						  file, "mu18_neg_mc_matched_barrel", "mu18_neg_mc_probe_barrel",
 						  SFProvider::EtaPt,1.0);
-    m_sfProvTrig_G6I_neg_barrel->generateReplicas( NREPLICASF,  seed+oG6I );
+    m_sfProvTrig_G6I_neg_barrel->generateReplicas( NREPLICASF,  seed+oG6I+oneg );
     m_sfProvTrig_JM_neg_barrel   = new SFProvider(file, "medium_neg_data_matched_barrel", "medium_neg_data_probe_barrel",
 						  file, "medium_neg_mc_matched_barrel", "medium_neg_mc_probe_barrel",
 						  SFProvider::EtaPt,1.0);
-    m_sfProvTrig_JM_neg_barrel->generateReplicas( NREPLICASF,  seed+oJM );
+    m_sfProvTrig_JM_neg_barrel->generateReplicas( NREPLICASF,  seed+oJM+oneg );
     m_sfProvTrig_L3L4_neg_barrel = new SFProvider(file, "rpc_neg_data_matched_barrel", "rpc_neg_data_probe_barrel",
 						  file, "rpc_neg_mc_matched_barrel", "rpc_neg_mc_probe_barrel",
 						  SFProvider::EtaPt,1.0);
-    m_sfProvTrig_L3L4_neg_barrel->generateReplicas( NREPLICASF,  seed+oL3L4 );
+    m_sfProvTrig_L3L4_neg_barrel->generateReplicas( NREPLICASF,  seed+oL3L4+oneg );
     m_sfProvTrig_DG5_neg_endcap  = new SFProvider(file, "charge_neg_data_matched_endcap", "charge_neg_data_probe_endcap",
 						  file, "charge_neg_mc_matched_endcap", "charge_neg_mc_probe_endcap",
 						  SFProvider::EtaPt,1.0);
-    m_sfProvTrig_DG5_neg_endcap->generateReplicas( NREPLICASF,  seed+oDG5 );
+    m_sfProvTrig_DG5_neg_endcap->generateReplicas( NREPLICASF,  seed+oDG5+oneg );
     m_sfProvTrig_G6I_neg_endcap  = new SFProvider(file, "mu18_neg_data_matched_endcap", "mu18_neg_data_probe_endcap",
 						  file, "mu18_neg_mc_matched_endcap", "mu18_neg_mc_probe_endcap",
 						  SFProvider::EtaPt,1.0);
-    m_sfProvTrig_G6I_neg_endcap->generateReplicas( NREPLICASF,  seed+oG6I );
+    m_sfProvTrig_G6I_neg_endcap->generateReplicas( NREPLICASF,  seed+oG6I+oneg );
     m_sfProvTrig_JM_neg_endcap   = new SFProvider(file, "medium_neg_data_matched_endcap", "medium_neg_data_probe_endcap",
 						  file, "medium_neg_mc_matched_endcap", "medium_neg_mc_probe_endcap",
 						  SFProvider::EtaPt,1.0);
-    m_sfProvTrig_JM_neg_endcap->generateReplicas( NREPLICASF,  seed+oJM );
+    m_sfProvTrig_JM_neg_endcap->generateReplicas( NREPLICASF,  seed+oJM+oneg );
     m_sfProvTrig_L3L4_neg_endcap = new SFProvider(file, "rpc_neg_data_matched_endcap", "rpc_neg_data_probe_endcap",
 						  file, "rpc_neg_mc_matched_endcap", "rpc_neg_mc_probe_endcap",
 						  SFProvider::EtaPt,1.0);
-    m_sfProvTrig_L3L4_neg_endcap->generateReplicas( NREPLICASF,  seed+oL3L4 );
+    m_sfProvTrig_L3L4_neg_endcap->generateReplicas( NREPLICASF,  seed+oL3L4+oneg );
   }
   
   const unsigned long myRunNumber = run_number;
