@@ -501,6 +501,7 @@ public:
 			  int replica = -1 )
   {
     static std::string datadir("CommonAnalysis/RootCore/data/MuonEfficiencyCorrections/");
+    const int seed = 5000; //1721
     static EFFCLASS *mcp_staco_cb = 0;
     static EFFCLASS *mcp_staco_cb_DtoK = 0;
     static EFFCLASS *mcp_staco_cb_LtoM = 0;
@@ -523,7 +524,7 @@ public:
 	mcp_muid_loose->addPeriod( run_periods[i] , int_lumi[i] );
       }
       mcp_staco_cb->Initialise();
-      mcp_staco_cb->generateReplicas(NREPLICASF , 1721);
+      mcp_staco_cb->generateReplicas(NREPLICASF , seed);
       mcp_staco_loose->Initialise();
       mcp_muid_cb->Initialise();
       mcp_muid_loose->Initialise();
