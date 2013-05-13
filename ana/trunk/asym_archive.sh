@@ -1,3 +1,4 @@
+#!/bin/bash
 
 ntuple=29L
 ntuple=29G

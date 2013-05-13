@@ -9,7 +9,7 @@ function compact() {
     rm -rf lhapdf-5.8.8/{src,PDFsets.index,pyext,m4,libtool,include,examples,aclocal.m4,ccwrap,config}
     rm -rf autom4te.cache
     rm -f CommonAnalysis/RootCore.par
-    rm -rf results result
+    rm -rf result*
     find . -type f -name \*.a | xargs rm -f
     find . -type f -name \*.o | xargs rm -f
     find . -type f -name \*.d | xargs rm -f
