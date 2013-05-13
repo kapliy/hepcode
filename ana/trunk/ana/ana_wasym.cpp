@@ -12,7 +12,7 @@ const bool UNFOLD_TREE        = false; // besides histograms, save ufolding tree
 const bool UNFOLD_TREE_REDUCE = true;  // remove all optional branches from unfolding tree?
 const int PDF_REWEIGHTING = 1;         // 0=None, 1=CT10(members), 2=CT10(members)+5(families)
 const bool ZMUMU_FIX = true;           // Fix ZMUMU sample overlap with DYAN?
-unsigned int NREPLICASF = 100;         // statistical error replicas
+unsigned int NREPLICASF = 100;         // statistical error replicas (propagated into response matrices)
 const unsigned int NREPLICASP = 53;    // PDF uncertainty replicas
 // Control application of certain weights to histograms. All should be "true"
 const bool HIST_VXZ_WEIGHT = true;     // vertex z0 weight - needs V1_29i ntuple
@@ -202,18 +202,18 @@ bool is_pdfrw = false;
 // event metadata
 unsigned long evnum = 0;
 unsigned long rnum = 0;        // for MC, this becomes the pseudo-run number from TPileupReweighting
-unsigned long rnum_DtoM = 0;   // for MC, this becomes the pseudo-run number from TPileupReweighting
-unsigned long rnum_DtoK = 0;   // for MC, this becomes the pseudo-run number from TPileupReweighting
-unsigned long rnum_LtoM = 0;   // for MC, this becomes the pseudo-run number from TPileupReweighting
+//unsigned long rnum_DtoM = 0;   // for MC, this becomes the pseudo-run number from TPileupReweighting
+//unsigned long rnum_DtoK = 0;   // for MC, this becomes the pseudo-run number from TPileupReweighting
+//unsigned long rnum_LtoM = 0;   // for MC, this becomes the pseudo-run number from TPileupReweighting
 unsigned long raw_rnum = 0;    // for MC, this stores the actual, original run number
 double avgmu = 0;
 double actmu = 0;
 float truth_met_pt = -1.0;
 // various globals
 std::vector<double> int_lumi;
-std::vector<double> int_lumi_DtoM;
-std::vector<double> int_lumi_DtoK;
-std::vector<double> int_lumi_LtoM;
+//std::vector<double> int_lumi_DtoM;
+//std::vector<double> int_lumi_DtoK;
+//std::vector<double> int_lumi_LtoM;
 std::vector<std::string> run_periods;
 DATARANGE::DataRange drange;
 detector::MCP_TYPE mu_type = detector::MCP_STACO_COMBINED;
@@ -277,7 +277,7 @@ std::vector<std::string> unf_keys_rec; // reco-level scale factors within Nomina
 std::vector<std::string> unf_keys_rep; // stat. replicas scale factors within Nominal
 std::vector<std::string> unf_keys_pdf; // pdf member sets within Nominal
 // list of unfolding sets [POS,NEG] * [uint,abseta,eta,abseta-pt,eta-pt] - for each systematic variation
-const int unf_nh = 5;
+const int unf_nh = 4; // was:5. Now dropped eta-pt
 const int unf_nq = 2;
 // unfolding data structure (indexed by unf_keys)
 typedef std::map<std::string,UNFDATA>unfdata_type;
@@ -334,10 +334,12 @@ void create_response(const std::string& key , bool hastree, unsigned int nreplic
 					   dg::bin().D_abseta.size()-1,&(dg::bin().D_abseta[0]),
 					   dg::bin().D_lpt.size()-1,&(dg::bin().D_lpt[0]),
 					   true , nreplicas )); itot++;
-    tmp.push_back(  UnfoldingHistogramTool(fout,sdir+key+"/eta_lpt",
-					   dg::bin().D_eta.size()-1,&(dg::bin().D_eta[0]),
-					   dg::bin().D_lpt.size()-1,&(dg::bin().D_lpt[0]),
-					   true , nreplicas )); itot++;
+    if(false){
+      tmp.push_back(  UnfoldingHistogramTool(fout,sdir+key+"/eta_lpt",
+					     dg::bin().D_eta.size()-1,&(dg::bin().D_eta[0]),
+					     dg::bin().D_lpt.size()-1,&(dg::bin().D_lpt[0]),
+					     true , nreplicas )); itot++;
+    }
     assert(unf_nh==itot);
   }
 }
@@ -412,15 +414,17 @@ void UNF_MISS() {
 					d.Truth_PtLep,
 					d.Truth_Weight_Replicas[replica],
 					replica);
-	d.response[ q*unf_nh + 4 ].fill(d.Reco_isReconstructed,
-					d.Reco_EtaLep,
-					d.Reco_PtLep,
-					d.Reco_Weight_Replicas[replica],
-					d.Truth_Is_Fiducial,
-					d.Truth_EtaLep,
-					d.Truth_PtLep,
-					d.Truth_Weight_Replicas[replica],
-					replica);
+	if(false) {
+	  d.response[ q*unf_nh + 4 ].fill(d.Reco_isReconstructed,
+					  d.Reco_EtaLep,
+					  d.Reco_PtLep,
+					  d.Reco_Weight_Replicas[replica],
+					  d.Truth_Is_Fiducial,
+					  d.Truth_EtaLep,
+					  d.Truth_PtLep,
+					  d.Truth_Weight_Replicas[replica],
+					  replica);
+	}
       }
     }
   } // end loop over systematics
@@ -474,15 +478,17 @@ void UNF_FILL(const std::string& key ) {
 				      d.Truth_PtLep,
 				      d.Truth_Weight_Replicas[replica],
 				      replica);
-      d.response[ q*unf_nh + 4 ].fill(d.Reco_isReconstructed,
-				      d.Reco_EtaLep,
-				      d.Reco_PtLep,
-				      d.Reco_Weight_Replicas[replica],
-				      d.Truth_Is_Fiducial,
-				      d.Truth_EtaLep,
-				      d.Truth_PtLep,
-				      d.Truth_Weight_Replicas[replica],
-				      replica);
+      if(false) {
+	d.response[ q*unf_nh + 4 ].fill(d.Reco_isReconstructed,
+					d.Reco_EtaLep,
+					d.Reco_PtLep,
+					d.Reco_Weight_Replicas[replica],
+					d.Truth_Is_Fiducial,
+					d.Truth_EtaLep,
+					d.Truth_PtLep,
+					d.Truth_Weight_Replicas[replica],
+					replica);
+      }
     }
   }
   return;
@@ -496,11 +502,6 @@ int main( int argc , char* argv[] )
   AnaConfiguration::configure("ana_wasym",argc,argv);
   if( !AnaConfiguration::configured() ) { exit(0); }
   TH1::AddDirectory(kTRUE);
-
-  // enable AnaMuon replicas
-  NREPLICASF = AnaConfiguration::replicas();
-  std::cout << "SF replicas = " << NREPLICASF << std::endl;
-  AnaMuon::NREPLICASF = NREPLICASF;
 
   // determine athena release version
   const int REL = AnaConfiguration::release();
@@ -570,6 +571,11 @@ int main( int argc , char* argv[] )
   NOMONLY = AnaConfiguration::skip_systematics();
   int save_ntuples = AnaConfiguration::save_ntuples();
 
+  // enable AnaMuon replicas if running over wmunu MC
+  NREPLICASF = is_wmunu ? AnaConfiguration::replicas() : 1;
+  std::cout << "SF replicas = " << NREPLICASF << std::endl;
+  AnaMuon::NREPLICASF = NREPLICASF;
+
   // UNFOLDING (order of definitions matters!)
 #define UNA(x) unf_keys.push_back(x)
 #define UNT(x) unf_keys.push_back(x); unf_keys_nom.push_back(x); unf_keys_tru.push_back(x)
@@ -599,7 +605,12 @@ int main( int argc , char* argv[] )
       UNPDF("PDFMEM");
     }
     // scale factors - replicas
-    UNREP("SFUncorr");
+    UNREP("SFUncorrReco");
+    UNREP("SFUncorrTrig");
+    UNREP("SFUncorrIsol");
+    if(false) { // combined toy, deprecated May 13 2013
+      UNREP("SFUncorr");
+    }
     // scale factors
     UNR("MuonRecoSFUp");
     UNR("MuonRecoSFDown");
@@ -1170,8 +1181,8 @@ int main( int argc , char* argv[] )
     static boost::shared_ptr<Root::TPileupReweighting> pw_up( new Root::TPileupReweighting( "pw_up" ) );
     static boost::shared_ptr<Root::TPileupReweighting> pw_down( new Root::TPileupReweighting( "pw_down" ) );
     // special period-separated files
-    static boost::shared_ptr<Root::TPileupReweighting> pw_DtoK( new Root::TPileupReweighting( "pw_DtoK" ) );
-    static boost::shared_ptr<Root::TPileupReweighting> pw_LtoM( new Root::TPileupReweighting( "pw_LtoM" ) );
+    //static boost::shared_ptr<Root::TPileupReweighting> pw_DtoK( new Root::TPileupReweighting( "pw_DtoK" ) );
+    //static boost::shared_ptr<Root::TPileupReweighting> pw_LtoM( new Root::TPileupReweighting( "pw_LtoM" ) );
 #define PINIT(p,s,df) p->SetDefaultChannel(0);				\
     p->SetUnrepresentedDataAction(2);					\
     p->DisableWarnings(true);						\
@@ -1195,12 +1206,12 @@ int main( int argc , char* argv[] )
       PINIT(pw,AnaConfiguration::pileup_data_scale(),pileup_data_file);
       PINIT(pw_down,0.97,pileup_data_file);
       PINIT(pw_up,1.03,pileup_data_file);
-      PINIT(pw_DtoK,AnaConfiguration::pileup_data_scale(),pileup_data_fileDtoK);
-      PINIT(pw_LtoM,AnaConfiguration::pileup_data_scale(),pileup_data_fileLtoM);
-      int_lumi_DtoM = pw->getIntegratedLumiVector();
-      int_lumi_DtoK = pw_DtoK->getIntegratedLumiVector();
-      int_lumi_LtoM = pw_LtoM->getIntegratedLumiVector();
-      int_lumi = int_lumi_DtoM; // default
+//       PINIT(pw_DtoK,AnaConfiguration::pileup_data_scale(),pileup_data_fileDtoK);
+//       PINIT(pw_LtoM,AnaConfiguration::pileup_data_scale(),pileup_data_fileLtoM);
+//       int_lumi_DtoM = pw->getIntegratedLumiVector();
+//       int_lumi_DtoK = pw_DtoK->getIntegratedLumiVector();
+//       int_lumi_LtoM = pw_LtoM->getIntegratedLumiVector();
+      int_lumi = pw->getIntegratedLumiVector();
       const double lumi_tot = pw->GetIntegratedLumi();
       std::cout << "Total lumi = " << lumi_tot << std::endl;
       pileup_reweighting_mode=PU_MC11B;
@@ -1212,8 +1223,8 @@ int main( int argc , char* argv[] )
       pw->SetRandomSeed(314159 + evt->mc_channel()*2718 + evnum);
       pw_up->SetRandomSeed(314159 + evt->mc_channel()*2718 + evnum);
       pw_down->SetRandomSeed(314159 + evt->mc_channel()*2718 + evnum);
-      pw_DtoK->SetRandomSeed(314159 + evt->mc_channel()*2718 + evnum);
-      pw_LtoM->SetRandomSeed(314159 + evt->mc_channel()*2718 + evnum);
+//       pw_DtoK->SetRandomSeed(314159 + evt->mc_channel()*2718 + evnum);
+//       pw_LtoM->SetRandomSeed(314159 + evt->mc_channel()*2718 + evnum);
     }
 #undef PINIT
     // for MC, calculate pileup weight
@@ -1221,8 +1232,8 @@ int main( int argc , char* argv[] )
       pu_weight[0] = pw ? pw->GetCombinedWeight( raw_rnum , evt->mc_channel() , avgmu ) : 1. ;
       pu_weight[1] = pw_down ? pw_down->GetCombinedWeight( raw_rnum , evt->mc_channel() , avgmu ) : 1. ;
       pu_weight[2] = pw_up ? pw_up->GetCombinedWeight( raw_rnum , evt->mc_channel() , avgmu ) : 1. ;
-      pu_weight[3] = pw_DtoK ? pw_DtoK->GetCombinedWeight( raw_rnum , evt->mc_channel() , avgmu ) : 1. ;
-      pu_weight[4] = pw_LtoM ? pw_LtoM->GetCombinedWeight( raw_rnum , evt->mc_channel() , avgmu ) : 1. ;
+//       pu_weight[3] = pw_DtoK ? pw_DtoK->GetCombinedWeight( raw_rnum , evt->mc_channel() , avgmu ) : 1. ;
+//       pu_weight[4] = pw_LtoM ? pw_LtoM->GetCombinedWeight( raw_rnum , evt->mc_channel() , avgmu ) : 1. ;
       // skip event; negative pileup weight means we don't know the weight (rare event)
       for(int ii=1; ii<5; ii++) {
 	if(pu_weight[ii]<0) pu_weight[ii]=0.0;
@@ -1278,10 +1289,10 @@ int main( int argc , char* argv[] )
     dg::fillh("nevts2_vtx",1,1,2,1);  // pileup and MC and vertex
 
     // retrieve more metadata
-    rnum_DtoM = is_data ? raw_rnum : pw->GetRandomRunNumber(raw_rnum);
-    rnum_DtoK = is_data ? raw_rnum : pw_DtoK->GetRandomRunNumber(raw_rnum);
-    rnum_LtoM = is_data ? raw_rnum : pw_LtoM->GetRandomRunNumber(raw_rnum);
-    rnum = rnum_DtoM; // default
+//     rnum_DtoM = is_data ? raw_rnum : pw->GetRandomRunNumber(raw_rnum);
+//     rnum_DtoK = is_data ? raw_rnum : pw_DtoK->GetRandomRunNumber(raw_rnum);
+//     rnum_LtoM = is_data ? raw_rnum : pw_LtoM->GetRandomRunNumber(raw_rnum);
+    rnum = is_data ? raw_rnum : pw->GetRandomRunNumber(raw_rnum);
     /* Comment on rnum in MC:
        Pseudo-run numbers in aggregate give the right fraction of events in each run.
        However, they don't directly maintain the correlations to <nmu> for a given MC event.
@@ -1909,7 +1920,8 @@ int main( int argc , char* argv[] )
 
 
     // debugging stat scale factors with Max Bellomo (10 or 10k replicas only!)
-    if(AnaConfiguration::verbose() && is_mc && n_events<100 && mu_smeared_iso_col.size()==1 ) {
+    // note: not updated for independent toys
+    if(false && AnaConfiguration::verbose() && is_mc && n_events<100 && mu_smeared_iso_col.size()==1 ) {
       std::cout << "======  EVENT: " << evnum << " " << rnum << " TYPE=" << mu_smeared_type_col.size() << " QUAL=" << mu_smeared_qual_col.size()
 	 	<< " ETA=" << mu_smeared_eta_col.size() << " ISO=" << mu_smeared_iso_col.size() 
 		<< " LPT=" << mu_smeared_iso_col[0]->pt() << std::endl;
@@ -2616,8 +2628,13 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
 	  for(unsigned int ik=0; ik<unf_keys_rep.size(); ik++) {
 	    unfdata_type::iterator it2 = unfdata.find(unf_keys_rep[ik]);
 	    assert( it2 != unfdata.end() );
-	    assert(it2->first == "SFUncorr");
+	    assert( it2->first.find("SFUncorr") != std::string::npos );
 	    assert( it2->second.Reco_Weight_Replicas.size() == NREPLICASF );
+	    const bool SFALL  = (it2->first == "SFUncorr");
+	    const bool SFRECO = (it2->first == "SFUncorrReco");
+	    const bool SFTRIG = (it2->first == "SFUncorrTrig");
+	    const bool SFISOL = (it2->first == "SFUncorrIsol");
+	    assert(SFALL || SFRECO || SFTRIG || SFISOL);
 	    double _eff = 1.0;
 	    double _trig = 1.0;
 	    double _siso = 1.0;
@@ -2627,7 +2644,10 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
 	      mu_eff_scale(  mu_iso_col , _eff  , _a , _b , replica);
 	      mu_trig_scale( mu_iso_col , _trig , _a , 20 , replica);
 	      mu_isol_scale( mu_iso_col , _siso , _a , 0, replica);
-	      it2->second.Reco_Weight_Replicas[replica] =  event_weight[0]*_eff*_trig*_siso ;
+	      if(SFALL) it2->second.Reco_Weight_Replicas[replica] =        event_weight[0] *_eff *_trig *_siso ;
+	      else if(SFRECO) it2->second.Reco_Weight_Replicas[replica] =  event_weight[0] *_eff * trig * siso ;
+	      else if(SFTRIG) it2->second.Reco_Weight_Replicas[replica] =  event_weight[0] * eff *_trig * siso ;
+	      else if(SFISOL) it2->second.Reco_Weight_Replicas[replica] =  event_weight[0] * eff * trig *_siso ;
 	    }
 	  }
 	  // this loop only includes CT10 member sets

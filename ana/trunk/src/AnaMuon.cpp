@@ -557,9 +557,10 @@ AnaMuon::GetIsolationSF_v17( const CONF::ConfType& conf, const detector::MCP_TYP
   static SFProvider *tcnom = 0;
   static SFProvider *tcup = 0;
   static SFProvider *tcdown = 0;
+  const int seed = 6000; // 1721
   if(!tcnom) {
     tcnom = new SFProvider("data/IsolationSF_vsPt.root","SF","EffMC","EffData",SFProvider::Pt,1.0);
-    tcnom->generateReplicas(NREPLICASF);
+    tcnom->generateReplicas(NREPLICASF,seed);
     tcup = new SFProvider("data/IsolationSF_vsPtup.root","SF","","",SFProvider::Pt,1.0);
     tcdown = new SFProvider("data/IsolationSF_vsPtdown.root","SF","","",SFProvider::Pt,1.0);
   }

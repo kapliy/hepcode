@@ -76,12 +76,10 @@ elif [ "$1" ==  "link" ]; then
 elif [ "$1" ==  "update" -o "$1" == "up" ]; then
     $ROOTCOREDIR/scripts/update.sh ${packages}
     fixup_paths
-elif [ "$1" ==  "compile" -o "$1" == "make" -o "$1" == "gmake" ]; then
+elif [ "$1" ==  "compile" -o "$1" == "make" -o "$1" == "gmake" -o "$1" ==  "build" -o "$1" == "all" ]; then
     $ROOTCOREDIR/scripts/build.sh ${packages}
     fixup_paths
-elif [ "$1" ==  "build" -o "$1" == "all" ]; then # checkout & compile shortcut
-    $ROOTCOREDIR/scripts/build.sh ${packages}
-    fixup_paths
+    cd $ROOTCOREDIR/lib && rlibmap -f -o libBootstrapGenerator.rootmap -l libBootstrapGenerator.so -c ../../BootstrapGenerator/Root/LinkDef.h && echo "Info: created libBootstrapGenerator.rootmap"
 elif [ "$1" ==  "status" -o "$1" == "st" ]; then
     $ROOTCOREDIR/scripts/status.sh ${packages}
 fi

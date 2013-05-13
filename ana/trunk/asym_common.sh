@@ -18,7 +18,8 @@ ntuple=29I
 
 lbl=05102013_newmet    # updated met util (soft terms systematics). Use separate random seed for each period range for trigger SF.
 lbl=05122013_newmet    # decoupled random seeds for mu+ and mu- per Jan's advice. Set both nvtx and avgmu in metutil
-lbl=05132013_newmet    # fixed toy mc seed per agreement with Max
+lbl=05132013_newmet    # fixed toy mc seed per agreement with Max.
+lbl=05142013_newmet    # fixed toy mc seed per agreement with Max. Independent toy MCs (total = 3000). removed eta x pt unfolding. commented out DtoK and LtoM stuff.
 
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
 

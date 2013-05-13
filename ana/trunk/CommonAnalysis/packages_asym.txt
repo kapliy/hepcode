@@ -16,3 +16,4 @@ atlasusr/nagarkar/IsoIPSF/tags/IsoIPSF-00-01-01
 atlasoff/PhysicsAnalysis/JetTagging/JetTagPerformanceCalibration/CalibrationDataInterface/tags/CalibrationDataInterface-00-01-02
 atlasperf/CombPerf/FlavorTag/JetTagAlgorithms/MV1Tagger/tags/MV1Tagger-00-00-01
 atlasphys/Physics/StandardModel/WZPhysics/Common/LineShapeTool/tags/LineShapeTool-00-00-02
+atlasphys/Physics/StandardModel/Common/BootstrapGenerator/trunk
