@@ -20,8 +20,8 @@ AC_DEFUN([AX_COMMONANALYSIS],
 dnl check that RootCore packages are in place, and that ROOTCOREDIR is available
   AC_MSG_CHECKING([for CommonAnalysis headers and libraries])
   if test -f "${user_commonanalysis}/RootCore/lib/libPileupReweighting.so" && test -f "${ROOTCOREDIR}/lib/libPileupReweighting.so"; then
-	COMMONANALYSIS_LDFLAGS='$(shell $(ROOTCOREDIR)/scripts/get_ldflags.sh egammaAnalysisUtils MuonIsolationCorrection MuonMomentumCorrections MuonEfficiencyCorrections JetResolution JetUncertainties MV1Tagger ApplyJetCalibration ApplyJetResolutionSmearing TrigMuonEfficiency PileupReweighting GoodRunsLists MissingETUtility ScaleFactorProvider LineShapeTool)'
-        COMMONANALYSIS_CPPFLAGS='-I$(ROOTCOREBIN)/include $(shell $(ROOTCOREDIR)/scripts/get_cxxflags.sh egammaAnalysisUtils MuonIsolationCorrection MuonMomentumCorrections MuonEfficiencyCorrections JetResolution JetUncertainties MV1Tagger ApplyJetCalibration ApplyJetResolutionSmearing TrigMuonEfficiency PileupReweighting GoodRunsLists MissingETUtility ScaleFactorProvider LineShapeTool)'
+	COMMONANALYSIS_LDFLAGS='$(shell $(ROOTCOREDIR)/scripts/get_ldflags.sh egammaAnalysisUtils MuonIsolationCorrection MuonMomentumCorrections MuonEfficiencyCorrections JetResolution JetUncertainties MV1Tagger ApplyJetCalibration ApplyJetResolutionSmearing TrigMuonEfficiency PileupReweighting GoodRunsLists MissingETUtility ScaleFactorProvider LineShapeTool BootstrapGenerator)'
+        COMMONANALYSIS_CPPFLAGS='-I$(ROOTCOREBIN)/include $(shell $(ROOTCOREDIR)/scripts/get_cxxflags.sh egammaAnalysisUtils MuonIsolationCorrection MuonMomentumCorrections MuonEfficiencyCorrections JetResolution JetUncertainties MV1Tagger ApplyJetCalibration ApplyJetResolutionSmearing TrigMuonEfficiency PileupReweighting GoodRunsLists MissingETUtility ScaleFactorProvider LineShapeTool BootstrapGenerator)'
         AC_DEFINE(HAVE_COMMONANALYSIS,,[define if the CommonAnalysis package is available])
         AC_MSG_RESULT(yes)
    else
