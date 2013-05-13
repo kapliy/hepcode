@@ -1965,11 +1965,9 @@ int main( int argc , char* argv[] )
     metutil->reset();
     float MeV = 1000.;
     // set truth-level met terms (for new softmet systematics)
-    if(false) {
-      metutil->setNvtx(nvtxsoftmet);
-    } else { // update 05/10/2013: use avgmu instead of nvtx
-      metutil->setAverageIntPerXing(avgmu);
-    }
+    metutil->setNvtx(nvtxsoftmet);
+    // update 05/10/2013: use avgmu instead of nvtx
+    metutil->setAverageIntPerXing(avgmu);
     if(have_nonint) {
       metutil->setMETTerm(METUtil::Truth, met->truth_nonint_etx()*MeV , met->truth_nonint_ety()*MeV , met->truth_nonint_sumet()*MeV );
     }
