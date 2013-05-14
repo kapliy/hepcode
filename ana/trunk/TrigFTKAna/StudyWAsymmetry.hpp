@@ -99,6 +99,12 @@ protected:
       }
     }
     if(minimal) return;
+    // bootstrap histos
+    if(_do_bootstrap) {
+      dg::bfillvh( "b_lepton_absetav" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta, std::abs(lepton->eta()) , "W Lepton |#eta|" );
+      dg::bfillh( "b_uint"   , 1 , 0 , 1.0 , 0.50 , "Integrated event counts, pt20" );
+      dg::bfillh( "b_uint25" , 1 , 0 , 1.0 , 0.50 , "Integrated event counts, pt25" );
+    }
     vector< boost::shared_ptr<const AnaJet> > jets_by_pt( w->begin_jets() , w->end_jets() );
     // make plots
     dg::fillh( "nvtxs_all" , 20 , 0 , 20 , w->nvtxs_all() , "N_{vtxs} (before cuts)" );
@@ -114,6 +120,10 @@ protected:
     if(study_2d && met && lepton) {
       dg::fillvh( "d2_abseta_lpt" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , std::abs(lepton->eta()) , L(lepton->pt()),"|leta|","lpt" );
       dg::fillvh( "d2_eta_lpt" , dg::bin().D_eta.size()-1, dg::bin().D_eta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , lepton->eta() , L(lepton->pt()),"leta","lpt" );
+      // bootstrap histos
+      if(_do_bootstrap) {
+	dg::bfillvh( "b_d2_abseta_lpt" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , std::abs(lepton->eta()) , L(lepton->pt()),"|leta|","lpt" );
+      }
       // QCD normalization in slices: utilize 3d histograms to store everything
       if(_run_qcd_slices) {
 	dg::fillvh( "d3_abseta_lpt_met" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_pt.size()-1, dg::bin().D_pt , std::abs(lepton->eta()) , L(lepton->pt()) , met->pt() ,  "|leta|","lpt","met" );
@@ -359,6 +369,7 @@ protected:
   }
 
 protected:
+  bool _do_bootstrap;
   bool _do_save_ntuple;
   bool _do_2d_plots;
   bool _do_charge_separation;
@@ -376,6 +387,7 @@ protected:
   float _average_mu;
 
 public:
+  void do_bootstrap(bool v = true) { _do_bootstrap = v; }
   void do_save_ntuple(bool v = true) { _do_save_ntuple = v; }
   void do_2d_plots( bool v = true ) { _do_2d_plots = v; }
   void do_charge_separation( bool v = true ) { _do_charge_separation = v; }
@@ -388,7 +400,8 @@ public:
     _do_yield = true; _yield_min = min ; _yield_max = max ; _yield_runnumber = runnumber; _yield_lumi = lumi; 
   }
   StudyWAsymmetry( const std::string& name , const std::string& description ) 
-    : _do_save_ntuple(false)
+    : _do_bootstrap(false)
+    , _do_save_ntuple(false)
     , _do_2d_plots(false)
     , _do_charge_separation(false)
     , _do_save_histo(true)

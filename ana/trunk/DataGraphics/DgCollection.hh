@@ -19,6 +19,7 @@
 
 class TDirectory;
 class TFile;
+class BootstrapGenerator;
 
 #ifdef __GNUG__
 #define inline  __attribute__((always_inline))
@@ -43,14 +44,20 @@ DataGraphics
     static DgEventInfo _event_info;
     // event-wide binning templates
     static DgBin _binning;
+    // bootstrap generator
+    static int _replicas;
+    static BootstrapGenerator *_boot;
     // in-memory metadata
     static std::map< std::string , std::vector<std::string> > _mapH;   // histograms
+    static std::map< std::string , std::map<std::string,TObject*> > _mapB;   // bootstrap histograms, memory-resident
     static std::map< std::string , std::vector<std::string> > _mapT;  // trees
   public:
     DgCollection() { return;  }
     ~DgCollection() { return; }
   public:
     static void set_save_filename( const std::string& _filename , bool force_unique = false);
+    static void initialize_bootstrap(const std::string& bname, const int nreplicas);
+    static void generate_bootstrap(unsigned int RunNumber, unsigned int EventNumber);
     static void dump_names();
     static void finalize();
     static void save(bool verbose=false);
@@ -165,6 +172,57 @@ DataGraphics
                          const BinSize& nbinsy , const Value& miny , const Value& maxy , 
                          const Value& x , const Value& y , const bool& pass , 
                          const std::string& axis_label_x , const std::string& axis_label_y );
+    
+    /*
+      -----------------------------------------
+      BOOTSTRAP HISTOGRAMS
+      -----------------------------------------
+    */
+    // fill 1d histogram with fixed binning
+    static void bfillh( const std::string& sname , const BinSize& nbins , const Value& min , const Value& max ,
+                       const Value& x ) {
+      static std::string dummy = "";
+      bfillh(sname,nbins,min,max,x,dummy);
+    }
+    static void bfillh( const std::string& sname , const BinSize& nbins , const Value& min , const Value& max ,
+                       const Value& x , const std::string& axis_label);
+    // fill 1d histogram with variable binning
+    static void bfillvh( const std::string& sname , const BinSize& nbins , const std::vector<Value>& bins ,
+                        const Value& x ,  const std::string& axis_label);
+    // fill weighted 1d histogram with fixed binning
+    static void bfillhw( const std::string& sname , const BinSize& nbins , const Value& min , const Value& max ,
+			const Value& x , const WeightedCount& weight ) {
+      static std::string dummy = "";
+      bfillhw(sname,nbins,min,max,x,weight,dummy);
+    }
+    static void bfillhw( const std::string& sname , const BinSize& nbins , const Value& min , const Value& max ,
+			const Value& x , const WeightedCount& weight , const std::string& axis_label);
+    // fill weighted 1d histogram with variable binning
+    static void bfillvhw( const std::string& sname , const BinSize& nbins , const std::vector<Value>& bins ,
+                         const Value& x , const WeightedCount& weight , const std::string& axis_label);
+    // fill 2d histogram
+    static void bfillh( const std::string& sname , 
+                       const BinSize& nbinsx , const Value& minx , const Value& maxx , 
+                       const BinSize& nbinsy , const Value& miny , const Value& maxy , 
+                       const Value& x , const Value& y , 
+		       const std::string& axis_label_x , const std::string& axis_label_y );
+    static void bfillvh( const std::string& sname , 
+			const BinSize& nbinsx , const std::vector<Value>& binsx ,
+			const BinSize& nbinsy , const std::vector<Value>& binsy ,
+			const Value& x , const Value& y ,
+			const std::string& axis_label_x , const std::string& axis_label_y );
+    // fill weighted 2d histogram
+    static void bfillhw( const std::string& sname , 
+                        const BinSize& nbinsx , const Value& minx , const Value& maxx , 
+                        const BinSize& nbinsy , const Value& miny , const Value& maxy , 
+                        const Value& x , const Value& y , const WeightedCount& weight ,
+                        const std::string& axis_label_x , const std::string& axis_label_y );
+    static void bfillvhw( const std::string& sname , 
+			 const BinSize& nbinsx , const std::vector<Value>& binsx ,
+			 const BinSize& nbinsy , const std::vector<Value>& binsy ,
+			 const Value& x , const Value& y , const WeightedCount& weight ,
+			 const std::string& axis_label_x , const std::string& axis_label_y );
+    
 
   }; // end DgCollection
 
