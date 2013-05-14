@@ -22,9 +22,12 @@
 #include <boost/regex.hpp>
 #include <fstream>
 
+#include <TObject.h>
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TH3D.h>
+#include <BootstrapGenerator/TH1Bootstrap.h>
+#include <BootstrapGenerator/TH2Bootstrap.h>
 #include <TNtuple.h>
 #include <TDirectory.h>
 #include <TKey.h>
@@ -33,6 +36,8 @@
 #include <TString.h>
 #include <TFile.h>
 #include <TClass.h>
+
+#include <BootstrapGenerator/BootstrapGenerator.h>
 
 using namespace std;
 using namespace DataGraphics;
@@ -48,17 +53,43 @@ DgCollection::set_save_filename( const std::string& _filename , bool force_uniqu
   _current = _file->GetDirectory("/");
   _current->cd();
   _mapH[ _current->GetPath() ] = std::vector<std::string>();
+  _mapB[ _current->GetPath() ] = std::map<std::string,TObject*>();
   _mapT[ _current->GetPath() ] = std::vector<std::string>();
 }
 
 void
+DgCollection::initialize_bootstrap(const std::string& bname, const int nreplicas){
+  if(_boot) {
+    std::cerr << "WARNING: overwriting old bootstrap generator" << std::endl;
+    delete _boot;
+  }
+  _replicas = nreplicas;
+  _boot = new BootstrapGenerator(bname.c_str(),bname.c_str(),nreplicas);
+}
+
+void
+DgCollection::generate_bootstrap(unsigned int RunNumber, unsigned int EventNumber) {
+  assert(_boot && "ERROR: must call initialize_bootstrap() first");
+  _boot->Generate(RunNumber, EventNumber);
+}
+    
+void
 DgCollection::dump_names() {
   std::map<std::string, std::vector<string> >::iterator imB;
+  std::map<std::string, std::map<string,TObject*> >::iterator imC;
+  std::map<string,TObject*>::iterator imD;
   std::cout << "================== DUMP HISTOGRAM NAMES ==================" << std::endl;
   for(imB=_mapH.begin(); imB!=_mapH.end(); imB++) {
     std::cout << " ----> " << imB->first << std::endl;
     for(int i=0; i<imB->second.size(); i++) {
       std::cout << " --> " << imB->second.at(i) << std::endl;
+    }
+  }
+  std::cout << "================== DUMP BOOTSTRAP NAMES ==================" << std::endl;
+  for(imC=_mapB.begin(); imC!=_mapB.end(); imC++) {
+    std::cout << " ----> " << imC->first << std::endl;
+    for(imD=imC->second.begin(); imD!=imC->second.end(); imD++) {
+      std::cout << " --> " << imD->first << std::endl;
     }
   }
   std::cout << "================== DUMP NTUPLE NAMES ==================" << std::endl;
@@ -77,6 +108,9 @@ DgCollection::dump_names() {
 void
 DgCollection::finalize() {
   std::map<std::string, std::vector<string> >::iterator imB;
+  std::map<std::string, std::map<string,TObject*> >::iterator imC;
+  std::map<string,TObject*>::iterator imD;
+  // flush ntuples
   for(imB=_mapT.begin(); imB!=_mapT.end(); imB++) {
     for(int i=0; i<imB->second.size(); i++) {
       TNamed *o = (TNamed*) _file->Get( (std::string(imB->first) + "/" + std::string(imB->second.at(i))).c_str() );
@@ -89,6 +123,15 @@ DgCollection::finalize() {
 	TNtuple *T = (TNtuple*)o;
 	T->FlushBaskets();
       }
+    }
+  }
+  // save bootstrap histograms since they are always memory-residet
+  for(imC=_mapB.begin(); imC!=_mapB.end(); imC++) {
+    const bool st = _file->cd((imC->first).c_str());
+    assert( st && "error: unable to cd into a directory during finalize() ");
+    for(imD=imC->second.begin(); imD!=imC->second.end(); imD++) {
+      TH1DBootstrap *hsave = (TH1DBootstrap*)(imD->second);
+      hsave->Write();
     }
   }
 }
@@ -117,6 +160,7 @@ DgCollection::down( const std::string& sname , const std::string& description ) 
   if(!next) {
     next = _current->mkdir( sname.c_str() , description.c_str() );
     _mapH[ next->GetPath() ] = std::vector<std::string>();
+    _mapB[ next->GetPath() ] = std::map<std::string, TObject*>();
     _mapT[ next->GetPath() ] = std::vector<std::string>();
   }
   _current = next;
@@ -430,11 +474,125 @@ DgCollection::filleff( const std::string& sname ,
   return;
 }
 
+/*
+  -----------------------------------------
+  BOOTSTRAP HISTOGRAMS (resident in memory until writing)
+  -----------------------------------------
+*/
+
+/* 1D histograms */
+void
+DgCollection::bfillh( const std::string& sname , const BinSize& nbins , const Value& min , const Value& max ,
+		      const Value& x , const std::string& axis_label )
+{
+  return bfillhw(sname,nbins,min,max,x,dg::global_weight(),axis_label);
+}
+void
+DgCollection::bfillvh( const std::string& sname , const BinSize& nbins , const std::vector<Value>& bins ,
+		       const Value& x , const std::string& axis_label )
+{
+  return bfillvhw(sname,nbins,bins,x,dg::global_weight(),axis_label);
+}
+void
+DgCollection::bfillhw( const std::string& sname , const BinSize& nbins , const Value& min , const Value& max , 
+		       const Value& x , const WeightedCount& weight, const std::string& axis_label )
+{
+  std::map<std::string,TObject*>& dlist = _mapB.find(_current->GetPath())->second;
+  TH1DBootstrap* h = (dlist.find(sname)!=dlist.end()) ? (TH1DBootstrap*)dlist.find(sname)->second : 0;
+  if(!h) {
+    h = new TH1DBootstrap(sname.c_str(),axis_label.c_str(),nbins,min,max, _replicas,_boot );
+    h->Write();
+    //h->SetDirectory( _current );
+    //h->Sumw2();
+    _mapB[ _current->GetPath() ][ h->GetName() ] = h;
+  }
+  h->Fill( x , weight );
+  return;
+}
+void
+DgCollection::bfillvhw( const std::string& sname , const BinSize& nbins , const std::vector<Value>& bins ,
+			const Value& x , const WeightedCount& weight, const std::string& axis_label )
+{
+  assert(_mapB.find(_current->GetPath()) != _mapB.end() );
+  std::map<std::string,TObject*>& dlist = _mapB.find(_current->GetPath())->second;
+  TH1DBootstrap* h = (dlist.find(sname)!=dlist.end()) ? (TH1DBootstrap*)dlist.find(sname)->second : 0;
+  if(!h) {
+    h = new TH1DBootstrap(sname.c_str(),axis_label.c_str(),nbins,&bins[0], _replicas,_boot);
+    h->Write();
+    //h->SetDirectory( _current );
+    //h->Sumw2();
+    _mapB[ _current->GetPath() ][ h->GetName() ] = h;
+  }
+  h->Fill( x , weight );
+  return;
+}
+
+/* 2D histograms */
+void
+DgCollection::bfillh( const std::string& sname , 
+		      const BinSize& nbinsx , const Value& minx , const Value& maxx , 
+		      const BinSize& nbinsy , const Value& miny , const Value& maxy , 
+		      const Value& x , const Value& y , const std::string& axis_label_x , const std::string& axis_label_y )
+{
+  return bfillhw(sname,nbinsx,minx,maxx,nbinsy,miny,maxy,x,y,dg::global_weight(),axis_label_x,axis_label_y);
+}
+void
+DgCollection::bfillvh( const std::string& sname , 
+		       const BinSize& nbinsx , const std::vector<Value>& binsx ,
+		       const BinSize& nbinsy , const std::vector<Value>& binsy ,
+		       const Value& x , const Value& y , const std::string& axis_label_x , const std::string& axis_label_y )
+{
+  return bfillvhw(sname,nbinsx,binsx,nbinsy,binsy,x,y,dg::global_weight(),axis_label_x,axis_label_y);
+}
+void
+DgCollection::bfillhw( const std::string& sname , 
+		       const BinSize& nbinsx , const Value& minx , const Value& maxx , 
+		       const BinSize& nbinsy , const Value& miny , const Value& maxy , 
+		       const Value& x , const Value& y , const WeightedCount& weight ,
+		       const std::string& axis_label_x , const std::string& axis_label_y )
+{
+  std::map<std::string,TObject*>& dlist = _mapB.find(_current->GetPath())->second;
+  TH2DBootstrap* h = (dlist.find(sname)!=dlist.end()) ? (TH2DBootstrap*)dlist.find(sname)->second : 0;
+  if(!h) {
+    h = new TH2DBootstrap(sname.c_str(),(axis_label_x+" vs "+axis_label_y).c_str(),
+			  nbinsx,minx,miny,nbinsy,miny,maxy,
+			  _replicas,_boot);
+    //h->SetDirectory( _current );
+    //h->Sumw2();
+    _mapB[ _current->GetPath() ][ h->GetName() ] = h;
+  }
+  h->Fill( x , y , weight );
+  return;
+}
+void
+DgCollection::bfillvhw( const std::string& sname , 
+			const BinSize& nbinsx , const std::vector<Value>& binsx ,
+			const BinSize& nbinsy , const std::vector<Value>& binsy ,
+			const Value& x , const Value& y , const WeightedCount& weight ,
+			const std::string& axis_label_x , const std::string& axis_label_y )
+{
+  std::map<std::string,TObject*>& dlist = _mapB.find(_current->GetPath())->second;
+  TH2DBootstrap* h = (dlist.find(sname)!=dlist.end()) ? (TH2DBootstrap*)dlist.find(sname)->second : 0;
+  if(!h) {
+    h = new TH2DBootstrap(sname.c_str(),(axis_label_x+" vs "+axis_label_y).c_str(),
+			  nbinsx,&binsx[0],nbinsy,&binsy[0],
+			  _replicas,_boot);
+    //h->SetDirectory( _current );
+    //h->Sumw2();
+    _mapB[ _current->GetPath() ][ h->GetName() ] = h;
+  }
+  h->Fill( x , y , weight );
+  return;
+}
+
 DgCollection DgCollection::_base = DgCollection();
 TFile* DgCollection::_file = 0;
 TDirectory* DgCollection::_current = 0;
 WeightedCount DgCollection::_global_weight = 1.0;
 DgEventInfo DgCollection::_event_info = DgEventInfo();
 DgBin DgCollection::_binning = DgBin();
+BootstrapGenerator* DgCollection::_boot = 0;
+int DgCollection::_replicas = 0;
 std::map< std::string , std::vector<std::string> > DgCollection::_mapH = std::map< std::string , std::vector<std::string> >();
+std::map< std::string , std::map<std::string,TObject*> > DgCollection::_mapB = std::map< std::string , std::map<std::string,TObject*> >();
 std::map< std::string , std::vector<std::string> > DgCollection::_mapT = std::map< std::string , std::vector<std::string> >();

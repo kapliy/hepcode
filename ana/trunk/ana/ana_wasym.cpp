@@ -14,6 +14,7 @@ const int PDF_REWEIGHTING = 1;         // 0=None, 1=CT10(members), 2=CT10(member
 const bool ZMUMU_FIX = true;           // Fix ZMUMU sample overlap with DYAN?
 unsigned int NREPLICASF = 100;         // statistical error replicas (propagated into response matrices)
 const unsigned int NREPLICASP = 53;    // PDF uncertainty replicas
+bool RUN_BOOTSTRAP = true;             // generate bootstrap histograms? For now, auto-disabled for MC
 // Control application of certain weights to histograms. All should be "true"
 const bool HIST_VXZ_WEIGHT = true;     // vertex z0 weight - needs V1_29i ntuple
 const bool HIST_WZPT_WEIGHT = true;    // W/Z pt weight
@@ -517,8 +518,9 @@ int main( int argc , char* argv[] )
   double MU_PT_CUT = AnaConfiguration::pt_cut();
   assert(MU_PT_CUT>19.99 && MU_PT_CUT < 25.01);
   std::cout << "Minimum PT cut (only applies to W selection; Z is fixed at 20) is: " << MU_PT_CUT << std::endl;
-  // see if we are running wmunu/zmumu [hardcoded!]
+  // see if we are running wmunu/zmumu or some other special sample [hardcoded!]
   const std::string sample_name = AnaConfiguration::sample_name();
+  is_data = boost::algorithm::icontains(sample_name,"data_period");
   is_unfold = boost::algorithm::icontains(sample_name,"_wminmunu") || boost::algorithm::icontains(sample_name,"_wplusmunu") || boost::algorithm::icontains(sample_name,"max_wplus") || boost::algorithm::icontains(sample_name,"max_wminus");
   if(is_unfold) {
     std::cout << "Detected MC that needs to be unfolded" << std::endl;
@@ -575,6 +577,10 @@ int main( int argc , char* argv[] )
   NREPLICASF = is_wmunu ? AnaConfiguration::replicas() : 1;
   std::cout << "SF replicas = " << NREPLICASF << std::endl;
   AnaMuon::NREPLICASF = NREPLICASF;
+
+  // bootstrap histograms. for now, only apply to data
+  if(!is_data) RUN_BOOTSTRAP = false;
+  if(RUN_BOOTSTRAP) dg::initialize_bootstrap("boot",NREPLICASF);
 
   // UNFOLDING (order of definitions matters!)
 #define UNA(x) unf_keys.push_back(x)
@@ -1065,6 +1071,7 @@ int main( int argc , char* argv[] )
   
   // W candidates
   StudyWAsymmetry st_w( "st_w_final" , "W event candidates" );
+  st_w.do_bootstrap(RUN_BOOTSTRAP);
   st_w.study_n_objects(false);
   st_w.do_charge_separation(true);
   // the following assumes that the pt/eta cuts have already been applied at DgCut level
@@ -1167,13 +1174,15 @@ int main( int argc , char* argv[] )
     // data-only or mc-only preselection cuts.
     AnaEvent::tribool is_mc_tri = evt->check_flag( "mc" );
     is_mc = is_mc_tri;
-    is_data = !is_mc;
+    assert(is_data == (!is_mc));
     // retrieve metadata
     avgmu = evt->average_mu();
     actmu = evt->actual_mu();
     const unsigned long lbnum = evt->lumi_block();
     evnum = evt->event_number();
     raw_rnum = evt->run_number();
+    // bootstrap replicas
+    if(RUN_BOOTSTRAP) dg::generate_bootstrap(raw_rnum,evnum);
     mc_weight = is_mc ? evt->mc_weight() : 1.0;
     WSX(event_weight,mc_weight);
     // MC pileup reweighting
