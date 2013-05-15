@@ -8,7 +8,7 @@ import antondb
 import sys,glob
 
 assert len(sys.argv)>=3,'Arguments: save_name glob_pattern'
-outname = sys.argv[1]
+outname = sys.argv[1] if sys.argv[1][-3:]=='.db' else sys.argv[1]+'.db'
 patterns = sys.argv[2:]
 
 files1 = []

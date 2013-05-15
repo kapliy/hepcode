@@ -1083,7 +1083,7 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
     if nomonly:
         return (MSYS,MGROUPS)
 
-    # fit error
+    # fit error [ not actually used anywhere ]
     add( qcdfit('fit_error',spL.clone(),apply_stat=True) )
     next('Fit error')
 

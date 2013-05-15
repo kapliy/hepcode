@@ -108,10 +108,10 @@ def make_qcd(name):
             if mname in MSYS_FLAT:
                 v  = MSYS_FLAT[mname][11]
                 #ve = MSYS_FLAT[mname][12]
-            elif mname in ('Nominal_qcd_up','Nominal_qcd_down'): # DEPRECATED
+            elif mname in ('Nominal_qcd_up','Nominal_qcd_down'): # only used in max_latex.py to print bg tables
                 # Hardcoded list of QCD systematics not propagated through EWUnfold (so we need to add them in quadrature here)
-                # That includes: fit error; met fit range  + choice of anti-isolation (previously missing)
-                _ERRORS = ['fit_error','met_range','IsoWind20m','IsoWind40']
+                # That includes: fit range; fit var; choice of anti-isolation
+                _ERRORS = ['fit_var','fit_periods','met_range','IsoWind20m','IsoWind40']
                 devs = common.qcdfit_sys_deviations_subset(MSYS,MGROUPS,_ERRORS)
                 dev2 = math.sqrt( sum([ xx*xx for xx in devs ]) )
                 err  = 1.0*dev2 if mname=='Nominal_qcd_up' else -1.0*dev2
