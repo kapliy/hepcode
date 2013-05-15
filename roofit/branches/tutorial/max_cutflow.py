@@ -123,7 +123,7 @@ else:
     assert os.path.isfile(dataR), 'ERROR: failed to load either:\n%s \nor:\n%s'%(data,dataR)
     ff = ROOT.TFile.Open(dataR,'READ')
 if ff.Get('dg'): # parsing dgplot
-    print 'Opened as dgplot'
+    print  >>sys.stderr, 'Opened as dgplot'
     p = os.popen(cmd,"r")
     while True:
         line = p.readline()
@@ -138,7 +138,7 @@ if ff.Get('dg'): # parsing dgplot
 else: # parsing root output
     assert ff.Get('wcut')
     assert ff.Get('Nominal/wcut')
-    print 'Opened as ROOT'
+    print  >>sys.stderr, 'Opened as ROOT'
     def make_xx(t,DATA):
         """ t is one of: u,v,w """
         xx = sorted([ z.GetName().replace('_num','') for z in ff.Get('wcut').GetListOfKeys() if z.GetName()[0]==t and z.GetName()[-3:]=='num'])

@@ -85,6 +85,9 @@ DB=DB_04242013_NOMG.v25  # proper hadd; reduce wmt by trying ranges; adding: pil
 input=/share/t3data3/antonk/ana/ana_v29I_04252013_rep_stacoCB_all/pt20
 DB=DB_04242013_NOMG.v26  # proper hadd; reduce wmt by trying ranges; adding: DtoK and LtoM; pileupdown
 
+input=/share/t3data3/antonk/ana/ana_v29I_05142013_newmet_stacoCB_all/pt20
+DB=DB_05142013_NOMG.v27  # updated met util (soft terms systematics). Set both nvtx and avgmu in metutil. 3000 MC toys with stat decoupling of charges and regions. removed eta x pt unfolding. commented out DtoK and LtoM stuff. full set of bootstrapping histograms in data. Total QCD uncertainty updated in qcdsys.py to make correct errors in max_latex.py
+
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`
 iq=0
