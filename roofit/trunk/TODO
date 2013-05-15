@@ -1,0 +1,57 @@
+DOING: Muon reco SF - compare with Max's instructions.
+DOING: MET-scale: check that up/down is not switched.
+
+Add some more words in supporting document about the curvature parametrization.
+Check the direction of Up variation is different with/without QCD (since it's different with Wenu)
+
+TODO: check wmunu/wenu channel merging
+dump all muon-related scale factors
+
+Data reweighting of the distribution we unfold
+
+TABLES:
+- QCD uncertainties in table form
+- Plot QCD chi2/ndf for different systematics
+
+DONE: CHECK if muon reco corrections correct in phi - NO
+
+QCD FITS:
+LONG overdue: really need to understand difference in bgqcd=3 and bgqcd=4.
+Plot normalized templates on top of each other?
+
+OCT29:
+* Look at MCP systematics by-hand: is statistical uncertainty dominant? If not, can we reduce it by averaging?
+MCP corrections: is most of uncertainty statistical? Then no point messing with the systematics!
+MCP corrections: split in phi bins, for the barrel case where there is large C offset?
+
+Peter: why w mt is best.
+it factors out w pt. Overlay templates for different generators - expect better agreement between them in w_mt (vs other variables).
+
+Consider EtMissRel instead of etmiss?
+/home/antonk/ElectroweakBosons/AnalysisZmumu/HFrame/src
+
+MET propagation: see if KC corrections are actually valid for low-pt muons, which are used for MET propagation!
+
+charge mis-id - won't work from Z's. Flip probability. Can't look at same-sign Z's
+
+MCP:
+* understand systematics using special MC. Validate the method by putting a shift by hand. Massimo will make samples
+effect on the order of 0.2 TeV-1.
+KS toy-MC study (performing a fit) - see if errors are correct. If yes, drop chi2 method.
+Peter: does z resolution improve in data following the correction?
+TODO: Z mass fit in bins of eta/phi - including on MC (confirm Kluit's problem)
+      Z mass peak fit with alpgen; fit with/without pileup factors.
+      Z mass peak at particle level (which is, however, after FSR/ISR)
+Suggestions for MCP:
+* Add fitted-z-mass in phi/eta bins plot!
+  https://indico.cern.ch/getFile.py/access?subContId=3&contribId=7&resId=1&materialId=slides&confId=157170
+* Add p_cmb-p_ID feature
+  https://indico.cern.ch/getFile.py/access?subContId=0&contribId=7&resId=0&materialId=slides&confId=157170
+print keysfit id/exms string modification to make sure it is correct.
+* Et-miss resolution study: use Z events; project on Z pt axis (Sam Whitehead's thesis)
+* Investigate RooEggePdf - see if it is indeed compatible with my implementation!
+  Test by fitting the same event!
+* in zpeak.py: automatically apply defaults depending on region and type of muon!
+MCP scales:
+* Check if RooKeysPDF rho can be chosen smartly - Jahred's thesis.
+* Repeat a study to verify sqrt(A*B) works if one leg in barrel, another in endcap

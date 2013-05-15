@@ -1,0 +1,65 @@
+0706 - q*q<0; first stage chi fit window expanded 50->70
+0704 - no q*q<0 requirement
+
+==================================
+root_all.root, root_all_v1.root
+Flatntupler release 16 (athena version 15) - first results.
+This had been verified with cutflows long time ago (via python version of analysis code)
+About 10k Z events in total.
+This (_v1 version) was used for my 03/01 MCP talk
+
+scales_03012011.root
+Changing scales for mu+ and mu- to test sqrt(k+*k-) assumption
+
+root_all_v19.root -> root_all_0311.root
+First version of v19 (athena release 16) processing.
+Cuts marginally copied from Jordan for jets and muon quality - cutflow not verified yet.
+
+root_all_0323.root
+Added private muon reprocessed with geometry resembling 2011 data
+
+root_all_0328.root
+After large updates by Antonio, including changes to definition of is_staco_combined.
+First attempt to use a TNtuple (in addition to TGraph, for now)
+Verified that compatible with 0311. Also processing reprocess-2010 and early 2011 (two runs)
+(missing mc10a).
+This was used for my 03/30 MCP talk
+
+root_all_0331.root
+Update after talking to Peter:
+* changed z0 to zb for muon-z0 - vertex cut (reverted in a later iteration to preserve evt counts!)
+* removed muon MS and MS-ID matching cuts in release 16 analysis
+* Only saving ntuples now, also saving ID,MS,EXMS separately (note that Z selection is still based on MS!)
+After a few updates (root file was remade), this was made in April 01 - April 15 talks, done by Peter)
+
+root_all_0312graph.root
+root_all_0312msid.root
+This is trying to reproduce old numbers
+Results in Peter email - multiple effects contirbute a little.
+Difference between graph and ntuple due to mz window narrowing to 70..100 GeV
+
+root_apr13.root
+Peter asked to verify 2011 data problems in MS (C-side endcap).
+What's done here: graph of (ptms-ptid)/pt vs eta
+
+root_data2011_0425.root
+Added 2011 data up to period D3. Note that periodB and periodD are NOT compatible - repro07 and repro08.
+Reran old-2011 version, but with 25 GeV cut.
+
+root_data2011_0426.root
+Save as above, but running 2011 data with correct GRL. Separately period B (pro07) and D1-D3 (pro08).
+
+root_0505_closure.root
+Major version - final scales for the first note on 2010 data. This also includes closure tests on 2010 and 2011 data!
+(closure tests are wrong - they use "old" scales, not final scales, and they were applied to data, not MC).
+
+root_all_0516_2010clos.root
+An update - checking closure using the "proper" method of applying to MC.
+This basically checks that MC z peak location aligns with data.
+
+root_all_0519_dataMCclosure.root
+root_all_0520_dataMCclosure.root
+root_all_0522_dataMCclosure.root
+Repeats the above, but adds: smeared MC version; smeared + scaled MC version; scaled data version.
+Version 20 fixes the bug in smearing code - now applied to extrapolated
+Version 22 is a repeat, but includes scale_22, which are scaled calculated using smeared MC.
