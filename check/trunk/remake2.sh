@@ -3,8 +3,8 @@
 # careful: check for grep -v in list_dir
 
 if [ "1" -eq "1" ]; then
-    tag=v1_i29i
-    RDIR=/atlas/uct3/data/users/antonk/NTUPLE/v1_29i/v1_i29i
+    tag=v1_m29i
+    RDIR=/atlas/uct3/data/users/antonk/NTUPLE/v1_29i/${tag}
     CDIR=/pnfs/uchicago.edu/atlaslocalgroupdisk/user/kapliy/UCNTUP
 fi
 
@@ -18,9 +18,9 @@ function list_dir () {
 	find ${SOURCEDIR}/user*mc11*${RFLAG}*AOD*mc11c.${tag}* -maxdepth 2 -type f -name \*root\* 2>/dev/null | sort >> ${OUTNAME}
     else  # letter = data period
 	# BUGGY SUBMISSION:
-	find ${SOURCEDIR}/user*data11*eriod${RFLAG}*Muons*AOD*mc11c.${tag}* -maxdepth 2 -type f -name \*root\* 2>/dev/null | grep -v ret2 | sort >> ${OUTNAME}
+	#find ${SOURCEDIR}/user*data11*eriod${RFLAG}*Muons*AOD*mc11c.${tag}* -maxdepth 2 -type f -name \*root\* 2>/dev/null | grep -v ret2 | sort >> ${OUTNAME}
 	# CORRECT:
-	#find ${SOURCEDIR}/user*data11*eriod${RFLAG}*Muons*AOD*data.${tag}* -maxdepth 2 -type f -name \*root\* 2>/dev/null | sort >> ${OUTNAME}
+	find ${SOURCEDIR}/user*data11*eriod${RFLAG}*Muons*AOD*data.${tag}* -maxdepth 2 -type f -name \*root\* 2>/dev/null | sort >> ${OUTNAME}
     fi
 }
 function run () {
@@ -37,6 +37,18 @@ function run () {
 	rm -f ${OUTNAME}.tmp
     fi
 }
+
+
+######################################
+# FIXME: just running what's necessary
+######################################
+run mcnlo_wminmunu 106084
+run mcnlo_wplusmunu 106083
+run powheg_herwig_wminmunu 113185
+run powheg_herwig_wplusmunu 113187
+######################################
+exit 0; # FIXME
+######################################
 
 for per in {D..M}; do
     run ${per} ${per}
