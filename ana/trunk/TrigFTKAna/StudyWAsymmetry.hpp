@@ -100,7 +100,7 @@ protected:
     }
     if(minimal) return;
     // bootstrap histos
-    if(_do_bootstrap) {
+    if(bootstrap()) {
       dg::bfillvh( "b_lepton_absetav" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta, std::abs(lepton->eta()) , "W Lepton |#eta|" );
       dg::bfillh( "b_uint"   , 1 , 0 , 1.0 , 0.50 , "Integrated event counts, pt20" );
       dg::bfillh( "b_uint25" , 1 , 0 , 1.0 , 0.50 , "Integrated event counts, pt25" );
@@ -121,7 +121,7 @@ protected:
       dg::fillvh( "d2_abseta_lpt" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , std::abs(lepton->eta()) , L(lepton->pt()),"|leta|","lpt" );
       dg::fillvh( "d2_eta_lpt" , dg::bin().D_eta.size()-1, dg::bin().D_eta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , lepton->eta() , L(lepton->pt()),"leta","lpt" );
       // bootstrap histos
-      if(_do_bootstrap) {
+      if(bootstrap()) {
 	dg::bfillvh( "b_d2_abseta_lpt" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , std::abs(lepton->eta()) , L(lepton->pt()),"|leta|","lpt" );
       }
       // QCD normalization in slices: utilize 3d histograms to store everything
@@ -387,6 +387,9 @@ protected:
   float _average_mu;
 
 public:
+  bool bootstrap() const {   // hardcoded to only run in "baseline" directory
+    return _do_bootstrap && (current_category()=="baseline"); 
+  }
   void do_bootstrap(bool v = true) { _do_bootstrap = v; }
   void do_save_ntuple(bool v = true) { _do_save_ntuple = v; }
   void do_2d_plots( bool v = true ) { _do_2d_plots = v; }

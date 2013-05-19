@@ -127,11 +127,18 @@ DgCollection::finalize() {
   }
   // save bootstrap histograms since they are always memory-residet
   for(imC=_mapB.begin(); imC!=_mapB.end(); imC++) {
+    if( imC->second.empty() ) continue;
     const bool st = _file->cd((imC->first).c_str());
     assert( st && "error: unable to cd into a directory during finalize() ");
+    _current = _file->CurrentDirectory();
+    assert( (std::string(_current->GetPath()) == imC->first) && "Critical error: directory name mismatch");
     for(imD=imC->second.begin(); imD!=imC->second.end(); imD++) {
       TH1DBootstrap *hsave = (TH1DBootstrap*)(imD->second);
-      hsave->Write();
+      if( _current->Get( hsave->GetName() ) ){
+	std::cerr << "ERROR: " << hsave->GetName() << " already exists in: "
+		  << _current->GetName() << std::endl;
+      }
+      hsave->Write(hsave->GetName(), TObject::kOverwrite);
     }
   }
 }
@@ -501,7 +508,6 @@ DgCollection::bfillhw( const std::string& sname , const BinSize& nbins , const V
   TH1DBootstrap* h = (dlist.find(sname)!=dlist.end()) ? (TH1DBootstrap*)dlist.find(sname)->second : 0;
   if(!h) {
     h = new TH1DBootstrap(sname.c_str(),axis_label.c_str(),nbins,min,max, _replicas,_boot );
-    h->Write();
     //h->SetDirectory( _current );
     //h->Sumw2();
     _mapB[ _current->GetPath() ][ h->GetName() ] = h;
@@ -518,7 +524,6 @@ DgCollection::bfillvhw( const std::string& sname , const BinSize& nbins , const 
   TH1DBootstrap* h = (dlist.find(sname)!=dlist.end()) ? (TH1DBootstrap*)dlist.find(sname)->second : 0;
   if(!h) {
     h = new TH1DBootstrap(sname.c_str(),axis_label.c_str(),nbins,&bins[0], _replicas,_boot);
-    h->Write();
     //h->SetDirectory( _current );
     //h->Sumw2();
     _mapB[ _current->GetPath() ][ h->GetName() ] = h;

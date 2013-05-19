@@ -57,6 +57,7 @@ DataGraphics
     bool _study_categorized; 
     // set to reflect the status of current study
     bool _now_uncategorized;
+    std::string _current_category;
     // switch: plot number of objects in each for_each block.
     bool _study_n_objects;
 
@@ -142,7 +143,9 @@ DataGraphics
         for( typename std::vector< CategoryPairUnary >::const_iterator icat=_category_visitor_interfaces.begin(), fcat=_category_visitor_interfaces.end(); icat!=fcat; ++icat,++icur ) {
           if( !(*icur) ) { continue; }
           dg::down( icat->first , "category and selector study" );
+	  _current_category = icat->first;
           _study( **icur );
+	  _current_category.clear();
           dg::up();
         }
         dg::up(); // end selector study
@@ -218,6 +221,7 @@ DataGraphics
     }
     void study_uncategorized( const bool& yes ) { _study_uncategorized = yes; }
     bool uncategorized() const { return _now_uncategorized; }
+    const std::string& current_category() const { return _current_category; }
     bool categorized() const { return !uncategorized(); }
     void study_categorized( const bool& yes ) { _study_categorized = yes; }
     void study_n_objects( const bool& yes ) { _study_n_objects = yes; }
@@ -238,7 +242,9 @@ DataGraphics
 	  nobj_cat[icat] = true;
 	  if( _study_categorized ) { 
 	    dg::down( catpair.first , "category study" );
+	    _current_category = catpair.first;
 	    _study( obj );
+	    _current_category.clear();
 	    dg::up();
 	  }
 	}
@@ -267,7 +273,9 @@ DataGraphics
             ++(nobj_cat[icat]);
             if( _study_categorized ) { 
               dg::down( catpair.first , "category study" );
+	      _current_category = catpair.first;
               _study( *beg );
+	      _current_category.clear();
               dg::up();
             }
           }
@@ -283,7 +291,7 @@ DataGraphics
         dg::fillh( "number_of" , 100 , 0 , 100 , nobj , "n" );
         unsigned int icat = 0u;
         BOOST_FOREACH( const CategoryPairUnary& catpair , _category_visitor_interfaces ) {
-          dg::down( catpair.first , "category study" );
+          dg::down( catpair.first , "category study" );	  
           dg::fillh( "number_of" , 100 , 0 , 100 , nobj_cat[icat] , "n" );
           dg::up();
           ++icat;
@@ -316,7 +324,9 @@ DataGraphics
             ++(nobj_cat[icat]);
 	    if( _study_categorized ) { 
 	      dg::down( catpair.first , "category study" );
+	      _current_category = catpair.first;
 	      _study( *beg );
+	      _current_category.clear();
 	      dg::up();
 	    }
           }
@@ -333,7 +343,9 @@ DataGraphics
         unsigned int icat = 0u;
         BOOST_FOREACH( const CategoryPairUnary& catpair , _category_visitor_interfaces ) {
           dg::down( catpair.first , "category study" );
+	  _current_category = catpair.first;
           dg::fillh( "number_of" , 100 , 0 , 100 , nobj_cat[icat] , "n" );
+	  _current_category.clear();
           dg::up();
           ++icat;
         }

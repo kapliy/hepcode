@@ -9,7 +9,7 @@ atlasoff/PhysicsAnalysis/MuonID/MuonIDAnalysis/MuonEfficiencyCorrections/tags/Mu
 atlasoff/PhysicsAnalysis/MuonID/MuonIDAnalysis/MuonMomentumCorrections/branches/MuonMomentumCorrections-00-06-08-branch
 atlasoff/Trigger/TrigAnalysis/TrigMuonEfficiency/tags/TrigMuonEfficiency-00-02-13
 atlasoff/Reconstruction/MissingETUtility/tags/MissingETUtility-01-01-04-01
-atlasoff/Reconstruction/egamma/egammaAnalysis/egammaAnalysisUtils/tags/egammaAnalysisUtils-00-04-25
+atlasoff/Reconstruction/egamma/egammaAnalysis/egammaAnalysisUtils/tags/egammaAnalysisUtils-00-04-31
 svn+ssh://svn.cern.ch/reps/penn/schae/MuonIsolationCorrection/tags/MuonIsolationCorrection-01-01
 svn+ssh://svn.cern.ch/reps/atlasusr/mbellomo/ElectroweakBosons/trunk/RootCore/ScaleFactorProvider
 atlasusr/nagarkar/IsoIPSF/tags/IsoIPSF-00-01-01
