@@ -51,11 +51,13 @@ if [ -f ${ROOTDIR}/tmp.proxy ]; then
     export X509_USER_PROXY=${ROOTDIR}/tmp.proxy
 else
     echo ERROR: cannot locate x509 proxy under: ${ROOTDIR}/tmp.proxy
+    echo exit 10
     exit 10
 fi
 
 if [ $PWD == '/home/antonk' ]; then
     echo ERROR: invoked from home directory. Exiting...
+    echo exit 20
     exit 20
 fi
 
@@ -66,10 +68,12 @@ if [ -s TrigFTKAna.tar.bz2 ]; then
     tar xfj TrigFTKAna.tar.bz2
     if [ ! -d TrigFTKAna ]; then
 	echo ERROR: extracted TrigFTKAna.tar.bz2, but cannot find TrigFTKAna folder
+        echo exit 30
 	exit 30
     fi
 else
     echo ERROR: unable to find TrigFTKAna.tar.bz2 in $PWD
+    echo exit 40
     exit 40
 fi
 
@@ -79,15 +83,15 @@ date
 export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
 source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh --quiet
 source $AtlasSetup/scripts/asetup.sh 17.6.0.1,64,here
-if [ -z $ROOTSYS ]; then echo 'ERROR: ROOTSYS undefined. Exiting...'; exit 50; fi
-if [ -z $SITEROOT ]; then echo 'ERROR: SITEROOT undefined. Exiting...'; exit 60; fi
+if [ -z $ROOTSYS ]; then echo 'ERROR: ROOTSYS undefined. Exiting...'; echo exit 50; exit 50; fi
+if [ -z $SITEROOT ]; then echo 'ERROR: SITEROOT undefined. Exiting...'; echo exit 60; exit 60; fi
 export XrdSecGSISRVNAMES=uct2-s5.uchicago.edu\|uct2-s6.uchicago.edu\|uct2-s20.uchicago.edu
 export XrdSecGSISRVNAMES='uct2-*.uchicago.edu'
 
 # Set up TrigFTKAna
 echo 'SETUP <<<<<<<<<<<<<<<<<<<<<<<'
 date
-if [ ! -s TrigFTKAna/ana/ana_wasym ]; then echo 'ERROR: cannot find TrigFTKAna/ana/ana_wasym. Exiting...'; exit 70; fi
+if [ ! -s TrigFTKAna/ana/ana_wasym ]; then echo 'ERROR: cannot find TrigFTKAna/ana/ana_wasym. Exiting...'; echo exit 70; exit 70; fi
 export uct3_64=1
 export ROOTCORE_NCPUS=24
 source ${ROOTDIR}/TrigFTKAna/scripts/dependencies.sh &> /dev/null
@@ -115,6 +119,7 @@ echo $@
 SH_POST="""
 if [ ${status} != '0' ]; then
     echo ERROR: job failed with status: ${status}
+    echo exit `expr 100 + ${status}`
     exit `expr 100 + ${status}`
 fi
 
@@ -136,6 +141,7 @@ if [ \"$dirchk\" == 'The directory exists.' ]; then
 else
   echo ERROR: failed to create output directory: ${RESDIR}
   echo $dirchk
+  echo exit 80
   exit 80
 fi
 nout=0
@@ -150,12 +156,14 @@ for outfile in ${outfiles}; do
     if [ ${status} != '0' ]; then sleep 30; eval ${cmd}; status=$?; fi
     if [ ${status} != '0' ]; then
 	echo ERROR: failed to transfer files: ${cmd}
+        echo exit 90
 	exit 90
     fi
     ((nout++))
 done
 if [ ${nout} == '0' ]; then
     echo ERROR: executable finished but failed to produce any ROOT files in the output directory
+    echo exit 100
     exit 100
 fi
 
@@ -251,12 +259,14 @@ class Job:
                 echo ERROR: detected $nbad failures in cache file:
                 cat ${fc}
                 rm -f ${fc}
+                echo exit 200
                 exit 200
            else
                 mv ${fc} ${ROOTDIR}/cached_ignore_filenames_%d.xml
            fi
         else
            echo ERROR: TrigFTKAna failed to produce ${fc}
+           echo exit 201
            exit 201
         fi
         """%(s.isplit)
@@ -295,8 +305,8 @@ class Job:
             print >>f,'else'
             print >>f,'echo ERROR: failed to locate file $f'
             print >>f,'fi'
-        print >>f,'if [ "$ntot" -eq "$nexpected" ]; then echo "ALL DONE"; else echo "ERROR: missing `expr $nexpected - $ntot` files"; exit 202; fi'
-        print >>f,'if [ "$ntot" -eq "0" ]; then echo "ERROR: no files to merge"; exit 203; fi'
+        print >>f,'if [ "$ntot" -eq "$nexpected" ]; then echo "ALL DONE"; else echo "ERROR: missing `expr $nexpected - $ntot` files"; echo exit 202; exit 202; fi'
+        print >>f,'if [ "$ntot" -eq "0" ]; then echo "ERROR: no files to merge"; echo exit 203; exit 203; fi'
         print >>f,"""
 # a special version of hadd that adds files in chunks of 20
 function hadd2() {
