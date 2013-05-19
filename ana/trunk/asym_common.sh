@@ -11,7 +11,9 @@ if [ "${MODE}" == "pbs" ]; then
     submitter="./submit_wasym.py"
 else
     # run condor_release every now and then
-    crontab -r && crontab cron.tab
+    if [ "$USER" == "antonk" ]; then
+	crontab -r && crontab cron.tab
+    fi
 fi
 
 ntuple=29I
@@ -24,11 +26,11 @@ muname[0]="stacoCB"
 muname[1]="stacoLoose"
 muname[100]="muidCB"
 
-coredir=/share/t3data3/antonk/ana
+coredir=/share/t3data3/$USER/ana
 
-export X509_USER_PROXY=/home/antonk/.globus/tmp.proxy
+export X509_USER_PROXY=/home/$USER/.globus/tmp.proxy
 echo "Setting up X509 proxy"
-(source /share/wlcg-client/setup.sh && voms-proxy-init -pwstdin -voms atlas -valid 999:0 -out ${X509_USER_PROXY} < /home/antonk/setup/info 2>&1)
+(source /share/wlcg-client/setup.sh && voms-proxy-init -pwstdin -voms atlas -valid 999:0 -out ${X509_USER_PROXY} < /home/$USER/setup/info 2>&1)
 echo "Ready to submit jobs"
 
 function compute_nevts() {

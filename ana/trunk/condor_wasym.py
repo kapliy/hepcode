@@ -22,12 +22,12 @@ Arguments = None
 
 Requirements   =  ( (Memory >= {memory}) && (HAS_CVMFS =?= TRUE) )
 
-transfer_input_files = /tmp/antonk/TAR/TrigFTKAna.tar.bz2,/home/antonk/.globus/tmp.proxy
+transfer_input_files = /tmp/{user}/TAR/TrigFTKAna.tar.bz2,/home/{user}/.globus/tmp.proxy
 #transfer_output_files = {outputs}
 should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 
-+AccountingGroup = \"group_uct3.antonk\"
++AccountingGroup = \"group_uct3.{user}\"
 
 Queue
 """
@@ -190,13 +190,14 @@ class Job:
         s.id = "" # this is only set upon submission
         s.sleep = 1
         s.jobtype = jobtype
+        s.user = getpass.getuser()
     def create(s,tag,workdir,executable,options,submitdir,sample="",nsplits=1,isplit=0,sleep=1,cput=None,mem=None):
         s.workdir = workdir
         s.executable = executable
         s.options = options
         s.submitdir = submitdir
-        assert re.search('/share/t3data3/antonk/ana/',submitdir)
-        s.resdir = submitdir.replace('/share/t3data3/antonk/ana/','/atlas/uct3/data/users/antonk/ana/')
+        assert re.search('/share/t3data3/%s/ana/'%(s.user),submitdir)
+        s.resdir = submitdir.replace('/share/t3data3/%s/ana/'%(s.user),'/atlas/uct3/data/users/%s/ana/'%(s.user))
         s.fdic = [s.submitdir,s.resdir]
         s.sample = sample
         s.nsplits = nsplits
@@ -229,6 +230,7 @@ class Job:
         assert s.jobtype, 'ERROR: write_submit_script must run after write_ana_script'
         s.condorfile = os.path.join(s.submitdir, s.jobtype+'_'+s.tag+"_"+str(s.isplit)+".submit")
         s.cdic = cdic = {}
+        cdic['user'] = s.user
         cdic['executable'] = s.jobfile
         cdic['stdout'] = s.outOU
         cdic['stderr'] = s.outER
@@ -474,7 +476,6 @@ if __name__ == '__main__':
         pipe=os.popen("pwd","r")
         for line in pipe.readlines():
             opts.workdir = line.strip()
-    user = getpass.getuser()
     date = datetime.date.today().isoformat().replace('-','')
     submitdir = os.path.join(opts.output,opts.tag)
     if os.path.exists(submitdir):
