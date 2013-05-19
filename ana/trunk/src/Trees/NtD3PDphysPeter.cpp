@@ -74,7 +74,7 @@ NtD3PDphysPeter::begin_file( const std::string& raw_filename )
     std::cout << "Found v 1_29l ntuple, reading using v 1_29l code" << std::endl;
   } else if ( boost::icontains( filename , "1_29i" ) || boost::icontains( filename , "v1_g29i") 
 	      || boost::icontains( filename , "v1_e29i") || boost::icontains( filename , "v1_f29i")
-	      || boost::icontains( filename , "v1_i29i") ) {
+	      || boost::icontains( filename , "v1_i29i") || boost::icontains( filename , "v1_m29i") ) {
     _madeclass_version = V29i;
     AnaConfiguration::release(17);
     std::cout << "Found v 1_29i ntuple, reading using v 1_29i code" << std::endl;

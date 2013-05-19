@@ -61,6 +61,12 @@ lbl=04242013_condor        # same as 04032013, but: added DtoK and LtoM systemat
 lbl=04252013               # added missing DtoK and LtoM histograms
 lbl=04252013_rep           # just repeating with memory and speed optimizations
 
+lbl=05102013_newmet    # updated met util (soft terms systematics). Use separate random seed for each period range for trigger SF.
+lbl=05122013_newmet    # decoupled random seeds for mu+ and mu- per Jan's advice. Set both nvtx and avgmu in metutil
+lbl=05132013_newmet    # fixed toy mc seed per agreement with Max. [never finished]
+lbl=05142013_newmet    # fixed toy mc seed per agreement with Max. Independent toy MCs (total = 3000). removed eta x pt unfolding. commented out DtoK and LtoM stuff. full set of bootstrapping histograms in data
+lbl=05142013_newmet_qindepSF  # trigger SF independent of charge
+
 
 function rerun20() {
     submit_sample wasymmetry29I_mc_alpgen_herwig_wmunu_np0.dat

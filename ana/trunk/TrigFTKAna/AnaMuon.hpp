@@ -612,6 +612,26 @@ public:
 			    double& eff, double& err,
 			    int replica=-1);
 
+
+  // FIXME: trying out temporary variations to reduce statistical error
+  static void
+  GetTriggerSF_v17_custom2_ptindep( const CONF::ConfType& conf, const detector::MCP_TYPE& mu_type , const detector::EGAMMA_TYPE& el_type , 
+				    std::vector<TLorentzVector>& muons,
+				    std::vector<TLorentzVector>& electrons,
+				    std::vector<ftype>& muon_charges,
+				    const unsigned long& run_number , const int& mu_trig ,
+				    double& eff, double& err,
+				    int replica=-1 );
+  static void
+  GetTriggerSF_v17_custom2_qindep( const CONF::ConfType& conf, const detector::MCP_TYPE& mu_type , const detector::EGAMMA_TYPE& el_type , 
+				   std::vector<TLorentzVector>& muons,
+				   std::vector<TLorentzVector>& electrons,
+				   std::vector<ftype>& muon_charges,
+				   const unsigned long& run_number , const int& mu_trig ,
+				   double& eff, double& err,
+				   int replica=-1 );
+
+
   // ISOLATION SCALE FACTORS
   static void
   GetIsolationSF_v17( const CONF::ConfType& conf, const detector::MCP_TYPE& mu_type , 

@@ -543,6 +543,344 @@ AnaMuon::GetTriggerSF_v17_custom4( const CONF::ConfType& conf, const detector::M
 #endif
 }
 
+//FIXME temporary variations to reduce statistical uncertainty
+void
+AnaMuon::GetTriggerSF_v17_custom2_ptindep( const CONF::ConfType& conf, const detector::MCP_TYPE& mu_type , const detector::EGAMMA_TYPE& el_type ,
+				   std::vector<TLorentzVector>& muons,
+				   std::vector<TLorentzVector>& electrons,
+				   std::vector<ftype>& muon_charges,
+				   const unsigned long& run_number , const int& mu_trig ,
+				   double& eff, double& err , int replica) {
+#ifdef HAVE_COMMONANALYSIS
+  assert(conf==CONF::LATEST && "Unsupported --conf for GetTriggerSF_v17 scaling");
+  static SFProvider* m_sfProvTrig_DG5_pos_barrel = 0;
+  static SFProvider* m_sfProvTrig_G6I_pos_barrel = 0;
+  static SFProvider* m_sfProvTrig_JM_pos_barrel = 0;
+  static SFProvider* m_sfProvTrig_L3L4_pos_barrel = 0;
+  static SFProvider* m_sfProvTrig_DG5_pos_endcap = 0;
+  static SFProvider* m_sfProvTrig_G6I_pos_endcap = 0;
+  static SFProvider* m_sfProvTrig_JM_pos_endcap = 0;
+  static SFProvider* m_sfProvTrig_L3L4_pos_endcap = 0;
+  static SFProvider* m_sfProvTrig_DG5_neg_barrel = 0;
+  static SFProvider* m_sfProvTrig_G6I_neg_barrel = 0;
+  static SFProvider* m_sfProvTrig_JM_neg_barrel = 0;
+  static SFProvider* m_sfProvTrig_L3L4_neg_barrel = 0;
+  static SFProvider* m_sfProvTrig_DG5_neg_endcap = 0;
+  static SFProvider* m_sfProvTrig_G6I_neg_endcap = 0;
+  static SFProvider* m_sfProvTrig_JM_neg_endcap = 0;
+  static SFProvider* m_sfProvTrig_L3L4_neg_endcap = 0;
+
+  // value for initial seed, with a unique offset for each period / region / charge
+  // const int seed = 1721;
+  
+  // period base
+  const int seed = 0;
+  const int oposB = 1000;
+  const int onegB = 2000;
+  const int oposE = 3000;
+  const int onegE = 4000;
+  // period offset
+  const int oDG5 = 0;
+  const int oG6I = 1;
+  const int oJM = 2;
+  const int oL3L4 = 3;
+
+  // init on first event
+  if(!m_sfProvTrig_DG5_pos_barrel) {
+    const std::string file="data/pt_independent_eta.root";
+    //const std::string file="data/muon_trigger_SF_hists.root"; // AK 04/03/2013: this was MG
+    // positive muons
+    m_sfProvTrig_DG5_pos_barrel  = new SFProvider(file, "charge_pos_data_matched_barrel", "charge_pos_data_probe_barrel",
+						  file, "charge_pos_mc_matched_barrel", "charge_pos_mc_probe_barrel",
+						  SFProvider::Eta,1.0);
+    m_sfProvTrig_DG5_pos_barrel->generateReplicas( NREPLICASF,  seed+oDG5+oposB );
+    m_sfProvTrig_G6I_pos_barrel  = new SFProvider(file, "mu18_pos_data_matched_barrel", "mu18_pos_data_probe_barrel",
+						  file, "mu18_pos_mc_matched_barrel", "mu18_pos_mc_probe_barrel",
+						  SFProvider::Eta,1.0);
+    m_sfProvTrig_G6I_pos_barrel->generateReplicas( NREPLICASF,  seed+oG6I+oposB );
+    m_sfProvTrig_JM_pos_barrel   = new SFProvider(file, "medium_pos_data_matched_barrel", "medium_pos_data_probe_barrel",
+						  file, "medium_pos_mc_matched_barrel", "medium_pos_mc_probe_barrel",
+						  SFProvider::Eta,1.0);
+    m_sfProvTrig_JM_pos_barrel->generateReplicas( NREPLICASF,  seed+oJM+oposB );
+    m_sfProvTrig_L3L4_pos_barrel = new SFProvider(file, "rpc_pos_data_matched_barrel", "rpc_pos_data_probe_barrel",
+						  file, "rpc_pos_mc_matched_barrel", "rpc_pos_mc_probe_barrel",
+						  SFProvider::Eta,1.0);
+    m_sfProvTrig_L3L4_pos_barrel->generateReplicas( NREPLICASF,  seed+oL3L4+oposB );
+    m_sfProvTrig_DG5_pos_endcap  = new SFProvider(file, "charge_pos_data_matched_endcap", "charge_pos_data_probe_endcap",
+						  file, "charge_pos_mc_matched_endcap", "charge_pos_mc_probe_endcap",
+						  SFProvider::Eta,1.0);
+    m_sfProvTrig_DG5_pos_endcap->generateReplicas( NREPLICASF,  seed+oDG5+oposE );
+    m_sfProvTrig_G6I_pos_endcap  = new SFProvider(file, "mu18_pos_data_matched_endcap", "mu18_pos_data_probe_endcap",
+						  file, "mu18_pos_mc_matched_endcap", "mu18_pos_mc_probe_endcap",
+						  SFProvider::Eta,1.0);
+    m_sfProvTrig_G6I_pos_endcap->generateReplicas( NREPLICASF,  seed+oG6I+oposE );
+    m_sfProvTrig_JM_pos_endcap   = new SFProvider(file, "medium_pos_data_matched_endcap", "medium_pos_data_probe_endcap",
+						  file, "medium_pos_mc_matched_endcap", "medium_pos_mc_probe_endcap",
+						  SFProvider::Eta,1.0);
+    m_sfProvTrig_JM_pos_endcap->generateReplicas( NREPLICASF,  seed+oJM+oposE );
+    m_sfProvTrig_L3L4_pos_endcap = new SFProvider(file, "rpc_pos_data_matched_endcap", "rpc_pos_data_probe_endcap",
+						  file, "rpc_pos_mc_matched_endcap", "rpc_pos_mc_probe_endcap",
+						  SFProvider::Eta,1.0);
+    m_sfProvTrig_L3L4_pos_endcap->generateReplicas( NREPLICASF,  seed+oL3L4+oposE );
+    // negative muons
+    m_sfProvTrig_DG5_neg_barrel  = new SFProvider(file, "charge_neg_data_matched_barrel", "charge_neg_data_probe_barrel",
+						  file, "charge_neg_mc_matched_barrel", "charge_neg_mc_probe_barrel",
+						  SFProvider::Eta,1.0);
+    m_sfProvTrig_DG5_neg_barrel->generateReplicas( NREPLICASF,  seed+oDG5+onegB );
+    m_sfProvTrig_G6I_neg_barrel  = new SFProvider(file, "mu18_neg_data_matched_barrel", "mu18_neg_data_probe_barrel",
+						  file, "mu18_neg_mc_matched_barrel", "mu18_neg_mc_probe_barrel",
+						  SFProvider::Eta,1.0);
+    m_sfProvTrig_G6I_neg_barrel->generateReplicas( NREPLICASF,  seed+oG6I+onegB );
+    m_sfProvTrig_JM_neg_barrel   = new SFProvider(file, "medium_neg_data_matched_barrel", "medium_neg_data_probe_barrel",
+						  file, "medium_neg_mc_matched_barrel", "medium_neg_mc_probe_barrel",
+						  SFProvider::Eta,1.0);
+    m_sfProvTrig_JM_neg_barrel->generateReplicas( NREPLICASF,  seed+oJM+onegB );
+    m_sfProvTrig_L3L4_neg_barrel = new SFProvider(file, "rpc_neg_data_matched_barrel", "rpc_neg_data_probe_barrel",
+						  file, "rpc_neg_mc_matched_barrel", "rpc_neg_mc_probe_barrel",
+						  SFProvider::Eta,1.0);
+    m_sfProvTrig_L3L4_neg_barrel->generateReplicas( NREPLICASF,  seed+oL3L4+onegB );
+    m_sfProvTrig_DG5_neg_endcap  = new SFProvider(file, "charge_neg_data_matched_endcap", "charge_neg_data_probe_endcap",
+						  file, "charge_neg_mc_matched_endcap", "charge_neg_mc_probe_endcap",
+						  SFProvider::Eta,1.0);
+    m_sfProvTrig_DG5_neg_endcap->generateReplicas( NREPLICASF,  seed+oDG5+onegE );
+    m_sfProvTrig_G6I_neg_endcap  = new SFProvider(file, "mu18_neg_data_matched_endcap", "mu18_neg_data_probe_endcap",
+						  file, "mu18_neg_mc_matched_endcap", "mu18_neg_mc_probe_endcap",
+						  SFProvider::Eta,1.0);
+    m_sfProvTrig_G6I_neg_endcap->generateReplicas( NREPLICASF,  seed+oG6I+onegE );
+    m_sfProvTrig_JM_neg_endcap   = new SFProvider(file, "medium_neg_data_matched_endcap", "medium_neg_data_probe_endcap",
+						  file, "medium_neg_mc_matched_endcap", "medium_neg_mc_probe_endcap",
+						  SFProvider::Eta,1.0);
+    m_sfProvTrig_JM_neg_endcap->generateReplicas( NREPLICASF,  seed+oJM+onegE );
+    m_sfProvTrig_L3L4_neg_endcap = new SFProvider(file, "rpc_neg_data_matched_endcap", "rpc_neg_data_probe_endcap",
+						  file, "rpc_neg_mc_matched_endcap", "rpc_neg_mc_probe_endcap",
+						  SFProvider::Eta,1.0);
+    m_sfProvTrig_L3L4_neg_endcap->generateReplicas( NREPLICASF,  seed+oL3L4+onegE );
+  }
+  
+  const unsigned long myRunNumber = run_number;
+
+  // code below adapted from Max Bellomo, and from TrigMuonEfficiency (to combine multiple muons)
+  Double_t rate_not_fired_data = 1.;
+  Double_t rate_not_fired_mc   = 1.;
+  // needed for uncertainty calculation
+  Double_t inv_sq_eff_data    = 0.;
+  Double_t inv_sq_eff_mc      = 0.;
+  Double_t inv_sq_eff_data_el    = 0.;
+  Double_t inv_sq_eff_mc_el      = 0.;
+  Double_t inv_sq_eff_data_mu    = 0.;
+  Double_t inv_sq_eff_mc_mu      = 0.;
+  for(unsigned i=0; i<muons.size(); i++) {
+    const int q = muon_charges[i]>0 ? 1 : -1;
+    SFProvider *m_sfProvTrig = 0;
+    TLorentzVector& muon = muons[i];
+    if(q>0) {
+      if(fabs(muon.Eta())<1.05) {
+	if(myRunNumber>=179710 && myRunNumber<=183347)
+	  m_sfProvTrig=m_sfProvTrig_DG5_pos_barrel;
+	else if(myRunNumber>=183391 && myRunNumber<=186493)
+	  m_sfProvTrig=m_sfProvTrig_G6I_pos_barrel;
+	else if( (myRunNumber>=186516 && myRunNumber<=189090) || (myRunNumber>=189639 && myRunNumber<=191933) )
+	  m_sfProvTrig=m_sfProvTrig_JM_pos_barrel;
+	else if(myRunNumber>=189184 && myRunNumber<=189610)
+	  m_sfProvTrig=m_sfProvTrig_L3L4_pos_barrel;
+	else assert(0&&" unknown run number "&&BOOST_CURRENT_FUNCTION);
+      } else {
+	if(myRunNumber>=179710 && myRunNumber<=183347)
+	  m_sfProvTrig=m_sfProvTrig_DG5_pos_endcap;
+	else if(myRunNumber>=183391 && myRunNumber<=186493)
+	  m_sfProvTrig=m_sfProvTrig_G6I_pos_endcap;
+	else if( (myRunNumber>=186516 && myRunNumber<=189090) || (myRunNumber>=189639 && myRunNumber<=191933) )
+	  m_sfProvTrig=m_sfProvTrig_JM_pos_endcap;
+	else if(myRunNumber>=189184 && myRunNumber<=189610)
+	  m_sfProvTrig=m_sfProvTrig_L3L4_pos_endcap;
+	else assert(0&&" unknown run number "&&BOOST_CURRENT_FUNCTION);
+      }
+    } else {    // q<0
+      if(fabs(muon.Eta())<1.05) {
+	if(myRunNumber>=179710 && myRunNumber<=183347)
+	  m_sfProvTrig=m_sfProvTrig_DG5_neg_barrel;
+	else if(myRunNumber>=183391 && myRunNumber<=186493)
+	  m_sfProvTrig=m_sfProvTrig_G6I_neg_barrel;
+	else if( (myRunNumber>=186516 && myRunNumber<=189090) || (myRunNumber>=189639 && myRunNumber<=191933) )
+	  m_sfProvTrig=m_sfProvTrig_JM_neg_barrel;
+	else if(myRunNumber>=189184 && myRunNumber<=189610)
+	  m_sfProvTrig=m_sfProvTrig_L3L4_neg_barrel;
+	else assert(0&&" unknown run number "&&BOOST_CURRENT_FUNCTION);
+      } else {
+	if(myRunNumber>=179710 && myRunNumber<=183347)
+	  m_sfProvTrig=m_sfProvTrig_DG5_neg_endcap;
+	else if(myRunNumber>=183391 && myRunNumber<=186493)
+	  m_sfProvTrig=m_sfProvTrig_G6I_neg_endcap;
+	else if( (myRunNumber>=186516 && myRunNumber<=189090) || (myRunNumber>=189639 && myRunNumber<=191933) )
+	  m_sfProvTrig=m_sfProvTrig_JM_neg_endcap;
+	else if(myRunNumber>=189184 && myRunNumber<=189610)
+	  m_sfProvTrig=m_sfProvTrig_L3L4_neg_endcap;
+	else assert(0&&" unknown run number "&&BOOST_CURRENT_FUNCTION);
+      }
+    }
+
+    // calculate central values and uncertainties
+    assert(m_sfProvTrig);
+    const double eff_data = replica<0 ? m_sfProvTrig->getEffDATA(muon) : m_sfProvTrig->getEffDATAreplica(muon,replica);
+    const double eff_mc = replica<0 ? m_sfProvTrig->getEffMC(muon) : m_sfProvTrig->getEffMCreplica(muon,replica);
+    const double err_data = m_sfProvTrig->getEffDATAError(muon);
+    const double err_mc = m_sfProvTrig->getEffMCError(muon);
+    rate_not_fired_data *= ( 1 - eff_data );
+    rate_not_fired_mc   *= ( 1 - eff_mc );
+    if( eff_data ) {
+      inv_sq_eff_data += TMath::Power( (err_data/( 1 - eff_data )), 2 );
+    }
+    if( eff_mc ) {
+      inv_sq_eff_mc += TMath::Power( (err_mc/( 1 - eff_mc )), 2 );
+    }
+
+  } // loop over muons
+
+  // calculate event-wide trigger weight
+  eff = 1.0;
+  err = 0;
+  // prevent events with no triggered electrons or muons
+  if( ( muons.size() ) && ( TMath::Abs( 1 - rate_not_fired_mc ) > 0.0001 ) ) {
+    eff    = ( 1 - rate_not_fired_data ) / ( 1 - rate_not_fired_mc );
+    err    = AnaMuon::GetSFError( rate_not_fired_data, rate_not_fired_mc,
+				  inv_sq_eff_data, inv_sq_eff_mc );
+  }
+
+  return;
+  
+#else
+  assert(0&&NO_ANALYSIS_MSG);
+#endif
+}
+
+// FIXME2 - now charge-indep version
+void
+AnaMuon::GetTriggerSF_v17_custom2_qindep( const CONF::ConfType& conf, const detector::MCP_TYPE& mu_type , const detector::EGAMMA_TYPE& el_type ,
+					  std::vector<TLorentzVector>& muons,
+					  std::vector<TLorentzVector>& electrons,
+					  std::vector<ftype>& muon_charges,
+					  const unsigned long& run_number , const int& mu_trig ,
+					  double& eff, double& err , int replica) {
+#ifdef HAVE_COMMONANALYSIS
+  assert(conf==CONF::LATEST && "Unsupported --conf for GetTriggerSF_v17 scaling");
+  static SFProvider* m_sfProvTrig_DG5_barrel = 0;
+  static SFProvider* m_sfProvTrig_G6I_barrel = 0;
+  static SFProvider* m_sfProvTrig_JM_barrel = 0;
+  static SFProvider* m_sfProvTrig_L3L4_barrel = 0;
+  static SFProvider* m_sfProvTrig_DG5_endcap = 0;
+  static SFProvider* m_sfProvTrig_G6I_endcap = 0;
+  static SFProvider* m_sfProvTrig_JM_endcap = 0;
+  static SFProvider* m_sfProvTrig_L3L4_endcap = 0;
+  
+  // init on first event
+  if(!m_sfProvTrig_DG5_barrel) {
+    const std::string file="data/charge_independent_eta_pt.root";
+    // positive muons
+    m_sfProvTrig_DG5_barrel  = new SFProvider(file, "charge_data_matched_barrel", "charge_data_probe_barrel",
+						  file, "charge_mc_matched_barrel", "charge_mc_probe_barrel",
+						  SFProvider::EtaPt,1.0);
+    m_sfProvTrig_G6I_barrel  = new SFProvider(file, "mu18_data_matched_barrel", "mu18_data_probe_barrel",
+						  file, "mu18_mc_matched_barrel", "mu18_mc_probe_barrel",
+						  SFProvider::EtaPt,1.0);
+    m_sfProvTrig_JM_barrel   = new SFProvider(file, "medium_data_matched_barrel", "medium_data_probe_barrel",
+						  file, "medium_mc_matched_barrel", "medium_mc_probe_barrel",
+						  SFProvider::EtaPt,1.0);
+    m_sfProvTrig_L3L4_barrel = new SFProvider(file, "rpc_data_matched_barrel", "rpc_data_probe_barrel",
+						  file, "rpc_mc_matched_barrel", "rpc_mc_probe_barrel",
+						  SFProvider::EtaPt,1.0);
+    m_sfProvTrig_DG5_endcap  = new SFProvider(file, "charge_data_matched_endcap", "charge_data_probe_endcap",
+						  file, "charge_mc_matched_endcap", "charge_mc_probe_endcap",
+						  SFProvider::EtaPt,1.0);
+    m_sfProvTrig_G6I_endcap  = new SFProvider(file, "mu18_data_matched_endcap", "mu18_data_probe_endcap",
+						  file, "mu18_mc_matched_endcap", "mu18_mc_probe_endcap",
+						  SFProvider::EtaPt,1.0);
+    m_sfProvTrig_JM_endcap   = new SFProvider(file, "medium_data_matched_endcap", "medium_data_probe_endcap",
+						  file, "medium_mc_matched_endcap", "medium_mc_probe_endcap",
+						  SFProvider::EtaPt,1.0);
+    m_sfProvTrig_L3L4_endcap = new SFProvider(file, "rpc_data_matched_endcap", "rpc_data_probe_endcap",
+						  file, "rpc_mc_matched_endcap", "rpc_mc_probe_endcap",
+						  SFProvider::EtaPt,1.0);
+  }
+  
+  const unsigned long myRunNumber = run_number;
+
+  // code below adapted from Max Bellomo, and from TrigMuonEfficiency (to combine multiple muons)
+  Double_t rate_not_fired_data = 1.;
+  Double_t rate_not_fired_mc   = 1.;
+  // needed for uncertainty calculation
+  Double_t inv_sq_eff_data    = 0.;
+  Double_t inv_sq_eff_mc      = 0.;
+  Double_t inv_sq_eff_data_el    = 0.;
+  Double_t inv_sq_eff_mc_el      = 0.;
+  Double_t inv_sq_eff_data_mu    = 0.;
+  Double_t inv_sq_eff_mc_mu      = 0.;
+  for(unsigned i=0; i<muons.size(); i++) {
+    const int q = muon_charges[i]>0 ? 1 : -1;
+    SFProvider *m_sfProvTrig = 0;
+    TLorentzVector& muon = muons[i];
+    if(true) {
+      if(fabs(muon.Eta())<1.05) {
+	if(myRunNumber>=179710 && myRunNumber<=183347)
+	  m_sfProvTrig=m_sfProvTrig_DG5_barrel;
+	else if(myRunNumber>=183391 && myRunNumber<=186493)
+	  m_sfProvTrig=m_sfProvTrig_G6I_barrel;
+	else if( (myRunNumber>=186516 && myRunNumber<=189090) || (myRunNumber>=189639 && myRunNumber<=191933) )
+	  m_sfProvTrig=m_sfProvTrig_JM_barrel;
+	else if(myRunNumber>=189184 && myRunNumber<=189610)
+	  m_sfProvTrig=m_sfProvTrig_L3L4_barrel;
+	else assert(0&&" unknown run number "&&BOOST_CURRENT_FUNCTION);
+      } else {
+	if(myRunNumber>=179710 && myRunNumber<=183347)
+	  m_sfProvTrig=m_sfProvTrig_DG5_endcap;
+	else if(myRunNumber>=183391 && myRunNumber<=186493)
+	  m_sfProvTrig=m_sfProvTrig_G6I_endcap;
+	else if( (myRunNumber>=186516 && myRunNumber<=189090) || (myRunNumber>=189639 && myRunNumber<=191933) )
+	  m_sfProvTrig=m_sfProvTrig_JM_endcap;
+	else if(myRunNumber>=189184 && myRunNumber<=189610)
+	  m_sfProvTrig=m_sfProvTrig_L3L4_endcap;
+	else assert(0&&" unknown run number "&&BOOST_CURRENT_FUNCTION);
+      }
+    }
+
+    // calculate central values and uncertainties
+    assert(m_sfProvTrig);
+    const double eff_data = m_sfProvTrig->getEffDATA(muon);
+    const double eff_mc = m_sfProvTrig->getEffMC(muon);
+    const double err_data = m_sfProvTrig->getEffDATAError(muon);
+    const double err_mc = m_sfProvTrig->getEffMCError(muon);
+    if(false) {
+      std::cerr << "DEBUG: eff_data = " << eff_data << std::endl;
+      std::cerr << "DEBUG: eff_mc = " << eff_mc << std::endl;
+      std::cerr << "DEBUG: eff_data_mc = " << eff_data/eff_mc << std::endl;
+    }
+    rate_not_fired_data *= ( 1 - eff_data );
+    rate_not_fired_mc   *= ( 1 - eff_mc );
+    if( eff_data ) {
+      inv_sq_eff_data += TMath::Power( (err_data/( 1 - eff_data )), 2 );
+    }
+    if( eff_mc ) {
+      inv_sq_eff_mc += TMath::Power( (err_mc/( 1 - eff_mc )), 2 );
+    }
+
+  } // loop over muons
+
+  // calculate event-wide trigger weight
+  eff = 1.0;
+  err = 0;
+  // prevent events with no triggered electrons or muons
+  if( ( muons.size() ) && ( TMath::Abs( 1 - rate_not_fired_mc ) > 0.0001 ) ) {
+    eff    = ( 1 - rate_not_fired_data ) / ( 1 - rate_not_fired_mc );
+    err    = AnaMuon::GetSFError( rate_not_fired_data, rate_not_fired_mc,
+				  inv_sq_eff_data, inv_sq_eff_mc );
+  }
+
+  return;
+  
+#else
+  assert(0&&NO_ANALYSIS_MSG);
+#endif
+}
+
 
 // ISOLATION SCALE FACTORS
 void

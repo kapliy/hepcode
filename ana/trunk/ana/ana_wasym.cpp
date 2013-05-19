@@ -14,14 +14,14 @@ const int PDF_REWEIGHTING = 1;         // 0=None, 1=CT10(members), 2=CT10(member
 const bool ZMUMU_FIX = true;           // Fix ZMUMU sample overlap with DYAN?
 unsigned int NREPLICASF = 100;         // statistical error replicas (propagated into response matrices)
 const unsigned int NREPLICASP = 53;    // PDF uncertainty replicas
+const unsigned int NREPLICASB = 1000;  // bootstrap replicas (data)
 bool RUN_BOOTSTRAP = true;             // generate bootstrap histograms? For now, auto-disabled for MC
 // Control application of certain weights to histograms. All should be "true"
 const bool HIST_VXZ_WEIGHT = true;     // vertex z0 weight - needs V1_29i ntuple
 const bool HIST_WZPT_WEIGHT = true;    // W/Z pt weight
-const bool HIST_WPOL_WEIGHT = false;   // w polarization
 const bool HIST_ZNLO_WEIGHT = true;    // observed MC@NLO generator deficit in "Z samples" in ~60-65 GeV mass region
 const bool HIST_ALPY_WEIGHT = true;    // alpgen reweighting
-const bool WPOL_PHYS_CONSTRAIN = true;
+const bool WPOL_PHYS_CONSTRAIN = false;
 const bool HIST_LS_WEIGHT = true;      // W/Z lineshape weight
 
 #define WZPT_WEIGHT_TARGET "PowhegPythia8MC11_ZData2011" // nominal
@@ -175,7 +175,8 @@ bool getBosonBornLeptons(const std::vector< boost::shared_ptr<const AnaTruthPart
 // weights
 const int NWPU = 2; // number of pileup variations
 const int NWPT = 2; // number of wzpt variations
-const int NWEIGHTS = PDF_REWEIGHTING ? 1+NWPU+NWPT + NREPLICASP + (PDF_REWEIGHTING>1 ? 5 : 0) : 1+NWPU+NWPT;
+const int NWPO = 2; // number of w polarization variations (z unaffected)
+const int NWEIGHTS = PDF_REWEIGHTING ? 1+NWPU+NWPT+NWPO + NREPLICASP + (PDF_REWEIGHTING>1 ? 5 : 0) : 1+NWPU+NWPT+NWPO;
 const int pdf_offset = (PDF_REWEIGHTING==2) ? 5 : 0;
 // nominal,  pu2,pu3,  wzpt2,wzpt3,  pdf[1..5],  pdf_member[53]
 double event_weight[NWEIGHTS];
@@ -193,6 +194,9 @@ bool is_mc = false;
 bool is_data = false;
 bool is_unfold = false;
 bool is_wmunu = false;
+bool is_wmunu_powheg_pythia = false;
+bool is_wmunu_powheg_herwig = false;
+bool is_wmunu_mcnlo = false;
 bool is_wgamma = false;
 bool is_zmumu = false;
 bool is_zmumu_mcnlo = false;
@@ -526,8 +530,15 @@ int main( int argc , char* argv[] )
     std::cout << "Detected MC that needs to be unfolded" << std::endl;
   }
   is_wmunu = boost::algorithm::icontains(sample_name,"wmu") || boost::algorithm::icontains(sample_name,"wminmunu") || boost::algorithm::icontains(sample_name,"wplusmunu") || boost::algorithm::icontains(sample_name,"max_wplus") || boost::algorithm::icontains(sample_name,"max_wminus");
+  is_wmunu_powheg_pythia = boost::algorithm::icontains(sample_name,"powheg_pythia_wminmunu") || boost::algorithm::icontains(sample_name,"powheg_pythia_wplusmunu") || boost::algorithm::icontains(sample_name,"max_wplus") || boost::algorithm::icontains(sample_name,"max_wminus");
+  is_wmunu_powheg_herwig = boost::algorithm::icontains(sample_name,"powheg_herwig_wminmunu") || boost::algorithm::icontains(sample_name,"powheg_herwig_wplusmunu");
+  is_wmunu_mcnlo = boost::algorithm::icontains(sample_name,"mcnlo_wminmunu") || boost::algorithm::icontains(sample_name,"mcnlo_wplusmunu");
   if(is_wmunu) {
-    std::cout << "Detected wmunu MC" << std::endl;
+    std::cout << "Detected wmunu MC";
+    if(is_wmunu_powheg_pythia) std::cout << " (PowhegPythia)";
+    if(is_wmunu_powheg_herwig) std::cout << " (PowhegHerwig)";
+    if(is_wmunu_mcnlo) std::cout << " (McAtNlo)";
+    std::cout << std::endl;
   }
   is_wgamma = boost::algorithm::icontains(sample_name,"wgamma");
   if(is_wgamma) {
@@ -580,7 +591,7 @@ int main( int argc , char* argv[] )
 
   // bootstrap histograms. for now, only apply to data
   if(!is_data) RUN_BOOTSTRAP = false;
-  if(RUN_BOOTSTRAP) dg::initialize_bootstrap("boot",NREPLICASF);
+  if(RUN_BOOTSTRAP) dg::initialize_bootstrap("boot",NREPLICASB);
 
   // UNFOLDING (order of definitions matters!)
 #define UNA(x) unf_keys.push_back(x)
@@ -594,9 +605,12 @@ int main( int argc , char* argv[] )
     // pileup reweighting variations
     UNT("PileupDown");
     UNT("PileupUp");
-    // other generators
+    // wzpt reweighting variations
     UNT("WptSherpa");
     UNT("WptPythia8");
+    // w polarization reweighting variations
+    UNT("WpolPowhegHerwig"); // only mcnlo is reweighted
+    UNT("WpolPowhegPythia"); // both mcnlo and powhegHerwig reweighted
     // other PDFs
     if(PDF_REWEIGHTING) {
       // pdf families
@@ -1071,7 +1085,7 @@ int main( int argc , char* argv[] )
   
   // W candidates
   StudyWAsymmetry st_w( "st_w_final" , "W event candidates" );
-  st_w.do_bootstrap(RUN_BOOTSTRAP);
+  st_w.do_bootstrap(false);
   st_w.study_n_objects(false);
   st_w.do_charge_separation(true);
   // the following assumes that the pt/eta cuts have already been applied at DgCut level
@@ -1125,8 +1139,8 @@ int main( int argc , char* argv[] )
   // Whether METUtility should scream at you over every little thing
   metutil->setVerbosity(false);
 
-  // W boson pt and polarization reweighting: 1 nominal vpt;  2 variations; 1 alpgen y reweighting tool
-  BosonPtReweightingTool* wzptutil[] = {0, 0,0, 0};
+  // W boson pt and polarization reweighting: 1 nominal vpt;  2 variations; 1 alpgen y reweighting tool;  2 new polarization rw tools
+  BosonPtReweightingTool* wzptutil[] = {0, 0,0, 0,  0,0};
   // Vertex reweighting
   VertexPositionReweightingTool *vtxutil = 0;
   // W and Z lineshape reweighting
@@ -1181,8 +1195,6 @@ int main( int argc , char* argv[] )
     const unsigned long lbnum = evt->lumi_block();
     evnum = evt->event_number();
     raw_rnum = evt->run_number();
-    // bootstrap replicas
-    if(RUN_BOOTSTRAP) dg::generate_bootstrap(raw_rnum,evnum);
     mc_weight = is_mc ? evt->mc_weight() : 1.0;
     WSX(event_weight,mc_weight);
     // MC pileup reweighting
@@ -1337,17 +1349,18 @@ int main( int argc , char* argv[] )
 	if(wzpt_source!="") {
 	  std::string wzpt_destination;
 	  wzpt_destination = WZPT_WEIGHT_TARGET;
+	  assert(std::string("PowhegPythia8MC11_ZData2011") == wzpt_destination);
 	  BosonPtReweightingTool::ePtWeightType vtype = (is_wmunu || is_wtaunu) ? BosonPtReweightingTool::PeakWeight : BosonPtReweightingTool::MassBinnedWeight;
 	  wzptutil[0] = new BosonPtReweightingTool(wzpt_source,wzpt_destination,vtype,rw_path);
-	  wzptutil[0]->SetImposePhysicalWpolConstraint(WPOL_PHYS_CONSTRAIN);
+	  wzptutil[0]->SetImposePhysicalPolConstraint(WPOL_PHYS_CONSTRAIN);
 	  wzpt_destination = WZPT_WEIGHT_TARGET2;
 	  assert(std::string("Sherpa14MC11") == wzpt_destination);
 	  wzptutil[1] = new BosonPtReweightingTool(wzpt_source,wzpt_destination,vtype,rw_path);
-	  wzptutil[1]->SetImposePhysicalWpolConstraint(WPOL_PHYS_CONSTRAIN);
+	  wzptutil[1]->SetImposePhysicalPolConstraint(WPOL_PHYS_CONSTRAIN);
 	  wzpt_destination = WZPT_WEIGHT_TARGET3;
 	  assert(std::string("PowhegPythia8MC11") == wzpt_destination);
 	  wzptutil[2] = new BosonPtReweightingTool(wzpt_source,wzpt_destination,BosonPtReweightingTool::PeakWeight,rw_path);
-	  wzptutil[2]->SetImposePhysicalWpolConstraint(WPOL_PHYS_CONSTRAIN);
+	  wzptutil[2]->SetImposePhysicalPolConstraint(WPOL_PHYS_CONSTRAIN);
 	}
       }
       if(!wzptutil[3] && is_alpgen && !is_wgamma) {
@@ -1358,6 +1371,23 @@ int main( int argc , char* argv[] )
 	  wzptutil[3] = new BosonPtReweightingTool(alpgen_source,alpgen_target,
 						   BosonPtReweightingTool::PeakWeight,rw_path);
 	}
+      }
+      if(!wzptutil[4] && is_wmunu_mcnlo) {
+	// set up McAtNLOMC11 -> PowhegHerwigMC11 reweighting
+	std::string rw_source = BosonPtReweightingTool::MapMCName(current_filename);
+	assert(rw_source == "McAtNloMC11");
+	std::string rw_target = "PowhegHerwigMC11";
+	wzptutil[4] = new BosonPtReweightingTool(rw_source,rw_target,
+						 BosonPtReweightingTool::PeakWeight,rw_path);
+      }
+      if(!wzptutil[5] && (is_wmunu_mcnlo || is_wmunu_powheg_herwig) ) {
+	// set up PowhegHerwigMC11,McAtNloMC11 -> PowhegPythiaMC11 reweighting
+	std::string rw_source = BosonPtReweightingTool::MapMCName(current_filename);
+	if(is_wmunu_mcnlo) assert(rw_source == "McAtNloMC11");
+	if(is_wmunu_powheg_herwig) assert(rw_source == "PowhegHerwigMC11");
+	std::string rw_target = "PowhegPythiaMC11";
+	wzptutil[5] = new BosonPtReweightingTool(rw_source,rw_target,
+						 BosonPtReweightingTool::PeakWeight,rw_path);
       }
       // W->lnu or Z->ll selection
       bool lepFound = false;
@@ -1398,15 +1428,20 @@ int main( int argc , char* argv[] )
 	    dg::event_info().set_wzpt_weight3(wpt_weight);
 	  }
 	}
-	// w polarization
-	if( wzptutil[0] && !is_alpgen ) {
-	  const double wpol_weight = l1->charge()>0 ? wzptutil[0]->GetPolarisationWeightWplusGeV(l1->four_vector(),l2->four_vector()) : wzptutil[0]->GetPolarisationWeightWminusGeV(l1->four_vector(),l2->four_vector());
+	// w polarization (mcnlo -> powheg_herwig)
+	if( wzptutil[4] && is_wmunu_mcnlo ) {
+	  const double wpol_weight = l1->charge()>0 ? wzptutil[4]->GetPolarisationWeightWplusGeV(l1->four_vector(),l2->four_vector()) : wzptutil[4]->GetPolarisationWeightWminusGeV(l1->four_vector(),l2->four_vector());
+	  event_weight[1+NWPU+NWPT+0] *= wpol_weight;
+	  // since this is NOT applied to central value,
+	  // we do not need to multiply all other weights by wpol_weight!
+	}
+	// w polarization (mcnlo,powheg_herwig -> powheg_pythia)
+	if( wzptutil[5] && (is_wmunu_mcnlo||is_wmunu_powheg_herwig) ) {
+	  const double wpol_weight = l1->charge()>0 ? wzptutil[5]->GetPolarisationWeightWplusGeV(l1->four_vector(),l2->four_vector()) : wzptutil[5]->GetPolarisationWeightWminusGeV(l1->four_vector(),l2->four_vector());
 	  dg::event_info().set_wpol_weight(wpol_weight);
-	  // apply to histograms, too?
-	  if(HIST_WPOL_WEIGHT) {
-	    WSX(event_weight,wpol_weight);
-	    dg::set_global_weight( event_weight[0] );
-	  }
+	  event_weight[1+NWPU+NWPT+1] *= wpol_weight;
+	  // since this is NOT applied to central value,
+	  // we do not need to multiply all other weights by wpol_weight!
 	}
 	// Alpgen rapidity reweighting
 	if( wzptutil[3] && is_alpgen ) {
@@ -1613,8 +1648,8 @@ int main( int argc , char* argv[] )
 	pdf_weight.push_back( rwpdf->GetEventWeight(4,mcevt_pdf_scale,mcevt_id1,mcevt_id2,x1,x2,pdf1,pdf2,false) );
 	pdf_weight.push_back( rwpdf->GetEventWeight(5,mcevt_pdf_scale,mcevt_id1,mcevt_id2,x1,x2,pdf1,pdf2,false) );
 	// 5 PDF variations
-	for(int ii=1+NWPU+NWPT; ii<1+NWPU+NWPT+pdf_offset; ii++) {
-	  const int ipdf = ii-(1+NWPU+NWPT);
+	for(int ii=1+NWPU+NWPT+NWPO; ii<1+NWPU+NWPT+NWPO+pdf_offset; ii++) {
+	  const int ipdf = ii-(1+NWPU+NWPT+NWPO);
 	  assert(  ipdf >= 0 && ipdf<pdf_weight.size()  );
 	  event_weight[ii] *= pdf_weight[ipdf];
 	  ntpdf.push_back(pdf_weight[ipdf]);
@@ -1625,8 +1660,8 @@ int main( int argc , char* argv[] )
 	assert(pdf_offset==0);
       }
       // reweight to each member of CT10 family
-      for(int ii=1+NWPU+NWPT+pdf_offset; ii<NWEIGHTS; ii++) {
-	const int member = ii - (1+NWPU+NWPT) - pdf_offset;
+      for(int ii=1+NWPU+NWPT+NWPO+pdf_offset; ii<NWEIGHTS; ii++) {
+	const int member = ii - (1+NWPU+NWPT+NWPO) - pdf_offset;
 	assert(member>=0 && member<= 52);
 	event_weight[ii] *= rwpdf->GetEventWeight(1,member,mcevt_pdf_scale,mcevt_id1,mcevt_id2,x1,x2,pdf1,pdf2,false);
       }
@@ -1655,9 +1690,9 @@ int main( int argc , char* argv[] )
 	if(it->first == "PDFMEM") {
 	  assert( it->second.Truth_Weight_Replicas.size() == NREPLICASP );
 	  for(int member = 0; member < NREPLICASP; member++) { // [0..52]
-	    it->second.Truth_Weight_Replicas[member]=event_weight[1+NWPU+NWPT + pdf_offset + member];
+	    it->second.Truth_Weight_Replicas[member]=event_weight[1+NWPU+NWPT+NWPO + pdf_offset + member];
 	  }
-	  it->second.Truth_Weight=event_weight[1+NWPU+NWPT+pdf_offset];
+	  it->second.Truth_Weight=event_weight[1+NWPU+NWPT+NWPO+pdf_offset];
 	}
 	// everything else: fall back on nominal
 	else {
@@ -2168,12 +2203,17 @@ int main( int argc , char* argv[] )
 					  met_ ##met## _col,		\
 					  st_w, st_z)
 
+    // bootstrap replicas if requested
+    if(RUN_BOOTSTRAP) dg::generate_bootstrap(raw_rnum,evnum);
+
     // regular histograms and ntuples
     if(is_data) {
       // nominal
       st_w.run_qcd_slices(RUN_QCD_SLICES);
       st_w.run_debug_studies(true);
+      st_w.do_bootstrap(RUN_BOOTSTRAP);
       STUDYDEF("Nominal",save_ntuples&0x2,0,0,raw,caljet_em_nominal,rawjet_nominal);
+      st_w.do_bootstrap(false);
       // anti-isolation qcd templates
       st_w.run_debug_studies(true);
       STUDYQCD("",raw,caljet_em_nominal,rawjet_nominal);
@@ -2277,7 +2317,7 @@ int main( int argc , char* argv[] )
 
   // SAVE ROOT DATA
   AnaEventMgr::instance()->close_sample();
-  dg::save( false && AnaConfiguration::verbose() );
+  dg::save( AnaConfiguration::verbose() );
 
   // SAVE UNFOLDING DATA
   if(is_unfold) {
@@ -2624,7 +2664,7 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
 	    }
 	  }
 	  // this loop only includes truth sf variations (pu, wpt, PDF)
-	  assert((unf_keys_tru.size()==4+pdf_offset) || NOMONLY);
+	  assert((unf_keys_tru.size()==6+pdf_offset) || NOMONLY);
 	  for(unsigned int ik=0; ik<unf_keys_tru.size(); ik++) {
 	    unfdata_type::iterator it2 = unfdata.find(unf_keys_tru[ik]);
 	    assert(it2 != unfdata.end());
@@ -2667,7 +2707,7 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
 	    assert( it2->second.Reco_Weight_Replicas.size() == NREPLICASP );
 	    // compute efficiency scale factors on final selected muons, for each replica
 	    for(int replica=0; replica<it2->second.Reco_Weight_Replicas.size(); replica++) {
-	      it2->second.Reco_Weight_Replicas[replica] =  event_weight[1+NWPU+NWPT+pdf_offset+replica]*eff*trig*siso ;
+	      it2->second.Reco_Weight_Replicas[replica] =  event_weight[1+NWPU+NWPT+NWPO+pdf_offset+replica]*eff*trig*siso ;
 	    }
 	  }
 	}
