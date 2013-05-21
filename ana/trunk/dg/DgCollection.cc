@@ -133,7 +133,7 @@ DgCollection::finalize() {
     _current = _file->CurrentDirectory();
     assert( (std::string(_current->GetPath()) == imC->first) && "Critical error: directory name mismatch");
     for(imD=imC->second.begin(); imD!=imC->second.end(); imD++) {
-      TH1DBootstrap *hsave = (TH1DBootstrap*)(imD->second);
+      TH1Bootstrap *hsave = (TH1Bootstrap*)(imD->second);
       if( _current->Get( hsave->GetName() ) ){
 	std::cerr << "ERROR: " << hsave->GetName() << " already exists in: "
 		  << _current->GetName() << std::endl;

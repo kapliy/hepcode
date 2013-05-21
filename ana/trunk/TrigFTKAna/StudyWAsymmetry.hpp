@@ -103,7 +103,9 @@ protected:
     if(bootstrap()) {
       dg::bfillvh( "b_lepton_absetav" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta, std::abs(lepton->eta()) , "W Lepton |#eta|" );
       dg::bfillh( "b_uint"   , 1 , 0 , 1.0 , 0.50 , "Integrated event counts, pt20" );
-      dg::bfillh( "b_uint25" , 1 , 0 , 1.0 , 0.50 , "Integrated event counts, pt25" );
+      if(lepton->pt() > 25.0) { // for integrated measurement in pt>25 GeV region
+	dg::bfillh( "b_uint25" , 1 , 0 , 1.0 , 0.50 , "Integrated event counts, pt25" );
+      }
     }
     vector< boost::shared_ptr<const AnaJet> > jets_by_pt( w->begin_jets() , w->end_jets() );
     // make plots
