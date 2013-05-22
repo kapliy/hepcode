@@ -43,6 +43,9 @@ parser.add_option("--ieta",dest="ieta",
 parser.add_option("--ipt",dest="ipt",
                   type="string", default=None,
                   help="Select pt bin")
+parser.add_option("--stathack",dest="stathack",
+                  type="int", default=1,
+                  help="Statistical hack for TFractionFitter. 0=None, 1=scale to sig, 2=scale to least-statistics")
 parser.add_option("--lvar",dest="lvar",
                   type="string", default='met',
                   help="Variable used to fit QCD")
@@ -466,7 +469,7 @@ if True:
                        'forcenominal':True,'plotrange':Aplotrange})
 
 SuStack.QCD_SYS_SCALES = opts.metallsys
-SuStack.QCD_STAT_HACK = 1              # 1=scale ewk template to signal Monte-Carlo stats; 2=scale to most-scarce MC stats (usually wtaunu)
+SuStack.QCD_STAT_HACK = opts.stathack  # 1=scale ewk template to signal Monte-Carlo stats; 2=scale to most-scarce MC stats (usually wtaunu)
 SuStack.QCD_MIX_CHARGE = True          # if True, QCD template becomes the sum of POS and NEG (to increase statistics)
 SuStack.QCD_EXC_ZERO_BINS = 0          # exclude from fit all bins where any of the templates or data have less than X entries
 SuStack.QCD_PLOT_MODIFIED_BINS = False # if True, we plot templates varied within poisson stats for best fit agreement
