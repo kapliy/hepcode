@@ -452,12 +452,15 @@ class SuSys:
         return s.stack.Add(o.h,opt) if s.stack and o.h else None
     def SetName(s,n):
         return s.h.SetName(n) if s.h else None
+    def H(s):
+        """ Signifies a non-null TH1 object """
+        return s.h and not s.h.InheritsFrom('TH1Bootstrap')
     def SetLineColor(s,c):
-        return s.h.SetLineColor(c) if s.h else None
+        return s.h.SetLineColor(c) if s.H() else None
     def SetFillColor(s,c):
-        return s.h.SetFillColor(c) if s.h else None
+        return s.h.SetFillColor(c) if s.H() else None
     def SetMarkerSize(s,c):
-        return s.h.SetMarkerSize(c) if s.h else None
+        return s.h.SetMarkerSize(c) if s.H() else None
     def ScaleOne(s,*args,**kwargs):
         """ In SuSys, this is just an alias for Scale() """
         return s.Scale(*args,**kwargs)
@@ -609,7 +612,7 @@ class SuPlot:
         for ig,sgroups in enumerate(s.sys):
             name = s.groups[ig]
             for iss,sinst in enumerate(sgroups):
-                if idx in s.enable and name in ('PDF',):
+                if idx in s.enable and name in ('PDF','WPOL'):
                     newenable.remove(idx)
                     print 'Disabling systematic:',name,sinst.name
                 idx += 1
@@ -622,6 +625,9 @@ class SuPlot:
         [o.qcd_region() for i,o in enumerate(res.flat) if i in res.enable]
         res.status = 1 # to prevent infinite recursion
         return res
+    def use_ntuple(s):
+        """ checks if we are using ntuples based on the nominal SuSys """
+        return s.nominal().use_ntuple()
     def bootstrap(s,charge=2,qcd = {},unfold={},do_unfold=False,qcderr='NOM',
                   ntuple=None,path=None,var=None,bin=None,pre='',weight="mcw*puw*effw*trigw",
                   histo=None,sliced_1d=None,sliced_2d=None,sysdir=None,subdir=None,basedir=None ):
@@ -647,9 +653,12 @@ class SuPlot:
             """ Clones sysdir """
             res.append(nom.clone(name=n,sysdir_mc=ss,qcdadd=xadd,unfdir=unfss if unfss!=None else ss))
             s.flat.append(res[-1])
-        def add2(n,ss,unfss=None,xadd=None):
+        def add2(n,ss,unfss=None,xadd=None,bgsig=None):
             """ Clones subdir (e.g., for efficiencies) """
-            res.append(nom.clone(name=n,subdir_mc=ss,qcdadd=xadd,unfdir=unfss if unfss!=None else ss))
+            if bgsig!=None:
+                res.append(nom.clone(name=n,subdir_mc=ss,qcdadd=xadd,bgsig=bgsig,unfdir=unfss if unfss!=None else ss))
+            else:
+                res.append(nom.clone(name=n,subdir_mc=ss,qcdadd=xadd,unfdir=unfss if unfss!=None else ss))
             s.flat.append(res[-1])
         def add3(n,ss,unfss,xadd=None):
             """ Clones qcd normalization """
@@ -740,6 +749,12 @@ class SuPlot:
             add2('WptPythia8','WptPythia8','WptPythia8',xadd=qcdadd) # new: as of 03/06/2013
             #add2('WptPythiaMC10','WptPythiaMC10','WptPythiaMC10',xadd=qcdadd)
             next('WPT_REWEIGHT')
+        # W polarization targets
+        if True: # new as of 05/21/2013
+            add2('WpolMCNLOtoPowhegHerwig','WpolPowhegHerwig','WpolPowhegHerwig',xadd=qcdadd,bgsig=1)
+            add2('WpolMCNLOtoPowhegPythia','WpolPowhegPythia','WpolPowhegPythia',xadd=qcdadd,bgsig=1)
+            add2('WpolPowhegHerwigtoPowhegPythia','WpolPowhegPythia','WpolPowhegPythia',xadd=qcdadd,bgsig=4)
+            next('WPOL')
         # PDF reweighting
         if False: # new: as of 03/17/2013
             #add2('PdfCT10nlo','PdfCT10nlo',xadd=qcdadd)
@@ -774,6 +789,7 @@ class SuPlot:
         if avg=True, it takes the mean up/down variation, as opposed to max
         """
         # list of systematics that should NOT be averaged no matter what
+        # instead, we take maximum up/down deviation for these:
         NAVG = [ 'WPT_REWEIGHT' , 'PDF' ]
         if s.hsys and sysonly==True and not force: return s.hsys
         if s.htot and sysonly==False and not force: return s.htot
@@ -1101,7 +1117,8 @@ class SuSample:
                 fpath = '%s%s'%(s.topdir(f),hpath)
                 fname = re.sub(r'[^\w]', '_',s.name+'_'+hname+'_'+fpath+'_'+common.rand_name())
                 h = f.Get(fpath).Clone(fname)
-                h.Sumw2()
+                if not h.InheritsFrom('TH1Bootstrap'):
+                    h.Sumw2()
                 if SuSample.debug:
                     print ' Int: %.1f  N: %d  x: %.3f'%(h.Integral(),h.GetEntries(),h.GetMean(1))
             else:
@@ -1275,7 +1292,8 @@ class SuSample:
             res.Scale(s.scale(evcnt = s.choose_evcount('')))
         if rebin!=1:
             res.Rebin(rebin)
-        res.Sumw2()
+        if not res.InheritsFrom('TH1Bootstrap'):
+            res.Sumw2()
         d.histo = hbase
         return res
     def histo_h_3dproj(s,hname,d,rebin=1.0):
@@ -1342,7 +1360,7 @@ class SuSample:
             res.Scale(s.scale(evcnt = s.choose_evcount('')))
         if rebin!=1:
             res.Rebin(rebin)
-        res.Sumw2()
+        #res.Sumw2() # already done inside GetHisto()
         return res
     
 class SuStackElm:
@@ -1923,6 +1941,14 @@ class SuStack:
         if type(leg)==type([]):
             leg.append( ['data','data 2011 (#sqrt{s} = 7 TeV)','LP'] )
         return res
+    def data_bootstrap(s,hname,d,leg=[],norm=None):
+        """ data summed histogram - TH1DBootstrap version """
+        loop = [e for e in s.elm if 'data' in e.flags and 'no' not in e.flags]
+        assert not d.use_ntuple(),'data_bootstrap only works with TH1DBootstrap histograms'
+        res = s.histosum(loop,hname,d.clone(histo='b_'+d.nominal().histo),norm=norm)
+        if type(leg)==type([]):
+            leg.append( ['data','data 2011 (#sqrt{s} = 7 TeV)','LP'] )
+        return res
     def asym_data(s,*args,**kwargs):
         return s.asym_generic(s.data,*args,**kwargs)
     def ratio_data(s,*args,**kwargs):
@@ -2034,6 +2060,18 @@ class SuStack:
                     assert hs[-1],'Failed to find systematic %s in sample %s'%(sinst.name,name)
                     hs[-1].SetName(title)
                     hs[-1].SetTitle(title)
+                    # try to save the bootstrap replicas: only for the nominal folder
+                    if name=='data' and dname in ('POS_sig5_tau2_ewk5','NEG_sig5_tau2_ewk5') and d.nominal().histo[:13] in ('d2_abseta_lpt','lepton_abseta','uint','uint25'):
+                        assert(isys==1)
+                        title='data_bootstrap'
+                        dnom = d.clone()
+                        dnom.enable_nominal()
+                        hb = bg.histo(title,dnom.clone(histo='b_'+dnom.nominal().histo))
+                        if hb.nominal().h:
+                            hs.append( hb.nominal().h )
+                            hs[-1].SetName(title)
+                            hs[-1].SetTitle(title)
+
         # save stuff
         fout = ROOT.TFile.Open(fname,mode)
         assert fout.IsOpen(),'Failed to open file: %s'%fname

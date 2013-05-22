@@ -232,6 +232,7 @@ if __name__=='__main__':
         # generate total histograms for detector systematics
         if True:
             bgsig=5
+            # take care of the charge-combined histograms
             fout_D[2].cd()
             hh = fout_D[2].Get('data')
             if hh:
@@ -239,8 +240,11 @@ if __name__=='__main__':
                 hh.Write('data',ROOT.TObject.kOverwrite)
             else:
                 adir.Get('data').Write('data',ROOT.TObject.kOverwrite)
+            # save data and MC
             fout_D[iq].cd()
             adir.Get('data').Write('data',ROOT.TObject.kOverwrite)
+            if adir.Get('data_bootstrap'):
+                adir.Get('data_bootstrap').Write('data_bootstrap',ROOT.TObject.kOverwrite)
             for system in systems: #including Nominal
                 assert system == system.strip(), 'Extra space in systematic name: |%s|'%system
                 sigL = [adir.Get('wmunu_'+system),]

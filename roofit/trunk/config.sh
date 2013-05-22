@@ -88,6 +88,14 @@ DB=DB_04242013_NOMG.v26  # proper hadd; reduce wmt by trying ranges; adding: Dto
 input=/share/t3data3/antonk/ana/ana_v29I_05142013_newmet_stacoCB_all/pt20
 DB=DB_05142013_NOMG.v27  # updated met util (soft terms systematics). Set both nvtx and avgmu in metutil. 3000 MC toys with stat decoupling of charges and regions. removed eta x pt unfolding. commented out DtoK and LtoM stuff. full set of bootstrapping histograms in data. Total QCD uncertainty updated in qcdsys.py to make correct errors in max_latex.py
 
+# experimental:
+#input=/share/t3data3/antonk/ana/ana_v29I_05142013_newmet_qindepSF_stacoCB_all/pt20
+#DB=DB_05142013_qindepsf.v28   # charge-independent trigger scale factors
+
+input=/share/t3data3/antonk/ana/ana_v29I_05182013_fullstat_stacoCB_all/pt20
+DB=DB_05182013_fstat.v29  # update to full mcnlo and powhegHerig stat. new egammaUtils: remove wpol constraint and apply jan's new experimental wpol reweights (mcnlo->powhegherwig or mcnlo/powhegherwig->powhegpythia) to reduce CW syst. fix bootstrapping to 1000 replicas and only run on baseline Nominal data.
+DB=DB_05182013_fstat.v30  # adding w polarization histograms to output root files
+
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`
 iq=0
