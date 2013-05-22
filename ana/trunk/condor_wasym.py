@@ -37,6 +37,7 @@ SH_PRE="""#!/bin/bash
 # setup based on: http://twiki.mwt2.org/bin/view/UCTier3/CondorUCT3
 
 date
+df -h .
 echo 'START <<<<<<<<<<<<<<<<<<<<<<<'
 ROOTDIR=$PWD
 LOCDIR=results/ana_wasym
@@ -64,6 +65,7 @@ fi
 # Unpack code tarball
 echo 'UNPACK <<<<<<<<<<<<<<<<<<<<<<<'
 date
+df -h .
 if [ -s TrigFTKAna.tar.bz2 ]; then
     tar xfj TrigFTKAna.tar.bz2
     if [ ! -d TrigFTKAna ]; then
@@ -80,6 +82,7 @@ fi
 # Setup athena environment
 echo 'SOURCE <<<<<<<<<<<<<<<<<<<<<<<'
 date
+df -h .
 export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
 source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh --quiet
 source $AtlasSetup/scripts/asetup.sh 17.6.0.1,64,here
@@ -91,6 +94,7 @@ export XrdSecGSISRVNAMES='uct2-*.uchicago.edu'
 # Set up TrigFTKAna
 echo 'SETUP <<<<<<<<<<<<<<<<<<<<<<<'
 date
+df -h .
 if [ ! -s TrigFTKAna/ana/ana_wasym ]; then echo 'ERROR: cannot find TrigFTKAna/ana/ana_wasym. Exiting...'; echo exit 70; exit 70; fi
 export uct3_64=1
 export ROOTCORE_NCPUS=24
@@ -109,6 +113,7 @@ export LD_LIBRARY_PATH=${ROOTDIR}/TrigFTKAna/LIBXML/:${LD_LIBRARY_PATH}
 # Execute code with arguments
 echo 'EXECUTE <<<<<<<<<<<<<<<<<<<<<<<'
 date
+df -h .
 cd TrigFTKAna
 rm -rf results
 mkdir -p $LOCDIR
@@ -126,6 +131,7 @@ fi
 # Copy output with xrdcp
 echo 'COPY <<<<<<<<<<<<<<<<<<<<<<<'
 date
+df -h .
 outfiles=`find $LOCDIR -maxdepth 2 -type f -name \*root\* 2>/dev/null`
 # check that the output xrootd directory exists
 dirchk=`xrd uct3-xrd.mwt2.org existdir ${RESDIR}`
@@ -170,12 +176,14 @@ fi
 # Clean up worker so no files are transferred back
 echo 'CLEAN <<<<<<<<<<<<<<<<<<<<<<<'
 date
+df -h .
 cd ${ROOTDIR}
 rm -rf TrigFTKAna
 
 echo 'STOP <<<<<<<<<<<<<<<<<<<<<<<'
 ls
 date
+df -h .
 
 """
 

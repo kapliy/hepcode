@@ -19,6 +19,7 @@ fi
 ntuple=29I
 
 lbl=05182013_fullstat  # update to full mcnlo and powhegHerig stat. new egammaUtils: remove wpol constraint and apply jan's new experimental wpol reweights (mcnlo->powhegherwig or mcnlo/powhegherwig->powhegpythia) to reduce CW syst. fix bootstrapping to 1000 replicas and only run on baseline Nominal data.
+lbl=05202013_fullstat  # fixed two bugs in bootstrap: int25 was wrong, and 2d used the wrong type cast.
 
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
 
