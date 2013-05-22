@@ -1188,6 +1188,16 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
         add(qcdfit('WptPythia8',spL.clone(subdir_mc='WptPythia8'))) # new: as of 03/06/2013
         next('p_{T}^{W} reweighting')
 
+    # W polarization reweighting target (new: as of 05/21/2013)
+    if True:
+        po.choose_sig(1)
+        add(qcdfit('WpolMCNLOtoPowhegHerwig',spL.clone(subdir_mc='WpolPowhegHerwig')))
+        add(qcdfit('WpolMCNLOtoPowhegPythia',spL.clone(subdir_mc='WpolPowhegPythia')))
+        po.choose_sig(4)
+        add(qcdfit('WpolPowhegHerwigtoPowhegPythia',spL.clone(subdir_mc='WpolPowhegPythia')))
+        next('W polarization')
+        nom()
+
     # type of anti-isolation
     if True:
         for x in ['IsoWind20m','IsoWind40']:
@@ -1248,6 +1258,32 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
         a.add(key, {'MSYS':MSYS,'MGROUPS':MGROUPS} )
     return (MSYS,MGROUPS)
 
+def PRUNE_MSYS(arg):
+    """ Use this function to erase certain QCD systematics from plotting
+    (e.g., experimental systematics only used for specific studies)
+    """
+    msys,mgroups = arg[0],arg[1]
+    exs = ['W polarization']
+    iexs = sorted( [ mgroups.index(x) for x in exs if x in mgroups] , reverse=True )
+    for iex in iexs:
+        del mgroups[iex]
+        del msys[iex]
+    return msys,mgroups
+
+def latex_qcd_table(M,Vabs,Vrel,latex_file):
+    """ Prints a latex QCD table for integrated measurement (similar to Adrian) """
+    f = open(latex_file,'w')
+    for obj in enumerate(zip(Vabs,Vrel)):
+        i=obj[0]
+        if i==0: continue
+        habs,hrel = obj[1]
+        l = M.labels[i] + '  &  %.2f  &  %.2f\\%% \\\\'%(habs.GetBinContent(1),hrel.GetBinContent(1))
+        l = l.replace('p_{T}^{W}','$p_{T}^{W}$')
+        print >>f,l
+    habs,hrel=Vabs[0],Vrel[0]
+    print >>f,'\\hline'
+    print >>f,M.labels[0] + '  &  %.2f  &  %.2f\\%% \\\\'%(habs.GetBinContent(1),hrel.GetBinContent(1))
+    
 # comprehensive study of qcd fits in 2d: pt x eta bins, using histograms.
 # now also supports 1D and 0D (all-inclusive) fits
 # this version runs ALL necessary fits for a given pt/eta bin, and also produces summary plots
@@ -1282,7 +1318,7 @@ if mode in ('qcdfit','qcdfit_sys'):
     read_cache = opts.ieta in ['LOOP',]
     do_init = True
     for ieta in etas:
-        MSYS , MGROUPS = qcdfit_slice(spR.clone() , iq,opts.etamode,ieta,ipt , nomonly=opts.nomonly , read_cache = read_cache )
+        MSYS , MGROUPS = PRUNE_MSYS(qcdfit_slice(spR.clone() , iq,opts.etamode,ieta,ipt , nomonly=opts.nomonly , read_cache = read_cache ))
         NOM = MSYS[0].values()[0]
         SQCD = SREL = qcdfit_sys_deviations(MSYS,MGROUPS)
         SLAB = MGROUPS[1:]
@@ -1384,10 +1420,14 @@ if mode in ('qcdfit','qcdfit_sys'):
             print 'SAVING:',zz,xaxis_info+ys[zz],height
             c[zz].plotAny(hs[zz],M=M[zz],height=height,drawopt='LP',xaxis_info=xaxis_info+ys[zz],pave=pave)
             c[zz].SaveSelf()
+    # save latex tables for 1D case
+    if opts.ieta=='ALL' and opts.ipt in ('ALL20','ALL25') and opts.etamode==2:
+        latex_file = SuCanvas.savedir + '/tableQCD_%s_%s.tex'%(QMAP[iq][1],'pt20' if opts.ipt=='ALL20' else 'pt25')
+        latex_qcd_table(M[0],hs[0],hs[2],latex_file)
     if opts.exit: dexit()
 
 if mode=='qcdfit_adrian':
-    # qcd and ewk fractions in each 2D pt slice, all super-imposed on one eta plot
+    # a single plot showing qcd and ewk fractions in each 2D pt slice (super-imposed)
     spR.enable_nominal()
     iq = opts.charge
     assert opts.ipt=='ALL20','qcdfit_adrian is called on --ipt ALL20'
@@ -1420,7 +1460,7 @@ if mode=='qcdfit_adrian':
             ptinfo = '%d < p_{T} < %d GeV'%(ptbins[ipt-1],ptbins[ipt])
         do_init = True
         for ieta in etas:
-            MSYS , MGROUPS = qcdfit_slice(spR.clone() , iq,opts.etamode,ieta,ipt , nomonly=opts.nomonly , read_cache = read_cache )
+            MSYS , MGROUPS = PRUNE_MSYS(qcdfit_slice(spR.clone() , iq,opts.etamode,ieta,ipt , nomonly=opts.nomonly , read_cache = read_cache ))
             NOM = MSYS[0].values()[0]
             SQCD = SREL = qcdfit_sys_deviations(MSYS,MGROUPS)
             SLAB = MGROUPS[1:]
