@@ -220,7 +220,7 @@ def Fit(w,data,fullbins,fitbins,ncpus=4,extras=False,gaus=False):
     RF.Hesse(kTRUE)
     r = w.model.fitTo(data,RF.PrintLevel(1),RF.Extended(w.model.isExt),RF.NumCPU(ncpus),RF.Save(),RF.Range('it1'))
     w.model.plotOn(frame,RF.Name('mit1'),RF.Range('it1'),RF.NormRange('it1'))
-    #return (r,frame,None,None,None,None) # FIXME - problem fitting in a reduced range!
+    #return (r,frame,None,None,None,None) # TODO - problem fitting in a reduced range!
     res1st = []
     if gaus:
         nsc = 1.0  #1.25
@@ -251,7 +251,7 @@ def import_unbinned(w,hz,tt,pre,reg,xmin,xmax,ndata,scale=1.0):
     else:
         print 'Problem loading class',hz.ClassName()
         sys.exit(0)
-    # FIXME TODO
+    # TODO - code the stuff below (for now, simply copy-pasted)
     print 'Loaded raw unbinned data with',N,'entries'
     ds1 = RooDataSet('ds1','ds1',RooArgSet(w.var('x')))
     ds2 = RooDataSet('ds2','ds2',RooArgSet(w.var('x')))
