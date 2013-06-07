@@ -1162,7 +1162,7 @@ class SuSample:
                 return sh
             else:
                 return s
-        if isinstance(dall,SuSys):  # used in SuFit to produce QCD and ewk templates
+        if isinstance(dall,SuSys):  # used in template fits to produce QCD and ewk templates
             d = dall
             sh = get_sh(d)
             if d.use_ntuple():
@@ -1798,7 +1798,12 @@ class SuStack:
             return s.scale_sys(key,d)
         print 'COMPUTING NEW QCD WEIGHT:',key
         import SuFit
-        f = SuFit.SuFit()
+#         if key != SuFit._KEY_DEBUG: #FIXME
+#             s.scales[key] = (1,0,1,0,1,0,1,0,100,100,1)
+#             s.scalekeys.append(key)
+#             s.fits[key] = None
+#             return 1
+        f = SuFit.SuFit(key)
         f.addFitVar( d2.qcd['var'], d2.qcd['min'] , d2.qcd['max'] , '%s (GeV)'%(d2.qcd['var']) );
         # get histograms
         if SuSample.debug: print 'SuData::get_scale(SuFit): 0 making data'
