@@ -666,10 +666,14 @@ Int_t TFractionFitter2::Fit() {
    // fit
    Int_t status = fractionFitter->ExecuteCommand("MINIMIZE",0,0);
    if ( fFitInfinite ) status = 999;
-   if (status == 0) fFitDone = kTRUE;
 
    // determine goodness of fit
-   ComputeChisquareLambda();
+   if ( status == 0 ) {
+     fFitDone = kTRUE;
+     ComputeChisquareLambda();
+   } else {
+     fChisquare = 0;
+   }
 
    return status;
 }
