@@ -16,13 +16,16 @@ def safe_divide(num,den):
   return num*1.0/den if den!=0 else sys.float_info.max
 fabs = math.fabs
 
+_KEY_DEBUG = 'Q4S5X5Y2Z2_IsoWind20__ScaleSoftTermsUp_ptHard_st_w_final_metfit_POS_d3_abseta_lpt_met_x_10_10_y_7_7_0to60'
+
 # choose if we want to print EWK SF (underneath to qcd SF)
 SUFIT_PLOT_EWK_FRAC = True
 
 class SuFit:
   """ Float background fit class """
-  def __init__(s):
+  def __init__(s,key=None):
     """ constructor """
+    s.key = key
     s.data = None
     s.fixed = None
     s.free = []
@@ -129,13 +132,16 @@ class SuFit:
       return
     nbins = fitmax - fitmin + 1
     nexcl = 0
+    exclist = []
     for ibin in xrange(fitmin,fitmax+1):
       do_exc = any( [h.GetBinContent(ibin)<limit for h in hs] ) if sumall==False else (sum([h.GetBinContent(ibin) for h in hs])<limit)
       if do_exc:
         f.ExcludeBin(ibin)
+        exclist.append(ibin)
         nexcl += 1
     if nexcl>0:
       print 'WARNING: TFractionFitter excluded %d out of %d bins due to low statistics (nentries<%d)'%(nexcl,nbins,limit)
+      print '   bins: ' + ' '.join([str(xx) for xx in exclist])
     else:
       print 'INFO: TFractionFitter does not need to exclude any bins'
     return True
@@ -148,8 +154,11 @@ class SuFit:
     assert s.data and s.fixed and len(s.free)==1, 'SuFit has not been supplied with all required input histograms'
     TFractionFitter = ROOT.TFractionFitter
     if QCD_USE_FITTER2:
-      ROOT.gROOT.ProcessLine('.L TFractionFitter2.h+')
+      ROOT.gROOT.ProcessLine('.L TFractionFitter2.h+g')
       TFractionFitter = ROOT.TFractionFitter2
+    if False:
+      ROOT.gSystem.Load('VFitter.so')
+      TFractionFitter = ROOT.VFitter
     # clear results from previous fit
     s.fractions = []
     s.scales = []
@@ -161,7 +170,7 @@ class SuFit:
     mc = ROOT.TObjArray(2) # MC histograms are put into this array
     mc.Add(s.fixed.Clone())
     [mc.Add(ff.Clone()) for ff in s.free]
-    s.fit = fit = TFractionFitter(data, mc, 'Q') ;  # initialise
+    s.fit = fit = TFractionFitter(data, mc, 'Q') ;  # initialize
     var = s.w.var(s.vnames[0])
     s.fitmin,s.fitmax = s.data.FindFixBin(var.getMin()) , s.data.FindFixBin(var.getMax())
     s.plotmin = s.fitmin if plotrange is None else plotrange[0]
@@ -176,7 +185,8 @@ class SuFit:
     fit.SetRangeX(s.fitmin,s.fitmax) # choose MET fit range
     if EXCLUDE_ZERO_BINS!=None:
       SuFit.exclude_zero_bins( fit , s.fitmin, s.fitmax, [s.fixed,s.free[0]] , limit=EXCLUDE_ZERO_BINS )
-    if False: # debugging
+    if False : # debugging
+      import common
       common.dump_plot([data,s.fixed,s.free[0]],name='SYS',titles=['data','ewk','qcd'])
     # set up extra parameters. frac0 = EWK (fixed), frac1 = QCD (free)
     assert fit.GetFitter()
@@ -375,15 +385,14 @@ class SuFit:
       gr.SetLineStyle(2)
       gr.Draw('L')
     
-    #s.key = key = ROOT.TLegend(0.6, canvas.getY2()-(0.03*(3+len(s.free))) , canvas.getX2() , canvas.getY2() )
-    s.key = key = ROOT.TLegend()
-    key.AddEntry( data ,"data 2011 (#sqrt{s} = 7 TeV) ","pe")
+    s.leg = leg = ROOT.TLegend()
+    leg.AddEntry( data ,"data 2011 (#sqrt{s} = 7 TeV) ","pe")
     if s.PlotModel:
-      key.AddEntry( model , "fit range" , "l" )
-    key.AddEntry( free , 'QCD (template)' , "f" )
-    key.AddEntry( fixed , 'EWK + tops' , "f" )
-    canvas.ConfigureLegend(key)
-    key.Draw("9");
+      leg.AddEntry( model , "fit range" , "l" )
+    leg.AddEntry( free , 'QCD (template)' , "f" )
+    leg.AddEntry( fixed , 'EWK + tops' , "f" )
+    canvas.ConfigureLegend(leg)
+    leg.Draw("9");
     canvas.update()
 
     s.fractext = fractext = ROOT.TPaveText()
@@ -401,7 +410,7 @@ class SuFit:
         fractext.AddText( '%s SF = %.2f #pm %.2f%%'%('EWK',s.Wscales[ift]/lumifrac,s.WscalesE[ift]/s.Wscales[ift]*100.0 if s.Wscales[ift]!=0 else 0) )
       if s.ndf[ift]!=0:
         fractext.AddText( '#chi^{2}=%.1f   #chi^{2}/NDF=%.1f'%(s.chi2[ift],s.chi2[ift]/s.ndf[ift]) )
-    canvas.ConfigureText(fractext,text_y2 = key.GetY1NDC()-0.03)
+    canvas.ConfigureText(fractext,text_y2 = leg.GetY1NDC()-0.03)
     fractext.Draw("9");
     canvas.update()
     
