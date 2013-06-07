@@ -96,6 +96,11 @@ input=/share/t3data3/antonk/ana/ana_v29I_05182013_fullstat_stacoCB_all/pt20
 DB=DB_05182013_fstat.v29  # update to full mcnlo and powhegHerig stat. new egammaUtils: remove wpol constraint and apply jan's new experimental wpol reweights (mcnlo->powhegherwig or mcnlo/powhegherwig->powhegpythia) to reduce CW syst. fix bootstrapping to 1000 replicas and only run on baseline Nominal data.
 DB=DB_05182013_fstat.v30  # adding w polarization histograms to output root files
 
+input=/share/t3data3/antonk/ana/ana_v29I_05202013_fullstat_stacoCB_all/pt20
+DB=DB_05202013_fstat.v31  # fixed problems with bootstrap
+input=/share/t3data3/antonk/ana/ana_v29I_05202013_fullstat_ret_stacoCB_all/pt20
+DB=DB_05202013_fstat.v32  # just a retry of the above
+
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`
 iq=0

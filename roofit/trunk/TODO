@@ -1,3 +1,9 @@
+Mel: take some of the uncertainties (1-sigma extremes) and repeat QCD 1D vs 2D sum.
+
+
+
+Change qcd summary table to: delQCD / QCD
+
 DOING: Muon reco SF - compare with Max's instructions.
 DOING: MET-scale: check that up/down is not switched.
 
