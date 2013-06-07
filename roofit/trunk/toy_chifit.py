@@ -187,7 +187,7 @@ if False:  #ROOT-based single-fit example
     c3.Modified(); c3.Update()
 
 if False: #ROOT-based full chi2 scan  (not doing anything, since it refits scaled gauss to gauss)
-    #           FIXME - arrange for the TF to be fixed, and just get chi2 value with respect to new TH1
+    #           TODO - arrange for the TF to be fixed, and just get chi2 value with respect to new TH1
     chi2s = []
     for i in xrange(opts.nscan):
         datas[i].get().find("x").setBins(opts.maxbins)
