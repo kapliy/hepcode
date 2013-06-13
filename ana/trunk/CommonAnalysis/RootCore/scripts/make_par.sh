@@ -40,12 +40,12 @@ then
     cat $ROOTCOREDIR/PROOF-INF-LITE/BUILD.sh | sed "s/%ROOTCOREDIR%/`echo $ROOTCOREDIR | sed 's/\//\\\\\//'g`/" | sed "s/%ROOTCOREBIN%/`echo $ROOTCOREBIN | sed 's/\//\\\\\//'g`/" >$MYDIR/PROOF-INF/BUILD.sh
     chmod +x $MYDIR/PROOF-INF/BUILD.sh
 else
-    $ROOTCOREDIR/scripts/grid_copy.sh $MYDIR $ROOTCOREDIR
+    $ROOTCOREDIR/scripts/grid_copy.sh --nogrid $MYDIR $ROOTCOREDIR
 
     for package in `cat $ROOTCOREBIN/packages`
     do
 	echo using package $package
-	$ROOTCOREDIR/scripts/grid_copy.sh $NOBUILD $MYDIR $package
+	$ROOTCOREDIR/scripts/grid_copy.sh --nogrid $NOBUILD $MYDIR $package
 	basename $package >>$MYDIR/packages
     done
 

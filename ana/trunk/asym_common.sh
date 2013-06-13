@@ -19,7 +19,12 @@ fi
 ntuple=29I
 
 lbl=05182013_fullstat  # update to full mcnlo and powhegHerig stat. new egammaUtils: remove wpol constraint and apply jan's new experimental wpol reweights (mcnlo->powhegherwig or mcnlo/powhegherwig->powhegpythia) to reduce CW syst. fix bootstrapping to 1000 replicas and only run on baseline Nominal data.
-lbl=05202013_fullstat  # fixed two bugs in bootstrap: int25 was wrong, and 2d used the wrong type cast.
+lbl=05202013_fullstat      # fixed two bugs in bootstrap: int25 was wrong, and 2d used the wrong type cast
+lbl=05202013_fullstat_ret  # retry before trying out running over OSG nodes
+lbl=05202013_fullstat_noC  # removed curvature correction
+lbl=06092013_recoSFphi     # MCP trunk scale factors (phi only)
+lbl=06092013_recoSFphi_ret # updated RootCore, added compiler optimizations, unrolled response matrix loop; increased nsplits for sig, added anyfit
+lbl=06132013_recoSFpt      # re-running same-old version, but after all updates, using latest MuonEfficiencyCorrections, but old eta x pt txt file
 
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
 
@@ -56,7 +61,37 @@ function compute_nevts_condor() {
     sam=$2
     echo $sam | egrep -q -e 'periodG|periodK' && { echo 50; return; }
     echo $sam | egrep -q -e 'periodL|periodM' && { echo 100; return; }
-    echo $sam | egrep -q -e 'mc_powheg_pythia_wminmunu|mc_powheg_pythia_wplusmunu|mc_powheg_herwig_wminmunu|mc_powheg_herwig_wplusmunu|mc_mcnlo_wminmunu|mc_mcnlo_wplusmunu|mc_powheg_pythia_zmumu' && { echo 150; return; }
+    echo $sam | egrep -q -e 'mc_powheg_pythia_zmumu' && { echo 150; return; }
+    # wminus
+    echo $sam | egrep -q -e 'mc_powheg_herwig_wminmunu|mc_mcnlo_wminmunu' && { echo 100; return; }
+    # wplus
+    echo $sam | egrep -q -e 'mc_powheg_herwig_wplusmunu|mc_mcnlo_wplusmunu' && { echo 120; return; }
+    # powheg-pythia
+    echo $sam | egrep -q -e 'mc_powheg_pythia_wminmunu' && { echo 120; return; }
+    echo $sam | egrep -q -e 'mc_powheg_pythia_wplusmunu' && { echo 150; return; }
+    if [ $n -lt 5 ]; then echo 1; return; fi;
+    if [ $n -lt 10 ]; then echo 5; return; fi;
+    if [ $n -lt 20 ]; then echo 10; return; fi;
+    if [ $n -lt 50 ]; then echo 10; return; fi;
+    if [ $n -lt 100 ]; then echo 20; return; fi;
+    if [ $n -lt 300 ]; then echo 50; return; fi;
+    echo 100
+}
+
+# maximally parallel version
+function compute_nevts_condor_parallelized() {
+    n=$1
+    sam=$2
+    echo $sam | egrep -q -e 'periodG|periodK' && { echo 50; return; }
+    echo $sam | egrep -q -e 'periodL|periodM' && { echo 100; return; }
+    echo $sam | egrep -q -e 'mc_powheg_pythia_zmumu' && { echo 150; return; }
+    # wminus
+    echo $sam | egrep -q -e 'mc_powheg_herwig_wminmunu|mc_mcnlo_wminmunu' && { echo 200; return; }
+    # wplus
+    echo $sam | egrep -q -e 'mc_powheg_herwig_wplusmunu|mc_mcnlo_wplusmunu' && { echo 292; return; }
+    # powheg-pythia
+    echo $sam | egrep -q -e 'mc_powheg_pythia_wminmunu' && { echo 250; return; }
+    echo $sam | egrep -q -e 'mc_powheg_pythia_wplusmunu' && { echo 362; return; }
     if [ $n -lt 5 ]; then echo 1; return; fi;
     if [ $n -lt 10 ]; then echo 5; return; fi;
     if [ $n -lt 20 ]; then echo 10; return; fi;

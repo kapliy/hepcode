@@ -147,7 +147,7 @@ if [ "$#" -ge "1" ]; then
 	    # configure the first time
 	    if [ ! -s config.log ]; then
 		echo "Configuring RootCore for the first time..."
-		./configure 
+		CXXFLAGS="-g -O2" LDFLAGS="-g -O2" ./configure 
 	    # or it RootCore directory was changed since last configuration
 	    else
 		OLDDIR=`grep ROOT_CORE_DIR config.log | awk 'BEGIN{FS="="}{print $2}' | sed -e "s#'##g"`

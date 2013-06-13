@@ -1,16 +1,14 @@
-atlasgrp/CombPerf/EGamma/PhotonID/FudgeMCTool/tags
-atlasgrp/CombPerf/EGamma/PhotonID/PhotonIDTool/tags
-atlasgrp/CombPerf/FlavorTag/JetTagAlgorithms/tags
-atlasgrp/CombPerf/JetETMiss/JetCalibrationTools/ApplyJetCalibration/tags
-atlasgrp/CombPerf/JetETMiss/JetCalibrationTools/ApplyJetResolutionSmearing/tags
 atlasoff/DataQuality/GoodRunsLists/tags
-atlasoff/PhysicsAnalysis/AnalysisCommon/ObjectSelectorCore/tags
+atlasoff/PhysicsAnalysis/AnalysisCommon/ISUFitter/tags
+atlasoff/PhysicsAnalysis/AnalysisCommon/PATCore/tags
 atlasoff/PhysicsAnalysis/AnalysisCommon/PileupReweighting/tags
 atlasoff/PhysicsAnalysis/AnalysisCommon/ReweightUtils/tags
 atlasoff/PhysicsAnalysis/D3PDTools/EventLoop/tags
 atlasoff/PhysicsAnalysis/D3PDTools/EventLoopAlgs/tags
+atlasoff/PhysicsAnalysis/D3PDTools/EventLoopGrid/tags
 atlasoff/PhysicsAnalysis/D3PDTools/MultiDraw/tags
 atlasoff/PhysicsAnalysis/D3PDTools/RootCore/tags
+atlasoff/PhysicsAnalysis/D3PDTools/RootCoreCintex/tags
 atlasoff/PhysicsAnalysis/D3PDTools/RootCoreUtils/tags
 atlasoff/PhysicsAnalysis/D3PDTools/SampleHandler/tags
 atlasoff/PhysicsAnalysis/ElectronPhotonID/ElectronPhotonSelectorTools/tags
@@ -20,10 +18,11 @@ atlasoff/PhysicsAnalysis/MuonID/MuonIDAnalysis/MuonEfficiencyCorrections/tags
 atlasoff/PhysicsAnalysis/MuonID/MuonIDAnalysis/MuonMomentumCorrections/tags
 atlasoff/PhysicsAnalysis/MuonID/MuonSelectorTools/tags
 atlasoff/PhysicsAnalysis/SUSYPhys/SUSYTools/tags
-atlasoff/PhysicsAnalysis/TauID/TauSelectorTools/tags
+atlasoff/PhysicsAnalysis/TauID/TauDiscriminant/tags
+atlasoff/PhysicsAnalysis/TileID/TileTripReader/tags
 atlasoff/PhysicsAnalysis/TopPhys/FakesMacros/tags
 atlasoff/PhysicsAnalysis/TopPhys/MultiJesInputFiles/tags
-atlasoff/PhysicsAnalysis/TopPhys/TopD3PDSelection/tags
+atlasoff/PhysicsAnalysis/TopPhys/TopD3PDCorrections/tags
 atlasoff/PhysicsAnalysis/TopPhys/TopPhysUtils/FakesTriggerUtils/tags
 atlasoff/PhysicsAnalysis/TopPhys/TopPhysUtils/JetEffiProvider/tags
 atlasoff/PhysicsAnalysis/TopPhys/TopPhysUtils/TopAnalysisBase/tags
@@ -32,8 +31,10 @@ atlasoff/PhysicsAnalysis/TopPhys/TopPhysUtils/TopDileptonSFUtils/tags
 atlasoff/PhysicsAnalysis/TopPhys/TopPhysUtils/TopElectronSFUtils/tags
 atlasoff/PhysicsAnalysis/TopPhys/TopPhysUtils/TopGoodRunsList/tags
 atlasoff/PhysicsAnalysis/TopPhys/TopPhysUtils/TopJetUtils/tags
+atlasoff/PhysicsAnalysis/TopPhys/TopPhysUtils/TopMiniNtuple/tags
 atlasoff/PhysicsAnalysis/TopPhys/TopPhysUtils/TopMuonSFUtils/tags
 atlasoff/PhysicsAnalysis/TopPhys/TopPhysUtils/WjetsCorrections/tags
+atlasoff/PhysicsAnalysis/TopPhys/TopRootCoreRelease/tags
 atlasoff/Reconstruction/Jet/ApplyJetCalibration/tags
 atlasoff/Reconstruction/Jet/JetResolution/tags
 atlasoff/Reconstruction/Jet/JetUncertainties/tags
@@ -42,23 +43,41 @@ atlasoff/Reconstruction/egamma/egammaAnalysis/egammaAnalysisUtils/tags
 atlasoff/Reconstruction/egamma/egammaEvent/tags
 atlasoff/Trigger/TrigAnalysis/TrigAnalysisInterfaces/tags
 atlasoff/Trigger/TrigAnalysis/TrigBunchCrossingTool/tags
+atlasoff/Trigger/TrigAnalysis/TrigEfficiency/tags
 atlasoff/Trigger/TrigAnalysis/TrigMuonEfficiency/tags
-atlasperf/CombPerf/EGamma/PhotonID/FudgeMCTool/tags
-atlasperf/CombPerf/EGamma/PhotonID/PhotonIDTool/tags
-atlasperf/CombPerf/FlavorTag/JetTagAlgorithms/MV1Tagger/tags
 atlasperf/CombPerf/JetETMiss/JetCalibrationTools/ApplyJetResolutionSmearing/tags
+atlasphys/Physics/Exotic/Analysis/HeavyQuarks/LimitsCode/mclimitCode/tags
+atlasusr/dlopez/SemileptonicCorr/tags
+atlasusr/krumnack/rcpkg/PlotMaker/tags
+atlasusr/krumnack/rcpkg/RootCoreRooUnfold/tags
+atlasusr/krumnack/rcpkg/D3PDReader/tags
+atlasusr/morgens/TauCorrections/tags
 
-# these don't work in the latest version:
-#atlasoff/PhysicsAnalysis/TopPhys/TopD3PDCorrections/tags
+atlasoff/PhysicsAnalysis/ElectronPhotonID/ElectronEfficiencyCorrection/tags
+atlasoff/Reconstruction/Jet/JetAnalysisTools/JVFUncertaintyTool/tags
 
-# these depend on packages that are not working
-#atlasoff/PhysicsAnalysis/TopPhys/TopPhysUtils/TopMetTool/tags
-#atlasoff/PhysicsAnalysis/TopPhys/TopD3PDAnalysis/tags
-#atlasoff/PhysicsAnalysis/TopPhys/TopPhysUtils/TopMiniNtuple/tags
+# these have special pre-requisites
+#atlasoff/PhysicsAnalysis/D3PDTools/RootCoreBoost/tags
+#atlasoff/PhysicsAnalysis/D3PDTools/RootCoreBoostDist/tags
+#atlasoff/PhysicsAnalysis/D3PDTools/RootCoreCLHEP/tags
+#atlasoff/PhysicsAnalysis/D3PDTools/RootCoreLhapdf/tags
+
+# these depend on the outdated MV1Tagger
+atlasoff/PhysicsAnalysis/TopPhys/TopD3PDAnalysis/tags
+
+# these depend on the outdated PhotonIDTool FudgeMCTool
+atlasoff/PhysicsAnalysis/TopPhys/TopD3PDSelection/tags
+
+# these depend on missing packages
+
+# these depend on the outdated ObjectSelectorCore
+#atlasoff/PhysicsAnalysis/TauID/TauSelectorTools/tags
 
 #outdated:
-#atlasgrp/CombPerf/EGamma/EGammaOQ/EGammaOQ_2011/tags
-
-#not converted:
-atlasgrp/CombPerf/EGamma/Calibrations/EnergyRescalerTool/tags
-atlasoff/PhysicsAnalysis/TauID/TauDiscriminant/tags
+#atlasperf/CombPerf/EGamma/EGammaOQ/EGammaOQ_2011/tags
+#atlasperf/CombPerf/EGamma/PhotonID/PhotonIDTool/tags
+#atlasoff/PhysicsAnalysis/AnalysisCommon/ObjectSelectorCore/tags
+#atlasperf/CombPerf/EGamma/PhotonID/FudgeMCTool/tags
+#atlasoff/PhysicsAnalysis/TopPhys/TopPhysUtils/TopMetTool/tags
+#atlasperf/CombPerf/FlavorTag/JetTagAlgorithms/MV1Tagger/tags
+#atlasperf/CombPerf/JetETMiss/JetCalibrationTools/ApplyJetCalibration/tags

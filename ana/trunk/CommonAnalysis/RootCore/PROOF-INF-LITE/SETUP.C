@@ -5,7 +5,7 @@ Int_t SETUP()
 
   try
   {
-    gROOT->Macro ("$ROOTCOREDIR/scripts/load_packages.C+");
+    gROOT->Macro ("$ROOTCOREDIR/scripts/load_packages.C");
   } catch (std::string& e)
   {
     std::cout << "error: " << e << std::endl;

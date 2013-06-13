@@ -543,7 +543,7 @@ AnaMuon::GetTriggerSF_v17_custom4( const CONF::ConfType& conf, const detector::M
 #endif
 }
 
-//FIXME temporary variations to reduce statistical uncertainty
+// temporary variations to reduce statistical uncertainty
 void
 AnaMuon::GetTriggerSF_v17_custom2_ptindep( const CONF::ConfType& conf, const detector::MCP_TYPE& mu_type , const detector::EGAMMA_TYPE& el_type ,
 				   std::vector<TLorentzVector>& muons,
@@ -753,7 +753,7 @@ AnaMuon::GetTriggerSF_v17_custom2_ptindep( const CONF::ConfType& conf, const det
 #endif
 }
 
-// FIXME2 - now charge-indep version
+// now charge-independent version
 void
 AnaMuon::GetTriggerSF_v17_custom2_qindep( const CONF::ConfType& conf, const detector::MCP_TYPE& mu_type , const detector::EGAMMA_TYPE& el_type ,
 					  std::vector<TLorentzVector>& muons,
@@ -947,11 +947,12 @@ AnaMuon::mcp_effscale( const CONF::ConfType& conf, const DATARANGE::DataRange& d
 		       const boost::shared_ptr<const AnaMuon>& muon , const detector::MCP_TYPE& mu_type,
 		       const unsigned long& run_number, const int runRange,
 		       const std::vector<double>& int_lumi, const std::vector<std::string>& run_periods,
-		       double& eff, double& errstat, double& errsys , int replica ) {
+		       double *effs,
+		       double& eff, double& errstat, double& errsys ) {
 #ifdef HAVE_COMMONANALYSIS
   using namespace detector;
   assert(conf==CONF::LATEST);
-  return AnaMuon::mcp_effscale_apply_v17<Analysis::AnalysisMuonConfigurableScaleFactors>(muon,mu_type,run_number,runRange,int_lumi,run_periods,"2011",eff,errstat,errsys,replica);
+  return AnaMuon::mcp_effscale_apply_v17<Analysis::AnalysisMuonConfigurableScaleFactors>(muon,mu_type,run_number,runRange,int_lumi,run_periods,"2011",effs,eff,errstat,errsys);
 #else
   assert(0&&NO_ANALYSIS_MSG);
 #endif

@@ -17,7 +17,7 @@ function add_dep {
     if test "$dir" = ""
     then
 	echo package $1 not known 1>&2
-	return -1
+	return 1
     fi
     dep=`$ROOTCOREDIR/scripts/get_field.sh $dir/cmt/Makefile.RootCore PACKAGE_DEP`
     for mydep in `$ROOTCOREDIR/scripts/get_field.sh $dir/cmt/Makefile.RootCore PACKAGE_TRYDEP`
@@ -34,7 +34,7 @@ function add_dep {
 	if test "$1" = "$mydep"
 	then
 	    echo package $1 has cyclical dependency 1>&2
-	    return -1
+	    return 2
 	fi
     done
 

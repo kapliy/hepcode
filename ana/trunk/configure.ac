@@ -3,8 +3,6 @@ AC_INIT(TrigFTKAna,VERSION_NUMBER,[A. Boveia <boveia@hep.uchicago.edu>])
 AM_CONFIG_HEADER(TrigFTKAna_config.h)
 AM_INIT_AUTOMAKE
 
-dnl AC_INIT(TrigFTKAna/AnaEventMgr.hpp,VERSION_NUMBER,[A. Boveia <boveia@hep.uchicago.edu>])
-dnl AM_INIT_AUTOMAKE(TrigFTKAna,VERSION_NUMBER)
 AC_CANONICAL_HOST
 AC_PROG_INSTALL
 AC_PROG_RANLIB
@@ -44,18 +42,18 @@ AC_PROG_CXX
 dnl flags for optional gcov output
 GCOVFLAGS="-fprofile-arcs -ftest-coverage -O0"
 dnl flags for optional gprof output
-GPROFFLAGS="-pg -O2 -g"
+GPROFFLAGS="-pg"
+# defaults
 if test X$user_set_cxxflags != Xyes; then
-dnl force 32-bit binary, and link against 32-bit libraries. see also
-dnl fortran flags.
 dnl "-O2 -fno-inline" turn on optimizations but do not inline (makes debugging easier)
 dnl -Wno-deprecated to avoid warnings about deprecated headers such as
 dnl                 hash_map included in boost adjacency list.
-  CXXFLAGS="$XTRAARCHFLAGS -O0 -g -fno-inline -Wno-deprecated"
+  AC_MSG_NOTICE(Hardcoding CXXFLAGS)
   CXXFLAGS="$XTRAARCHFLAGS -O2 -g -fno-inline -Wno-deprecated"
-  CXXFLAGS="$XTRAARCHFLAGS -O3 -g -fno-inline -Wno-deprecated"
-  CXXFLAGS="$XTRAARCHFLAGS -O2 -g -fno-inline -Wno-deprecated"
-  LDFLAGS="$XTRAARCHLDFLAGS" 
+  CXXFLAGS="$XTRAARCHFLAGS -O2 -g"
+  LDFLAGS="$XTRAARCHLDFLAGS -O2 -g"
+else
+  AC_MSG_NOTICE(Relying on system-default CXXFLAGS)
 fi
 AC_MSG_NOTICE(CXXFLAGS are $CXXFLAGS)
 AC_MSG_NOTICE(LDFLAGS are $LDFLAGS)

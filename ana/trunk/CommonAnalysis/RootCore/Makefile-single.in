@@ -11,9 +11,9 @@
 
 include @ROOT_MAKE@
 
-CXXFLAGS   += -I.. -I$(ROOTCOREBIN)/include $(ROOTCORETEST_CXXFLAGS) -DROOTCORE $(shell root-config --cflags)
+CXXFLAGS   += -I.. -I$(ROOTCOREBIN)/include $(ROOTCORETEST_CXXFLAGS) -DROOTCORE $(shell root-config --cflags) @CXXFLAGS@
 LDFLAGS    += $(ROOTCORETEST_LDFLAGS)
-SOFLAGS    += $(ROOTCORETEST_LDFLAGS) $(shell root-config --ldflags)
+SOFLAGS    += $(ROOTCORETEST_LDFLAGS) $(shell root-config --ldflags) @LDFLAGS@
 
 ifeq ($(PLATFORM),macosx)
 SOFLAGS    += -install_name @rpath/lib$(PACKAGE).so

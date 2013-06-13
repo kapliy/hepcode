@@ -1,0 +1,2 @@
+ana/ana_wasym --release 17 -s adrian_ttbar.dat -n10000 --save-ntuples 7 --apply-pileup --muon-type 0 --data-range DtoM --pt 20 --verbose --noTrig
+

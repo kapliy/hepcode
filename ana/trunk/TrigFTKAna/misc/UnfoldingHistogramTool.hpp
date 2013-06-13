@@ -17,6 +17,7 @@
 #define _UNFOLDING_HISTOGRAM_TOOL_H_
 
 #include <string>
+#include <vector>
 
 #include <TFile.h>
 #include <TDirectory.h>
@@ -40,12 +41,16 @@ public:
 
   // Call this method once per event
   // if isReco or is TruthFid are false, the corresponding values and weights won't get filled so just pass a dummy argument e.g. truthX = 999.0
-  void fill(bool isReco, double recoX, double recoWeight, bool isTruthFid, double truthX, double truthWeight, unsigned int toyIndex = 0);
+  void fill(bool isReco, const double& recoX, const std::vector<double>& recoWeight,
+	    bool isTruthFid, const double& truthX, const std::vector<double>& truthWeight,
+	    int nreplicas );
   
   // The corresponding method for 2D histograms
   // Here the unfolding can be performed in X in slices of Y
-  void fill(bool isReco, double recoX, double recoY, double recoWeight, bool isTruthFid, double truthX, double truthY, double truthWeight, unsigned int toyIndex = 0);
-
+  void fill(bool isReco, const double& recoX, const double& recoY, const std::vector<double>& recoWeight,
+	    bool isTruthFid, const double& truthX, const double& truthY, const std::vector<double>& truthWeight,
+	    int nreplicas );
+  
   // Dump histograms to file
   void write();
 

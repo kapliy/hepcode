@@ -6,10 +6,10 @@ pkgfile=$ROOTCOREBIN/packages
 script=`basename $1`
 if test \! -f "$pkgfile"
 then
-    if test "$script" != "find_packages.sh" -a "$script" != "checkout.sh" -a "$script" != "update.sh"
+    if test "$script" != "find_packages.sh" -a "$script" != "checkout.sh" -a "$script" != "checkout_pkg.sh" -a "$script" != "update.sh" -a "$script" != "manage_all.sh" -a "$script" != "manage_pkg.sh"
     then
 	echo "did not find package list, please run"
-	echo "  \$ROOTCOREDIR/scripts/find_packages.sh"
+	echo "  rc find_packages"
 	echo "at the base of your source directory"
 	exit 100
     fi

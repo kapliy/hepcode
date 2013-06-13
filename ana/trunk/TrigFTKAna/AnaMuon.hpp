@@ -487,8 +487,8 @@ public:
 		const boost::shared_ptr<const AnaMuon>& muon , const detector::MCP_TYPE& mu_type,
 		const unsigned long& run_number, const int runRange,
 		const std::vector<double>& int_lumi, const std::vector<std::string>& run_periods,
-		double& eff, double& errstat, double& errsys ,
-		int replica = -1 );
+		double *effs,
+		double& eff, double& errstat, double& errsys );
   
   // templated workhorse function that computes the efficiency scale factor (rel. 17)
   template <typename EFFCLASS>
@@ -497,8 +497,8 @@ public:
 			  const unsigned long& run_number , const int runRange,
 			  const std::vector<double>& int_lumi, const std::vector<std::string>& run_periods,
 			  const std::string& flag ,
-			  double& eff, double& errstat, double& errsys ,
-			  int replica = -1 )
+			  double *effs,
+			  double& eff, double& errstat, double& errsys )
   {
     static std::string datadir("CommonAnalysis/RootCore/data/MuonEfficiencyCorrections/");
     const int seed = 5000; //1721
@@ -509,8 +509,11 @@ public:
     static EFFCLASS *mcp_muid_cb = 0;
     static EFFCLASS *mcp_muid_loose = 0;
     if( !mcp_staco_cb && runRange==0) { //DtoM
-      // mcp_staco_cb = new EFFCLASS( datadir , "STACO_CB_2011_SF.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
-      mcp_staco_cb = new EFFCLASS( datadir , "STACO_CB_2011_SF_fineEtaBinning.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
+      if(false) { // EtaPhi // FIXME
+	mcp_staco_cb = new EFFCLASS( datadir , "STACO_CB_2011_SF_fine.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
+      } else {   // EtaPt
+	mcp_staco_cb = new EFFCLASS( datadir , "STACO_CB_2011_SF_fineEtaBinning.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
+      }
       mcp_staco_loose = new EFFCLASS( datadir , "STACO_CB_plus_ST_2011_SF.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
       mcp_muid_cb = new EFFCLASS( datadir , "Muid_CB_2011_SF.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
       mcp_muid_loose = new EFFCLASS( datadir , "Muid_CB_plus_ST_2011_SF.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
@@ -524,7 +527,7 @@ public:
 	mcp_muid_loose->addPeriod( run_periods[i] , int_lumi[i] );
       }
       mcp_staco_cb->Initialise();
-      mcp_staco_cb->generateReplicas(NREPLICASF , seed);
+      if(NREPLICASF>0) mcp_staco_cb->generateReplicas(NREPLICASF , seed);
       mcp_staco_loose->Initialise();
       mcp_muid_cb->Initialise();
       mcp_muid_loose->Initialise();
@@ -553,16 +556,20 @@ public:
     }
     EFFCLASS *mcp = 0;
     if(mu_type==detector::MCP_STACO_COMBINED) {
-      mcp = runRange==2 ? mcp_staco_cb_LtoM : ( runRange==1 ? mcp_staco_cb_DtoK : mcp_staco_cb);
+      // mcp = runRange==2 ? mcp_staco_cb_LtoM : ( runRange==1 ? mcp_staco_cb_DtoK : mcp_staco_cb);
+      mcp = mcp_staco_cb;
     }
-    if(mu_type==detector::MCP_STACO_LOOSE || mu_type==detector::MCP_STACO_TIGHT) mcp = mcp_staco_loose;
-    if(mu_type==detector::MCP_MUID_COMBINED) mcp = mcp_muid_cb;
-    if(mu_type==detector::MCP_MUID_LOOSE || mu_type==detector::MCP_MUID_TIGHT) mcp = mcp_muid_loose;
-    assert(mcp);
-    if(replica>=0) assert(runRange==0); // replicas are only used for runRange=0 (DtoM)
-    eff = replica<0 ? mcp->scaleFactor(muon->scharge(),muon->four_vector()) : mcp->scaleFactorReplica(muon->scharge(),muon->four_vector(),replica);
-    errstat = mcp->scaleFactorUncertainty(muon->scharge(),muon->four_vector());
-    errsys = mcp->scaleFactorSystematicUncertainty(muon->scharge(),muon->four_vector());
+    //    if(mu_type==detector::MCP_STACO_LOOSE || mu_type==detector::MCP_STACO_TIGHT) mcp = mcp_staco_loose;
+    //    if(mu_type==detector::MCP_MUID_COMBINED) mcp = mcp_muid_cb;
+    //    if(mu_type==detector::MCP_MUID_LOOSE || mu_type==detector::MCP_MUID_TIGHT) mcp = mcp_muid_loose;
+    //    if(replica>=0) assert(runRange==0); // replicas are only used for runRange=0 (DtoM)
+    const std::pair<int,int> bin = mcp->get_pt_eta_phi_bin_index(muon->scharge(),muon->four_vector());
+    for(int replica=0;replica<NREPLICASF;replica++) {
+      effs[replica] *= mcp->scaleFactorReplica(muon->scharge(),muon->four_vector(),replica,bin);
+    }
+    eff = mcp->scaleFactor(muon->scharge(),muon->four_vector(),bin); 
+    errstat = mcp->scaleFactorUncertainty(muon->scharge(),muon->four_vector(),bin);
+    errsys = mcp->scaleFactorSystematicUncertainty(muon->scharge(),muon->four_vector(),bin);
     return;
   }
 
@@ -613,7 +620,7 @@ public:
 			    int replica=-1);
 
 
-  // FIXME: trying out temporary variations to reduce statistical error
+  // trying out temporary variations to reduce statistical error
   static void
   GetTriggerSF_v17_custom2_ptindep( const CONF::ConfType& conf, const detector::MCP_TYPE& mu_type , const detector::EGAMMA_TYPE& el_type , 
 				    std::vector<TLorentzVector>& muons,

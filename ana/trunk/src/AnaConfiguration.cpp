@@ -39,6 +39,7 @@ bool AnaConfiguration::_force_full_output_path = false;
 std::string AnaConfiguration::_full_sample_definition_path = "";
 bool AnaConfiguration::_verbose = false;
 bool AnaConfiguration::_skip_systematics = false;
+bool AnaConfiguration::_notrigger = false;
 bool AnaConfiguration::_apply_pileup_weights = false;
 float AnaConfiguration::_pileup_data_scale = 1.0;
 std::string AnaConfiguration::_pileup_weights_map = "";
@@ -85,6 +86,7 @@ AnaConfiguration::configure( const std::string& executable_name , int argc , cha
       ( "pileup-config" , po::value<string>() , "a ROOT file to configure TPileupReweighting" )
       ( "verbose" , "provide verbose printouts for debugging")
       ( "noSys" , "only run the nominal analysis, skipping all systematic variations")
+      ( "noTrig" , "skip the trigger cut (e.g., for cross-channel debugging)")
       ( "precompute-event-totals" , "determine the number of events per file before processing" )
       ( "out-ntuple" , po::value<string>() , "write AnaEventNtuple to this directory (default no output)" )
       ( "grl" , po::value<string>() , "set a default GRL file (in the future, this will support globbing)" )
@@ -127,6 +129,7 @@ AnaConfiguration::configure( const std::string& executable_name , int argc , cha
       if( cmdline.count( "pt" ) ) { _pt_cut = cmdline["pt"].as<float>(); }
       if( cmdline.count( "verbose" ) ) { _verbose = true; }
       if( cmdline.count( "noSys" ) ) { _skip_systematics = true; }
+      if( cmdline.count( "noTrig" ) ) { _notrigger = true; }
       if( cmdline.count( "apply-pileup" ) ) { _apply_pileup_weights = true; }
       if( cmdline.count( "pileup-scale" ) ) { _pileup_data_scale = cmdline["pileup-scale"].as<float>(); }
       if( cmdline.count( "pileup-map" ) ) { _pileup_weights_map = cmdline["pileup-map"].as<string>(); }

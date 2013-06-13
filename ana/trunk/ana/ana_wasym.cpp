@@ -142,7 +142,8 @@ bool jet_tp_dr_compare( const boost::shared_ptr<const AnaParticle>& mu , boost::
 void jet_tp_overlap_removal( JETCOL& jetcoll , TPCOL& mucoll , const float& dr , std::vector< boost::shared_ptr<const AnaJet> >& output_col );
 template< typename jetIterT > const bool jet_larhole_veto( jetIterT jet_begin , jetIterT jet_end );
 const double jet_drmin( const boost::shared_ptr<const AnaJet>& jet , JETCOL& jetcoll );
-void mu_eff_scale( MUCOL& mucoll , double& eff_weight , double& eff_stat_error , double& eff_sys_error , int replica=-1 );
+void mu_eff_scale( MUCOL& mucoll , double *eff_weights,
+		   double& eff_weight , double& eff_stat_error , double& eff_sys_error );
 void mu_trig_scale( MUCOL& mucoll , double& trig_weight , double& trig_stat_error , int choice , int replica=-1 );
 void mu_isol_scale( MUCOL& mucoll , double& trig_weight , double& trig_stat_error , int choice , int replica=-1 );
 
@@ -284,6 +285,9 @@ std::vector<std::string> unf_keys_pdf; // pdf member sets within Nominal
 // list of unfolding sets [POS,NEG] * [uint,abseta,eta,abseta-pt,eta-pt] - for each systematic variation
 const int unf_nh = 4; // was:5. Now dropped eta-pt
 const int unf_nq = 2;
+double *EFFVEC = 0;
+double *TRIVEC = 0;
+double *ISOVEC = 0;
 // unfolding data structure (indexed by unf_keys)
 typedef std::map<std::string,UNFDATA>unfdata_type;
 unfdata_type unfdata;
@@ -320,8 +324,10 @@ void create_response(const std::string& key , bool hastree, unsigned int nreplic
     t->Branch("Reco_EtaLep",&unfdata[key].Reco_EtaLep,"Reco_EtaLep/D");
   }
   // vector of weights
-  unfdata[key].Truth_Weight_Replicas.resize(nreplicas);
-  unfdata[key].Reco_Weight_Replicas.resize(nreplicas);
+  if(nreplicas>0) {
+    unfdata[key].Truth_Weight_Replicas.resize(nreplicas);
+    unfdata[key].Reco_Weight_Replicas.resize(nreplicas);
+  }
   // Unfolding matrices
   unfdata[key].response = std::vector<UnfoldingHistogramTool>();
   std::vector<UnfoldingHistogramTool>& tmp = unfdata[key].response;
@@ -386,49 +392,52 @@ void UNF_MISS() {
     if(d.Reco_isReconstructed || d.Truth_Is_Fiducial) {
       boost::shared_ptr<const AnaWCrossSectionCandidate>& unftru = d.unftru;
       const int q = unftru->scharge()>0 ? 0 : 1;
-      for(unsigned int replica=0; replica<d.Reco_Weight_Replicas.size(); replica++) {
-	assert( std::abs(-999.0 - d.Truth_Weight_Replicas[replica]) > 0.000001 );
-	if(d.Reco_isReconstructed) assert( std::abs(-999.0 - d.Reco_Weight_Replicas[replica]) > 0.000001 );
+//       for(unsigned int replica=0; replica<d.Reco_Weight_Replicas.size(); replica++) {
+// 	assert( std::abs(-999.0 - d.Truth_Weight_Replicas[replica]) > 0.000001 );
+// 	if(d.Reco_isReconstructed) assert( std::abs(-999.0 - d.Reco_Weight_Replicas[replica]) > 0.000001 );
+//       }
+      const unsigned int nreplicas = d.Reco_Weight_Replicas.size();
+      if(nreplicas>0) {
 	d.response[ q*unf_nh + 0 ].fill(d.Reco_isReconstructed,
 					d.Reco_EtaLep==-999 ? d.Reco_EtaLep : (std::abs(d.Reco_EtaLep)<2.4 ? 0.5 : 1.1),
-					d.Reco_Weight_Replicas[replica],
+					d.Reco_Weight_Replicas,
 					d.Truth_Is_Fiducial,
 					d.Truth_EtaLep==-999 ? d.Truth_EtaLep : (std::abs(d.Truth_EtaLep)<2.4 ? 0.5 : 1.1),
-					d.Truth_Weight_Replicas[replica],
-					replica);
+					d.Truth_Weight_Replicas,
+					nreplicas);
 	d.response[ q*unf_nh + 1 ].fill(d.Reco_isReconstructed,
 					d.Reco_EtaLep==-999 ? d.Reco_EtaLep : std::abs(d.Reco_EtaLep),
-					d.Reco_Weight_Replicas[replica],
+					d.Reco_Weight_Replicas,
 					d.Truth_Is_Fiducial,
 					d.Truth_EtaLep==-999 ? d.Truth_EtaLep : std::abs(d.Truth_EtaLep),
-					d.Truth_Weight_Replicas[replica],
-					replica);
+					d.Truth_Weight_Replicas,
+					nreplicas);
 	d.response[ q*unf_nh + 2 ].fill(d.Reco_isReconstructed,
 					d.Reco_EtaLep,
-					d.Reco_Weight_Replicas[replica],
+					d.Reco_Weight_Replicas,
 					d.Truth_Is_Fiducial,
 					d.Truth_EtaLep,
-					d.Truth_Weight_Replicas[replica],
-					replica);
+					d.Truth_Weight_Replicas,
+					nreplicas);
 	d.response[ q*unf_nh + 3 ].fill(d.Reco_isReconstructed,
 					d.Reco_EtaLep==-999 ? d.Reco_EtaLep : std::abs(d.Reco_EtaLep),
 					d.Reco_PtLep,
-					d.Reco_Weight_Replicas[replica],
+					d.Reco_Weight_Replicas,
 					d.Truth_Is_Fiducial,
 					d.Truth_EtaLep==-999 ? d.Truth_EtaLep : std::abs(d.Truth_EtaLep),
 					d.Truth_PtLep,
-					d.Truth_Weight_Replicas[replica],
-					replica);
+					d.Truth_Weight_Replicas,
+					nreplicas);
 	if(false) {
 	  d.response[ q*unf_nh + 4 ].fill(d.Reco_isReconstructed,
 					  d.Reco_EtaLep,
 					  d.Reco_PtLep,
-					  d.Reco_Weight_Replicas[replica],
+					  d.Reco_Weight_Replicas,
 					  d.Truth_Is_Fiducial,
 					  d.Truth_EtaLep,
 					  d.Truth_PtLep,
-					  d.Truth_Weight_Replicas[replica],
-					  replica);
+					  d.Truth_Weight_Replicas,
+					  nreplicas);
 	}
       }
     }
@@ -450,49 +459,52 @@ void UNF_FILL(const std::string& key ) {
     boost::shared_ptr<const AnaWCrossSectionCandidate>& unftru = d.unftru;
     // charge determination: prefer from truth, but use reco for fakes
     const int q = unftru ? (unftru->scharge()>0 ? 0 : 1) : (unfrec->scharge()>0 ? 0 : 1);
-    for(unsigned int replica=0; replica<d.Reco_Weight_Replicas.size(); replica++) {
-      assert( std::abs(-999.0 - d.Truth_Weight_Replicas[replica]) > 0.000001 );
-      if(d.Reco_isReconstructed) assert( std::abs(-999.0 - d.Reco_Weight_Replicas[replica]) > 0.000001 );
+//     for(unsigned int replica=0; replica<d.Reco_Weight_Replicas.size(); replica++) {
+//       assert( std::abs(-999.0 - d.Truth_Weight_Replicas[replica]) > 0.000001 );
+//       if(d.Reco_isReconstructed) assert( std::abs(-999.0 - d.Reco_Weight_Replicas[replica]) > 0.000001 );
+//     }
+    const unsigned int nreplicas = d.Reco_Weight_Replicas.size();
+    if(nreplicas>0) {
       d.response[ q*unf_nh + 0 ].fill(d.Reco_isReconstructed,
 				      d.Reco_EtaLep==-999 ? d.Reco_EtaLep : (std::abs(d.Reco_EtaLep)<2.4 ? 0.5 : 1.1),
-				      d.Reco_Weight_Replicas[replica],
+				      d.Reco_Weight_Replicas,
 				      d.Truth_Is_Fiducial,
 				      d.Truth_EtaLep==-999 ? d.Truth_EtaLep : (std::abs(d.Truth_EtaLep)<2.4 ? 0.5 : 1.1),
-				      d.Truth_Weight_Replicas[replica],
-				      replica);
+				      d.Truth_Weight_Replicas,
+				      nreplicas);
       d.response[ q*unf_nh + 1 ].fill(d.Reco_isReconstructed,
 				      d.Reco_EtaLep==-999 ? d.Reco_EtaLep : std::abs(d.Reco_EtaLep),
-				      d.Reco_Weight_Replicas[replica],
+				      d.Reco_Weight_Replicas,
 				      d.Truth_Is_Fiducial,
 				      d.Truth_EtaLep==-999 ? d.Truth_EtaLep : std::abs(d.Truth_EtaLep),
-				      d.Truth_Weight_Replicas[replica],
-				      replica);
+				      d.Truth_Weight_Replicas,
+				      nreplicas);
       d.response[ q*unf_nh + 2 ].fill(d.Reco_isReconstructed,
 				      d.Reco_EtaLep,
-				      d.Reco_Weight_Replicas[replica],
+				      d.Reco_Weight_Replicas,
 				      d.Truth_Is_Fiducial,
 				      d.Truth_EtaLep,
-				      d.Truth_Weight_Replicas[replica],
-				      replica);
+				      d.Truth_Weight_Replicas,
+				      nreplicas);
       d.response[ q*unf_nh + 3 ].fill(d.Reco_isReconstructed,
 				      d.Reco_EtaLep==-999 ? d.Reco_EtaLep : std::abs(d.Reco_EtaLep),
 				      d.Reco_PtLep,
-				      d.Reco_Weight_Replicas[replica],
+				      d.Reco_Weight_Replicas,
 				      d.Truth_Is_Fiducial,
 				      d.Truth_EtaLep==-999 ? d.Truth_EtaLep : std::abs(d.Truth_EtaLep),
 				      d.Truth_PtLep,
-				      d.Truth_Weight_Replicas[replica],
-				      replica);
+				      d.Truth_Weight_Replicas,
+				      nreplicas);
       if(false) {
 	d.response[ q*unf_nh + 4 ].fill(d.Reco_isReconstructed,
 					d.Reco_EtaLep,
 					d.Reco_PtLep,
-					d.Reco_Weight_Replicas[replica],
+					d.Reco_Weight_Replicas,
 					d.Truth_Is_Fiducial,
 					d.Truth_EtaLep,
 					d.Truth_PtLep,
-					d.Truth_Weight_Replicas[replica],
-					replica);
+					d.Truth_Weight_Replicas,
+					nreplicas);
       }
     }
   }
@@ -524,6 +536,7 @@ int main( int argc , char* argv[] )
   std::cout << "Minimum PT cut (only applies to W selection; Z is fixed at 20) is: " << MU_PT_CUT << std::endl;
   // see if we are running wmunu/zmumu or some other special sample [hardcoded!]
   const std::string sample_name = AnaConfiguration::sample_name();
+  std::cout << "Sample name = " << sample_name << std::endl;
   is_data = boost::algorithm::icontains(sample_name,"data_period");
   is_unfold = boost::algorithm::icontains(sample_name,"_wminmunu") || boost::algorithm::icontains(sample_name,"_wplusmunu") || boost::algorithm::icontains(sample_name,"max_wplus") || boost::algorithm::icontains(sample_name,"max_wminus");
   if(is_unfold) {
@@ -585,9 +598,14 @@ int main( int argc , char* argv[] )
   int save_ntuples = AnaConfiguration::save_ntuples();
 
   // enable AnaMuon replicas if running over wmunu MC
-  NREPLICASF = is_wmunu ? AnaConfiguration::replicas() : 1;
+  NREPLICASF = is_wmunu ? AnaConfiguration::replicas() : 0;
   std::cout << "SF replicas = " << NREPLICASF << std::endl;
   AnaMuon::NREPLICASF = NREPLICASF;
+  if(true) {
+    EFFVEC = new double[NREPLICASF];
+    TRIVEC = new double[NREPLICASF];
+    ISOVEC = new double[NREPLICASF];
+  }
 
   // bootstrap histograms. for now, only apply to data
   if(!is_data) RUN_BOOTSTRAP = false;
@@ -1093,7 +1111,7 @@ int main( int argc , char* argv[] )
   st_w.add_category("baseline",bind(&AnaWCrossSectionCandidate::asym_baseline_quick,_1)==true);
   st_w.add_category("metfit",bind(&AnaWCrossSectionCandidate::asym_metfit_quick,_1)==true);
   st_w.add_category("wmtfit",bind(&AnaWCrossSectionCandidate::asym_wmtfit_quick,_1)==true);
-  //st_w.add_category("anyfit",bind(&AnaWCrossSectionCandidate::asym_anyfit_quick,_1)==true);
+  st_w.add_category("anyfit",bind(&AnaWCrossSectionCandidate::asym_anyfit_quick,_1)==true);
 
   // special trick when running in MCP scale determination mode: disable ALL histograms
   if(AnaConfiguration::muon_scale()==999) {
@@ -1795,7 +1813,7 @@ int main( int argc , char* argv[] )
     bool e_trigger = trigger->wz_asym_muon_trigger_2012_nomg(rnum); // switched to mu18 muid chains
     CUTFLOW(w,05,true,e_trigger);
     CUTFLOW(z,05,true,e_trigger);
-    if ( !e_trigger ) {
+    if ( !e_trigger && !AnaConfiguration::notrigger() ) {
       UNF_MISS();
       continue;
     }
@@ -1962,56 +1980,6 @@ int main( int argc , char* argv[] )
     }
 #undef SELMU
 
-
-    // debugging stat scale factors with Max Bellomo (10 or 10k replicas only!)
-    // note: not updated for independent toys
-    if(false && AnaConfiguration::verbose() && is_mc && n_events<100 && mu_smeared_iso_col.size()==1 ) {
-      std::cout << "======  EVENT: " << evnum << " " << rnum << " TYPE=" << mu_smeared_type_col.size() << " QUAL=" << mu_smeared_qual_col.size()
-	 	<< " ETA=" << mu_smeared_eta_col.size() << " ISO=" << mu_smeared_iso_col.size() 
-		<< " LPT=" << mu_smeared_iso_col[0]->pt() << std::endl;
-      // evnum 0 reco trig iso |
-      // rep1
-      // rep10
-      // muon
-      // this loop only includes stat. replicas
-      for(unsigned int ik=0; ik<unf_keys_rep.size(); ik++) {
-	unfdata_type::iterator it2 = unfdata.find(unf_keys_rep[ik]);
-	assert( it2 != unfdata.end() );
-	assert(it2->first == "SFUncorr");
-	assert( it2->second.Reco_Weight_Replicas.size() == NREPLICASF );
-	double _eff = 1.0;
-	double _trig = 1.0;
-	double _siso = 1.0;
-	double _a , _b;
-	// default (replica-less)
-	mu_eff_scale(  mu_smeared_iso_col , _eff  , _a , _b);
-	mu_trig_scale( mu_smeared_iso_col , _trig , _a , 20);
-	mu_isol_scale( mu_smeared_iso_col , _siso , _a , 0);
-	std::cout << "N " << 0 << " : " << _eff << " " << _trig << " " << _siso << std::endl;
-	std::string pl = TString::Format("pt=%.1f eta=%.2f",mu_smeared_iso_col[0]->pt(),mu_smeared_iso_col[0]->eta()).Data();
-	TCanvas cc("cc","cc",1024,400); cc.Divide(3);
-	TH1D h1("hreco",TString::Format("%s: %s",pl.c_str(),"reco").Data(),100,_eff-0.1,_eff+0.1);
-	TH1D h2("htrig",TString::Format("%s: %s",pl.c_str(),"trig").Data(),100,_trig-0.1,_trig+0.1);
-	TH1D h3("hiso",TString::Format("%s: %s",pl.c_str(),"iso").Data(),100,_siso-0.1,_siso+0.1);
-	// compute efficiency scale factors on final selected muons, for each replica
-	for(int replica=0; replica<it2->second.Reco_Weight_Replicas.size(); replica++) {
-	  mu_eff_scale(  mu_smeared_iso_col , _eff  , _a , _b , replica);
-	  h1.Fill(_eff);
-	  mu_trig_scale( mu_smeared_iso_col , _trig , _a , 20 , replica);
-	  h2.Fill(_trig);
-	  mu_isol_scale( mu_smeared_iso_col , _siso , _a , 0, replica);
-	  h3.Fill(_siso);
-	  if(replica<100) {
-	    std::cout << "R " << replica << " : " << _eff << " " << _trig << " " << _siso << std::endl;
-	  }
-	}
-	cc.cd(1); h1.Draw();
-	cc.cd(2); h2.Draw();
-	cc.cd(3); h3.Draw();
-	cc.SaveAs(TString::Format("results/EVENT_%d.png",evnum).Data());
-      }
-    }
-
     // MET recomputation for various systematics
     dgSTL::copy_if( evt->missing_et().begin(),evt->missing_et().end(),back_inserter(met_ref_col),CUT_ALL(AnaMET,met_ref_cut) );
     dgSTL::copy_if( evt->missing_et().begin(),evt->missing_et().end(),back_inserter(met_truth_nonint_col),CUT_ALL(AnaMET,met_truth_nonint_cut) );
@@ -2036,12 +2004,23 @@ int main( int argc , char* argv[] )
     metutil->setMETTerm( METUtil::RefMuon , met->refmuon_etx()*MeV , met->refmuon_ety()*MeV , met->refmuon_sumet()*MeV );
     metutil->setMETTerm( METUtil::SoftJets , met->softjets_etx()*MeV , met->softjets_ety()*MeV , met->softjets_sumet()*MeV );
 
-    // re-compute MET terms. Note that the macro always forces recomputation of the jet component!
+    /* re-compute MET terms. Note that the macro always forces recomputation of the jet component!
+    jetetmiss_met( const boost::shared_ptr<const AnaMET>& met , METUTILCLASS *metutil ,
+		 const elIterT& el_begin , const elIterT& el_end , const bool& reset_el ,
+		 const muIterT& mu_begin , const muIterT& mu_end , const bool& reset_mu ,
+		 const jetIterT& jet_begin , const jetIterT& jet_end , const bool& reset_jet ,
+		 const METUTILTERM& term , const METUTILSYS& sys ) 
+    */
 #define FILLMET(x,ele,eleT,mu,muT,jet,jetT,sys) met_rawjet_ ##x## _col.push_back( AnaMET::jetetmiss_met(met,metutil,ele.begin() , ele.end() , eleT, mu.begin() , mu.end() , muT, rawjet_lc_ ##jet## _col.begin() , rawjet_lc_ ##jet## _col.end() , true , METUtil::RefFinal , sys ) ); \
     met_caljet_ ##x## _col.push_back( AnaMET::jetetmiss_met(met,metutil,ele.begin() , ele.end() , eleT, mu.begin() , mu.end() , muT, caljet_lc_ ##jet## _col.begin() , caljet_lc_ ##jet## _col.end() , true , METUtil::RefFinal , sys ) )
+    
     FILLMET(nominal,evt->electrons(),true,evt->muons(),true,nominal,true,METUtil::None);
     if(is_mc) {
-      FILLMET(mcp_smeared,evt->electrons(),false,mu_smeared_mcp_col,true,nominal,false,METUtil::None); // nominal for MC
+      if(false) { // only for debugging MET variations: disable propagation of all other objects.
+	FILLMET(mcp_smeared,evt->electrons(),false,mu_smeared_mcp_col,false,nominal,false,METUtil::None); // nominal for MC
+      } else {
+	FILLMET(mcp_smeared,evt->electrons(),false,mu_smeared_mcp_col,true,nominal,false,METUtil::None); // nominal for MC
+      }
       // new met uncertainties
       FILLMET(resosofttermsup,evt->electrons(),false,mu_smeared_mcp_col,false,nominal,false,METUtil::ResoSoftTermsUp_ptHard);
       FILLMET(resosofttermsdown,evt->electrons(),false,mu_smeared_mcp_col,false,nominal,false,METUtil::ResoSoftTermsDown_ptHard);
@@ -2140,6 +2119,70 @@ int main( int argc , char* argv[] )
       }
 #undef FILLRES
       dg::up();
+    }
+
+
+    // DEBUG: MET scale variations (with Adrian)
+    bool runsel = evnum==104701 || evnum==104702 || evnum==104710 || evnum==104721 || evnum==104725 || evnum==104730 || evnum==104731 || evnum==104738 || evnum==104739 || evnum==104744 || evnum==104745 || evnum==104747 || evnum==104750 || evnum==104904;
+    //runsel = evnum==104730;  // debugging the event where scaleUp/Down are NOT symmetric around nominal
+    if(false && AnaConfiguration::verbose() && is_mc && runsel) {
+      std::cout << "===============================================" << std::endl;
+      std::cout << "RunNumber = " << raw_rnum << std::endl;
+      std::cout << "EventNumber = " << evnum << std::endl;
+      std::cout.precision(1);
+      std::cout << std::fixed;
+      std::cout << "Met in D3PD = " << met->pt()*1000.0 << std::endl;
+      std::cout << "Nominal re-calculated Met = " << met_rawjet_nominal_col.front()->pt()*1000.0 << std::endl;
+      std::cout << "Smeared Met = " << met_rawjet_mcp_smeared_col.front()->pt()*1000.0 << std::endl;
+      std::cout << "SoftTerm pt-hard scale up  = " << met_rawjet_scalesofttermsup_col.front()->pt()*1000.0 << std::endl;
+      std::cout << "SoftTerm pt-hard scale down  = " << met_rawjet_scalesofttermsdown_col.front()->pt()*1000.0 << std::endl;
+      std::cout << "SoftTerm pt-hard reso up  = " << met_rawjet_resosofttermsup_col.front()->pt()*1000.0 << std::endl;
+      std::cout << "SoftTerm pt-hard reso down  = " << met_rawjet_resosofttermsdown_col.front()->pt()*1000.0 << std::endl;
+    }
+
+    // DEBUG: stat scale factors with Max Bellomo (10 or 10k replicas only!)
+    if(true && AnaConfiguration::verbose() && is_mc && n_events<100 && mu_smeared_iso_col.size()==1 ) {
+      std::cout << "======  EVENT: " << evnum << " " << rnum << " TYPE=" << mu_smeared_type_col.size() << " QUAL=" << mu_smeared_qual_col.size()
+	 	<< " ETA=" << mu_smeared_eta_col.size() << " ISO=" << mu_smeared_iso_col.size() 
+		<< " LPT=" << mu_smeared_iso_col[0]->pt() << std::endl;
+      // this loop only includes stat. replicas
+      for(unsigned int ik=0; ik<unf_keys_rep.size(); ik++) {
+	unfdata_type::iterator it2 = unfdata.find(unf_keys_rep[ik]);
+	assert( it2 != unfdata.end() );
+	assert( it2->second.Reco_Weight_Replicas.size() == NREPLICASF );
+	double _eff = 1.0;
+	double _a=0 , _b=0;
+	// default (replica-less)
+	const bool SFRECO = (it2->first == "SFUncorrReco");
+	const bool SFTRIG = (it2->first == "SFUncorrTrig");
+	const bool SFISOL = (it2->first == "SFUncorrIsol");
+	if(SFRECO) mu_eff_scale( mu_smeared_iso_col , EFFVEC , _eff, _a , _b );
+	if(SFTRIG) mu_trig_scale( mu_smeared_iso_col , _eff , _a , 20);
+	if(SFISOL) mu_isol_scale( mu_smeared_iso_col , _eff , _a , 0);
+	std::cout << "N " << 0 << " : " << _eff << " +/- " << _a << " +/- " << _b << std::endl;
+	std::string pl = TString::Format("pt=%.1f eta=%.2f",mu_smeared_iso_col[0]->pt(),mu_smeared_iso_col[0]->eta()).Data();
+	TCanvas cc("cc","cc",1024,400);
+	TH1D h1("histo",TString::Format("%s: %s",pl.c_str(),it2->first.c_str()).Data(),100,_eff-0.1,_eff+0.1);
+	// compute efficiency scale factors on final selected muons, for each replica
+	for(int replica=0; replica<it2->second.Reco_Weight_Replicas.size(); replica++) {
+	  if( SFRECO ) {
+	    h1.Fill(EFFVEC[replica]);
+	  }
+	  if (SFTRIG) {
+	    mu_trig_scale( mu_smeared_iso_col , _eff , _a , 20 , replica);
+	    h1.Fill(_eff);
+	  }
+	  if (SFISOL) {
+	    mu_isol_scale( mu_smeared_iso_col , _eff , _a , 0, replica);
+	    h1.Fill(_eff);
+	  }
+	  if(replica<10) {
+	    std::cout << "R " << replica << " : " << _eff << std::endl;
+	  }
+	}
+	cc.cd(); h1.Draw();
+	cc.SaveAs(TString::Format("results/EVENT_%d_%s.png",evnum,it2->first.c_str()).Data());
+      }
     }
 
     // default (MAX) isolation
@@ -2317,7 +2360,7 @@ int main( int argc , char* argv[] )
 
   // SAVE ROOT DATA
   AnaEventMgr::instance()->close_sample();
-  dg::save( AnaConfiguration::verbose() );
+  dg::save( false && AnaConfiguration::verbose() );
 
   // SAVE UNFOLDING DATA
   if(is_unfold) {
@@ -2407,8 +2450,8 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
   double trig = 1.0;
   double trigall = 1.0;  // multiplies trigger SF of each muon (i.e. ALL are required to fire, as opposed to an OR)
   double trigphi = 1.0;  // systematic: addition of phi on top
-  double mcp = 1.0;     // MCP weights
-  double mcpall = 1.0;  // multiplies trigger SF of each muon (i.e. ALL are required to fire, as opposed to an OR)
+  double mcp = 1.0;      // MCP weights
+  double mcpall = 1.0;   // multiplies trigger SF of each muon (i.e. ALL are required to fire, as opposed to an OR)
   double trig_err = 0.0;
   double trig_dummy = 0.0;
   double siso = 1.0;
@@ -2418,7 +2461,7 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
   if(is_mc) {
     // compute efficiency scale factors on final selected muons
     // (which happens to be "iso" muons - whether isolated or anti-isolated
-    mu_eff_scale( mu_iso_col , eff , eff_errstat , eff_errsys );
+    mu_eff_scale( mu_iso_col , EFFVEC , eff, eff_errstat , eff_errsys );
     mu_trig_scale( mu_iso_col , trig    , trig_err   , 20);
     mu_trig_scale( mu_iso_col , trigphi , trig_dummy , 21);
     mu_trig_scale( mu_iso_col , trigall , trig_dummy , 22);
@@ -2637,7 +2680,9 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
       if (true) {
 	// nominal
 	it->second.Reco_Weight = dg::get_global_weight();
-	it->second.Reco_Weight_Replicas[0] = it->second.Reco_Weight;
+	if(!it->second.Reco_Weight_Replicas.empty()) {
+	  it->second.Reco_Weight_Replicas[0] = it->second.Reco_Weight;
+	}
 	if(good) {
 	  it->second.Reco_isReconstructed = true;
 	  it->second.unfrec = w_tmp_col[0];
@@ -2654,7 +2699,9 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
 	    assert(it2 != unfdata.end());
 	    assert( wchk.find(it2->first) == wchk.end()); wchk[ it2->first ] = true;
 	    it2->second.Reco_Weight = dg::get_global_weight();              // to be over-ridden
-	    it2->second.Reco_Weight_Replicas[0] = it2->second.Reco_Weight;  // to be over-ridden
+	    if(!it2->second.Reco_Weight_Replicas.empty()) {
+	      it2->second.Reco_Weight_Replicas[0] = it2->second.Reco_Weight;  // to be over-ridden
+	    }
 	    if(good) {
 	      it2->second.Reco_isReconstructed = true;
 	      it2->second.unfrec = w_tmp_col[0];
@@ -2690,7 +2737,8 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
 	    double _a , _b;
 	    // compute efficiency scale factors on final selected muons, for each replica
 	    for(int replica=0; replica<it2->second.Reco_Weight_Replicas.size(); replica++) {
-	      mu_eff_scale(  mu_iso_col , _eff  , _a , _b , replica);
+	      _eff = EFFVEC[replica];
+	      // mu_eff_scale(  mu_iso_col , _eff  , _a , _b , replica);
 	      mu_trig_scale( mu_iso_col , _trig , _a , 20 , replica);
 	      mu_isol_scale( mu_iso_col , _siso , _a , 0, replica);
 	      if(SFALL) it2->second.Reco_Weight_Replicas[replica] =        event_weight[0] *_eff *_trig *_siso ;
@@ -3040,7 +3088,7 @@ const bool jet_larhole_veto( jetIterT jet_begin , jetIterT jet_end ) {
   if( is_mc && (raw_rnum != LARHOLE_MC_RNUM) ) { return false; }
   if( !is_mc && ( (raw_rnum < LARHOLE_DA_RNUM_MIN) || (raw_rnum >= LARHOLE_DA_RNUM_MAX) ) ) { return false; }
   for( std::vector< shared_ptr<const AnaJet> >::const_iterator ijet = jet_begin ; ijet != jet_end ; ++ijet ) {
-    const shared_ptr<const AnaJet> jet(*ijet);
+    const shared_ptr<const AnaJet>& jet(*ijet);
     if( LArHole::simpleVeto( jet->pt() , jet->eta() , jet->phi() , jet->f_BCH_CORR_JET() , jet->f_BCH_CORR_CELL() , LARHOLE_PT_CUT ) ) { return true; }
   }
   return false;
@@ -3053,20 +3101,17 @@ const double jet_drmin( const boost::shared_ptr<const AnaJet>& jet , JETCOL& jet
   return double( jet->dist_eta_phi( jetcoll[1] ) );
 }
 
-void mu_eff_scale( MUCOL& mucoll , double& eff_weight , double& eff_stat_error , double& eff_sys_error , int replica) {
+void mu_eff_scale( MUCOL& mucoll , double *eff_weights,
+		   double& eff_weight , double& eff_stat_error , double& eff_sys_error )
+{
+  std::fill(eff_weights, eff_weights+NREPLICASF, 1.0);
   eff_weight = 1.;
   eff_stat_error = 0.; // absolute errors
   eff_sys_error = 0.;
-  static const std::vector<double> vecD;
-  static const std::vector<std::string> vecS;
   for( std::vector< shared_ptr<const AnaMuon> >::const_iterator imu = mucoll.begin() ; imu != mucoll.end() ; ++imu ) {
-    const shared_ptr<const AnaMuon> mu(*imu);
+    const shared_ptr<const AnaMuon>& mu(*imu);
     double wt , stat_err , sys_err;
-    if(true) { // propagate period luminosities
-      AnaMuon::mcp_effscale( AnaConfiguration::conf() , AnaConfiguration::data_range() , mu , mu_type , rnum , 0, int_lumi , run_periods , wt , stat_err , sys_err , replica );
-    } else {    // just use the default luminosities
-      AnaMuon::mcp_effscale( AnaConfiguration::conf() , AnaConfiguration::data_range() , mu , mu_type , rnum , 0, vecD , vecS , wt , stat_err , sys_err );
-    }
+    AnaMuon::mcp_effscale( AnaConfiguration::conf() , AnaConfiguration::data_range() , mu , mu_type , rnum , 0, int_lumi , run_periods , eff_weights, wt , stat_err , sys_err );
     eff_weight *= wt;
     eff_stat_error += pow(stat_err/wt,2);
     eff_sys_error += pow(sys_err/wt,2);
@@ -3080,6 +3125,8 @@ void mu_trig_scale( MUCOL& mucoll , double& trig_weight , double& trig_stat_erro
   std::vector<TLorentzVector> velectrons; // should be empty
   std::vector<TLorentzVector> vmuons;
   std::vector<float> vmuons_charges;
+  trig_weight = 1.0;
+  trig_stat_error = 0.0;
   for( std::vector< shared_ptr<const AnaMuon> >::const_iterator imu = mucoll.begin() ; imu != mucoll.end() ; ++imu ) {
     vmuons.push_back( (*imu)->four_vector() );
     vmuons_charges.push_back( (*imu)->charge() );
@@ -3091,8 +3138,6 @@ void mu_trig_scale( MUCOL& mucoll , double& trig_weight , double& trig_stat_erro
     AnaMuon::GetTriggerSF_v17( AnaConfiguration::conf() , mu_type , el_type , vmuons , velectrons ,
 			       rnum , 0 , trig_weight , trig_stat_error );
   } else if (choice==12) { // same as choice==10 (MCP official), BUT taking a product of all per-muon weights
-    trig_weight = 1.0;
-    trig_stat_error = 0.0;
     for(int ii=0; ii<vmuons.size(); ii++) {
       double cweight = 1.0;
       double cerror = 0.0;
@@ -3105,8 +3150,6 @@ void mu_trig_scale( MUCOL& mucoll , double& trig_weight , double& trig_stat_erro
       trig_weight *= cweight;
     }
   } else if (choice==22) { // same as choice==20, BUT taking a product of all per-muon weights (for Z both-match)
-    trig_weight = 1.0;
-    trig_stat_error = 0.0;
     for(int ii=0; ii<vmuons.size(); ii++) {
       double cweight = 1.0;
       double cerror = 0.0;
@@ -3133,6 +3176,8 @@ void mu_trig_scale( MUCOL& mucoll , double& trig_weight , double& trig_stat_erro
 
 void mu_isol_scale( MUCOL& mucoll , double& trig_weight , double& trig_stat_error , int choice, int replica) {
   std::vector<TLorentzVector> vmuons;
+  trig_weight = 1.0;
+  trig_stat_error = 0.0;
   for( std::vector< shared_ptr<const AnaMuon> >::const_iterator imu = mucoll.begin() ; imu != mucoll.end() ; ++imu ) {
     vmuons.push_back( (*imu)->four_vector() );
   }

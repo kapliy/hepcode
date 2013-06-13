@@ -16,17 +16,24 @@ then
     echo >>"$MAKEFILE" '# therefore it does not support full make syntax and features'
     echo >>"$MAKEFILE" '# edit with care'
     echo >>"$MAKEFILE"
+    echo >>"$MAKEFILE" '# for full documentation check:'
+    echo >>"$MAKEFILE" '# https://twiki.cern.ch/twiki/bin/viewauth/Atlas/RootCore#Package_Makefile'
+    echo >>"$MAKEFILE"
     echo >>"$MAKEFILE" "PACKAGE          = `basename $DIR`"
     echo >>"$MAKEFILE" 'PACKAGE_PRELOAD  = '
     echo >>"$MAKEFILE" 'PACKAGE_CXXFLAGS = '
     echo >>"$MAKEFILE" 'PACKAGE_OBJFLAGS = '
     echo >>"$MAKEFILE" 'PACKAGE_LDFLAGS  = '
     echo >>"$MAKEFILE" 'PACKAGE_BINFLAGS = '
+    echo >>"$MAKEFILE" 'PACKAGE_LIBFLAGS = '
     echo >>"$MAKEFILE" 'PACKAGE_DEP      = '
     echo >>"$MAKEFILE" 'PACKAGE_TRYDEP   = '
     echo >>"$MAKEFILE" 'PACKAGE_CLEAN    = '
+    echo >>"$MAKEFILE" 'PACKAGE_NOGRID   = '
+    echo >>"$MAKEFILE" 'PACKAGE_PEDANTIC = 0'
     echo >>"$MAKEFILE" 'PACKAGE_NOOPT    = 0'
     echo >>"$MAKEFILE" 'PACKAGE_NOCC     = 0'
+    echo >>"$MAKEFILE" 'PACKAGE_REFLEX   = 0'
     echo >>"$MAKEFILE" ''
     echo >>"$MAKEFILE" 'include $(ROOTCOREDIR)/Makefile-common'
 fi
