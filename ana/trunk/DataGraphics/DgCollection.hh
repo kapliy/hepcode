@@ -21,9 +21,9 @@ class TDirectory;
 class TFile;
 class BootstrapGenerator;
 
-#ifdef __GNUG__
-#define inline  __attribute__((always_inline))
-#endif
+//#ifdef __GNUG__
+//#define inline  __attribute__((always_inline))
+//#endif
 
 namespace
 DataGraphics
@@ -64,9 +64,9 @@ DataGraphics
     // construction / destruction
     static DgCollection* root() { return &_base; }
     // move to this subgroup (creating it if necessary)
-    inline static void down( const std::string& sname , const std::string& description );
+    /* inline */ static void down( const std::string& sname , const std::string& description );
     // move up to the parent group
-    inline static void up();
+    /* inline */ static void up();
   public:
     // if global_weight is set, all "fill" calls are redirected to corresponding "fillw"
     static const WeightedCount global_weight() { return _global_weight; }
@@ -230,6 +230,6 @@ DataGraphics
 
 };
 
-#undef inline
+//#undef inline
 
 #endif // WRAP_DGCOLLECTION_HH

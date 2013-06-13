@@ -21,6 +21,7 @@ fi;
 unset SVNROOT
 export CERN_USER=$USER
 export ROOTCORE_NCPUS=16
+export ROOTCORE_VERBOSE=1
 
 # Feel free to add yourself if your CERN username differs from UCT3 username
 if [ "${CERN_USER}" == "antonk" ]; then

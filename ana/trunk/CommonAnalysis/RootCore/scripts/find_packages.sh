@@ -5,7 +5,7 @@ source "`dirname $0`/preamble.sh" "$0"
 DIR=`pwd`
 echo looking for packages in $DIR
 PACKAGES=
-for file in `find -L $DIR -type f -name Makefile.RootCore | grep cmt/Makefile.RootCore$`
+for file in `find -L $DIR -type f -name Makefile.RootCore | grep cmt/Makefile.RootCore$ | sort -r`
 do
     pkg=`dirname $file | xargs dirname`
     PACKAGES="$pkg $PACKAGES"
@@ -31,6 +31,16 @@ touch $PKGFILE
 
 for pkg in $PACKAGES
 do
+    name=`basename $pkg`
+    pkg2=`grep /$name$ $PKGFILE`
+    if test "$pkg2" != ""
+    then
+	echo duplicate packages, please remove one of them:
+	echo "  $pkg"
+	echo "  $pkg2"
+	rm -f $PKGFILE
+	exit 1
+    fi
     echo $pkg >>$PKGFILE
 done
 
@@ -39,9 +49,30 @@ cat $PKGFILE
 
 echo
 echo sorted packages:
-list=`sed 's/.*\///' < $PKGFILE` || exit $?
-list=`$ROOTCOREDIR/scripts/get_dependency.sh $list` || exit $?
-list=`$ROOTCOREDIR/scripts/get_location.sh $list` || exit $?
+if list=`sed 's/.*\///' < $PKGFILE`
+then
+    true
+else
+    result=$?
+    rm -f $PKGFILE
+    exit $result
+fi
+if list=`$ROOTCOREDIR/scripts/get_dependency.sh $list`
+then
+    true
+else
+    result=$?
+    rm -f $PKGFILE
+    exit $result
+fi
+if list=`$ROOTCOREDIR/scripts/get_location.sh $list`
+then
+    true
+else
+    result=$?
+    rm -f $PKGFILE
+    exit $result
+fi
 rm -f $PKGFILE
 touch $PKGFILE
 for pkg in $list

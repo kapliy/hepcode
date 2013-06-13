@@ -1,13 +1,24 @@
-#!/bin/sh
+#!/bin/bash
 
 # this scripts copies an individual package into the grid distribution.
 
 NOBUILD=
-if test "$1" == "--nobuild"
-then
-    NOBUILD=--nobuild
-    shift
-fi
+NOGRID=
+done=0
+while test $done -eq 0
+do
+    if test "$1" == "--nobuild"
+    then
+	NOBUILD=--nobuild
+	shift
+    elif test "$1" == "--nogrid"
+    then
+	NOGRID=--nogrid
+	shift
+    else
+	done=1
+    fi
+done
 
 test \! -d "$1" && echo could not find target $1 && exit 1
 test \! -d "$2" && echo could not find package $2 && exit 2
@@ -33,6 +44,13 @@ then
     for clean in `$ROOTCOREDIR/scripts/get_field.sh $2/cmt/Makefile.RootCore PACKAGE_CLEAN`
     do
 	EXCLUDES="$EXCLUDES --exclude $clean"
+    done
+fi
+if test "$NOGRID" == ""
+then
+    for exclude in `$ROOTCOREDIR/scripts/get_field.sh $2/cmt/Makefile.RootCore PACKAGE_NOGRID`
+    do
+	EXCLUDES="$EXCLUDES --exclude $exclude"
     done
 fi
 

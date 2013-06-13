@@ -25,5 +25,5 @@ touch packages
 for package in `cat grid_packages`
 do
     echo $1/$package >> packages
-    $ROOTCOREDIR/scripts/link_package.sh $1/$package
+    $ROOTCOREDIR/scripts/link_package.sh $1/$package || exit $?
 done

@@ -3,7 +3,7 @@ if $?ROOTSYS then
 else
     setenv ROOTSYS `root-config --prefix`
     test $? -ne 0 && echo no valid root version found, please set up root && return 1
-fi
+endif
 
 test "x$ROOTSYS" != "x@ROOTSYS@" && echo ROOTSYS=$ROOTSYS not @ROOTSYS@ && echo please set up correct root version or follow the instructions at && echo \ \ https://twiki.cern.ch/twiki/bin/viewauth/Atlas/RootCore#If_Something_Goes_Wrong && return 1
 
@@ -27,3 +27,7 @@ if $?PYTHONPATH then
 else
     setenv PYTHONPATH $ROOTCOREBIN/python
 endif
+
+mkdir -p $ROOTCOREBIN/bin
+test -f $ROOTCOREBIN/bin/rc || ln -sf $ROOTCOREDIR/scripts/rc.sh $ROOTCOREBIN/bin/rc
+true

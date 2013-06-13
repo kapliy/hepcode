@@ -69,7 +69,7 @@ private:
   float _mcevt_pdf2;   // pdf probability for second incoming parton
 
   boost::scoped_ptr<TFile> _file;
-  typedef enum { V29, V29g, V29i, V29l, RESERVED=100 } Version;
+  typedef enum { V29, V29g, V29i, RESERVED=100 } Version;
   Version _madeclass_version;
   boost::scoped_ptr<D3PDPeterTreeBase> _madeclass;
 
@@ -88,7 +88,6 @@ private:
   const bool _get_event_V29();
   const bool _get_event_V29g();
   const bool _get_event_V29i();
-  const bool _get_event_V29l();
 
   template<typename ntT> void _make_associated_track_for_electron( boost::shared_ptr<AnaElectron>& mu , ntT nt , const unsigned int& i );
   template<typename ntT> void _make_associated_track_for_muon( boost::shared_ptr<AnaMuon>& mu , ntT nt , const unsigned int& i );

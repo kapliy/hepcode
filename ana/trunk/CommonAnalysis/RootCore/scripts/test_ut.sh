@@ -15,7 +15,14 @@ success=0
 fails=""
 for pkg in `cat $ROOTCOREBIN/packages`
 do
-    for test in $pkg/test-bin/ut_*
+    if test "$ROOTCOREOBJ" == ""
+    then
+	bindir=$pkg/test-bin
+    else
+	bindir=$ROOTCOREOBJ/`basename $pkg`/test-bin
+    fi
+
+    for test in $bindir/ut_*
     do
 	if test -f $test -a -x $test
 	then

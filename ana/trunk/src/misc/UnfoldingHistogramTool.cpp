@@ -198,93 +198,113 @@ UnfoldingHistogramTool::~UnfoldingHistogramTool()
 {
 }
 
-void UnfoldingHistogramTool::fill(bool isReco, double recoX, double recoWeight, bool isTruthFid, double truthX, double truthWeight, unsigned int toyIndex)
+#define T for(t=0; t<m_Ntoys; t++)
+
+void UnfoldingHistogramTool::fill(bool isReco, const double& recoX, const std::vector<double>& recoWeight,
+				  bool isTruthFid, const double& truthX, const std::vector<double>& truthWeight,
+				  int nreplicas )
 {
-  if (m_is2D) {
-    std::cerr << "[UnfoldingHistogramTool]: WARNING: Attempting to fill 1D histograms after calling 2D constructor." << std::endl;
-    return;
-  }
-
-  if (isReco) {
-    // Fiducial correction denominator
-    m_fidCorrDenom1D[toyIndex]->Fill(recoX, recoWeight);
-
-    // Purity and stability calculation
-
-    // purity denom is the same as fidCorrDenom, but include it for backwards compatibility
-    m_purityDenom1D[toyIndex]->Fill(recoX, recoWeight);
-
-    // stability has the same numerator as the purity, but different denominator
-    m_stabilityDenom1D[toyIndex]->Fill(truthX, recoWeight);
-
-    if (m_purityNum1D[toyIndex]->FindBin(recoX) == m_purityNum1D[toyIndex]->FindBin(truthX)) {
-      m_purityNum1D[toyIndex]->Fill(recoX, recoWeight);
+  unsigned int t;
+  assert(nreplicas==m_Ntoys);
+  const bool isSame = ( m_purityNum1D[0]->FindBin(recoX) == m_purityNum1D[0]->FindBin(truthX) );
+  //  const Int_t bt = m_purityNum1D[0]->FindBin(truthX);
+  //  const Int_t br = m_purityNum1D[0]->FindBin(recoX);
+//   if (m_is2D) {
+//     std::cerr << "[UnfoldingHistogramTool]: WARNING: Attempting to fill 1D histograms after calling 2D constructor." << std::endl;
+//     return;
+//   }
+  
+  T {
+    
+    if (isReco) {
+      // Fiducial correction denominator
+      m_fidCorrDenom1D[t]->Fill(recoX, recoWeight[t]);
+      
+      // Purity and stability calculation
+      
+      // purity denom is the same as fidCorrDenom, but include it for backwards compatibility
+      m_purityDenom1D[t]->Fill(recoX, recoWeight[t]);
+      
+      // stability has the same numerator as the purity, but different denominator
+      m_stabilityDenom1D[t]->Fill(truthX, recoWeight[t]);
+      
+      if (isSame) {
+	m_purityNum1D[t]->Fill(recoX, recoWeight[t]);
+      }
+      
+      if (isTruthFid) {
+	// Efficiency and Fiducial correction numerators
+	m_fidCorrNum1D[t]->Fill(recoX, recoWeight[t]);
+	m_effCorrNum1D[t]->Fill(truthX, recoWeight[t]);
+	
+	m_Response1D[t]->Fill(recoX, truthX, recoWeight[t]);
+      }
     }
     
+    // Efficiency correction denominator
     if (isTruthFid) {
-      // Efficiency and Fiducial correction numerators
-      m_fidCorrNum1D[toyIndex]->Fill(recoX, recoWeight);
-      m_effCorrNum1D[toyIndex]->Fill(truthX, recoWeight);
-
-      m_Response1D[toyIndex]->Fill(recoX, truthX, recoWeight);
+      m_effCorrDenom1D[t]->Fill(truthX, truthWeight[t]);
     }
-  }
-
-  // Efficiency correction denominator
-  if (isTruthFid) {
-    m_effCorrDenom1D[toyIndex]->Fill(truthX, truthWeight);
   }
 }
 
-void UnfoldingHistogramTool::fill(bool isReco, double recoX, double recoY, double recoWeight, bool isTruthFid, double truthX, double truthY, double truthWeight, unsigned int toyIndex)
+void UnfoldingHistogramTool::fill(bool isReco, const double& recoX, const double& recoY, const std::vector<double>& recoWeight,
+				  bool isTruthFid, const double& truthX, const double& truthY, const std::vector<double>& truthWeight,
+  				  int nreplicas )
 {
-  if (!m_is2D) {
-    std::cerr << "[UnfoldingHistogramTool]: WARNING: Attempting to fill 2D histograms after calling 1D constructor." << std::endl;
-    return;
-  }
+  unsigned int t;
+  assert(nreplicas==m_Ntoys);
+//   if (!m_is2D) {
+//     std::cerr << "[UnfoldingHistogramTool]: WARNING: Attempting to fill 2D histograms after calling 1D constructor." << std::endl;
+//     return;
+//   }
 
   // check whether both truth and reco are in the same fiducial slice (in the variable we are not unfolding in)
-  bool isSameSlice = m_unfoldingInY ?     
-    (m_fidCorrNum2D[toyIndex]->GetXaxis()->FindBin(recoX) == m_fidCorrNum2D[toyIndex]->GetXaxis()->FindBin(truthX)) :
-    (m_fidCorrNum2D[toyIndex]->GetYaxis()->FindBin(recoY) == m_fidCorrNum2D[toyIndex]->GetYaxis()->FindBin(truthY));
+  bool isSameSlice = m_unfoldingInY ?
+    (m_fidCorrNum2D[0]->GetXaxis()->FindBin(recoX) == m_fidCorrNum2D[0]->GetXaxis()->FindBin(truthX)) :
+    (m_fidCorrNum2D[0]->GetYaxis()->FindBin(recoY) == m_fidCorrNum2D[0]->GetYaxis()->FindBin(truthY));
 
-  bool isSameUnfoldingBin = m_unfoldingInY ?     
-    (m_fidCorrNum2D[toyIndex]->GetYaxis()->FindBin(recoY) == m_fidCorrNum2D[toyIndex]->GetYaxis()->FindBin(truthY)) : 
-    (m_fidCorrNum2D[toyIndex]->GetXaxis()->FindBin(recoX) == m_fidCorrNum2D[toyIndex]->GetXaxis()->FindBin(truthX));
+  bool isSameUnfoldingBin = m_unfoldingInY ?
+    (m_fidCorrNum2D[0]->GetYaxis()->FindBin(recoY) == m_fidCorrNum2D[0]->GetYaxis()->FindBin(truthY)) : 
+    (m_fidCorrNum2D[0]->GetXaxis()->FindBin(recoX) == m_fidCorrNum2D[0]->GetXaxis()->FindBin(truthX));
 
+  T {
   if (isReco) {
     // Fiducial correction denominator
-    m_fidCorrDenom2D[toyIndex]->Fill(recoX, recoY, recoWeight);
+    m_fidCorrDenom2D[t]->Fill(recoX, recoY, recoWeight[t]);
 
     // Purity and stability calculation
 
     // purity denom is the same as fidCorrDenom, but include it for backwards compatibility    
-    m_purityDenom2D[toyIndex]->Fill(recoX, recoY, recoWeight);
+    m_purityDenom2D[t]->Fill(recoX, recoY, recoWeight[t]);
 
     // stability has the same numerator as the purity, but different denominator
-    m_stabilityDenom2D[toyIndex]->Fill(truthX, truthY, recoWeight);
+    m_stabilityDenom2D[t]->Fill(truthX, truthY, recoWeight[t]);
 
     if (isSameUnfoldingBin && isSameSlice) {
-      m_purityNum2D[toyIndex]->Fill(recoX, recoY, recoWeight);
+      m_purityNum2D[t]->Fill(recoX, recoY, recoWeight[t]);
     }
     
     // require both reco and truth to be in the same fiducial slice
     if (isTruthFid && isSameSlice) { 
       
       // Efficiency and Fiducial correction numerators
-      m_fidCorrNum2D[toyIndex]->Fill(recoX, recoY, recoWeight);
-      m_effCorrNum2D[toyIndex]->Fill(truthX, truthY, recoWeight);
+      m_fidCorrNum2D[t]->Fill(recoX, recoY, recoWeight[t]);
+      m_effCorrNum2D[t]->Fill(truthX, truthY, recoWeight[t]);
 
       if (m_unfoldingInY) {
-	m_Response2D[toyIndex]->Fill(recoY, truthY, truthX, recoWeight);
+	m_Response2D[t]->Fill(recoY, truthY, truthX, recoWeight[t]);
       } else {
-	m_Response2D[toyIndex]->Fill(recoX, truthX, truthY, recoWeight);
+	m_Response2D[t]->Fill(recoX, truthX, truthY, recoWeight[t]);
       }
     }
   }
 
   // Efficiency correction denominator
   if (isTruthFid) {
-    m_effCorrDenom2D[toyIndex]->Fill(truthX, truthY, truthWeight);
+    m_effCorrDenom2D[t]->Fill(truthX, truthY, truthWeight[t]);
+  }
   }
 }
+
+#undef T
