@@ -38,6 +38,7 @@ SH_PRE="""#!/bin/bash
 
 date
 df -h .
+free -m
 echo 'START <<<<<<<<<<<<<<<<<<<<<<<'
 ROOTDIR=$PWD
 LOCDIR=results/ana_wasym
@@ -184,6 +185,7 @@ echo 'STOP <<<<<<<<<<<<<<<<<<<<<<<'
 ls
 date
 df -h .
+free -m
 
 """
 

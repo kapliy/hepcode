@@ -34,6 +34,7 @@ private:
   static bool _verbose;
   static bool _skip_systematics;
   static bool _notrigger;
+  static bool _noexit;
   static bool _apply_pileup_weights;
   static float _pileup_data_scale;
   static std::string _pileup_weights_map;
@@ -74,6 +75,7 @@ public:
   static const bool verbose() { return _verbose; }
   static const bool skip_systematics() { return _skip_systematics; }
   static const bool notrigger() { return _notrigger; }
+  static const bool noexit() { return _noexit; }
   static const bool apply_pileup_weights() { return _apply_pileup_weights; }
   static const float pileup_data_scale() { return _pileup_data_scale; }
   static const std::string pileup_weights_map() { return _pileup_weights_map; }
@@ -100,6 +102,7 @@ public:
   static void verbose( const bool& val ) { _verbose = val; }
   static void skip_systematics( const bool& val ) { _skip_systematics = val; }
   static void notrigger( const bool& val ) { _notrigger = val; }
+  static void noexit( const bool& val ) { _noexit = val; }
   static void apply_pileup_weights( const bool& val ) { _apply_pileup_weights = val; }
   static void pileup_data_scale( const float& val ) { _pileup_data_scale = val; }
   static void pileup_weights_map( const std::string& val ) { _pileup_weights_map = val; }

@@ -219,7 +219,8 @@ NtD3PDphysPeter::_make_associated_track_for_electron( boost::shared_ptr<AnaElect
   // overwrite defaults)
   track->_d0 = nt->ele_d0[i];
   track->_z0 = nt->ele_z0[i];
-  if( nt->mu_dvx[i] > -1E6 ) { // -1e6 in flat ntuple flags no vertex or similar error
+  // disable below since mu_dvx is not present
+  if( false && nt->mu_dvx[i] > -1E6 ) { // -1e6 in flat ntuple flags no vertex or similar error
     track->_exPV_d0 = nt->ele_dxpv[i];
     track->_exPV_z0 = nt->ele_zxpv[i];
     track->_exPV_d0_err = std::sqrt( nt->ele_covdxpv[i] );
