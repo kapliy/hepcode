@@ -24,7 +24,11 @@ lbl=05202013_fullstat_ret  # retry before trying out running over OSG nodes
 lbl=05202013_fullstat_noC  # removed curvature correction
 lbl=06092013_recoSFphi     # MCP trunk scale factors (phi only)
 lbl=06092013_recoSFphi_ret # updated RootCore, added compiler optimizations, unrolled response matrix loop; increased nsplits for sig, added anyfit
+
 lbl=06132013_recoSFpt      # re-running same-old version, but after all updates, using latest MuonEfficiencyCorrections, but old eta x pt txt file
+lbl=06132013_recoSFphi     # phi version (re-run)
+
+lbl=06172013_recoBOTH_withZ # nominal is SFpt, but added a new st_w_bla option to do phi. Also: running z plots
 
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
 

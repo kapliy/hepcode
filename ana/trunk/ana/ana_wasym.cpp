@@ -1,6 +1,6 @@
 #include "TrigFTKAna/AnaCommon.hpp"
-bool RUNZ = false;                     // run Z selection and histograms? [was:true 05/13/2013]
-bool RUNZ_NT = false;                  // save Z ntuples? This is set automatically for MCP studies [was:true 05/13/2013]
+bool RUNZ = true;                      // run Z selection and histograms? [was:true 05/13/2013]
+bool RUNZ_NT = true;                   // save Z ntuples? This is set automatically for MCP studies [was:true 05/13/2013]
 bool RUN_QCD_SLICES = true;            // save QCD normalization histograms?
 bool NOMONLY = false;                  // skip systematics and only do NOMINAL case?
 const bool D0CUT = false;              // optional cut on d0 signficance?
@@ -143,7 +143,7 @@ void jet_tp_overlap_removal( JETCOL& jetcoll , TPCOL& mucoll , const float& dr ,
 template< typename jetIterT > const bool jet_larhole_veto( jetIterT jet_begin , jetIterT jet_end );
 const double jet_drmin( const boost::shared_ptr<const AnaJet>& jet , JETCOL& jetcoll );
 void mu_eff_scale( MUCOL& mucoll , double *eff_weights,
-		   double& eff_weight , double& eff_stat_error , double& eff_sys_error );
+		   double& eff_weight , double& eff_stat_error , double& eff_sys_error , int choice=0);
 void mu_trig_scale( MUCOL& mucoll , double& trig_weight , double& trig_stat_error , int choice , int replica=-1 );
 void mu_isol_scale( MUCOL& mucoll , double& trig_weight , double& trig_stat_error , int choice , int replica=-1 );
 
@@ -598,7 +598,7 @@ int main( int argc , char* argv[] )
   int save_ntuples = AnaConfiguration::save_ntuples();
 
   // enable AnaMuon replicas if running over wmunu MC
-  NREPLICASF = is_wmunu ? AnaConfiguration::replicas() : 0;
+  NREPLICASF = is_wmunu_powheg_pythia ? AnaConfiguration::replicas() : 1; // should be 0, but may have a bug below
   std::cout << "SF replicas = " << NREPLICASF << std::endl;
   AnaMuon::NREPLICASF = NREPLICASF;
   if(true) {
@@ -652,6 +652,7 @@ int main( int argc , char* argv[] )
     // scale factors
     UNR("MuonRecoSFUp");
     UNR("MuonRecoSFDown");
+    UNR("MuonRecoSFPhi"); // experimental MCP reco eta x phi corrections
     UNR("MuonTriggerSFPhi");
     UNR("MuonIsoSFUp");
     UNR("MuonIsoSFDown");
@@ -1111,7 +1112,7 @@ int main( int argc , char* argv[] )
   st_w.add_category("baseline",bind(&AnaWCrossSectionCandidate::asym_baseline_quick,_1)==true);
   st_w.add_category("metfit",bind(&AnaWCrossSectionCandidate::asym_metfit_quick,_1)==true);
   st_w.add_category("wmtfit",bind(&AnaWCrossSectionCandidate::asym_wmtfit_quick,_1)==true);
-  st_w.add_category("anyfit",bind(&AnaWCrossSectionCandidate::asym_anyfit_quick,_1)==true);
+  //st_w.add_category("anyfit",bind(&AnaWCrossSectionCandidate::asym_anyfit_quick,_1)==true);
 
   // special trick when running in MCP scale determination mode: disable ALL histograms
   if(AnaConfiguration::muon_scale()==999) {
@@ -2121,7 +2122,6 @@ int main( int argc , char* argv[] )
       dg::up();
     }
 
-
     // DEBUG: MET scale variations (with Adrian)
     bool runsel = evnum==104701 || evnum==104702 || evnum==104710 || evnum==104721 || evnum==104725 || evnum==104730 || evnum==104731 || evnum==104738 || evnum==104739 || evnum==104744 || evnum==104745 || evnum==104747 || evnum==104750 || evnum==104904;
     //runsel = evnum==104730;  // debugging the event where scaleUp/Down are NOT symmetric around nominal
@@ -2141,7 +2141,7 @@ int main( int argc , char* argv[] )
     }
 
     // DEBUG: stat scale factors with Max Bellomo (10 or 10k replicas only!)
-    if(true && AnaConfiguration::verbose() && is_mc && n_events<100 && mu_smeared_iso_col.size()==1 ) {
+    if(true && AnaConfiguration::verbose() && is_mc && n_events<2000 && mu_smeared_iso_col.size()==1 ) {
       std::cout << "======  EVENT: " << evnum << " " << rnum << " TYPE=" << mu_smeared_type_col.size() << " QUAL=" << mu_smeared_qual_col.size()
 	 	<< " ETA=" << mu_smeared_eta_col.size() << " ISO=" << mu_smeared_iso_col.size() 
 		<< " LPT=" << mu_smeared_iso_col[0]->pt() << std::endl;
@@ -2156,10 +2156,11 @@ int main( int argc , char* argv[] )
 	const bool SFRECO = (it2->first == "SFUncorrReco");
 	const bool SFTRIG = (it2->first == "SFUncorrTrig");
 	const bool SFISOL = (it2->first == "SFUncorrIsol");
+	if(!SFRECO) continue;
 	if(SFRECO) mu_eff_scale( mu_smeared_iso_col , EFFVEC , _eff, _a , _b );
 	if(SFTRIG) mu_trig_scale( mu_smeared_iso_col , _eff , _a , 20);
 	if(SFISOL) mu_isol_scale( mu_smeared_iso_col , _eff , _a , 0);
-	std::cout << "N " << 0 << " : " << _eff << " +/- " << _a << " +/- " << _b << std::endl;
+	std::cout << "SFDBG " << 0 << " : " << _eff << " +/- " << _a << " +/- " << _b << std::endl;
 	std::string pl = TString::Format("pt=%.1f eta=%.2f",mu_smeared_iso_col[0]->pt(),mu_smeared_iso_col[0]->eta()).Data();
 	TCanvas cc("cc","cc",1024,400);
 	TH1D h1("histo",TString::Format("%s: %s",pl.c_str(),it2->first.c_str()).Data(),100,_eff-0.1,_eff+0.1);
@@ -2176,12 +2177,14 @@ int main( int argc , char* argv[] )
 	    mu_isol_scale( mu_smeared_iso_col , _eff , _a , 0, replica);
 	    h1.Fill(_eff);
 	  }
-	  if(replica<10) {
-	    std::cout << "R " << replica << " : " << _eff << std::endl;
-	  }
+// 	  if(replica<10) {
+// 	    std::cout << "R " << replica << " : " << _eff << std::endl;
+// 	  }
 	}
-	cc.cd(); h1.Draw();
-	cc.SaveAs(TString::Format("results/EVENT_%d_%s.png",evnum,it2->first.c_str()).Data());
+	if(n_events<100) {
+	  cc.cd(); h1.Draw();
+	  cc.SaveAs(TString::Format("results/EVENT_%d_%s.png",evnum,it2->first.c_str()).Data());
+	}
       }
     }
 
@@ -2379,7 +2382,11 @@ int main( int argc , char* argv[] )
   
   std::cout << "==================== FINISHED MAIN ====================" << std::endl;
   std::cout.flush();
-  std::_Exit(0);
+  if( ! AnaConfiguration::noexit() ) std::_Exit(0);
+
+  delete[] EFFVEC;
+  delete[] TRIVEC;
+  delete[] ISOVEC;
 
   return 0;
 }
@@ -2445,6 +2452,7 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
 
   // compute muon efficiency
   double eff = 1.0;
+  double effphi = 0.0;
   double eff_errstat = 0.0;
   double eff_errsys = 0.0;
   double trig = 1.0;
@@ -2461,7 +2469,8 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
   if(is_mc) {
     // compute efficiency scale factors on final selected muons
     // (which happens to be "iso" muons - whether isolated or anti-isolated
-    mu_eff_scale( mu_iso_col , EFFVEC , eff, eff_errstat , eff_errsys );
+    mu_eff_scale( mu_iso_col , EFFVEC , effphi, eff_errstat , eff_errsys , 1); // eta x phi
+    mu_eff_scale( mu_iso_col , EFFVEC , eff, eff_errstat , eff_errsys , 0); // (nominal) eta
     mu_trig_scale( mu_iso_col , trig    , trig_err   , 20);
     mu_trig_scale( mu_iso_col , trigphi , trig_dummy , 21);
     mu_trig_scale( mu_iso_col , trigall , trig_dummy , 22);
@@ -2482,14 +2491,15 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
   dg::event_info().set_iso_weight(siso,siso_err);
 
   // define modified weights to account for systematic SF variations
-  const int NRECKEYS = 5;
+  const int NRECKEYS = 6;
   assert( (unf_keys_rec.size() == NRECKEYS) || NOMONLY);
   double total_rec[NRECKEYS];
   total_rec[0] = event_weight[0]*(eff+eff_errsys)*trig*siso;
   total_rec[1] = event_weight[0]*(eff-eff_errsys)*trig*siso;
-  total_rec[2] = event_weight[0]*eff*(trigphi)*siso;
-  total_rec[3] = event_weight[0]*eff*trig*(sisoup);
-  total_rec[4] = event_weight[0]*eff*trig*(sisodown);
+  total_rec[2] = event_weight[0]*(effphi)*trig*siso;
+  total_rec[3] = event_weight[0]*eff*(trigphi)*siso;
+  total_rec[4] = event_weight[0]*eff*trig*(sisoup);
+  total_rec[5] = event_weight[0]*eff*trig*(sisodown);
 
   // prepare unfolding data structure
   unfdata_type::iterator it = unfdata.find(label);
@@ -2592,8 +2602,8 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
     CUTFLOW(w,19,it->second.Truth_Is_Fiducial,w_reco_fid);
   }
  
-  // Z cutflow
-  if(RUNZ) {
+  // Z cutflow [ not needed ]
+  if(RUNZ && false) {
     dg::set_global_weight( event_weight[0] );
     const bool z_type = (mu_type_col.size()>=2);
     CUTFLOW(z,06,true,z_type);
@@ -2738,7 +2748,6 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
 	    // compute efficiency scale factors on final selected muons, for each replica
 	    for(int replica=0; replica<it2->second.Reco_Weight_Replicas.size(); replica++) {
 	      _eff = EFFVEC[replica];
-	      // mu_eff_scale(  mu_iso_col , _eff  , _a , _b , replica);
 	      mu_trig_scale( mu_iso_col , _trig , _a , 20 , replica);
 	      mu_isol_scale( mu_iso_col , _siso , _a , 0, replica);
 	      if(SFALL) it2->second.Reco_Weight_Replicas[replica] =        event_weight[0] *_eff *_trig *_siso ;
@@ -2835,6 +2844,7 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
   }
 
   // Z histograms - only if do_ntuples is set (i.e., nominal case only)
+  dg::set_global_weight( event_weight[0]*eff*trig*siso );
   if(RUNZ && e_met_cleaning && e_lar_hole && mu_iso_col.size()>=2 && do_ntuples) {
     MAKE_Z(iso);
     // study z's
@@ -2842,8 +2852,14 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
     st_z.study_categorized(true);
     st_z.repurpose( "st_z_final" , "Z event candidates after full selection" );
     st_z.for_each( z_all_col.begin() , z_all_col.end() );
+    if(true && is_mc) { // add trigger-phi plots
+      dg::set_global_weight( total_rec[2] );
+      st_z.repurpose( "st_z_trigphi" , "Z event candidates after full selection" );
+      st_z.for_each( z_all_col.begin() , z_all_col.end() );
+    }
   }
 
+  dg::set_global_weight( event_weight[0]*eff*trig*siso );
   // Special event quantities
   dg::fillh( "avgmu" , 30 , 0 , 30 , avgmu , "average_mu" );
   dg::fillhw( "avgmu_unw" , 30,0,30, avgmu , 1.0 , "average_mu" );
@@ -3102,7 +3118,7 @@ const double jet_drmin( const boost::shared_ptr<const AnaJet>& jet , JETCOL& jet
 }
 
 void mu_eff_scale( MUCOL& mucoll , double *eff_weights,
-		   double& eff_weight , double& eff_stat_error , double& eff_sys_error )
+		   double& eff_weight , double& eff_stat_error , double& eff_sys_error , int choice)
 {
   std::fill(eff_weights, eff_weights+NREPLICASF, 1.0);
   eff_weight = 1.;
@@ -3111,7 +3127,7 @@ void mu_eff_scale( MUCOL& mucoll , double *eff_weights,
   for( std::vector< shared_ptr<const AnaMuon> >::const_iterator imu = mucoll.begin() ; imu != mucoll.end() ; ++imu ) {
     const shared_ptr<const AnaMuon>& mu(*imu);
     double wt , stat_err , sys_err;
-    AnaMuon::mcp_effscale( AnaConfiguration::conf() , AnaConfiguration::data_range() , mu , mu_type , rnum , 0, int_lumi , run_periods , eff_weights, wt , stat_err , sys_err );
+    AnaMuon::mcp_effscale( AnaConfiguration::conf() , AnaConfiguration::data_range() , mu , mu_type , rnum , 0, int_lumi , run_periods , choice, eff_weights, wt , stat_err , sys_err );
     eff_weight *= wt;
     eff_stat_error += pow(stat_err/wt,2);
     eff_sys_error += pow(sys_err/wt,2);

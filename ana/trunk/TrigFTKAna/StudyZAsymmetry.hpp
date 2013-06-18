@@ -66,8 +66,8 @@ protected:
     // make plots
     dg::fillh( "z_m" , 200 , 0 , 200 , z->mass() , "Z Mass (GeV/c^{2})" );
     dg::fillh( "z_pt" , 200 , 0 , 200 , z->pt() , "Z Momentum (GeV/c)" );
-    dg::fillh( "njets" , 10 , 0 , 10 , z->njets() , "N_{jets}" );
-    dg::fillh( "nvtxs_all" , 20 , 0 , 20 , z->nvtxs_all() , "N_{vtxs} (before cuts)" );
+    //dg::fillh( "njets" , 10 , 0 , 10 , z->njets() , "N_{jets}" );
+    //dg::fillh( "nvtxs_all" , 20 , 0 , 20 , z->nvtxs_all() , "N_{vtxs} (before cuts)" );
     //dg::fillh( "jet_sumpt" , 200 , 0 , 200 , jet_sumpt , "Jet #Sigma p_{T} (GeV)" );
     if( met ) {
       dg::fillh( "met" , 200 , 0 , 200 , met->pt() , "Z Missing ET (GeV)" );
@@ -87,6 +87,9 @@ protected:
       dg::fillh( "leptonN_phi" , 100 , -M_PI , M_PI , leptonN->phi() , "l- #phi (rad)" );
       dg::fillvh( "leptonN_absetav" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta, std::abs(leptonN->eta()) , "Z l- |#eta|" );
       dg::fillvh( "leptonN_etav" , dg::bin().D_eta.size()-1, dg::bin().D_eta, leptonN->eta() , "Z l- #eta" );
+      // both charges
+      dg::fillh( "lepton_phi" , 100 , -M_PI , M_PI , leptonP->phi() , "l #phi (rad)" );
+      dg::fillh( "lepton_phi" , 100 , -M_PI , M_PI , leptonN->phi() , "l #phi (rad)" );
       // joint quantities for mu+ & mu-
       //dg::fillh( "dphi_leptonP_leptonN" , 100 , -M_PI , M_PI , leptonP->dist_phi( leptonN ) , "#Delta #phi between leptons (rad)" );
       //dg::fillh( "deta_leptonP_leptonN" , 100 , -M_PI , M_PI , leptonP->dist_eta( leptonN ) , "#Delta #eta between leptons (rad)" );

@@ -487,38 +487,36 @@ public:
 		const boost::shared_ptr<const AnaMuon>& muon , const detector::MCP_TYPE& mu_type,
 		const unsigned long& run_number, const int runRange,
 		const std::vector<double>& int_lumi, const std::vector<std::string>& run_periods,
+		const int& flag,
 		double *effs,
 		double& eff, double& errstat, double& errsys );
   
   // templated workhorse function that computes the efficiency scale factor (rel. 17)
+#define PATCHED_MCP
   template <typename EFFCLASS>
   static void
   mcp_effscale_apply_v17( const boost::shared_ptr<const AnaMuon>& muon , const detector::MCP_TYPE& mu_type,
 			  const unsigned long& run_number , const int runRange,
 			  const std::vector<double>& int_lumi, const std::vector<std::string>& run_periods,
-			  const std::string& flag ,
+			  const int& flag ,
 			  double *effs,
 			  double& eff, double& errstat, double& errsys )
   {
     static std::string datadir("CommonAnalysis/RootCore/data/MuonEfficiencyCorrections/");
     const int seed = 5000; //1721
     static EFFCLASS *mcp_staco_cb = 0;
-    static EFFCLASS *mcp_staco_cb_DtoK = 0;
-    static EFFCLASS *mcp_staco_cb_LtoM = 0;
+    static EFFCLASS *mcp_staco_cb_phi = 0;
     static EFFCLASS *mcp_staco_loose = 0;
     static EFFCLASS *mcp_muid_cb = 0;
     static EFFCLASS *mcp_muid_loose = 0;
-    if( !mcp_staco_cb && runRange==0) { //DtoM
-      if(false) { // EtaPhi // FIXME
-	mcp_staco_cb = new EFFCLASS( datadir , "STACO_CB_2011_SF_fine.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
-      } else {   // EtaPt
-	mcp_staco_cb = new EFFCLASS( datadir , "STACO_CB_2011_SF_fineEtaBinning.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
-      }
+    if( !mcp_staco_cb && runRange==0 && flag==0 ) { //DtoM
+      // eta only (suspecting that this could also be eta x pt though)
+      mcp_staco_cb = new EFFCLASS( datadir , "STACO_CB_2011_SF_fineEtaBinning.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
       mcp_staco_loose = new EFFCLASS( datadir , "STACO_CB_plus_ST_2011_SF.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
       mcp_muid_cb = new EFFCLASS( datadir , "Muid_CB_2011_SF.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
       mcp_muid_loose = new EFFCLASS( datadir , "Muid_CB_plus_ST_2011_SF.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
       assert( int_lumi.size() == run_periods.size() && "probably need to edit run_periods vector in your analysis file" );
-      std::cout << "Inserting run periods into muon efficiency tool: " << runRange << std::endl;
+      std::cout << "Inserting run periods into muon efficiency (eta only) tool: " << runRange << std::endl;
       for( int i = 0 ; i < run_periods.size() ; ++i ) {
 	std::cout << "EFFSCALE WEIGHTS: " << run_periods[i] << " " << int_lumi[i] << std::endl;
 	mcp_staco_cb->addPeriod( run_periods[i] , int_lumi[i] );
@@ -532,46 +530,45 @@ public:
       mcp_muid_cb->Initialise();
       mcp_muid_loose->Initialise();
     }
-    if( !mcp_staco_cb_DtoK && runRange==1 ) { //DtoK
-      mcp_staco_cb_DtoK = new EFFCLASS( datadir , "STACO_CB_2011_SF_fineEtaBinning.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
+    // staco CB with phi corrections
+    if( !mcp_staco_cb_phi && runRange==0 && flag==1 ) {
+      mcp_staco_cb_phi = new EFFCLASS( datadir , "STACO_CB_2011_SF_fine.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
       assert( int_lumi.size() == run_periods.size() && "probably need to edit run_periods vector in your analysis file" );
-      assert( int_lumi[9]==0 && int_lumi[10]==0 );
-      std::cout << "Inserting run periods into muon efficiency tool: " << runRange << std::endl;
+      std::cout << "Inserting run periods into muon efficiency (eta x phi) tool: " << runRange << std::endl;
       for( int i = 0 ; i < run_periods.size() ; ++i ) {
 	std::cout << "EFFSCALE WEIGHTS: " << run_periods[i] << " " << int_lumi[i] << std::endl;
-	mcp_staco_cb_DtoK->addPeriod( run_periods[i] , int_lumi[i] );
+	mcp_staco_cb_phi->addPeriod( run_periods[i] , int_lumi[i] );
       }
-      mcp_staco_cb_DtoK->Initialise();
+      mcp_staco_cb_phi->Initialise();
+      // no replicas for mcp_staco_cb_phi
     }
-    if( !mcp_staco_cb_LtoM && runRange==2 ) { //LtoM
-      mcp_staco_cb_LtoM = new EFFCLASS( datadir , "STACO_CB_2011_SF_fineEtaBinning.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
-      assert( int_lumi.size() == run_periods.size() && "probably need to edit run_periods vector in your analysis file" );
-      assert( int_lumi[1]==0 && int_lumi[8]==0 );
-      std::cout << "Inserting run periods into muon efficiency tool: " << runRange << std::endl;
-      for( int i = 0 ; i < run_periods.size() ; ++i ) {
-	std::cout << "EFFSCALE WEIGHTS: " << run_periods[i] << " " << int_lumi[i] << std::endl;
-	mcp_staco_cb_LtoM->addPeriod( run_periods[i] , int_lumi[i] );
-      }
-      mcp_staco_cb_LtoM->Initialise();
-    }
+
     EFFCLASS *mcp = 0;
     if(mu_type==detector::MCP_STACO_COMBINED) {
-      // mcp = runRange==2 ? mcp_staco_cb_LtoM : ( runRange==1 ? mcp_staco_cb_DtoK : mcp_staco_cb);
-      mcp = mcp_staco_cb;
+      mcp = flag==0 ? mcp_staco_cb : mcp_staco_cb_phi;
     }
-    //    if(mu_type==detector::MCP_STACO_LOOSE || mu_type==detector::MCP_STACO_TIGHT) mcp = mcp_staco_loose;
-    //    if(mu_type==detector::MCP_MUID_COMBINED) mcp = mcp_muid_cb;
-    //    if(mu_type==detector::MCP_MUID_LOOSE || mu_type==detector::MCP_MUID_TIGHT) mcp = mcp_muid_loose;
-    //    if(replica>=0) assert(runRange==0); // replicas are only used for runRange=0 (DtoM)
+    if(mu_type==detector::MCP_STACO_LOOSE || mu_type==detector::MCP_STACO_TIGHT) mcp = mcp_staco_loose;
+    if(mu_type==detector::MCP_MUID_COMBINED) mcp = mcp_muid_cb;
+    if(mu_type==detector::MCP_MUID_LOOSE || mu_type==detector::MCP_MUID_TIGHT) mcp = mcp_muid_loose;
+#ifdef PATCHED_MCP
     const std::pair<int,int> bin = mcp->get_pt_eta_phi_bin_index(muon->scharge(),muon->four_vector());
     for(int replica=0;replica<NREPLICASF;replica++) {
-      effs[replica] *= mcp->scaleFactorReplica(muon->scharge(),muon->four_vector(),replica,bin);
+      effs[replica] *= (flag==0 ? mcp->scaleFactorReplica(muon->scharge(),muon->four_vector(),replica,bin) : 1.0);
     }
     eff = mcp->scaleFactor(muon->scharge(),muon->four_vector(),bin); 
     errstat = mcp->scaleFactorUncertainty(muon->scharge(),muon->four_vector(),bin);
     errsys = mcp->scaleFactorSystematicUncertainty(muon->scharge(),muon->four_vector(),bin);
+#else
+    for(int replica=0;replica<NREPLICASF;replica++) {
+      effs[replica] *= (flag==0 ? mcp->scaleFactorReplica(muon->scharge(),muon->four_vector(),replica) : 1.0);
+    }
+    eff = mcp->scaleFactor(muon->scharge(),muon->four_vector()); 
+    errstat = mcp->scaleFactorUncertainty(muon->scharge(),muon->four_vector());
+    errsys = mcp->scaleFactorSystematicUncertainty(muon->scharge(),muon->four_vector());
+#endif
     return;
   }
+#undef PATCHED_MCP
 
   // TRIGGER SCALE FACTORS
   
