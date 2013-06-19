@@ -56,7 +56,9 @@ void D3PDPeterTreeV29l::Init(TTree *tree)
 
   // Set object pointer
   trig_ef = 0;
+#ifndef DISABLE_TRIGGER_MATCHING
   mu_trig_efmatchdelr = 0;
+#endif
   // Set branch addresses and branch pointers
   if (!tree) return;
   fChain = tree;
@@ -206,10 +208,14 @@ void D3PDPeterTreeV29l::Init(TTree *tree)
   if( fChain->GetBranchStatus("mu_noutlierstrt") ) { fChain->SetBranchAddress("mu_noutlierstrt", mu_noutlierstrt, &b_mu_noutlierstrt); }
   if( fChain->GetBranchStatus("mu_nhitcscunspoilt") ) { fChain->SetBranchAddress("mu_nhitcscunspoilt", mu_nhitcscunspoilt, &b_mu_nhitcscunspoilt); }
   if( fChain->GetBranchStatus("mu_quality") ) { fChain->SetBranchAddress("mu_quality", mu_quality, &b_mu_quality); }
+#ifndef DISABLE_TRIGGER_MATCHING
   if( fChain->GetBranchStatus("mu_trig_efmatchvector") ) { fChain->SetBranchAddress("mu_trig_efmatchvector", &mu_trig_efmatchvector_, &b_mu_trig_efmatchvector_); }
   if( fChain->GetBranchStatus("mu_trig_efmatchvector.first") ) { fChain->SetBranchAddress("mu_trig_efmatchvector.first", mu_trig_efmatchvector_first, &b_mu_trig_efmatchvector_first); }
   if( fChain->GetBranchStatus("mu_trig_efmatchvector.second") ) { fChain->SetBranchAddress("mu_trig_efmatchvector.second", mu_trig_efmatchvector_second, &b_mu_trig_efmatchvector_second); }
   if( fChain->GetBranchStatus("mu_trig_efmatchdelr") ) { fChain->SetBranchAddress("mu_trig_efmatchdelr", &mu_trig_efmatchdelr, &b_mu_trig_efmatchdelr); }
+#else
+  fChain->SetBranchStatus("mu_trig_efmatch*",0);
+#endif
   if( fChain->GetBranchStatus("mu_passes_mcp") ) { fChain->SetBranchAddress("mu_passes_mcp", mu_passes_mcp, &b_mu_passes_mcp); }
   if( fChain->GetBranchStatus("mu_MET_wet") ) { fChain->SetBranchAddress("mu_MET_wet", mu_MET_wet, &b_mu_MET_wet); }
   if( fChain->GetBranchStatus("mu_MET_wpx") ) { fChain->SetBranchAddress("mu_MET_wpx", mu_MET_wpx, &b_mu_MET_wpx); }

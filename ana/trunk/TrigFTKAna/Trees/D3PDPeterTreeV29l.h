@@ -8,6 +8,7 @@
 #ifndef D3PDPeterTreeV29l_h
 #define D3PDPeterTreeV29l_h
 
+#include "TrigFTKAna_config.h"
 #include <TROOT.h>
 #include <TChain.h>
 #include <TFile.h>
@@ -127,10 +128,12 @@ D3PDPeterTreeV29l : public D3PDPeterTreeBase
   Int_t mu_noutlierstrt[nmu_max]; //[nmu]
   Int_t mu_nhitcscunspoilt[nmu_max]; //[nmu]
   UShort_t mu_quality[nmu_max]; //[nmu]
+#ifndef DISABLE_TRIGGER_MATCHING
   Int_t mu_trig_efmatchvector_;
   Int_t mu_trig_efmatchvector_first[matchvector_max]; //[mu_trig_efmatchvector_]
   Int_t mu_trig_efmatchvector_second[matchvector_max]; //[mu_trig_efmatchvector_]
   std::vector<float> *mu_trig_efmatchdelr;
+#endif
   Int_t mu_passes_mcp[nmu_max]; //[nmu]
   Float_t mu_MET_wet[nmu_max]; //[nmu]
   Float_t mu_MET_wpx[nmu_max]; //[nmu]
@@ -396,10 +399,12 @@ D3PDPeterTreeV29l : public D3PDPeterTreeBase
   TBranch *b_mu_noutlierstrt; //!
   TBranch *b_mu_nhitcscunspoilt; //!
   TBranch *b_mu_quality; //!
+#ifndef DISABLE_TRIGGER_MATCHING
   TBranch *b_mu_trig_efmatchvector_; //!
   TBranch *b_mu_trig_efmatchvector_first; //!
   TBranch *b_mu_trig_efmatchvector_second; //!
   TBranch *b_mu_trig_efmatchdelr; //!
+#endif
   TBranch *b_mu_passes_mcp; //!
   TBranch *b_mu_MET_wet; //!
   TBranch *b_mu_MET_wpx; //!

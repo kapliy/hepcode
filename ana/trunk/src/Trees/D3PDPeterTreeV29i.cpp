@@ -58,6 +58,7 @@ void D3PDPeterTreeV29i::Init(TTree *tree)
   trig_ef = 0;
   trig_l2 = 0;
   trig_l1 = 0;
+#ifndef DISABLE_TRIGGER_MATCHING
   mu_trig_l1matchdelr = 0;
   mu_trig_l2matchdelr = 0;
   mu_trig_l2samatchdelr = 0;
@@ -65,6 +66,7 @@ void D3PDPeterTreeV29i::Init(TTree *tree)
   ele_trig_l1matchdelr = 0;
   ele_trig_l2matchdelr = 0;
   ele_trig_efmatchdelr = 0;
+#endif
   // Set branch addresses and branch pointers
   if (!tree) return;
   fChain = tree;
@@ -298,6 +300,7 @@ void D3PDPeterTreeV29i::Init(TTree *tree)
   if( fChain->GetBranchStatus("mu_scatt_curv_sig") ) { fChain->SetBranchAddress("mu_scatt_curv_sig", mu_scatt_curv_sig, &b_mu_scatt_curv_sig); }
   if( fChain->GetBranchStatus("mu_scatt_neighb_sig") ) { fChain->SetBranchAddress("mu_scatt_neighb_sig", mu_scatt_neighb_sig, &b_mu_scatt_neighb_sig); }
   if( fChain->GetBranchStatus("mu_field_integral") ) { fChain->SetBranchAddress("mu_field_integral", mu_field_integral, &b_mu_field_integral); }
+#ifndef DISABLE_TRIGGER_MATCHING
   if( fChain->GetBranchStatus("mu_trig_l1matchvector") ) { fChain->SetBranchAddress("mu_trig_l1matchvector", &mu_trig_l1matchvector_, &b_mu_trig_l1matchvector_); }
   if( fChain->GetBranchStatus("mu_trig_l1matchvector.first") ) { fChain->SetBranchAddress("mu_trig_l1matchvector.first", mu_trig_l1matchvector_first, &b_mu_trig_l1matchvector_first); }
   if( fChain->GetBranchStatus("mu_trig_l1matchvector.second") ) { fChain->SetBranchAddress("mu_trig_l1matchvector.second", mu_trig_l1matchvector_second, &b_mu_trig_l1matchvector_second); }
@@ -314,6 +317,12 @@ void D3PDPeterTreeV29i::Init(TTree *tree)
   if( fChain->GetBranchStatus("mu_trig_efmatchvector.first") ) { fChain->SetBranchAddress("mu_trig_efmatchvector.first", mu_trig_efmatchvector_first, &b_mu_trig_efmatchvector_first); }
   if( fChain->GetBranchStatus("mu_trig_efmatchvector.second") ) { fChain->SetBranchAddress("mu_trig_efmatchvector.second", mu_trig_efmatchvector_second, &b_mu_trig_efmatchvector_second); }
   if( fChain->GetBranchStatus("mu_trig_efmatchdelr") ) { fChain->SetBranchAddress("mu_trig_efmatchdelr", &mu_trig_efmatchdelr, &b_mu_trig_efmatchdelr); }
+#else
+  fChain->SetBranchStatus("mu_trig_l1match*",0);
+  fChain->SetBranchStatus("mu_trig_l2match*",0);
+  fChain->SetBranchStatus("mu_trig_l2samatch*",0);
+  fChain->SetBranchStatus("mu_trig_efmatch*",0);
+#endif
   if( fChain->GetBranchStatus("mu_passes_mcp") ) { fChain->SetBranchAddress("mu_passes_mcp", mu_passes_mcp, &b_mu_passes_mcp); }
   if( fChain->GetBranchStatus("mu_MET_wet") ) { fChain->SetBranchAddress("mu_MET_wet", mu_MET_wet, &b_mu_MET_wet); }
   if( fChain->GetBranchStatus("mu_MET_wpx") ) { fChain->SetBranchAddress("mu_MET_wpx", mu_MET_wpx, &b_mu_MET_wpx); }
@@ -391,6 +400,7 @@ void D3PDPeterTreeV29i::Init(TTree *tree)
   if( fChain->GetBranchStatus("ele_noutlierssct") ) { fChain->SetBranchAddress("ele_noutlierssct", ele_noutlierssct, &b_ele_noutlierssct); }
   if( fChain->GetBranchStatus("ele_eta2") ) { fChain->SetBranchAddress("ele_eta2", ele_eta2, &b_ele_eta2); }
   if( fChain->GetBranchStatus("ele_et2") ) { fChain->SetBranchAddress("ele_et2", ele_et2, &b_ele_et2); }
+#ifndef DISABLE_TRIGGER_MATCHING
   if( fChain->GetBranchStatus("ele_trig_l1matchvector") ) { fChain->SetBranchAddress("ele_trig_l1matchvector", &ele_trig_l1matchvector_, &b_ele_trig_l1matchvector_); }
   if( fChain->GetBranchStatus("ele_trig_l1matchvector.first") ) { fChain->SetBranchAddress("ele_trig_l1matchvector.first", ele_trig_l1matchvector_first, &b_ele_trig_l1matchvector_first); }
   if( fChain->GetBranchStatus("ele_trig_l1matchvector.second") ) { fChain->SetBranchAddress("ele_trig_l1matchvector.second", ele_trig_l1matchvector_second, &b_ele_trig_l1matchvector_second); }
@@ -403,6 +413,11 @@ void D3PDPeterTreeV29i::Init(TTree *tree)
   if( fChain->GetBranchStatus("ele_trig_efmatchvector.first") ) { fChain->SetBranchAddress("ele_trig_efmatchvector.first", ele_trig_efmatchvector_first, &b_ele_trig_efmatchvector_first); }
   if( fChain->GetBranchStatus("ele_trig_efmatchvector.second") ) { fChain->SetBranchAddress("ele_trig_efmatchvector.second", ele_trig_efmatchvector_second, &b_ele_trig_efmatchvector_second); }
   if( fChain->GetBranchStatus("ele_trig_efmatchdelr") ) { fChain->SetBranchAddress("ele_trig_efmatchdelr", &ele_trig_efmatchdelr, &b_ele_trig_efmatchdelr); }
+#else
+  fChain->SetBranchStatus("ele_trig_l1match*",0);
+  fChain->SetBranchStatus("ele_trig_l2match*",0);
+  fChain->SetBranchStatus("ele_trig_efmatch*",0);
+#endif
   if( fChain->GetBranchStatus("ele_MET_wet") ) { fChain->SetBranchAddress("ele_MET_wet", ele_MET_wet, &b_ele_MET_wet); }
   if( fChain->GetBranchStatus("ele_MET_wpx") ) { fChain->SetBranchAddress("ele_MET_wpx", ele_MET_wpx, &b_ele_MET_wpx); }
   if( fChain->GetBranchStatus("ele_MET_wpy") ) { fChain->SetBranchAddress("ele_MET_wpy", ele_MET_wpy, &b_ele_MET_wpy); }

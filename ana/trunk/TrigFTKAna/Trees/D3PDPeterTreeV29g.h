@@ -8,6 +8,7 @@
 #ifndef D3PDPeterTreeV29g_h
 #define D3PDPeterTreeV29g_h
 
+#include "TrigFTKAna_config.h"
 #include <TROOT.h>
 #include <TChain.h>
 #include <TFile.h>
@@ -167,6 +168,7 @@ D3PDPeterTreeV29g : public D3PDPeterTreeBase
   Float_t mu_scatt_curv_sig[nmu_max]; //[nmu]
   Float_t mu_scatt_neighb_sig[nmu_max]; //[nmu]
   Float_t mu_field_integral[nmu_max]; //[nmu]
+#ifndef DISABLE_TRIGGER_MATCHING
   Int_t mu_trig_l1matchvector_;
   Int_t mu_trig_l1matchvector_first[matchvector_max]; //[mu_trig_l1matchvector_]
   Int_t mu_trig_l1matchvector_second[matchvector_max]; //[mu_trig_l1matchvector_]
@@ -183,6 +185,7 @@ D3PDPeterTreeV29g : public D3PDPeterTreeBase
   Int_t mu_trig_efmatchvector_first[matchvector_max]; //[mu_trig_efmatchvector_]
   Int_t mu_trig_efmatchvector_second[matchvector_max]; //[mu_trig_efmatchvector_]
   std::vector<float> *mu_trig_efmatchdelr;
+#endif
   Int_t mu_passes_mcp[nmu_max]; //[nmu]
   Float_t mu_MET_wet[nmu_max]; //[nmu]
   Float_t mu_MET_wpx[nmu_max]; //[nmu]
@@ -260,6 +263,7 @@ D3PDPeterTreeV29g : public D3PDPeterTreeBase
   Short_t ele_noutlierssct[nele_max]; //[nele]
   Float_t ele_eta2[nele_max]; //[nele]
   Float_t ele_et2[nele_max]; //[nele]
+#ifndef DISABLE_TRIGGER_MATCHING
   Int_t ele_trig_l1matchvector_;
   Int_t ele_trig_l1matchvector_first[matchvector_max]; //[ele_trig_l1matchvector_]
   Int_t ele_trig_l1matchvector_second[matchvector_max]; //[ele_trig_l1matchvector_]
@@ -272,6 +276,7 @@ D3PDPeterTreeV29g : public D3PDPeterTreeBase
   Int_t ele_trig_efmatchvector_first[matchvector_max]; //[ele_trig_efmatchvector_]
   Int_t ele_trig_efmatchvector_second[matchvector_max]; //[ele_trig_efmatchvector_]
   std::vector<float> *ele_trig_efmatchdelr;
+#endif
   Float_t ele_MET_wet[nele_max]; //[nele]
   Float_t ele_MET_wpx[nele_max]; //[nele]
   Float_t ele_MET_wpy[nele_max]; //[nele]
@@ -714,6 +719,7 @@ D3PDPeterTreeV29g : public D3PDPeterTreeBase
   TBranch *b_mu_scatt_curv_sig; //!
   TBranch *b_mu_scatt_neighb_sig; //!
   TBranch *b_mu_field_integral; //!
+#ifndef DISABLE_TRIGGER_MATCHING
   TBranch *b_mu_trig_l1matchvector_; //!
   TBranch *b_mu_trig_l1matchvector_first; //!
   TBranch *b_mu_trig_l1matchvector_second; //!
@@ -730,6 +736,7 @@ D3PDPeterTreeV29g : public D3PDPeterTreeBase
   TBranch *b_mu_trig_efmatchvector_first; //!
   TBranch *b_mu_trig_efmatchvector_second; //!
   TBranch *b_mu_trig_efmatchdelr; //!
+#endif
   TBranch *b_mu_passes_mcp; //!
   TBranch *b_mu_MET_wet; //!
   TBranch *b_mu_MET_wpx; //!
@@ -807,6 +814,7 @@ D3PDPeterTreeV29g : public D3PDPeterTreeBase
   TBranch *b_ele_noutlierssct; //!
   TBranch *b_ele_eta2; //!
   TBranch *b_ele_et2; //!
+#ifndef DISABLE_TRIGGER_MATCHING
   TBranch *b_ele_trig_l1matchvector_; //!
   TBranch *b_ele_trig_l1matchvector_first; //!
   TBranch *b_ele_trig_l1matchvector_second; //!
@@ -819,6 +827,7 @@ D3PDPeterTreeV29g : public D3PDPeterTreeBase
   TBranch *b_ele_trig_efmatchvector_first; //!
   TBranch *b_ele_trig_efmatchvector_second; //!
   TBranch *b_ele_trig_efmatchdelr; //!
+#endif
   TBranch *b_ele_MET_wet; //!
   TBranch *b_ele_MET_wpx; //!
   TBranch *b_ele_MET_wpy; //!
