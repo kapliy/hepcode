@@ -9,7 +9,7 @@ opt=""
 
 if test "$action" != "checkout" -a -f "$pkgfile"
 then
-    for package in "$ROOTCOREDIR" `cat $pkgfile`
+    for package in `cat $pkgfile`
     do
 	$ROOTCOREDIR/scripts/manage_pkg.sh "$action" "" "$package" "$list"
     done

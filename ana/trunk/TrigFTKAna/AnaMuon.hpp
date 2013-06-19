@@ -799,19 +799,15 @@ public:
 
   // wrapper function that checks if EF object is within cone 0.2 of this muon
   const bool passes_trigger_matching_v17() const;
-  const bool vlq_trigger_matched( const unsigned long& run_number ) const {
-    if( run_number < 186516 ) {
-      return trigger_match_dr("EF_mu18_MG") < 0.2 || trigger_match_dr("EF_mu18") < 0.2;
-    } else {
-      return trigger_match_dr("EF_mu18_MG_medium") < 0.2 || trigger_match_dr("EF_mu18_medium") < 0.2;
-    }
-  }
-  
   const std::map< std::string , ftype > trigger_match_dr() const { return _trigger_match_dr; } // peter's trigger matching
   const ftype trigger_match_dr( const std::string& trigname ) const { 
+#ifndef DISABLE_TRIGGER_MATCHING
     std::map<std::string,ftype>::const_iterator i=_trigger_match_dr.find(trigname);
     if( i==_trigger_match_dr.end() ) { return std::numeric_limits<ftype>::max(); }
     return i->second;
+#else  // always match
+    return 0.0;
+#endif
   }
 
   class IsTriggerMatch {

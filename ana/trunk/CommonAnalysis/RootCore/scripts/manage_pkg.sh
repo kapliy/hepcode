@@ -3,6 +3,7 @@
 set -e
 source "`dirname $0`/preamble.sh" "$0"
 
+echo "manage_pkg: $@"
 action=$1
 url=$2
 dir=$3

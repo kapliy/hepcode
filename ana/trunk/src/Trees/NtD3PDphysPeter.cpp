@@ -257,6 +257,7 @@ NtD3PDphysPeter::_get_event_V29g()
   assert(nt->nmu < D3PDPeterTreeV29g::nmu_max);
   assert(nt->nvx < D3PDPeterTreeV29g::nvx_max);
   // matchvectors are really large, so this is important
+#ifndef DISABLE_TRIGGER_MATCHING
   assert(nt->mu_trig_l1matchvector_ < D3PDPeterTreeV29g::matchvector_max);
   assert(nt->mu_trig_l2matchvector_ < D3PDPeterTreeV29g::matchvector_max);
   assert(nt->mu_trig_l2samatchvector_ < D3PDPeterTreeV29g::matchvector_max);
@@ -264,7 +265,7 @@ NtD3PDphysPeter::_get_event_V29g()
   assert(nt->ele_trig_l1matchvector_ < D3PDPeterTreeV29g::matchvector_max);
   assert(nt->ele_trig_l2matchvector_ < D3PDPeterTreeV29g::matchvector_max);
   assert(nt->ele_trig_efmatchvector_ < D3PDPeterTreeV29g::matchvector_max);
-
+#endif
   _run_number = nt->run;
   _event_number = nt->event;
   _lumi_block = nt->lb;
@@ -732,6 +733,7 @@ NtD3PDphysPeter::_get_event_V29g()
 
 
   // fill with Peter's trigger matching info
+#ifndef DISABLE_TRIGGER_MATCHING
   for( int i=0; i!=nt->mu_trig_l1matchvector_; ++i ) { 
     const int i_ntuple_mu = nt->mu_trig_l1matchvector_first[i];
     const int i_trigger = nt->mu_trig_l1matchvector_second[i];
@@ -796,6 +798,7 @@ NtD3PDphysPeter::_get_event_V29g()
     assert( i_trigger < EF.size() );
     if( iele != _electrons.end() ) { (*iele)->_trigger_match_dr[ EF[i_trigger] ] = dr; }
   }
+#endif
 
   // fill truth particles
   assert( nt );
@@ -828,6 +831,7 @@ NtD3PDphysPeter::_get_event_V29i()
   assert(nt->nmu < D3PDPeterTreeV29i::nmu_max);
   assert(nt->nvx < D3PDPeterTreeV29i::nvx_max);
   // matchvectors are really large, so this is important
+#ifndef DISABLE_TRIGGER_MATCHING
   assert(nt->mu_trig_l1matchvector_ < D3PDPeterTreeV29i::matchvector_max);
   assert(nt->mu_trig_l2matchvector_ < D3PDPeterTreeV29i::matchvector_max);
   assert(nt->mu_trig_l2samatchvector_ < D3PDPeterTreeV29i::matchvector_max);
@@ -835,6 +839,7 @@ NtD3PDphysPeter::_get_event_V29i()
   assert(nt->ele_trig_l1matchvector_ < D3PDPeterTreeV29i::matchvector_max);
   assert(nt->ele_trig_l2matchvector_ < D3PDPeterTreeV29i::matchvector_max);
   assert(nt->ele_trig_efmatchvector_ < D3PDPeterTreeV29i::matchvector_max);
+#endif
 
   _run_number = nt->run;
   _event_number = nt->event;
@@ -1303,6 +1308,7 @@ NtD3PDphysPeter::_get_event_V29i()
 
 
   // fill with Peter's trigger matching info
+#ifndef DISABLE_TRIGGER_MATCHING
   for( int i=0; i!=nt->mu_trig_l1matchvector_; ++i ) { 
     const int i_ntuple_mu = nt->mu_trig_l1matchvector_first[i];
     const int i_trigger = nt->mu_trig_l1matchvector_second[i];
@@ -1367,6 +1373,7 @@ NtD3PDphysPeter::_get_event_V29i()
     assert( i_trigger < EF.size() );
     if( iele != _electrons.end() ) { (*iele)->_trigger_match_dr[ EF[i_trigger] ] = dr; }
   }
+#endif
 
   // fill truth particles
   assert( nt );

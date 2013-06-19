@@ -142,6 +142,20 @@ protected:
 	}
       }
     }
+    // for Nominal/baseline selection: plot delta-phi between MET SoftTerms and all-but-SoftTerms
+    // PS - SoftTerms means softjets + cellout + cellout_eflow. we also do separately for softjets ONLY.
+    if(true && _run_debug_studies && met && is_baseline()) {
+      TLorentzVector met_final,met_softjets,met_cellout,met_celloute;
+      met_final.SetPtEtaPhiM( met->pt() , 0. , met->phi() , 0. );
+      met_softjets.SetPtEtaPhiM( met->softjets() , 0. , met->softjets_phi() , 0. );
+      met_cellout.SetPtEtaPhiM( met->cellout() , 0. , met->cellout_phi() , 0. );
+      met_celloute.SetPtEtaPhiM( met->cellout_eflow() , 0. , met->cellout_eflow_phi() , 0. );
+      TLorentzVector met_soft = met_softjets + met_cellout + met_celloute;
+      TLorentzVector met_nosoft = met_final - met_soft;
+      TLorentzVector met_nosoftjets = met_final - met_softjets;
+      dg::fillh( "dphi_metsoft_metnosoft_Wsel", 32 , -3.15 , 3.15 , detector::canonical_phi(met_soft.Phi() - met_nosoft.Phi()) , "MET soft - nosoft (softjets+cellout+cellouteflow)" );
+      dg::fillh( "dphi_metsjets_metnosjets_Wsel", 32 , -3.15 , 3.15 , detector::canonical_phi(met_softjets.Phi() - met_nosoftjets.Phi()) , "MET soft - nosoft (softjets only)" );
+    }
     // general 1D plots
     if( false ) {  //02/08/2013: disabled
       if(false &&  met ) {
@@ -389,8 +403,9 @@ protected:
   float _average_mu;
 
 public:
+  bool is_baseline() const { return current_category()=="baseline"; }
   bool bootstrap() const {   // hardcoded to only run in "baseline" directory
-    return _do_bootstrap && (current_category()=="baseline"); 
+    return _do_bootstrap && is_baseline();
   }
   void do_bootstrap(bool v = true) { _do_bootstrap = v; }
   void do_save_ntuple(bool v = true) { _do_save_ntuple = v; }

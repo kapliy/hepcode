@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#RootCore: atlasoff/PhysicsAnalysis/D3PDTools/RootCore/trunk
+
 # selects a snapshot of tags. Use "packages_tags.txt" to use the latest available tags.
 packages=packages.txt
 if [ "$#" -ge "2" ]; then

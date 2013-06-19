@@ -108,6 +108,13 @@ if test "x${remove_ancient_code}" = "xtrue" ; then
 fi
 AM_CONDITIONAL([DISABLE_ANCIENT], [test x${remove_ancient_code} = xtrue])
 
+# disable trigger matching code (memory-error-prone)
+disable_trigger_matching=true
+if test "x${disable_trigger_matching}" = "xtrue" ; then
+   AC_DEFINE(DISABLE_TRIGGER_MATCHING,,[Disable trigger matching to reduce memory footprint])
+fi
+AM_CONDITIONAL([DISABLE_TRIGGER_MATCHING], [test x${disable_trigger_matching} = xtrue])
+
 dnl check for CommonAnalysis source
 AC_DEFINE([NO_ANALYSIS_MSG],["FATAL: TrigFTKAna/CommonAnalysis/ packages were not compiled, but are necessary to call this function. Please run \"source bootstrap.sh RootCore\" before compiling TrigFTKAna to fix this problem."],[A message that will be printed during runtime if analysis dependencies were not compiled])
 AX_COMMONANALYSIS

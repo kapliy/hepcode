@@ -34,7 +34,7 @@ DataGraphics
     Value _vx_weight;
     Value _ls1_weight;  // line-shape weight: width parametrization
     Value _ls2_weight;  // line-shape weight: running coupling
-    Value _ph_weight;   // pythia-to-herwig weight
+    Value _ph_weight;   // pythia-to-herwig weight, OR: PowhegPythia->Data weight
     Value _eff_weight;
     Value _eff_weight_error;
     Value _eff_weight_error_sys;
@@ -83,11 +83,11 @@ DataGraphics
 
     // vectors for DgNtuple
     const std::vector<std::string>& get_names() const {
-      static std::vector<std::string> v = boost::assign::list_of("run")("event")("fid")("mcw")("puw")("wzptw")("wzptw2")("wzptw3")("wpolw")("znlow")("alpy")("vxw")("ls1w")("ls2w")("effw")("trigw")("trigallw")("trigphiw")("mcpw")("mcpallw")("isow")("lha_CT10")("lha_MSTW")("lha_HERA")("lha_NNPDF")("lha_ABM");
+      static std::vector<std::string> v = boost::assign::list_of("run")("event")("fid")("mcw")("puw")("wzptw")("wzptw2")("wzptw3")("wpolw")("znlow")("alpy")("vxw")("ls1w")("ls2w")("phw")("effw")("trigw")("trigallw")("trigphiw")("mcpw")("mcpallw")("isow")("lha_CT10")("lha_MSTW")("lha_HERA")("lha_NNPDF")("lha_ABM");
       return v;
     };
     const std::vector<float> get_values() const {
-      std::vector<float> v = boost::assign::list_of(static_cast<float>(_run_number))(static_cast<float>(_event_number))(static_cast<float>(_is_fiducial))(_mc_weight)(_pu_weight)(_wzpt_weight)(_wzpt_weight2)(_wzpt_weight3)(_wpol_weight)(_znlo_weight)(_alpy_weight)(_vx_weight)(_ls1_weight)(_ls2_weight)(_eff_weight)(_trig_weight)(_trigall_weight)(_trigphi_weight)(_mcp_weight)(_mcpall_weight)(_iso_weight);
+      std::vector<float> v = boost::assign::list_of(static_cast<float>(_run_number))(static_cast<float>(_event_number))(static_cast<float>(_is_fiducial))(_mc_weight)(_pu_weight)(_wzpt_weight)(_wzpt_weight2)(_wzpt_weight3)(_wpol_weight)(_znlo_weight)(_alpy_weight)(_vx_weight)(_ls1_weight)(_ls2_weight)(_ph_weight)(_eff_weight)(_trig_weight)(_trigall_weight)(_trigphi_weight)(_mcp_weight)(_mcpall_weight)(_iso_weight);
       const std::vector<float>& w = _pdf_weights;
       static std::vector<float> wones = boost::assign::list_of(1)(1)(1)(1)(1);
       if (w.size()==5) {
