@@ -38,6 +38,7 @@ DataGraphics
     Value _eff_weight;
     Value _eff_weight_error;
     Value _eff_weight_error_sys;
+    Value _effphi_weight; // reco eta x phi weight (applied instead)
     Value _trig_weight;
     Value _trigall_weight; // multiple of all trigger weights per event (e.g., Z with both-matched)
     Value _trigphi_weight; // trigger phi weight, applied *on top*
@@ -69,6 +70,7 @@ DataGraphics
       _eff_weight = 1.0;
       _eff_weight_error = 0.0;
       _eff_weight_error_sys = 0.0;
+      _effphi_weight = 1.0;
       _trig_weight = 1.0;
       _trigall_weight = 1.0;
       _trigphi_weight = 1.0;
@@ -83,11 +85,11 @@ DataGraphics
 
     // vectors for DgNtuple
     const std::vector<std::string>& get_names() const {
-      static std::vector<std::string> v = boost::assign::list_of("run")("event")("fid")("mcw")("puw")("wzptw")("wzptw2")("wzptw3")("wpolw")("znlow")("alpy")("vxw")("ls1w")("ls2w")("phw")("effw")("trigw")("trigallw")("trigphiw")("mcpw")("mcpallw")("isow")("lha_CT10")("lha_MSTW")("lha_HERA")("lha_NNPDF")("lha_ABM");
+      static std::vector<std::string> v = boost::assign::list_of("run")("event")("fid")("mcw")("puw")("wzptw")("wzptw2")("wzptw3")("wpolw")("znlow")("alpy")("vxw")("ls1w")("ls2w")("phw")("effw")("effphiw")("trigw")("trigallw")("trigphiw")("mcpw")("mcpallw")("isow")("lha_CT10")("lha_MSTW")("lha_HERA")("lha_NNPDF")("lha_ABM");
       return v;
     };
     const std::vector<float> get_values() const {
-      std::vector<float> v = boost::assign::list_of(static_cast<float>(_run_number))(static_cast<float>(_event_number))(static_cast<float>(_is_fiducial))(_mc_weight)(_pu_weight)(_wzpt_weight)(_wzpt_weight2)(_wzpt_weight3)(_wpol_weight)(_znlo_weight)(_alpy_weight)(_vx_weight)(_ls1_weight)(_ls2_weight)(_ph_weight)(_eff_weight)(_trig_weight)(_trigall_weight)(_trigphi_weight)(_mcp_weight)(_mcpall_weight)(_iso_weight);
+      std::vector<float> v = boost::assign::list_of(static_cast<float>(_run_number))(static_cast<float>(_event_number))(static_cast<float>(_is_fiducial))(_mc_weight)(_pu_weight)(_wzpt_weight)(_wzpt_weight2)(_wzpt_weight3)(_wpol_weight)(_znlo_weight)(_alpy_weight)(_vx_weight)(_ls1_weight)(_ls2_weight)(_ph_weight)(_eff_weight)(_effphi_weight)(_trig_weight)(_trigall_weight)(_trigphi_weight)(_mcp_weight)(_mcpall_weight)(_iso_weight);
       const std::vector<float>& w = _pdf_weights;
       static std::vector<float> wones = boost::assign::list_of(1)(1)(1)(1)(1);
       if (w.size()==5) {
@@ -140,6 +142,9 @@ DataGraphics
       _eff_weight_error = err;
       _eff_weight_error_sys = err_sys;
     }
+    void set_effphi_weight(Value val, Value err=0.0) {
+      _effphi_weight = val;
+    }
     void set_trig_weight(Value val, Value err=0.0) {
       _trig_weight = val;
       _trig_weight_error = err;
@@ -180,6 +185,7 @@ DataGraphics
     const Value get_trig_weight() const { return _trig_weight; }
     const Value get_trigall_weight() const { return _trigall_weight; }
     const Value get_trigphi_weight() const { return _trigphi_weight; }
+    const Value get_effphi_weight() const { return _effphi_weight; }
     const Value get_mcp_weight() const { return _mcp_weight; }
     const Value get_mcpall_weight() const { return _mcpall_weight; }
     const Value get_iso_weight() const { return _iso_weight; }

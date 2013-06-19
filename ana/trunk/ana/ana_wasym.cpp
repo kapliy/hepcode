@@ -1,6 +1,6 @@
 #include "TrigFTKAna/AnaCommon.hpp"
 bool RUNZ = true;                      // run Z selection and histograms? [was:true 05/13/2013]
-bool RUNZ_NT = false;                  // save Z ntuples? This is set automatically for MCP studies [was:true 05/13/2013]
+bool RUNZ_NT = true;                   // save Z ntuples? This is set automatically for MCP studies [was:true 05/13/2013]
 bool RUN_QCD_SLICES = true;            // save QCD normalization histograms?
 bool NOMONLY = false;                  // skip systematics and only do NOMINAL case?
 const bool D0CUT = false;              // optional cut on d0 signficance?
@@ -2506,6 +2506,7 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
     mu_isol_scale( mu_iso_col , siso , siso_err , 0);
   }
   dg::event_info().set_eff_weight(eff,eff_errstat,eff_errsys);
+  dg::event_info().set_effphi_weight(effphi);
   dg::event_info().set_trig_weight(trig,trig_err);
   dg::event_info().set_trigall_weight(trigall);
   dg::event_info().set_trigphi_weight(trigphi);
