@@ -29,8 +29,10 @@ lbl=06132013_recoSFpt      # re-running same-old version, but after all updates,
 lbl=06132013_recoSFphi     # phi version (re-run)
 
 lbl=06172013_recoBOTH_withZ # nominal is SFpt, but added a new st_w_bla option to do phi. Also: running z plots
-lbl=06192013_recoBOTH_withZ # removed Z ntuple. disabled trig matching. updated reco SF class (correct errors). Added deltaPhi(soft,all-but-soft). Added a new systematic - reweight signal MC to data (Max's file).
 
+lbl=06192013_recoBOTH_withZ # removed Z ntuple. disabled trig matching. updated reco SF class (correct errors). Added deltaPhi(soft,all-but-soft). Added a new systematic - reweight signal MC to data (Max's file).
+lbl=06192013_recoBOTH_withZ_recoPhi  # Eta-phi SF are nominal
+lbl=06192013_recoBOTH_withZ_pt25 # rerunning pt25 case with actual full statistics
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
 
 muname[0]="stacoCB"

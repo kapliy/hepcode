@@ -29,6 +29,7 @@ submit_all
 
 PT=25
 out=${coredir}/ana_v${ntuple}_${lbl}_${muname[$i]}_all/pt${PT}
-xtra="${common_opts} --muon-type $i --muon-scale 1000"
+#xtra="${common_opts} --muon-type $i --muon-scale 3"   #full version
+xtra="${common_opts} --muon-type $i --muon-scale 1000"  # quick version
 submit_wmumu_nlo
 submit_data # for cutflow

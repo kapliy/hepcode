@@ -1,6 +1,6 @@
 #include "TrigFTKAna/AnaCommon.hpp"
 bool RUNZ = true;                      // run Z selection and histograms? [was:true 05/13/2013]
-bool RUNZ_NT = true;                   // save Z ntuples? This is set automatically for MCP studies [was:true 05/13/2013]
+bool RUNZ_NT = false;                  // save Z ntuples? This is set automatically for MCP studies [was:true 05/13/2013]
 bool RUN_QCD_SLICES = true;            // save QCD normalization histograms?
 bool NOMONLY = false;                  // skip systematics and only do NOMINAL case?
 const bool D0CUT = false;              // optional cut on d0 signficance?

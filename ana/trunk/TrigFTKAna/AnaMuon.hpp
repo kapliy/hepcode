@@ -502,6 +502,7 @@ public:
 			  double *effs,
 			  double& eff, double& errstat, double& errsys )
   {
+    const bool NOMINAL_ETAPHI = false; // if false,nominal eta-only is used (FIXME)
     static std::string datadir("CommonAnalysis/RootCore/data/MuonEfficiencyCorrections/");
     const int seed = 5000; //1721
     static EFFCLASS *mcp_staco_cb = 0;
@@ -511,7 +512,11 @@ public:
     static EFFCLASS *mcp_muid_loose = 0;
     if( !mcp_staco_cb && runRange==0 && flag==0 ) { //DtoM
       // eta only (suspecting that this could also be eta x pt though)
-      mcp_staco_cb = new EFFCLASS( datadir , "STACO_CB_2011_SF_fineEtaBinning.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
+      if(NOMINAL_ETAPHI) {
+	mcp_staco_cb = new EFFCLASS( datadir , "STACO_CB_2011_SF_fineEtaBinning.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
+      } else {
+	mcp_staco_cb = new EFFCLASS( datadir , "STACO_CB_2011_SF_fine.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
+      }
       mcp_staco_loose = new EFFCLASS( datadir , "STACO_CB_plus_ST_2011_SF.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
       mcp_muid_cb = new EFFCLASS( datadir , "Muid_CB_2011_SF.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
       mcp_muid_loose = new EFFCLASS( datadir , "Muid_CB_plus_ST_2011_SF.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
@@ -532,7 +537,11 @@ public:
     }
     // staco CB with phi corrections
     if( !mcp_staco_cb_phi && runRange==0 && flag==1 ) {
-      mcp_staco_cb_phi = new EFFCLASS( datadir , "STACO_CB_2011_SF_fine.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
+      if(NOMINAL_ETAPHI) {
+	mcp_staco_cb_phi = new EFFCLASS( datadir , "STACO_CB_2011_SF_fine.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
+      } else {
+	mcp_staco_cb_phi = new EFFCLASS( datadir , "STACO_CB_2011_SF_fineEtaBinning.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
+      }
       assert( int_lumi.size() == run_periods.size() && "probably need to edit run_periods vector in your analysis file" );
       std::cout << "Inserting run periods into muon efficiency (eta x phi) tool: " << runRange << std::endl;
       for( int i = 0 ; i < run_periods.size() ; ++i ) {
