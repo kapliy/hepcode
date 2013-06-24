@@ -44,6 +44,7 @@ protected:
 
   virtual void _study( type const& w ) {
     using namespace DataGraphics;
+    if( is_anyfit() && !_run_anyfit_studies ) return; //hack: only plots "anyfit" for a subset of systematics
     if(_do_save_ntuple && uncategorized()) {
       study_ntuple(w);
     }
@@ -77,6 +78,14 @@ protected:
     const boost::shared_ptr<const AnaMET>& met = w->met();
     const boost::shared_ptr<const AnaParticle>& lepton = w->lepton();
     const boost::shared_ptr<const AnaMuon> muon = boost::dynamic_pointer_cast<const AnaMuon,const AnaParticle>(lepton);
+
+    // hack: in anyfit() case, only make the met plot
+    if( is_anyfit() ) {
+      if(met) {
+	dg::fillvh( "d3_abseta_lpt_met" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_pt.size()-1, dg::bin().D_pt , std::abs(lepton->eta()) , L(lepton->pt()) , met->pt() ,  "|leta|","lpt","met" );
+      }
+      return;
+    }
 
     if(_do_metonly) {
       if(_run_qcd_slices && met && lepton) {
@@ -392,6 +401,7 @@ protected:
   bool _do_save_histo;
   bool _run_qcd_slices;
   bool _run_debug_studies;
+  bool _run_anyfit_studies;
   bool _do_yield;
   bool _do_metonly;
   unsigned long _yield_min;
@@ -404,6 +414,7 @@ protected:
 
 public:
   bool is_baseline() const { return current_category()=="baseline"; }
+  bool is_anyfit() const { return current_category()=="anyfit"; }
   bool bootstrap() const {   // hardcoded to only run in "baseline" directory
     return _do_bootstrap && is_baseline();
   }
@@ -414,6 +425,7 @@ public:
   void do_save_histo( bool v = true ) { _do_save_histo = v; }
   void run_qcd_slices( bool v = true ) { _run_qcd_slices = v; }
   void run_debug_studies( bool v = true ) { _run_debug_studies = v; }
+  void run_anyfit_studies( bool v = true ) { _run_anyfit_studies = v; }
   void do_metonly(bool v = true) { _do_metonly = v; }
   void do_yield(bool v = true) { _do_yield = v; }
   void do_yield( const unsigned long& min , const unsigned long& max , const unsigned long& runnumber , const float& lumi ) { 
@@ -429,6 +441,7 @@ public:
     , _do_metonly(false)
     , _run_qcd_slices(false)
     , _run_debug_studies(false)
+    , _run_anyfit_studies(false)
     , _yield_min( 0. )
     , _yield_max( 1. )
     , _yield_runnumber( 0. )
