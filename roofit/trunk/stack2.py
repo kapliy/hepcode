@@ -106,9 +106,15 @@ parser.add_option("--norm", default=False,
 parser.add_option("--sysdir",dest="sysdir",
                   type="string", default='Nominal', # 'Rawmet'
                   help="Nominal/st_w_final/baseline - Nominal")
+parser.add_option("--sysdirmc",dest="sysdirmc",
+                  type="string", default=None,
+                  help="Nominal/st_w_final/baseline - Nominal (for MC)")
 parser.add_option("--subdir",dest="subdir",
                   type="string", default='st_w_final',
                   help="Nominal/st_w_final/baseline - st_w_final")
+parser.add_option("--subdirmc",dest="subdirmc",
+                  type="string", default=None,
+                  help="Nominal/st_w_final/baseline - st_w_final (for MC)")
 parser.add_option("--basedir",dest="basedir",
                   type="string", default='baseline',
                   help="Nominal/st_w_final/baseline - baseline")
@@ -463,7 +469,9 @@ if True:
     spR.bootstrap(do_unfold=False,
                   unfold={'sysdir':opts.sysdir,'histo':'abseta','mc':MAP_BGSIG[opts.bgsig],'method':unfmethod,'par':4},
                   charge=q,var=opts.var,histo=opts.hsource,
-                  sysdir=[opts.sysdir,opts.sysdir,opts.isofail],subdir=opts.subdir,basedir=opts.basedir,
+                  sysdir=[opts.sysdir,opts.sysdirmc if opts.sysdirmc else opts.sysdir,opts.isofail],
+                  subdir=[opts.subdir,opts.subdirmc if opts.subdirmc else opts.subdir,opts.subdir],
+                  basedir=opts.basedir,
                   qcd={'var':opts.lvar,'nbins':Afitrange[2],'min':Afitrange[0],'max':Afitrange[1],'rebin':opts.lrebin,
                        'metfit':metfit,'wmtfit':wmtfit,'anyfit':'anyfit',
                        'forcenominal':True,'plotrange':Aplotrange})
