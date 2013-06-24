@@ -33,6 +33,10 @@ lbl=06172013_recoBOTH_withZ # nominal is SFpt, but added a new st_w_bla option t
 lbl=06192013_recoBOTH_withZ # removed Z ntuple. disabled trig matching. updated reco SF class (correct errors). Added deltaPhi(soft,all-but-soft). Added a new systematic - reweight signal MC to data (Max's file).
 lbl=06192013_recoBOTH_withZ_recoPhi  # Eta-phi SF are nominal
 lbl=06192013_recoBOTH_withZ_pt25 # rerunning pt25 case with actual full statistics
+
+lbl=06192013_recoBOTH_withZ_anyfit  # added anyfit to make MET plots. updated to new iso SFs. added trigphi, effphi, eff*trigphi
+
+
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
 
 muname[0]="stacoCB"

@@ -662,6 +662,7 @@ int main( int argc , char* argv[] )
     UNR("MuonRecoSFDown");
     UNR("MuonRecoSFPhi"); // experimental MCP reco eta x phi corrections
     UNR("MuonTriggerSFPhi");
+    UNR("MuonTriggerRecoSFPhi"); // both reco and trigger phi corrections
     UNR("MuonIsoSFUp");
     UNR("MuonIsoSFDown");
     // advanced met
@@ -1120,7 +1121,7 @@ int main( int argc , char* argv[] )
   st_w.add_category("baseline",bind(&AnaWCrossSectionCandidate::asym_baseline_quick,_1)==true);
   st_w.add_category("metfit",bind(&AnaWCrossSectionCandidate::asym_metfit_quick,_1)==true);
   st_w.add_category("wmtfit",bind(&AnaWCrossSectionCandidate::asym_wmtfit_quick,_1)==true);
-  //st_w.add_category("anyfit",bind(&AnaWCrossSectionCandidate::asym_anyfit_quick,_1)==true);
+  st_w.add_category("anyfit",bind(&AnaWCrossSectionCandidate::asym_anyfit_quick,_1)==true);
 
   // special trick when running in MCP scale determination mode: disable ALL histograms
   if(AnaConfiguration::muon_scale()==999) {
@@ -2306,7 +2307,9 @@ int main( int argc , char* argv[] )
       // nominal
       st_w.run_qcd_slices(RUN_QCD_SLICES);
       st_w.run_debug_studies(true);
+      st_w.run_anyfit_studies(true);
       STUDYDEF("Nominal",save_ntuples&0x4,1,1,smeared,caljet_em_nominal,rawjet_mcp_smeared);
+      st_w.run_anyfit_studies(false);
       st_w.run_debug_studies(true);
       STUDYQCD("",smeared,caljet_em_nominal,rawjet_mcp_smeared); // for background-subtraction from QCD template
       st_w.run_debug_studies(false);
@@ -2326,12 +2329,14 @@ int main( int argc , char* argv[] )
 	  STUDYQCS("LtoM",             smeared,caljet_em_nominal,rawjet_mcp_smeared);
 	}
 	STUDYDEF("Rawmet",0,                0,1,smeared,caljet_em_nominal,rawjet_nominal); // without MET recalculation
+	st_w.run_anyfit_studies(true);
 	STUDYDEF("ResoSoftTermsUp_ptHard",0,0,1,smeared,caljet_em_nominal,rawjet_resosofttermsup);
 	STUDYDEF("ResoSoftTermsDown_ptHard",0,0,1,smeared,caljet_em_nominal,rawjet_resosofttermsdown);
 	//STUDYDEF("ResoSoftTermsUpDown_ptHard",0,0,1,smeared,caljet_em_nominal,rawjet_resosofttermsupdown);
 	//STUDYDEF("ResoSoftTermsDownUp_ptHard",0,0,1,smeared,caljet_em_nominal,rawjet_resosofttermsdownup);
 	STUDYDEF("ScaleSoftTermsUp_ptHard",0,0,1,smeared,caljet_em_nominal,rawjet_scalesofttermsup);
 	STUDYDEF("ScaleSoftTermsDown_ptHard",0,0,1,smeared,caljet_em_nominal,rawjet_scalesofttermsdown);
+	st_w.run_anyfit_studies(false);
 	// old met
 	if(false) {
 	  STUDYDEF("ResoSoftTermsUp",0,0,1,smeared,caljet_em_nominal,rawjet_resosoftup);
@@ -2515,15 +2520,16 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
   dg::event_info().set_iso_weight(siso,siso_err);
 
   // define modified weights to account for systematic SF variations
-  const int NRECKEYS = 6;
+  const int NRECKEYS = 7;
   assert( (unf_keys_rec.size() == NRECKEYS) || NOMONLY);
   double total_rec[NRECKEYS];
   total_rec[0] = event_weight[0]*(eff+eff_errsys)*trig*siso;
   total_rec[1] = event_weight[0]*(eff-eff_errsys)*trig*siso;
   total_rec[2] = event_weight[0]*(effphi)*trig*siso;
   total_rec[3] = event_weight[0]*eff*(trigphi)*siso;
-  total_rec[4] = event_weight[0]*eff*trig*(sisoup);
-  total_rec[5] = event_weight[0]*eff*trig*(sisodown);
+  total_rec[4] = event_weight[0]*(effphi)*(trigphi)*siso;
+  total_rec[5] = event_weight[0]*eff*trig*(sisoup);
+  total_rec[6] = event_weight[0]*eff*trig*(sisodown);
 
   // prepare unfolding data structure
   unfdata_type::iterator it = unfdata.find(label);
