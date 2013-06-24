@@ -1,8 +1,11 @@
-Mel: take some of the uncertainties (1-sigma extremes) and repeat QCD 1D vs 2D sum.
+Make delta-Phi plots between softterms and other met components
 
+Max: re-run with new phi trigger SF's.
 
-
+NOTE:
+Add a couple of W mT fits in the appendix
 Change qcd summary table to: delQCD / QCD
+Move Double-differential QCD uncertainty plots into the main body.
 
 DOING: Muon reco SF - compare with Max's instructions.
 DOING: MET-scale: check that up/down is not switched.
