@@ -2882,9 +2882,20 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
     st_z.study_categorized(true);
     st_z.repurpose( "st_z_final" , "Z event candidates after full selection" );
     st_z.for_each( z_all_col.begin() , z_all_col.end() );
-    if(true && is_mc) { // add trigger-phi plots
+    if(true && is_mc) { // add additional phi-correction plots
+      // reco phi
       dg::set_global_weight( total_rec[2] );
+      st_z.repurpose( "st_z_effphi" , "Z event candidates after full selection" );
+      st_z.for_each( z_all_col.begin() , z_all_col.end() );
+    }
+    if(false && is_mc) { // add additional phi-correction plots
+      // trig phi
+      dg::set_global_weight( total_rec[3] );
       st_z.repurpose( "st_z_trigphi" , "Z event candidates after full selection" );
+      st_z.for_each( z_all_col.begin() , z_all_col.end() );
+      // reco+trig phi
+      dg::set_global_weight( total_rec[4] );
+      st_z.repurpose( "st_z_efftrigphi" , "Z event candidates after full selection" );
       st_z.for_each( z_all_col.begin() , z_all_col.end() );
     }
   }
@@ -3210,7 +3221,7 @@ void mu_trig_scale( MUCOL& mucoll , double& trig_weight , double& trig_stat_erro
   } else if (choice==20 || choice==21) { // custom MCP scale factors from MCP + Max
     AnaMuon::GetTriggerSF_v17_custom2( AnaConfiguration::conf() , mu_type , el_type , vmuons , velectrons , vmuons_charges, 
 				       rnum , 0 , trig_weight , trig_stat_error , replica);
-    if(choice==21) { // apply eta-phi factors on top
+    if(choice==21) { // apply eta-phi factors on top. As coded, this only works for single-mu events!!!
       double trig_weight_phi = 1.0;
       double trig_stat_error_phi = 0.0;
       AnaMuon::GetTriggerSF_v17_custom4( AnaConfiguration::conf() , mu_type , el_type , vmuons , velectrons , vmuons_charges, 
