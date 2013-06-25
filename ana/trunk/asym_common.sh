@@ -34,7 +34,9 @@ lbl=06192013_recoBOTH_withZ # removed Z ntuple. disabled trig matching. updated 
 lbl=06192013_recoBOTH_withZ_recoPhi  # Eta-phi SF are nominal
 lbl=06192013_recoBOTH_withZ_pt25 # rerunning pt25 case with actual full statistics
 
-lbl=06192013_recoBOTH_withZ_anyfit  # added anyfit to make MET plots. updated to new iso SFs. added trigphi, effphi, eff*trigphi
+lbl=06192013_recoBOTH_withZ_anyfit  # reco=(eta,phi)added anyfit to make MET plots. updated to new iso SFs. added trigphi, effphi, eff*trigphi
+lbl=06192013_recoBOTH_withZ_rep     # reco=(eta,phi) add back trigger matching and z ntuple information
+lbl=06192013_recoBOTH_withZ_etaonly # reco=(eta) fixed a bug that reverted etaonly flag
 
 
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
