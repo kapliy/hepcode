@@ -2480,7 +2480,7 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
 
   // compute muon efficiency
   double eff = 1.0;
-  double effphi = 0.0;
+  double effphi = 0.0;   // dual meaning: either phi-binned systematic, OR: calo probe systematic (which deprecates eff_errstat)
   double eff_errstat = 0.0;
   double eff_errsys = 0.0;
   double trig = 1.0;
@@ -2497,8 +2497,10 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
   if(is_mc) {
     // compute efficiency scale factors on final selected muons
     // (which happens to be "iso" muons - whether isolated or anti-isolated
-    mu_eff_scale( mu_iso_col , EFFVEC , effphi, eff_errstat , eff_errsys , 1); // eta x phi
-    mu_eff_scale( mu_iso_col , EFFVEC , eff, eff_errstat , eff_errsys , 0); // (nominal) eta
+    //mu_eff_scale( mu_iso_col , EFFVEC , effphi, eff_errstat , eff_errsys , 1); // eta x phi
+    //mu_eff_scale( mu_iso_col , EFFVEC , eff, eff_errstat , eff_errsys , 0); // (nominal) eta
+    mu_eff_scale( mu_iso_col , EFFVEC , effphi, eff_errstat , eff_errsys , 11); // eta x phi, calo probe (systematic)
+    mu_eff_scale( mu_iso_col , EFFVEC , eff, eff_errstat , eff_errsys , 10); // (nominal) eta x phi, id probe
     mu_trig_scale( mu_iso_col , trig    , trig_err   , 20);
     mu_trig_scale( mu_iso_col , trigphi , trig_dummy , 21);
     mu_trig_scale( mu_iso_col , trigall , trig_dummy , 22);

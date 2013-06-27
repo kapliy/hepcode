@@ -36,7 +36,10 @@ lbl=06192013_recoBOTH_withZ_pt25 # rerunning pt25 case with actual full statisti
 
 lbl=06192013_recoBOTH_withZ_anyfit  # reco=(eta,phi)added anyfit to make MET plots. updated to new iso SFs. added trigphi, effphi, eff*trigphi
 lbl=06192013_recoBOTH_withZ_rep     # reco=(eta,phi) add back trigger matching and z ntuple information
-lbl=06192013_recoBOTH_withZ_etaonly # reco=(eta) fixed a bug that reverted etaonly flag
+lbl=06192013_recoBOTH_withZ_etaonly # reco=(eta) fixed a bug that reverted etaonly flag  #NEVER RAN
+
+lbl=06252013_newrecoSF              # new meaning of systematic: full difference between ID and CALO probes
+lbl=06252013_newrecoSF_rep          # just a re-run: previous run was affected by some xrootd problem (just in case)
 
 
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
