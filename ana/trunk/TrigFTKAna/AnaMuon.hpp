@@ -507,6 +507,8 @@ public:
     const int seed = 5000; //1721
     static EFFCLASS *mcp_staco_cb = 0;
     static EFFCLASS *mcp_staco_cb_phi = 0;
+    static EFFCLASS *mcp_staco_cb_phi_id = 0;
+    static EFFCLASS *mcp_staco_cb_phi_calo = 0;
     static EFFCLASS *mcp_staco_loose = 0;
     static EFFCLASS *mcp_muid_cb = 0;
     static EFFCLASS *mcp_muid_loose = 0;
@@ -523,7 +525,7 @@ public:
       mcp_muid_cb = new EFFCLASS( datadir , "Muid_CB_2011_SF.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
       mcp_muid_loose = new EFFCLASS( datadir , "Muid_CB_plus_ST_2011_SF.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
       assert( int_lumi.size() == run_periods.size() && "probably need to edit run_periods vector in your analysis file" );
-      std::cout << "Inserting run periods into muon efficiency (eta only) tool: " << runRange << std::endl;
+      std::cout << "Inserting run periods into muon efficiency (eta only) tool: " << runRange << " - " << NOMINAL_ETAPHI << std::endl;
       for( int i = 0 ; i < run_periods.size() ; ++i ) {
 	std::cout << "EFFSCALE WEIGHTS: " << run_periods[i] << " " << int_lumi[i] << std::endl;
 	mcp_staco_cb->addPeriod( run_periods[i] , int_lumi[i] );
@@ -546,17 +548,42 @@ public:
 	// eta x phi
 	mcp_staco_cb_phi = new EFFCLASS( datadir , "STACO_CB_2011_SF_fine.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
       }
+      std::cout << "Inserting run periods into muon efficiency (eta-phi) tool: " << runRange << " - " << NOMINAL_ETAPHI << std::endl;
       for( int i = 0 ; i < run_periods.size() ; ++i ) { mcp_staco_cb_phi->addPeriod( run_periods[i] , int_lumi[i] ); }
       mcp_staco_cb_phi->Initialise();
+      // no replicas
+    }
+    // staco CB with phi corrections (id probes, use for central value)
+    if( !mcp_staco_cb_phi_id && runRange==0 && flag==10 ) {
+      mcp_staco_cb_phi_id = new EFFCLASS( datadir , "STACO_CB_2011_SF_fine_IDProbe.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
+      std::cout << "Inserting run periods into muon efficiency (ID probe) tool: " << runRange << std::endl;
+      for( int i = 0 ; i < run_periods.size() ; ++i ) { mcp_staco_cb_phi_id->addPeriod( run_periods[i] , int_lumi[i] ); }
+      mcp_staco_cb_phi_id->Initialise();
+      if(NREPLICASF>0) mcp_staco_cb_phi_id->generateReplicas(NREPLICASF , seed);
+    }
+    if( !mcp_staco_cb_phi_calo && runRange==0 && flag==11 ) {
+      mcp_staco_cb_phi_calo = new EFFCLASS( datadir , "STACO_CB_2011_SF_fine_CaloProbe.txt" , "GeV" , EFFCLASS::AverageOverPeriods );
+      std::cout << "Inserting run periods into muon efficiency (CALO probe) tool: " << runRange << std::endl;
+      for( int i = 0 ; i < run_periods.size() ; ++i ) { mcp_staco_cb_phi_calo->addPeriod( run_periods[i] , int_lumi[i] ); }
+      mcp_staco_cb_phi_calo->Initialise();
+      // no replicas
     }
 
     EFFCLASS *mcp = 0;
     if(mu_type==detector::MCP_STACO_COMBINED) {
-      mcp = flag==0 ? mcp_staco_cb : mcp_staco_cb_phi;
+      switch(flag) {
+      case 0: mcp = mcp_staco_cb; break;
+      case 1: mcp = mcp_staco_cb_phi; break;
+      case 10: mcp = mcp_staco_cb_phi_id; break;
+      case 11: mcp = mcp_staco_cb_phi_calo; break;
+      default: assert(false && "unknown MCP efficiency SF flag");
+      }
+      //mcp = flag==0 ? mcp_staco_cb : mcp_staco_cb_phi;
     }
     if(mu_type==detector::MCP_STACO_LOOSE || mu_type==detector::MCP_STACO_TIGHT) mcp = mcp_staco_loose;
     if(mu_type==detector::MCP_MUID_COMBINED) mcp = mcp_muid_cb;
     if(mu_type==detector::MCP_MUID_LOOSE || mu_type==detector::MCP_MUID_TIGHT) mcp = mcp_muid_loose;
+    assert(mcp);
 #ifdef PATCHED_MCP
     const std::pair<int,int> bin = mcp->get_pt_eta_phi_bin_index(muon->scharge(),muon->four_vector());
     for(int replica=0;replica<NREPLICASF;replica++) {
