@@ -19,7 +19,7 @@ function make_pos_neg() {
       \hline
       \hline
        & \multicolumn{2}{c|}{\$W^+ \rightarrow \mu^+ \nu$} & \multicolumn{2}{c}{\$W^- \rightarrow \mu^- \nu$} \\\\
- Variation & $\delta N_{\mbox{QCD}}$ & $\delta N_{\mbox{QCD}} / N_{W+}^{\mbox{Cand.}}$ & $\delta N_{\mbox{QCD}}$ & $\delta N_{\mbox{QCD}} / N_{W^-}^{\mbox{Cand.}}$ \\\\
+ Variation & $\delta N_{\mbox{QCD}} / N_{\mbox{QCD}}$ & $\delta N_{\mbox{QCD}} / N_{W+}^{\mbox{Cand.}}$ & $\delta N_{\mbox{QCD}} / N_{\mbox{QCD}}$ & $\delta N_{\mbox{QCD}} / N_{W^-}^{\mbox{Cand.}}$ \\\\
       \hline
     """
     awk 'BEGIN{FS="&"}NF==3{printf("%s & %s\n",$2,$3); }NF==1{print $0}' ${FNEG} > ${FNEG}.tmp

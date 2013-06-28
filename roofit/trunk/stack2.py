@@ -1282,18 +1282,20 @@ def PRUNE_MSYS(arg):
     return msys,mgroups
 
 def latex_qcd_table(M,Vabs,Vrel,latex_file):
-    """ Prints a latex QCD table for integrated measurement (similar to Adrian) """
+    """ Prints a latex QCD table for integrated measurement (similar to Adrian)
+    Updated: Vabs is no longer absolute, but also relative: but relative to NQCD, not Nsig
+    """
     f = open(latex_file,'w')
     for obj in enumerate(zip(Vabs,Vrel)):
         i=obj[0]
         if i==0: continue
         habs,hrel = obj[1]
-        l = M.labels[i] + '  &  %.2f  &  %.2f\\%% \\\\'%(habs.GetBinContent(1),hrel.GetBinContent(1))
+        l = M.labels[i] + '  &  %.2f\\%%  &  %.2f\\%% \\\\'%(habs.GetBinContent(1),hrel.GetBinContent(1))
         l = l.replace('p_{T}^{W}','$p_{T}^{W}$')
         print >>f,l
     habs,hrel=Vabs[0],Vrel[0]
     print >>f,'\\hline'
-    print >>f,M.labels[0] + '  &  %.2f  &  %.2f\\%% \\\\'%(habs.GetBinContent(1),hrel.GetBinContent(1))
+    print >>f,M.labels[0] + '  &  %.2f\\%%  &  %.2f\\%% \\\\'%(habs.GetBinContent(1),hrel.GetBinContent(1))
     
 # comprehensive study of qcd fits in 2d: pt x eta bins, using histograms.
 # now also supports 1D and 0D (all-inclusive) fits
@@ -1434,7 +1436,7 @@ if mode in ('qcdfit','qcdfit_sys'):
     # save latex tables for 1D case
     if opts.ieta=='ALL' and opts.ipt in ('ALL20','ALL25') and opts.etamode==2:
         latex_file = SuCanvas.savedir + '/tableQCD_%s_%s.tex'%(QMAP[iq][1],'pt20' if opts.ipt=='ALL20' else 'pt25')
-        latex_qcd_table(M[0],hs[0],hs[2],latex_file)
+        latex_qcd_table(M[0],hs[1],hs[2],latex_file)
     if opts.exit: dexit()
 
 if mode=='qcdfit_adrian':

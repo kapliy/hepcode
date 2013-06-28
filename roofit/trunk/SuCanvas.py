@@ -593,17 +593,18 @@ class SuCanvas:
     @staticmethod
     def cleanse(name2):
         return re.sub(r'[^\w]', '_', name2)
-    def SaveSelf(s):
+    def SaveSelf(s,silent=False):
         """ auto-save version """
         assert s.savedir
         assert s.savename
         assert type(s.savetypes)==type([]) and len(s.savetypes)>0
         savetag = s.savetag+'_' if s.savetag!='' else ''
-        return s.SaveAs(savetag+s.savename,s.savetypes,s.savedir)
-    def SaveAs(s,name2,exts,DIR='./',verbose=True):
+        return s.SaveAs(savetag+s.savename,s.savetypes,s.savedir,silent=silent)
+    def SaveAs(s,name2,exts,DIR='./',verbose=True,silent=False):
         name = s.cleanse(name2)
         c = s._canvas
-        print 'SuCanvas: saving plot %s.%s'%(name,exts[0])
+        if not silent:
+            print 'SuCanvas: saving plot %s.%s'%(name,exts[0])
         [ c.SaveAs(DIR+'%s.%s'%(name,ext)) for ext in exts ]
 
     def clear(s):

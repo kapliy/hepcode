@@ -96,28 +96,28 @@ input=/share/t3data3/antonk/ana/ana_v29I_05182013_fullstat_stacoCB_all/pt20
 DB=DB_05182013_fstat.v29  # update to full mcnlo and powhegHerig stat. new egammaUtils: remove wpol constraint and apply jan's new experimental wpol reweights (mcnlo->powhegherwig or mcnlo/powhegherwig->powhegpythia) to reduce CW syst. fix bootstrapping to 1000 replicas and only run on baseline Nominal data.
 DB=DB_05182013_fstat.v30  # adding w polarization histograms to output root files
 
-input=/share/t3data3/antonk/ana/ana_v29I_05202013_fullstat_ret_stacoCB_all/pt20 #gone
-DB=DB_05202013_fstat.v32  # fixed problems with bootstrap
+# input=/share/t3data3/antonk/ana/ana_v29I_05202013_fullstat_ret_stacoCB_all/pt20 #gone
+# DB=DB_05202013_fstat.v32  # fixed problems with bootstrap
 
-input=/atlas/uct3/data/users/antonk/ana/ana_v29I_06092013_recoSFphi_stacoCB_all/pt20 #gone
-DB=DB_06092013_recoSFphi.v33 # reco SF in eta x phi, rather than eta x pt
+# input=/atlas/uct3/data/users/antonk/ana/ana_v29I_06092013_recoSFphi_stacoCB_all/pt20 #gone
+# DB=DB_06092013_recoSFphi.v33 # reco SF in eta x phi, rather than eta x pt
 
-input=/atlas/uct3/data/users/antonk/ana/ana_v29I_06092013_recoSFphi_ret_stacoCB_all/pt20 #gone
-DB=DB_06092013_recoSFphi.v34 # reco SF in eta x phi, rather than eta x pt
+# input=/atlas/uct3/data/users/antonk/ana/ana_v29I_06092013_recoSFphi_ret_stacoCB_all/pt20 #gone
+# DB=DB_06092013_recoSFphi.v34 # reco SF in eta x phi, rather than eta x pt
 
-input=/share/t3data3/antonk/ana/ana_v29I_06132013_recoSFpt_stacoCB_all/pt20 #gone
-DB=DB_06132013_recoSFpt.v35  # same as v31, but incorporating all fixes, and including anyfit
+# input=/share/t3data3/antonk/ana/ana_v29I_06132013_recoSFpt_stacoCB_all/pt20 #gone
+# DB=DB_06132013_recoSFpt.v35  # same as v31, but incorporating all fixes, and including anyfit
 
-input=/share/t3data3/antonk/ana/ana_v29I_06172013_recoBOTH_withZ_stacoCB_all/pt20
-DB=DB_06172013_recoBOTH_withZ.v36  # fixed bug that lost some signal files. nominal is SFpt, but added a new st_w_bla option to do phi. Also: added z plots. BUGGY - missing files
+# input=/share/t3data3/antonk/ana/ana_v29I_06172013_recoBOTH_withZ_stacoCB_all/pt20
+# DB=DB_06172013_recoBOTH_withZ.v36  # fixed bug that lost some signal files. nominal is SFpt, but added a new st_w_bla option to do phi. Also: added z plots. BUGGY - missing files
 
-input=/share/t3data3/antonk/ana/ana_v29I_06192013_recoBOTH_withZ_stacoCB_all/pt20   # disabled trig matching. updated reco SF eta-phi class (correct errors). Added deltaPhi(soft,all-but-soft). Added a new systematic - reweight signal MC to data (Max's file).
-DB=DB_06192013_recoBOTH_withZ.v37
-#input=/share/t3data3/antonk/ana/ana_v29I_06192013_recoBOTH_withZ_recoPhi_stacoCB_all/pt20   # v37, but with eta x phi nominal reco SF
-#DB=DB_06192013_recoBOTH_withZ_recoPhi.v38
+# input=/share/t3data3/antonk/ana/ana_v29I_06192013_recoBOTH_withZ_stacoCB_all/pt20   # disabled trig matching. updated reco SF eta-phi class (correct errors). Added deltaPhi(soft,all-but-soft). Added a new systematic - reweight signal MC to data (Max's file).
+# DB=DB_06192013_recoBOTH_withZ.v37
+# #input=/share/t3data3/antonk/ana/ana_v29I_06192013_recoBOTH_withZ_recoPhi_stacoCB_all/pt20   # v37, but with eta x phi nominal reco SF
+# #DB=DB_06192013_recoBOTH_withZ_recoPhi.v38
 
-input=/share/t3data3/antonk/ana/ana_v29I_06192013_recoBOTH_withZ_anyfit_stacoCB_all/pt20
-DB=DB_06192013_recoBOTH_withZ_anyfit.v39  # added anyfit to make MET plots. updated to new iso SFs. added trigphi, effphi, eff*trigphi
+# input=/share/t3data3/antonk/ana/ana_v29I_06192013_recoBOTH_withZ_anyfit_stacoCB_all/pt20  # reco x phi used by mistake as nominal!
+# DB=DB_06192013_recoBOTH_withZ_anyfit.v39  # added anyfit to make MET plots. updated to new iso SFs. added trigphi, effphi, eff*trigphi
 
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`
