@@ -29,6 +29,7 @@ else:
 
 import common
 import ROOT
+ROOT.gROOT.SetBatch(True)
 import binning
 etabins = binning.absetabins
 ptbins = binning.ptbins
@@ -66,9 +67,21 @@ EWK.append( ['Nominal_ewk_xsecdown','Nominal_ewk_xsecup'] )
 EWK.append( ['unfoldPowhegJimmy', 'unfoldMCNLO'] ) # caveat: ewk=5 (same)
 EWK.append( ['Nominal_qcd_up','Nominal_qcd_down'])
 
-SAMPLES = ['all/wtaunu' , 'all/zmumu' , 'all/ttbar_stop' , 'all/ztautau' , 'all/diboson']
+SAMPLES = ['all/wtaunu' , 'all/zmumu' , 'all/ttbar_stop' , 'all/ztautau' , 'all/diboson']  #+ [total_ewk,qcd]
 SNAMES = ['$W \\rightarrow \\tau \\nu$','$Z \\rightarrow \mu\mu$ + DrellYan','$t \\bar{t}$ + single-top','$Z \\rightarrow \\tau \\tau$','Dibosons']
 assert len(SAMPLES)==len(SNAMES)
+
+SCOLORS = {}
+SCOLORS[ SNAMES[0] ] = 41 #ROOT.kYellow - 9
+SCOLORS[ SNAMES[1] ] = ROOT.kRed
+SCOLORS[ SNAMES[2] ] = ROOT.kGreen + 1
+SCOLORS[ SNAMES[3] ] = ROOT.kViolet
+SCOLORS[ SNAMES[4] ] = ROOT.kOrange - 4
+SCOLORS['Total EWK+top'] = ROOT.kBlue
+SCOLORS['QCD'] = ROOT.kAzure - 9
+SSTYLES = [20,21,22,23,33,34,22,29]
+assert len(SSTYLES) >= len(SCOLORS)
+SORDER = [6,5,4,3,2,1,0] #plot order
 
 def getH(x):
     """ retrieves one histogram and makes sure it is valid
@@ -192,6 +205,7 @@ def printDataBgsubSig(py=None):
 
 def printEventComposition(py=None , dorel=True):
     """ A version split across THREE tables """
+    import SuData
     samples = SAMPLES[:]
     snames = SNAMES[:]
     HLINES = []
@@ -218,6 +232,10 @@ def printEventComposition(py=None , dorel=True):
     nfirst = 4
     nsecond = 4
     nthird = 3
+    # histograms
+    assert len(hs)==len(snames)
+    HP = [ SuData.SuSample.make_habseta('bgsummary%d_%s_pt%s'%(iz,qs,py)) for iz,z in enumerate(hs) ]
+    # loop
     for isub in (0,1,2):
         nbins = nfirst if isub == 0 else (nsecond if isub==1 else nthird)
         binmin = 1 if isub==0 else (5 if isub==1 else 9)
@@ -246,6 +264,8 @@ def printEventComposition(py=None , dorel=True):
                     e1 = e1/d*100.0
                     e2 = e2/d*100.0
                 z.append( '$%.2f \pm %.2f \pm %.2f$'%(v,e1,e2) )
+                HP[i].SetBinContent(ibin,v)
+                HP[i].SetBinError(ibin, math.sqrt(e1*e1+e2*e2) )
             print ' & '.join(z) + '   \\\\'
             if i in HLINES:
                 print '\hline'
@@ -256,6 +276,39 @@ def printEventComposition(py=None , dorel=True):
         if isub in (0,1):
             for ibr in range(4):
                 print r'\linebreak'
+    # make plots
+    if True:
+        from SuCanvas import SuCanvas,PlotOptions
+        from binning import LABELMAP
+        SuCanvas.savedir = './'
+        SuCanvas.savetypes = ['png','pdf']
+        SuCanvas.g_lin_ratio_y_title_offset = 1.7
+        SuCanvas.g_marker_size = 0.9
+        SuCanvas.g_legend_x1_ndc = 0.45
+        SuCanvas.g_text_size = 18
+        SuCanvas.g_legend_height_per_entry = 0.043
+        SuCanvas.g_lin_ratio_y_title_offset = 2.0
+        SuCanvas.g_lin_main_y_title_offset = 2.0
+        SuCanvas.cgStyle = SuCanvas.ControlPlotStyle()
+        SuCanvas._refLineMin = 0.99
+        SuCanvas._refLineMax = 1.02
+        M = PlotOptions()
+        M.msize = 1.3
+        size = SuCanvas.g_marker_size
+        HOUT = []
+        j=0
+        for i in SORDER:
+            nm2 = snames[i].replace('$','')
+            M.add(nm2,nm2,size=size*1.1,style=SSTYLES[j],color=SCOLORS[snames[i]])
+            HOUT.append( HP[i] )
+            j+=1
+#         for inm,nm in enumerate(snames):
+#             nm2 = nm.replace('$','')
+#             M.add(nm2,nm2,size=size*1.1,style=SSTYLES[inm],color=SCOLORS[nm])
+        c = SuCanvas('bgsummary_%s_pt%s'%(qs,pt if py==None else py))
+        xaxis_info = LABELMAP['lepton_absetav'] + ['Background fraction','%']
+        c.plotAny(HOUT,M=M,height=2.0,xaxis_info=xaxis_info)
+        c.SaveSelf(silent=True)
 
 def printEventComposition_tworows(py=None , dorel=True):
     """ A version split across two tables """
