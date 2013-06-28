@@ -4,6 +4,8 @@
 %===========================================
 %  Preamble
 %===========================================
+\usepackage{tikz}
+\usetikzlibrary{mindmap, calc, shadows}
 \usepackage{MnSymbol}
 \usepackage{graphicx}
 \usepackage{subfigure}
@@ -61,6 +63,8 @@
 \newcommand{\intlumnb}[1]{$\mathcal{L} \sim #1$~nb$^{-1}$}
 \newcommand{\intlumpb}[1]{$\mathcal{L} \sim #1$~pb$^{-1}$}
 \newcommand{\raw}[0]{\purple{$\Rightarrow$}}
+\newcommand{\mt}{\ensuremath{M_T}}
+\newcommand{\Multijet}{Multi-jet}
 \newcommand{\Wmunup}{$W^+ \rightarrow \mu^+ \nu$}
 \newcommand{\Wmunum}{$W^- \rightarrow \mu^- \nu$}
 \newcommand{\Wmunupm}{$W^{\pm} \rightarrow \mu^{\pm} \nu$}
@@ -71,6 +75,7 @@
 \newcommand{\ptFour}{\tiny{$40 < p_T < 45$ GeV}}
 \newcommand{\ptFive}{\tiny{$45 < p_T < 50$ GeV}}
 \newcommand{\ptSix}{\tiny{$p_T > 50$ GeV}}
+
 \setbeamercolor{frametitle}{fg=red}
 \setbeamercolor{itemize/enumerate subbody}{fg=Blue,bg=white}
 \setbeamercolor{itemize subitem}{fg=Blue}
@@ -137,20 +142,29 @@
 %  Title page
 %===========================================
 
-\title[]{$\Wboson \rightarrow \mu\nu$}
-\author {A.~Kapliy\inst{1} }
+\title[]{First Thesis Committee Meeting}
+%\title[]{$\Wboson \rightarrow \mu\nu$}
+\author {Anton~Kapliy\inst{1} }
 \institute {
 \inst{1} University of Chicago 
 }
 
 \date{\today}
 
+\tikzset{
+    invisible/.style={opacity=0},
+    visible on/.style={alt=#1{}{invisible}},
+    alt/.code args={<#1>#2#3}{%
+    \alt<#1>{\pgfkeysalso{#2}}{\pgfkeysalso{#3}}
+  },
+}
+
 \begin{document}
 
 \frame{
 \titlepage
 \centering
-\red{W/Z inclusive}   \\
+%\red{W/Z inclusive}   \\
 }
 
 
