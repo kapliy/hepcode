@@ -1,6 +1,6 @@
 #include "TrigFTKAna/AnaCommon.hpp"
-bool RUNZ = true;                      // run Z selection and histograms? [was:true 05/13/2013]
-bool RUNZ_NT = false;                  // save Z ntuples? This is set automatically for MCP studies [was:true 05/13/2013]
+bool RUNZ = false;                     // run Z selection and histograms? [was:true 05/13/2013]
+bool RUNZ_NT = true;                   // save Z ntuples? This is set automatically for MCP studies [was:true 05/13/2013]
 bool RUN_QCD_SLICES = true;            // save QCD normalization histograms?
 bool NOMONLY = false;                  // skip systematics and only do NOMINAL case?
 const bool D0CUT = false;              // optional cut on d0 signficance?
@@ -658,13 +658,20 @@ int main( int argc , char* argv[] )
       UNREP("SFUncorr");
     }
     // scale factors
+    // -reco
     UNR("MuonRecoSFUp");
     UNR("MuonRecoSFDown");
-    UNR("MuonRecoSFPhi"); // experimental MCP reco eta x phi corrections
-    UNR("MuonTriggerSFPhi");
-    UNR("MuonTriggerRecoSFPhi"); // both reco and trigger phi corrections
+    UNR("MuonRecoSFPhi"); // CaloTag-probe systematic. OR: experimental MCP reco eta x phi corrections
+    UNR("MuonRecoStatSFUp"); //[3]
+    UNR("MuonRecoStatSFDown");
+    // -trig
+    UNR("MuonTriggerSFPhi"); // additional corrections on top (systematic)
+    UNR("MuonTriggerStatSFUp");
+    UNR("MuonTriggerStatSFDown"); //[7]
+    //UNR("MuonTriggerRecoSFPhi"); // both reco and trigger phi corrections
+    // -iso
     UNR("MuonIsoSFUp");
-    UNR("MuonIsoSFDown");
+    UNR("MuonIsoSFDown"); //[9]
     // advanced met
     UNA("ResoSoftTermsUp_ptHard");
     UNA("ResoSoftTermsDown_ptHard");
@@ -2484,11 +2491,11 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
   double eff_errstat = 0.0;
   double eff_errsys = 0.0;
   double trig = 1.0;
+  double trig_errstat = 0.0;
   double trigall = 1.0;  // multiplies trigger SF of each muon (i.e. ALL are required to fire, as opposed to an OR)
   double trigphi = 1.0;  // systematic: addition of phi on top
   double mcp = 1.0;      // MCP weights
   double mcpall = 1.0;   // multiplies trigger SF of each muon (i.e. ALL are required to fire, as opposed to an OR)
-  double trig_err = 0.0;
   double trig_dummy = 0.0;
   double siso = 1.0;
   double sisoup = 1.0;
@@ -2497,11 +2504,12 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
   if(is_mc) {
     // compute efficiency scale factors on final selected muons
     // (which happens to be "iso" muons - whether isolated or anti-isolated
+    // original version, before splitting ID vs CaloTag probes
     //mu_eff_scale( mu_iso_col , EFFVEC , effphi, eff_errstat , eff_errsys , 1); // eta x phi
     //mu_eff_scale( mu_iso_col , EFFVEC , eff, eff_errstat , eff_errsys , 0); // (nominal) eta
     mu_eff_scale( mu_iso_col , EFFVEC , effphi, eff_errstat , eff_errsys , 11); // eta x phi, calo probe (systematic)
     mu_eff_scale( mu_iso_col , EFFVEC , eff, eff_errstat , eff_errsys , 10); // (nominal) eta x phi, id probe
-    mu_trig_scale( mu_iso_col , trig    , trig_err   , 20);
+    mu_trig_scale( mu_iso_col , trig    , trig_errstat   , 20);
     mu_trig_scale( mu_iso_col , trigphi , trig_dummy , 21);
     mu_trig_scale( mu_iso_col , trigall , trig_dummy , 22);
     if(true) { // mcp
@@ -2514,7 +2522,7 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
   }
   dg::event_info().set_eff_weight(eff,eff_errstat,eff_errsys);
   dg::event_info().set_effphi_weight(effphi);
-  dg::event_info().set_trig_weight(trig,trig_err);
+  dg::event_info().set_trig_weight(trig,trig_errstat);
   dg::event_info().set_trigall_weight(trigall);
   dg::event_info().set_trigphi_weight(trigphi);
   dg::event_info().set_mcp_weight(mcp);
@@ -2522,16 +2530,20 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
   dg::event_info().set_iso_weight(siso,siso_err);
 
   // define modified weights to account for systematic SF variations
-  const int NRECKEYS = 7;
+  const int NRECKEYS = 10;
   assert( (unf_keys_rec.size() == NRECKEYS) || NOMONLY);
   double total_rec[NRECKEYS];
   total_rec[0] = event_weight[0]*(eff+eff_errsys)*trig*siso;
   total_rec[1] = event_weight[0]*(eff-eff_errsys)*trig*siso;
   total_rec[2] = event_weight[0]*(effphi)*trig*siso;
-  total_rec[3] = event_weight[0]*eff*(trigphi)*siso;
-  total_rec[4] = event_weight[0]*(effphi)*(trigphi)*siso;
-  total_rec[5] = event_weight[0]*eff*trig*(sisoup);
-  total_rec[6] = event_weight[0]*eff*trig*(sisodown);
+  total_rec[3] = event_weight[0]*(eff+eff_errstat)*trig*siso;
+  total_rec[4] = event_weight[0]*(eff-eff_errstat)*trig*siso;
+  total_rec[5] = event_weight[0]*eff*(trigphi)*siso;
+  total_rec[6] = event_weight[0]*eff*(trig+trig_errstat)*siso;
+  total_rec[7] = event_weight[0]*eff*(trig-trig_errstat)*siso;
+  //total_rec[-1] = event_weight[0]*(effphi)*(trigphi)*siso;
+  total_rec[8] = event_weight[0]*eff*trig*(sisoup);
+  total_rec[9] = event_weight[0]*eff*trig*(sisodown);
 
   // prepare unfolding data structure
   unfdata_type::iterator it = unfdata.find(label);
@@ -2866,7 +2878,7 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
 
   // Z ntuples
   dg::set_global_weight( event_weight[0]*eff*trig*siso );
-  if(RUNZ && RUNZ_NT && e_met_cleaning && e_lar_hole && mu_ntuple_col.size()>=2 ) {
+  if(RUNZ_NT && e_met_cleaning && e_lar_hole && mu_ntuple_col.size()>=2 ) {
     MAKE_Z(ntuple);
     // study z's
     st_z.do_save_ntuple(do_ntuples && RUNZ_NT);
@@ -2896,9 +2908,9 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
       st_z.repurpose( "st_z_trigphi" , "Z event candidates after full selection" );
       st_z.for_each( z_all_col.begin() , z_all_col.end() );
       // reco+trig phi
-      dg::set_global_weight( total_rec[4] );
-      st_z.repurpose( "st_z_efftrigphi" , "Z event candidates after full selection" );
-      st_z.for_each( z_all_col.begin() , z_all_col.end() );
+//       dg::set_global_weight( total_rec[4] );
+//       st_z.repurpose( "st_z_efftrigphi" , "Z event candidates after full selection" );
+//       st_z.for_each( z_all_col.begin() , z_all_col.end() );
     }
   }
 
