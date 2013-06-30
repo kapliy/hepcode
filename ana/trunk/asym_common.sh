@@ -40,7 +40,11 @@ lbl=06192013_recoBOTH_withZ_etaonly # reco=(eta) fixed a bug that reverted etaon
 
 lbl=06252013_newrecoSF              # new meaning of systematic: full difference between ID and CALO probes
 lbl=06252013_newrecoSF_rep          # just a re-run: previous run was affected by some xrootd problem (just in case)
+lbl=06252013_newrecoSF_MG           # MG version
+lbl=06252013_newrecoSF_MG_rep       # MG version - rerunning to fix root_mc_powheg_pythia_wminmunu.root
 
+lbl=06282013_postSMmtg              # same as below, but very buggy. not sure why. job taking 25 GB of RAM, jobs hanging on hadd, segfaulting on hadd
+lbl=06292013_postSMmtg              # run z ntuples (for matrix method studies). Add 1 sigma up/down stat. uncertainties for reco and trig. noExit added. 06/29: added smart_killer. removed noExit
 
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
 

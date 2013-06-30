@@ -1,1 +1,1 @@
-ana/ana_wasym --release 17 -s wasymmetry29I_mc_powheg_pythia_zmumu.dat -n5000 --save-ntuples 7 --apply-pileup --muon-type 0 --data-range DtoM --pt 20
+ana/ana_wasym --release 17 -s wasymmetry29I_mc_powheg_pythia_zmumu.dat -n5000 --save-ntuples 7 --apply-pileup --muon-type 0 --data-range DtoM --pt 20 --noExit

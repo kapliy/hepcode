@@ -60,12 +60,14 @@ protected:
     study_histo(w,study_2d,true); // inclusive: don't make many plots
     if(_do_charge_separation) {
       if(w->scharge()>0) {
-	dg::down( "POS" , "W+ candidates" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+	dg::down( "POS" , "W+ candidates" );
 	study_histo(w,study_2d,minimal);
+	dg::up();
       }
       if(w->scharge()<0) {
-	dg::down( "NEG" , "W- candidates" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+	dg::down( "NEG" , "W- candidates" );
 	study_histo(w,study_2d,minimal);
+	dg::up();
       }
     }
   }
@@ -79,10 +81,11 @@ protected:
     const boost::shared_ptr<const AnaParticle>& lepton = w->lepton();
     const boost::shared_ptr<const AnaMuon> muon = boost::dynamic_pointer_cast<const AnaMuon,const AnaParticle>(lepton);
 
-    // hack: in anyfit() case, only make the met plot
+    // hack: in anyfit() case, only make the met and wmt plot
     if( is_anyfit() ) {
-      if(met) {
+      if(_run_qcd_slices && met && lepton) {
 	dg::fillvh( "d3_abseta_lpt_met" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_pt.size()-1, dg::bin().D_pt , std::abs(lepton->eta()) , L(lepton->pt()) , met->pt() ,  "|leta|","lpt","met" );
+	dg::fillvh( "d3_abseta_lpt_wmt" , dg::bin().D_abseta.size()-1, dg::bin().D_abseta , dg::bin().D_lpt.size()-1, dg::bin().D_lpt , dg::bin().D_pt.size()-1, dg::bin().D_pt , std::abs(lepton->eta()) , L(lepton->pt()) , w->transverse_mass() ,  "|leta|","lpt","wmt" );
       }
       return;
     }

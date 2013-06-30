@@ -117,6 +117,7 @@ date
 df -h .
 cd TrigFTKAna
 rm -rf results
+RMODE=ana
 mkdir -p $LOCDIR
 echo $@
 
@@ -154,6 +155,12 @@ fi
 nout=0
 for outfile in ${outfiles}; do
     fbase=`basename ${outfile}`
+    # check that the file was closed correctly
+    root -b -q ${outfile}  2>&1 | grep Error && {
+      echo ERROR: file ${outfile} was not closed correctly
+      echo exit 81
+      exit 81
+    }
     cmd=\"xrdcp -np -v -f $PWD/${outfile} ${RESHOST}/${RESDIR}/${fbase}\"
     echo ${cmd}
     eval ${cmd}
@@ -165,6 +172,27 @@ for outfile in ${outfiles}; do
 	echo ERROR: failed to transfer files: ${cmd}
         echo exit 90
 	exit 90
+    fi
+    # manually check that the file at destination is open-able
+    root -b -q ${RESHOST}/${RESDIR}/${fbase} 2>&1 | grep Error && {
+      echo ERROR: file ${RESHOST}/${RESDIR}/${fbase} contains error AFTER xrdcp
+      xrd uct3-xrd.mwt2.org rm ${RESDIR}/${fbase}
+      echo exit 91
+      exit 91
+    }
+    # manually check that we can read ALL bytes from the file at destination
+    # note that this check adds about 15 minutes to total run time, and may hang
+    if [ ${RMODE} == \"ana\" ]; then
+      ./smart_killer.sh hadd -O -f CRAP.root ${RESHOST}/${RESDIR}/${fbase} ${RESHOST}/${RESDIR}/${fbase}
+      stmrg=$?
+      if [ $stmrg != '0' ]; then
+         echo ERROR: file ${RESHOST}/${RESDIR}/${fbase} is corrupted AFTER xrdcp: detected file errors
+         rm -f CRAP.root
+         xrd uct3-xrd.mwt2.org rm ${RESDIR}/${fbase}
+         echo exit 92
+         exit 92
+      fi
+      rm -f CRAP.root
     fi
     ((nout++))
 done
@@ -303,6 +331,7 @@ class Job:
         s.outputs += [flist]
         f = open(s.jobfile, "w")
         print >>f, SH_PRE%(s.fdic[0],s.fdic[1])
+        print >>f,'RMODE=merge'
         print >>f,'nexpected=%d'%len(inputs)
         print >>f,'ntot=0'
         print >>f,'rm -f ${ROOTDIR}/%s ; touch ${ROOTDIR}/%s;'%(flist,flist)
@@ -323,7 +352,7 @@ class Job:
 # a special version of hadd that adds files in chunks of 20
 function hadd2() {
     local per
-    per=20
+    per=30 #20
     fin=$1
     opts=$2
     fout=$3
@@ -340,7 +369,7 @@ function hadd2() {
 	imin=`expr $imin + 1`
 	imax=`expr $imax`
 	idel=`expr $imax - $imin + 1`
-	echo \"===== Part $igrp : $imin to $imax\"
+	echo \"===== Part $igrp / $ngrp : $imin to $imax\"
 	echo hadd ${opts} \"${fout}.TMPHADD_${igrp}.root\" `cat $fin | head -n $imax | tail -n $idel`
 	hadd ${opts} \"${fout}.TMPHADD_${igrp}.root\" `cat $fin | head -n $imax | tail -n $idel`
 	st=$?

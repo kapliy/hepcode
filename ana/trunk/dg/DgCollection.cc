@@ -125,7 +125,7 @@ DgCollection::finalize() {
       }
     }
   }
-  // save bootstrap histograms since they are always memory-residet
+  // save bootstrap histograms since they are always memory-resident
   for(imC=_mapB.begin(); imC!=_mapB.end(); imC++) {
     if( imC->second.empty() ) continue;
     const bool st = _file->cd((imC->first).c_str());
