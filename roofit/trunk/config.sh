@@ -119,6 +119,18 @@ DB=DB_05182013_fstat.v30  # adding w polarization histograms to output root file
 # input=/share/t3data3/antonk/ana/ana_v29I_06192013_recoBOTH_withZ_anyfit_stacoCB_all/pt20  # reco x phi used by mistake as nominal!
 # DB=DB_06192013_recoBOTH_withZ_anyfit.v39  # added anyfit to make MET plots. updated to new iso SFs. added trigphi, effphi, eff*trigphi
 
+input=/share/t3data3/antonk/ana/ana_v29I_06252013_newrecoSF_rep_stacoCB_all/pt20
+DB=DB_06252013_newrecoSF.v40    # calo vs ID factored out
+#input=/share/t3data3/antonk/ana/ana_v29I_06252013_newrecoSF_MG_stacoCB_all/pt20
+#DB=DB_06252013_newrecoSF_mg.v41 # re-run
+
+input=/share/t3data3/antonk/ana/ana_v29I_06292013_postSMmtg_stacoCB_all/pt20
+DB=DB_06292013_postSMmtg.v41  #run z ntuples (for matrix method studies). Add 1 sigma up/down stat. uncertainties for reco and trig. added smart_killer
+
+input=/share/t3data3/antonk/ana/ana_v29I_07012013_postSMmtg_datarw_stacoCB_all/pt20
+DB=DB_07012013_postSMmtg_datarw.v42 # updated Max's data-rw class - it now uses smoothed histograms
+DB=DB_07012013_postSMmtg_datarw.v43 # added recoProbe to reco SF. added SFstat to stacks. added MCModeling. qcd in stack plots increased from 4% to 10%
+
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`
 iq=0

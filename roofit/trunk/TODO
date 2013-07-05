@@ -1,12 +1,26 @@
+APPROVAL(ADRIAN):
+Suggestion to come up with an alternative method for QCD systematic
+worries about background "composition uncertainty"
+* W+jets cannot be taken from MC
+Muon pt spectrum break at 50 GeV - not seen in Wenu or Zee!
+
 NOTE:
-Add a couple of W mT fits in the appendix
+Add RecoStatUp/RecoStatDown histograms so they can be added to the band
+Add a couple of W mT fits in the appendix. Note: Adrian uses 40-100 GeV fit range!
+Add QCD 1d vs 2d summary to appendix
 Move Double-differential QCD uncertainty plots into the main body.
+Max: MET fit before MET cut (play with unbinned ntuples, or use anyfit)
+Max: make pt plots with W pt rw target ONLY.
+Debug anyfit R__unzip bug. I'm pretty sure anyfit is the source of problems.
+      Consider running with --noExit in production.
+
+
 
 APPROVAL:
-Trigger efficiency - problem at high pT. Compare with old trigger!
-Isolation SFs: study sagging
+DONE Trigger efficiency - problem at high pT. Compare with old trigger!
+MAX: Isolation SFs: study sagging
 BG summary slide: separate QCD uncorrelated and correlated uncertainty
-Switch to bayesian unfolding by default
+SKIP: Switch to bayesian unfolding by default
 
 
 DONE Make delta-Phi plots between softterms and other met components
