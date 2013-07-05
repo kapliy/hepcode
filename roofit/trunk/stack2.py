@@ -295,7 +295,7 @@ if True:
     pw.adn(name='sig_mcnlo',label='W #rightarrow #mu#nu (MC@NLO)',samples=['mc_mcnlo_wminmunu','mc_mcnlo_wplusmunu'],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
     pw.adn(name='sig_powheg_herwig',label='W #rightarrow #mu#nu (Powheg+Herwig)',samples=['mc_powheg_herwig_wminmunu','mc_powheg_herwig_wplusmunu'],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
     pw.adn(name='sig_powheg_pythia',label='W #rightarrow #mu#nu (Powheg+Pythia)',samples=['mc_powheg_pythia_wminmunu','mc_powheg_pythia_wplusmunu'],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
-    pw.adn(name='sig_alpgen_herwig',label='W #rightarrow #mu# (Alpgen+Herwig)',samples=['mc_alpgen_herwig_wmunu_np%d'%v for v in range(6)],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
+    #pw.adn(name='sig_alpgen_herwig',label='W #rightarrow #mu# (Alpgen+Herwig)',samples=['mc_alpgen_herwig_wmunu_np%d'%v for v in range(6)],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
     ##pw.adn(name='sig_af_alpgen_herwig',label='W #rightarrow #mu#nu (Alpgen AFII)',samples=['mc_af_alpgen_herwig_wmunu_np%d'%v for v in range(6)],color=ROOT.kWhite,flags=['sig','mc','ewk','wmunu'])
     #SEL QCD: mc or data-driven qcd template
     if opts.bgqcd in MAP_BGQCD.keys():
@@ -1064,6 +1064,7 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
         qcdadd={'var':'d3_%s_lpt_met'%(eword)+ltail,'min':0,'max':60,'rebin':2} # adrian's new nominal
         qcdadd_range={'var':'d3_%s_lpt_met'%(eword)+ltail,'min':5,'max':50,'rebin':2}
     qcdadd_var={'var':'d3_%s_lpt_wmt'%(eword)+ltail,'min':40,'max':90,'rebin':2}
+    qcdadd_var={'var':'d3_%s_lpt_wmt'%(eword)+ltail,'min':40,'max':100,'rebin':2} # adrian's new nominal for wmt
     qcdadd_x = [] # other possible variations to consider (for rms)
     qcdadd_x.append({'var':'d3_%s_lpt_wmt'%(eword)+ltail,'min':40,'max':90,'rebin':2}) #0  (my old range)
     qcdadd_x.append({'var':'d3_%s_lpt_wmt'%(eword)+ltail,'min':30,'max':100,'rebin':2}) #1 (Adrian's range)
@@ -1104,7 +1105,7 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
         next('Fit range')
 
     # fit variable [careful - big swings]
-    if False and etamode==2: # 04/17/2013
+    if True and etamode==2: # 04/17/2013
         add(qcdfit('fit_var',spL.clone(qcdadd=qcdadd_var) ))
         next('Fit variable')
     if True and etamode==2: # 04/25/2013 (try several variations and choose smaller ones to work around stat fluctuations)
@@ -1114,14 +1115,14 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
         bunch = sorted( abunch , key = lambda x: abs(x[11]-NOMINAL[11]) ) # sort
         if False:
             min_index, min_value = min( enumerate([ abs(bb[11]-NOMINAL[11]) for bb in bunch]) , key=operator.itemgetter(1) )
-            add( ['fit_var']+bunch[min_index][1:] )
-            next('Fit variable')
+            add( ['fit_var_avg']+bunch[min_index][1:] )
+            next('Fit variable (avg)')
         else:
-            vvar = ['fit_var'] + NOMINAL[1:]
+            vvar = ['fit_var_avg'] + NOMINAL[1:]
             # drop two highest outliers
             vvar[11] = sum( [bb[11] for bb in bunch[:-2]] ) / len(bunch[:-2])
             add( vvar )
-            next('Fit variable')
+            next('Fit variable (avg)')
 
     # sum of DtoK and LtoM
     if True:
@@ -1199,6 +1200,10 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
         add(qcdfit('WptPythia8',spL.clone(subdir_mc='WptPythia8'))) # new: as of 03/06/2013
         next('p_{T}^{W} reweighting')
 
+    # MCModeling (reweight MC to data) - no need to re-estimate QCD
+    if False:
+        pass
+
     # W polarization reweighting target (new: as of 05/21/2013)
     if True:
         po.choose_sig(1)
@@ -1247,7 +1252,7 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
 
     # muon efficiencies
     if True:
-        for x in ['MuonRecoSFUp','MuonRecoSFDown','MuonIsoSFUp','MuonIsoSFDown', 'MuonTriggerSFPhi']:
+        for x in ['MuonRecoSFUp','MuonRecoSFDown','MuonRecoSFPhi','MuonIsoSFUp','MuonIsoSFDown', 'MuonTriggerSFPhi']:
             NMAP = {'MuonRecoSFUp':'st_w_effsysup','MuonRecoSFDown':'st_w_effsysdown',
                     'MuonIsoSFUp':'st_w_isoup','MuonIsoSFDown':'st_w_isodown',
                     'MuonTriggerSFPhi':'st_w_trigphi'}
@@ -1274,7 +1279,7 @@ def PRUNE_MSYS(arg):
     (e.g., experimental systematics only used for specific studies)
     """
     msys,mgroups = arg[0],arg[1]
-    exs = ['W polarization']
+    exs = ['W polarization'] + [ 'Fit variable (avg)' ]
     iexs = sorted( [ mgroups.index(x) for x in exs if x in mgroups] , reverse=True )
     for iex in iexs:
         del mgroups[iex]

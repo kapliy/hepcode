@@ -42,7 +42,7 @@ def qcdfit_sys_flatten(MSYS,MGROUPS):
     res = {}
     for IGRP in MSYS:
         for INAME,ISYS in IGRP.iteritems():
-            assert INAME not in res
+            assert INAME not in res, 'ERROR: missing %s'%INAME
             res[INAME] = ISYS
     return res
 

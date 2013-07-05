@@ -700,6 +700,11 @@ class SuPlot:
             add2('MuonRecoSFUp','MuonRecoSFUp','MuonRecoSFUp',xadd=qcdadd)
             add2('MuonRecoSFDown','MuonRecoSFDown','MuonRecoSFDown',xadd=qcdadd)
             next('MCP_EFF')
+            add2('MuonRecoSFPhi','MuonRecoSFPhi','MuonRecoSFPhi',xadd=qcdadd)
+            next('MCP_CALOTAG')
+            add2('MuonRecoStatSFUp','MuonRecoStatSFUp','MuonRecoStatSFUp',xadd=qcdadd)
+            add2('MuonRecoStatSFDown','MuonRecoStatSFDown','MuonRecoStatSFDown',xadd=qcdadd)
+            next('MCP_STAT')
         # Pileup rescaling of mu=0.97 (or 1.03 when applied to data)
         if True:
             add2('PileupScale','PileupUp','PileupUp',xadd=qcdadd)
@@ -708,6 +713,9 @@ class SuPlot:
         if True:
             add2('MuonTriggerSFPhi','MuonTriggerSFPhi','MuonTriggerSFPhi',xadd=qcdadd)
             next('MCP_TRIG')
+            add2('MuonTriggerStatSFUp','MuonTriggerStatSFUp','MuonTriggerStatSFUp',xadd=qcdadd)
+            add2('MuonTriggerStatSFDown','MuonTriggerStatSFDown','MuonTriggerStatSFDown',xadd=qcdadd)
+            next('MCP_TRIG_STAT')
         else:
             add2('MuonTriggerSFUp','MuonTriggerSFUp','MuonTriggerSFUp',xadd=qcdadd)
             add2('MuonTriggerSFDown','MuonTriggerSFDown','MuonTriggerSFDown',xadd=qcdadd)
@@ -755,6 +763,10 @@ class SuPlot:
             add2('WpolMCNLOtoPowhegPythia','WpolPowhegPythia','WpolPowhegPythia',xadd=qcdadd,bgsig=1)
             add2('WpolPowhegHerwigtoPowhegPythia','WpolPowhegPythia','WpolPowhegPythia',xadd=qcdadd,bgsig=4)
             next('WPOL')
+        # MC modeling (MC reweighted to MC)
+        if True:
+            add2('MCModeling','MCModeling','MCModeling',xadd=qcdadd)
+            next('MCMODEL')
         # PDF reweighting
         if False: # new: as of 03/17/2013
             #add2('PdfCT10nlo','PdfCT10nlo',xadd=qcdadd)
@@ -765,8 +777,8 @@ class SuPlot:
             next('PDF')
         # QCD normalization
         if True:
-            add3('qcdup',1.04,'Nominal',xadd=qcdadd)
-            add3('qcddown',0.96,'Nominal',xadd=qcdadd)
+            add3('qcdup',1.1,'Nominal',xadd=qcdadd)
+            add3('qcddown',0.9,'Nominal',xadd=qcdadd)
             next('QCD_FRAC')
         # Signal MC systematic (previously: unfolding systematic)
         if True and 'mc' in nom.unfold:
