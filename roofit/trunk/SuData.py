@@ -632,6 +632,7 @@ class SuPlot:
                   ntuple=None,path=None,var=None,bin=None,pre='',weight="mcw*puw*effw*trigw",
                   histo=None,sliced_1d=None,sliced_2d=None,sysdir=None,subdir=None,basedir=None ):
         """ bootstraps a full collection of systematics from the nominal instance of SuSys """
+        JULY_1 = True   # True to enable reco/trigger stat up/down variations
         prep=''
         if sysdir and sysdir[0]=='tight_nominal':
             prep='tight_'
@@ -700,11 +701,12 @@ class SuPlot:
             add2('MuonRecoSFUp','MuonRecoSFUp','MuonRecoSFUp',xadd=qcdadd)
             add2('MuonRecoSFDown','MuonRecoSFDown','MuonRecoSFDown',xadd=qcdadd)
             next('MCP_EFF')
-            add2('MuonRecoSFPhi','MuonRecoSFPhi','MuonRecoSFPhi',xadd=qcdadd)
-            next('MCP_CALOTAG')
-            add2('MuonRecoStatSFUp','MuonRecoStatSFUp','MuonRecoStatSFUp',xadd=qcdadd)
-            add2('MuonRecoStatSFDown','MuonRecoStatSFDown','MuonRecoStatSFDown',xadd=qcdadd)
-            next('MCP_STAT')
+            if JULY_1 and True:
+                add2('MuonRecoSFPhi','MuonRecoSFPhi','MuonRecoSFPhi',xadd=qcdadd)
+                next('MCP_CALOTAG')
+                add2('MuonRecoStatSFUp','MuonRecoStatSFUp','MuonRecoStatSFUp',xadd=qcdadd)
+                add2('MuonRecoStatSFDown','MuonRecoStatSFDown','MuonRecoStatSFDown',xadd=qcdadd)
+                next('MCP_STAT')
         # Pileup rescaling of mu=0.97 (or 1.03 when applied to data)
         if True:
             add2('PileupScale','PileupUp','PileupUp',xadd=qcdadd)
@@ -713,10 +715,11 @@ class SuPlot:
         if True:
             add2('MuonTriggerSFPhi','MuonTriggerSFPhi','MuonTriggerSFPhi',xadd=qcdadd)
             next('MCP_TRIG')
-            add2('MuonTriggerStatSFUp','MuonTriggerStatSFUp','MuonTriggerStatSFUp',xadd=qcdadd)
-            add2('MuonTriggerStatSFDown','MuonTriggerStatSFDown','MuonTriggerStatSFDown',xadd=qcdadd)
-            next('MCP_TRIG_STAT')
-        else:
+            if JULY_1 and True:
+                add2('MuonTriggerStatSFUp','MuonTriggerStatSFUp','MuonTriggerStatSFUp',xadd=qcdadd)
+                add2('MuonTriggerStatSFDown','MuonTriggerStatSFDown','MuonTriggerStatSFDown',xadd=qcdadd)
+                next('MCP_TRIG_STAT')
+        else: # deprecated!
             add2('MuonTriggerSFUp','MuonTriggerSFUp','MuonTriggerSFUp',xadd=qcdadd)
             add2('MuonTriggerSFDown','MuonTriggerSFDown','MuonTriggerSFDown',xadd=qcdadd)
             next('MCP_TRIG')
@@ -792,6 +795,53 @@ class SuPlot:
                 add4('unfoldPowhegJimmy','powheg_herwig','Nominal',4,xadd=qcdadd)
                 add4('unfoldPowhegPythia','powheg_pythia','Nominal',5,xadd=qcdadd)
                 next('UNFOLDING')
+        assert len(s.sys)==len(s.groups)
+        print 'Created systematic variations: N =',len(s.sys)
+    def bootstrap_mcpscale(s,charge=2,qcd = {},unfold={},do_unfold=False,qcderr='NOM',
+                           ntuple=None,path=None,var=None,bin=None,pre='',weight="mcw*puw*effw*trigw",
+                           histo=None,sliced_1d=None,sliced_2d=None,sysdir=None,subdir=None,basedir=None ):
+        """ bootstraps a full collection of systematics from the nominal instance of SuSys """
+        prep=''
+        if sysdir and sysdir[0]=='tight_nominal':
+            prep='tight_'
+        # nominal first:
+        nom = SuSys(charge=charge,qcd=qcd,unfold=unfold,qcderr=qcderr,
+                    ntuple=ntuple,path=path,var=var,bin=bin,pre=pre,weight=weight,
+                    histo=histo,sliced_1d=sliced_1d,sliced_2d=sliced_2d,sysdir=sysdir,subdir=subdir,basedir=basedir)
+        s.sys = [ [nom,] ]
+        s.flat = [ nom ]
+        s.groups = [ 'Nominal' ]
+        s.do_unfold = do_unfold
+        # if this is using the ntuple, we don't have all systematics
+        if nom.use_ntuple():
+            print 'Created ntuple-based SuPlot'
+            return
+        # systematic variations
+        res = []
+        def add(n,ss,unfss=None,xadd=None):
+            """ Clones sysdir """
+            res.append(nom.clone(name=n,sysdir_mc=ss,qcdadd=xadd,unfdir=unfss if unfss!=None else ss))
+            s.flat.append(res[-1])
+        def next(nn):
+            s.sys.append(res[:])
+            s.groups.append(nn)
+            del res[:]
+        qcdadd = {'forcenominal':False}
+        # MCP smearing UP
+        add('MuonResMSUp','MuonResMSUp',xadd=qcdadd)
+        add('MuonResMSDown','MuonResMSDown',xadd=qcdadd)
+        next('MCP_MS_RES')
+        # MCP smearing DOWN
+        add('MuonResIDUp','MuonResIDUp',xadd=qcdadd)
+        add('MuonResIDDown','MuonResIDDown',xadd=qcdadd)
+        next('MCP_ID_RES')
+        # MCP scale
+        add('MuonKScaleUp','MuonKScaleUp',xadd=qcdadd)
+        add('MuonKScaleDown','MuonKScaleDown',xadd=qcdadd)
+        next('MCP_KSCALE')
+        add('MuonCScaleUp','MuonCScaleUp',xadd=qcdadd)
+        add('MuonCScaleDown','MuonCScaleDown',xadd=qcdadd)
+        next('MCP_CSCALE')
         assert len(s.sys)==len(s.groups)
         print 'Created systematic variations: N =',len(s.sys)
     def update_errors(s,sysonly=False,force=False,rebin=1,scale=1,renorm=False,avg=True):

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import re,math,os
-from common import rand_name
+from common import rand_name,dump_plot
 import ROOT
 
 class SuCanvas:
@@ -803,14 +803,14 @@ class SuCanvas:
                   xaxis_info=None,
                   leg_x1=None,leg_y2=None,
                   lumi_x=None,lumi_y=None,
-                  mlogy=False,rlogy=False):
+                  mlogy=False,rlogy=False,
+                  hdatasub = None):
         """ Wrapper to make a complete plot of stack and data overlayed - SuData version
         if norm==True, the stack is rescaled to Nominal data counts
         if norm_sys_from_nominal=True, systematics are normalized to nominal (rather than to data)
         mode=0 - nominal only
         mode=1 - nominal + systematic bands
         """
-        out = None,None
         s.buildRatio(mlogy=mlogy,rlogy=rlogy);
         s.cd_plotPad();
         data = hdata.nominal_h(rebin)
@@ -864,10 +864,12 @@ class SuCanvas:
         [HMC[0].SetBinError(ii,0) for ii in xrange(0,HMC[0].GetNbinsX()+2)]
         if mode==1 and hstack.has_systematics():
             if norm_sys_from_nominal:     # systematics normalized to nominal scale factor
+                print 'Normalizing systematics to Nominal'
                 s.hsys = HMC[1] = hstack.update_errors(sysonly=True,rebin=rebin,scale=stackScale)
                 s.htot = HMC[2] = hstack.update_errors(rebin=rebin,scale=stackScale)
             else:       # systematics normalized to data every time (i.e., only consider shape differences)
                 if norm:
+                    print 'Normalizing each systematic to data independently'
                     dint = data.Integral()
                     s.hsys = HMC[1] = hstack.update_errors(sysonly=True,rebin=rebin,scale=dint,renorm=True)
                     s.htot = HMC[2] = hstack.update_errors(rebin=rebin,scale=dint,renorm=True)
@@ -897,7 +899,6 @@ class SuCanvas:
                 fractext.AddText( 'QCD Frac. = %.3f #pm %.2f%%'%(qcdfrac,staterr*100.0) )
                 s.ConfigureText(fractext,text_x1=leg_x1,text_y2 = leg.GetY1NDC()-0.02)
                 fractext.Draw()
-        out = data.Clone() , stackH.Clone()
         # configure legend
         if not lumi_x: lumi_x = leg.GetX1NDC() + 0.2
         if not lumi_y: lumi_y = leg.GetY1NDC() + 0.02 + 0.15 + 0.03
@@ -915,6 +916,12 @@ class SuCanvas:
             overR = [(hratio.GetBinContent(ibin) if hratio.GetBinContent(ibin)!=0 else 1.0) for ibin in xrange(1,hratio.GetNbinsX()+1)]
             CoverC = NoverR*1.0 / sum(overR)
             print 'INFO: Cp / C = %.4f'%CoverC
+        # dump ratio
+        hratioCMB = data.Clone("hratioCMB"); hratioCMB.Divide(stackH) # stat error data/MC combined
+        if True and os.path.isdir('JOAO'):
+            tt = s.savetag + '_' + s.savename
+            dump_plot([hratio,hratioCMB],'JOAO/histsR',titles=[tt,tt+'_errcmb'],fmode="UPDATE")
+            pass
         s.drawRatio(hratio)
         if xaxis_label:
             hratio.GetXaxis().SetTitle( xaxis_label )
@@ -944,7 +951,6 @@ class SuCanvas:
         s.ConfigureAxis(stack, hratio)
         # fin
         s.update()
-        return out
 
     def plotTagProbe(s,hda_bef,hda_aft,hmc_bef,hmc_aft,xtitle='var'):
         """ Makes a large tag-and-probe canvas """
