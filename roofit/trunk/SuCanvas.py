@@ -917,8 +917,8 @@ class SuCanvas:
             CoverC = NoverR*1.0 / sum(overR)
             print 'INFO: Cp / C = %.4f'%CoverC
         # dump ratio
-        hratioCMB = data.Clone("hratioCMB"); hratioCMB.Divide(stackH) # stat error data/MC combined
-        if True and os.path.isdir('JOAO'):
+        if False and os.path.isdir('JOAO'):
+            hratioCMB = data.Clone("hratioCMB"); hratioCMB.Divide(stackH) # stat error data/MC combined
             tt = s.savetag + '_' + s.savename
             dump_plot([hratio,hratioCMB],'JOAO/histsR',titles=[tt,tt+'_errcmb'],fmode="UPDATE")
             pass

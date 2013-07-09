@@ -80,5 +80,30 @@ for ipt in {1..7}; do
     fi
 done
 
+echo "Waiting mid-way (2): `jobs | wc -l` jobs..."
+wait
+
+# PLOTTING IN VARIOUS ETA BINS
+YRANGE="y:0:-1" # pt20
+YRANGE="y:2:-1" # pt25
+function runs() {
+    if [ -z "${ieta}" ]; then
+	echo "ERROR: ieta not defined"
+	exit 0;
+    fi
+    out=STACKS/CONTROL_IETA
+    log=LOG.ieta${ieta}
+    #hsource="d3_abseta_lpt_lpt:x:${ieta}:${ieta}:${YRANGE}" #FIXME
+    hsource="d3_abseta_lpt_met:x:${ieta}:${ieta}:${YRANGE}"
+    ./stack2.py -o ${out} --hsource "${hsource}" --bin 120,0,120  --rebin 1 --refline 0.85,1.175 ${common} &> ${log}.lpt &
+}
+for ieta in {1..11}; do
+    # met fits
+    # lvar="d3_abseta_lpt_met:x:${ieta}:${ieta}:${YRANGE}"  # fits in eta bins
+    lvar="d3_abseta_lpt_met:x:0:-1:${YRANGE}"               # inclusive fits
+    common="-b --input ${input} --lvar ${lvar} --lbin ${METRANGE} --lrebin 2 -t P${ieta} -m control_stack --charge 3 --bgqcd ${bgqcd} ${METALLSYS} --nomonly"
+    runs
+done
+
 echo "Please wait: `jobs | wc -l` jobs..."
 wait
