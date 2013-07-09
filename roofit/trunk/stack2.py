@@ -567,6 +567,19 @@ def plot_stack(spR2,var=None,bin=None,q=2,m=0,new_scales=None,norm=False,pave=Fa
     leg = []
     hstack = po.stack('mc',spR2.clone(q=q),leg=leg)
     hdata = po.data('data',spR2.clone(q=q),leg=leg)
+
+    # experimental: zero out lepton pT below 25 GeV
+#     xxx = hdata.nominal_h(opts.rebin).Clone()
+#     for i in xrange(1,xxx.GetNbinsX()):
+#         print i,xxx.GetBinCenter(i),xxx.GetBinContent(i),xxx.GetBinError(i)
+#     os._exit(0)
+    
+    if False and os.path.isdir('JOAO'):
+        Xdata = po.data_sub('data_sub',spR2.clone(q=q)).nominal_h(opts.rebin).Clone()
+        Xmc = po.sig('sigonly',spR2.clone(q=q)).nominal_h(opts.rebin).Clone()
+        tt = opts.tag+'_'+SuSys.QMAP[q][1]+'_'+SuCanvas.cleanse(var)
+        dump_plot([hdata.nominal_h(opts.rebin),Xdata,Xmc],'JOAO/hists',titles=[tt,tt+'_datasub',tt+'_sig'],fmode="UPDATE")
+    hdatajan = []
     xaxis_info = match_labelmap(var)
     if xaxis_info and xaxis_range:
         xaxis_info.append( xaxis_range )
@@ -578,12 +591,15 @@ def plot_stack(spR2,var=None,bin=None,q=2,m=0,new_scales=None,norm=False,pave=Fa
     if True and xaxis_info:
         pass
     leg_x1,leg_y2,height = SuCanvas.best_legend_and_height(hdata.nominal_h())
-    Xdata,Xmc = c.plotStack(hstack,hdata,mode=m,leg=leg,height=height,leg_x1=leg_x1,leg_y2=leg_y2,pave=pave,rebin=opts.rebin,norm=norm,xaxis_info=xaxis_info,mlogy=opts.mlogy,rlogy=opts.rlogy)
+    c.plotStack(hstack,hdata,mode=m,leg=leg,height=height,leg_x1=leg_x1,leg_y2=leg_y2,pave=pave,rebin=opts.rebin,norm=norm,xaxis_info=xaxis_info,mlogy=opts.mlogy,rlogy=opts.rlogy)
     # small hack to dump lepton pt plots for Jan
     if len(opts.hsource.split(':'))==7 and opts.hsource.split(':')[0] == 'd3_abseta_lpt_lpt':
         bn = int( opts.hsource.split(':')[3] )
         sq = QMAP[q][1]
-        dump_plot( [Xdata,Xmc] , 'jan_wmunu_pt' , ['data','sigbg'] , fmode='UPDATE' , title_common=sq+'_bin%d_'%bn, do_plot=False , do_ratio=True)
+        Xdata = po.data_sub('data_sub',spR2.clone(q=q)).nominal_h(opts.rebin).Clone()
+        Xmc = po.sig('sigonly',spR2.clone(q=q)).nominal_h(opts.rebin).Clone()
+        dump_plot( [Xdata,Xmc] , 'jan_wmunu_pt_v3' , ['data_minus_bg','sig'] , fmode='UPDATE' , title_common=sq+'_bin%d_'%bn, do_plot=False , do_ratio=True)
+        #dump_plot( [Xdata,Xmc] , 'jan_wmunu_pt_v2' , ['data','sigbg'] , fmode='UPDATE' , title_common=sq+'_bin%d_'%bn, do_plot=False , do_ratio=True)
     OMAP.append(c)
     return hdata,hstack
 

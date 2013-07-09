@@ -131,6 +131,14 @@ input=/share/t3data3/antonk/ana/ana_v29I_07012013_postSMmtg_datarw_stacoCB_all/p
 DB=DB_07012013_postSMmtg_datarw.v42 # updated Max's data-rw class - it now uses smoothed histograms
 DB=DB_07012013_postSMmtg_datarw.v43 # added recoProbe to reco SF. added SFstat to stacks. added MCModeling. qcd in stack plots increased from 4% to 10%
 
+
+# TEMPORARY - for stacks
+input=/share/t3data3/antonk/ana/ana_v29I_06252013_newrecoSF_rep_stacoCB_all/pt20
+DB=DB_06252013_newrecoSF.v40    # calo vs ID factored out
+#input=/share/t3data3/antonk/ana/ana_v29I_06252013_newrecoSF_MG_stacoCB_all/pt20
+#DB=DB_06252013_newrecoSF_mg.v41 # re-run
+
+
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`
 iq=0
