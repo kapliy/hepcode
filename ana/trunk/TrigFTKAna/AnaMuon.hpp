@@ -587,14 +587,14 @@ public:
 #ifdef PATCHED_MCP
     const std::pair<int,int> bin = mcp->get_pt_eta_phi_bin_index(muon->scharge(),muon->four_vector());
     for(int replica=0;replica<NREPLICASF;replica++) {
-      effs[replica] *= (flag==0 ? mcp->scaleFactorReplica(muon->scharge(),muon->four_vector(),replica,bin) : 1.0);
+      effs[replica] *= (flag==0 || flag==10 ? mcp->scaleFactorReplica(muon->scharge(),muon->four_vector(),replica,bin) : 1.0);
     }
     eff = mcp->scaleFactor(muon->scharge(),muon->four_vector(),bin); 
     errstat = mcp->scaleFactorUncertainty(muon->scharge(),muon->four_vector(),bin);
     errsys = mcp->scaleFactorSystematicUncertainty(muon->scharge(),muon->four_vector(),bin);
 #else
     for(int replica=0;replica<NREPLICASF;replica++) {
-      effs[replica] *= (flag==0 ? mcp->scaleFactorReplica(muon->scharge(),muon->four_vector(),replica) : 1.0);
+      effs[replica] *= (flag==0 || flag==10 ? mcp->scaleFactorReplica(muon->scharge(),muon->four_vector(),replica) : 1.0);
     }
     eff = mcp->scaleFactor(muon->scharge(),muon->four_vector()); 
     errstat = mcp->scaleFactorUncertainty(muon->scharge(),muon->four_vector());
