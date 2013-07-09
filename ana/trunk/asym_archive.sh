@@ -67,6 +67,30 @@ lbl=05132013_newmet    # fixed toy mc seed per agreement with Max. [never finish
 lbl=05142013_newmet    # fixed toy mc seed per agreement with Max. Independent toy MCs (total = 3000). removed eta x pt unfolding. commented out DtoK and LtoM stuff. full set of bootstrapping histograms in data
 lbl=05142013_newmet_qindepSF  # trigger SF independent of charge
 
+lbl=05182013_fullstat  # update to full mcnlo and powhegHerig stat. new egammaUtils: remove wpol constraint and apply jan's new experimental wpol reweights (mcnlo->powhegherwig or mcnlo/powhegherwig->powhegpythia) to reduce CW syst. fix bootstrapping to 1000 replicas and only run on baseline Nominal data.
+lbl=05202013_fullstat      # fixed two bugs in bootstrap: int25 was wrong, and 2d used the wrong type cast
+lbl=05202013_fullstat_ret  # retry before trying out running over OSG nodes
+lbl=05202013_fullstat_noC  # removed curvature correction
+lbl=06092013_recoSFphi     # MCP trunk scale factors (phi only)
+lbl=06092013_recoSFphi_ret # updated RootCore, added compiler optimizations, unrolled response matrix loop; increased nsplits for sig, added anyfit
+
+lbl=06132013_recoSFpt      # re-running same-old version, but after all updates, using latest MuonEfficiencyCorrections, but old eta x pt txt file
+lbl=06132013_recoSFphi     # phi version (re-run)
+
+lbl=06172013_recoBOTH_withZ # nominal is SFpt, but added a new st_w_bla option to do phi. Also: running z plots
+
+lbl=06192013_recoBOTH_withZ # removed Z ntuple. disabled trig matching. updated reco SF class (correct errors). Added deltaPhi(soft,all-but-soft). Added a new systematic - reweight signal MC to data (Max's file).
+lbl=06192013_recoBOTH_withZ_recoPhi  # Eta-phi SF are nominal
+lbl=06192013_recoBOTH_withZ_pt25 # rerunning pt25 case with actual full statistics
+
+lbl=06192013_recoBOTH_withZ_anyfit  # reco=(eta,phi)added anyfit to make MET plots. updated to new iso SFs. added trigphi, effphi, eff*trigphi
+lbl=06192013_recoBOTH_withZ_rep     # reco=(eta,phi) add back trigger matching and z ntuple information
+lbl=06192013_recoBOTH_withZ_etaonly # reco=(eta) fixed a bug that reverted etaonly flag  #NEVER RAN
+
+lbl=06252013_newrecoSF              # new meaning of systematic: full difference between ID and CALO probes
+lbl=06252013_newrecoSF_rep          # just a re-run: previous run was affected by some xrootd problem (just in case)
+lbl=06252013_newrecoSF_MG           # MG version
+lbl=06252013_newrecoSF_MG_rep       # MG version - rerunning to fix root_mc_powheg_pythia_wminmunu.root
 
 function rerun20() {
     submit_sample wasymmetry29I_mc_alpgen_herwig_wmunu_np0.dat
