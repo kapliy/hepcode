@@ -579,7 +579,6 @@ def plot_stack(spR2,var=None,bin=None,q=2,m=0,new_scales=None,norm=False,pave=Fa
         Xmc = po.sig('sigonly',spR2.clone(q=q)).nominal_h(opts.rebin).Clone()
         tt = opts.tag+'_'+SuSys.QMAP[q][1]+'_'+SuCanvas.cleanse(var)
         dump_plot([hdata.nominal_h(opts.rebin),Xdata,Xmc],'JOAO/hists',titles=[tt,tt+'_datasub',tt+'_sig'],fmode="UPDATE")
-    hdatajan = []
     xaxis_info = match_labelmap(var)
     if xaxis_info and xaxis_range:
         xaxis_info.append( xaxis_range )
@@ -593,7 +592,7 @@ def plot_stack(spR2,var=None,bin=None,q=2,m=0,new_scales=None,norm=False,pave=Fa
     leg_x1,leg_y2,height = SuCanvas.best_legend_and_height(hdata.nominal_h())
     c.plotStack(hstack,hdata,mode=m,leg=leg,height=height,leg_x1=leg_x1,leg_y2=leg_y2,pave=pave,rebin=opts.rebin,norm=norm,xaxis_info=xaxis_info,mlogy=opts.mlogy,rlogy=opts.rlogy)
     # small hack to dump lepton pt plots for Jan
-    if len(opts.hsource.split(':'))==7 and opts.hsource.split(':')[0] == 'd3_abseta_lpt_lpt':
+    if len(opts.hsource.split(':'))==7 and opts.hsource.split(':')[0] == 'd3_abseta_lpt_lpt' and opts.tag[:4]=='PJan':
         bn = int( opts.hsource.split(':')[3] )
         sq = QMAP[q][1]
         Xdata = po.data_sub('data_sub',spR2.clone(q=q)).nominal_h(opts.rebin).Clone()

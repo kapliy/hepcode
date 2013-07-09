@@ -11,7 +11,8 @@ METRANGE="100,0,60"
 YRANGE="y:0:-1" # pt20
 YRANGE="y:2:-1" # pt25
 
-# PLOTTING IN VARIOUS PT BINS
+rm -f jan_wmunu_pt_v3.root
+
 function runs() {
     if [ -z "${ieta}" ]; then
 	echo "ERROR: ieta not defined"
@@ -31,7 +32,7 @@ for ieta in {1..11}; do
     # pt fits
     #lvar="d3_abseta_lpt_lpt:x:${ieta}:${ieta}:${YRANGE}"
     #lvar="d3_abseta_lpt_lpt:x:0:-1:${YRANGE}"
-    common="-b --input ${input} --lvar ${lvar} --lbin ${METRANGE} --lrebin 2 -t P${ipt} -m control_stack --charge 3 --bgqcd ${bgqcd} ${METALLSYS} --nomonly"
+    common="-b --input ${input} --lvar ${lvar} --lbin ${METRANGE} --lrebin 2 -t PJan_${ieta} -m control_stack --charge 3 --bgqcd ${bgqcd} ${METALLSYS} --nomonly"
     runs
 done
 
