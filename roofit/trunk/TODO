@@ -1,4 +1,6 @@
-FIX: SuData bootstrap (add back stat)
+de-correlate ttbar from all other ewk uncertainties in qcdsys3d.py
+Total Luminosity: 4579.44 pb-1
+
 
 APPROVAL(ADRIAN):
 Suggestion to come up with an alternative method for QCD systematic

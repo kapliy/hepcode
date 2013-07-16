@@ -234,7 +234,12 @@ class SuSys:
             else:
                 i=1
         #isowind/st_w_final/metfit/bin_0/lpt_0/POS => #isowind/st_w_final/metfit/POS/bin_0/lpt_0
-        hpath = os.path.join(s.sysdir[i],s.subdir[i],s.basedir[i]) + SuSys.QMAP[s.charge][0]
+        csysdir = s.sysdir[i]
+        csubdir = s.subdir[i]
+        # hack for MCModeling
+        if csubdir=='MCModeling' and s.basedir[i]=='metfit':
+            csubdir = 'st_w_final'
+        hpath = os.path.join(csysdir,csubdir,s.basedir[i]) + SuSys.QMAP[s.charge][0]
         if hpath:
             hpath = re.sub('//','/',hpath) # remove double slashes
         if hpath and hpath[-1]=='/':
