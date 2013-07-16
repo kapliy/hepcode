@@ -3,7 +3,7 @@
 # Compare QCD for 1D vs SUM_over_pT{2D}
 # Note: focus on pt>25 GeV case
 
-import sys
+import sys,os
 import common
 import ROOT
 
@@ -15,9 +15,13 @@ if len(sys.argv)>=2:
 print 'Charge:',q
 qword=r'$\mu^{+}$' if q=='POS' else r'$\mu^{-}$'
 
-f1d = ROOT.TFile.Open('OUT_05182013_fstat.v30.abseta.1D.pt25.root')
+z = os.popen('source config.sh && echo $OUTDB','r')
+outbase='OUT_05182013_fstat.v30'  # first iteration
+outbase = z.readline().strip()
+
+f1d = ROOT.TFile.Open('%s.abseta.1D.pt25.root'%outbase)
 assert f1d.IsOpen()
-f2d = ROOT.TFile.Open('OUT_05182013_fstat.v30.abseta.2D.pt20.root')
+f2d = ROOT.TFile.Open('%s.abseta.2D.pt20.root'%outbase)
 assert f2d.IsOpen()
 
 HEAD = r"""

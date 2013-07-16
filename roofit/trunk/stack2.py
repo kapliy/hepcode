@@ -598,7 +598,7 @@ def plot_stack(spR2,var=None,bin=None,q=2,m=0,new_scales=None,norm=False,pave=Fa
         sq = QMAP[q][1]
         Xdata = po.data_sub('data_sub',spR2.clone(q=q)).nominal_h(opts.rebin).Clone()
         Xmc = po.sig('sigonly',spR2.clone(q=q)).nominal_h(opts.rebin).Clone()
-        dump_plot( [Xdata,Xmc] , 'jan_wmunu_pt_v4' , ['data_minus_bg','sig'] , fmode='UPDATE' , title_common=sq+'_bin%d_pt%d_'%(bn,bnPT), do_plot=False , do_ratio=True)
+        dump_plot( [Xdata,Xmc] , 'jan_wmunu_pt_v6' , ['data_minus_bg','sig'] , fmode='UPDATE' , title_common=sq+'_bin%d_pt%d_'%(bn,bnPT), do_plot=False , do_ratio=True)
         #dump_plot( [Xdata,Xmc] , 'jan_wmunu_pt_v2' , ['data','sigbg'] , fmode='UPDATE' , title_common=sq+'_bin%d_'%bn, do_plot=False , do_ratio=True)
     OMAP.append(c)
     return hdata,hstack

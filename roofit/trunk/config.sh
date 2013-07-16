@@ -134,6 +134,8 @@ DB=DB_07012013_postSMmtg_datarw.v43 # added recoProbe to reco SF. added SFstat t
 input=/share/t3data3/antonk/ana/ana_v29I_07082013_postSMmtg_recofix_stacoCB_all/pt20
 DB=DB_07082013_postSMmtg_recofix.v44   # fixed missing reco toy SF
 
+input=/share/t3data3/antonk/ana/ana_v29I_07112013_postSMmtg_datarw_stacoCB_all/pt20
+DB=DB_07112013_postSMmtg_datarw.v45   # fixed data rw: use QCD estimates from pt x eta bins
 
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`

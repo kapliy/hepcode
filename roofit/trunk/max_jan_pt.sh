@@ -7,6 +7,8 @@ source config.sh
 # refit qcd for each systematic? As of Jan 22, we decided to NOT refit.
 METALLSYS=""
 METRANGE="100,0,60"
+submc=st_w_final
+#submc=MCModeling
 
 YRANGE="y:0:-1" # pt20
 YRANGE="y:2:-1" # pt25
@@ -22,9 +24,9 @@ function runs() {
     log=LOG.ipt${ipt}.ieta${ieta}
     hsource="d3_abseta_lpt_lpt:x:${ieta}:${ieta}:${YRANGE}"
     REFLINE_ETA="0.85,1.175"
-    ./stack2.py -o ${out} --hsource "${hsource}" --bin 120,0,120  --rebin 1 --refline 0.85,1.175 ${common} &> ${log}.dat &
+    ./stack2.py --subdirmc ${submc} -o ${out} --hsource "${hsource}" --bin 120,0,120  --rebin 1 --refline 0.85,1.175 ${common} &> ${log}.dat &
 }
-# TODO - add a loop over ipt, and then save ALL ipt/ieta variations. Lastly, write a small pyroot script to add up pt slices
+
 for ipt in {2..7}; do
     YRANGE="y:${ipt}:${ipt}"
     for ieta in {1..11}; do
@@ -41,3 +43,7 @@ for ipt in {2..7}; do
 done
 echo "Please wait: `jobs | wc -l` jobs..."
 wait
+
+echo "Running merging..."
+./max_jan_pt_sum.py
+echo "All done"
