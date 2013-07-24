@@ -137,6 +137,12 @@ DB=DB_07082013_postSMmtg_recofix.v44   # fixed missing reco toy SF
 input=/share/t3data3/antonk/ana/ana_v29I_07112013_postSMmtg_datarw_stacoCB_all/pt20
 DB=DB_07112013_postSMmtg_datarw.v45   # fixed data rw: use QCD estimates from pt x eta bins
 
+input=/share/t3data3/antonk/ana/ana_v29I_07122013_postSMmtg_datarw_stacoCB_all/pt20
+DB=DB_07122013_postSMmtg_datarw.v46   # Updated to new lumi tag and ttbar xsec. fixed data rw: max said previous version was inverted
+
+input=/share/t3data3/antonk/ana/ana_v29I_07122013_postSMmtg_datarw_ret_stacoCB_all/pt20
+DB=DB_07122013_postSMmtg_datarw.v47   # re-run without retries. Implementing QCD fits with ewk and top up/down variations
+
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`
 iq=0

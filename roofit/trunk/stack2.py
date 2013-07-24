@@ -150,8 +150,9 @@ _DATA_PERIODS_DEFAULT = ('D','E','F','G','H','I','J','K','L','M') # default
 #4713.11*1000.0 - BtoM with pro10
 #4701.37*1000.0 - DtoM with pro10, OflLumi-7TeV-002
 #4644.00*1000.0 - DtoM with pro10, OflLumi-7TeV-003
+#4579.44*1000.0 - DtoM with pro10, OflLumi-7TeV-004
 parser.add_option("--lumi",dest="lumi",
-                  type="float", default=4644.0*1000.0,
+                  type="float", default=4579.44*1000.0,
                   help="Integrated luminosity for data (in nb^-1)")
 parser.add_option("--qcdscale",dest="qcdscale",
                   type="float", default=None,
@@ -190,8 +191,8 @@ parser.add_option("--bgtau",dest="bgtau",
                   type="int", default=2,
                   help="TAU: 0=Pythia, 1=MC@NLO, 2=Alpgen/Herwig, 3=Alpgen/Pythia, 4=PowHeg/Herwig, 5=PowHeg/Pythia")
 parser.add_option("--xsecerr",dest="xsecerr",
-                  type="int", default=0,
-                  help="Cross-section uncertainty. 0=nominal, +/-1 = one sigma variations")
+                  type="string", default='0,0',
+                  help="Cross-section uncertainty. 0=nominal, +/-1 = one sigma variations. Given as a pair: (ewk,top)")
 parser.add_option('-f',"--func",dest="func",
                   type="string", default='gaus',
                   help="func = {gaus,egge,voig,voigbgbw,bwfull}{0=none;1=gaus;2=double-gaus;3=crystal-ball}")
@@ -254,7 +255,7 @@ from SuData import *
 SuSample.rootpath = opts.input
 SuSample.debug = opts.verbose
 SuSample.lumi = opts.lumi
-SuSample.xsecerr = opts.xsecerr
+SuSample.xsecerr = [float(opts.xsecerr),float(opts.xsecerr)] if len(opts.xsecerr.split(','))==1 else [float(opts.xsecerr.split(',')[0]) , float(opts.xsecerr.split(',')[1])]
 SuSample.nevts_histogram = opts.nevtsh
 SuStackElm.qcdsource = opts.qcdsource
 SuStackElm.qcdscale = opts.qcdscale
@@ -984,12 +985,13 @@ if mode in ('prepare_qcd_2d','prepare_qcd_1d','prepare_qcd_0d'):
         SuStackElm.new_scales = False
         po.choose_qcd(opts.bgqcd)
     # variation of electroweak normalization
+    # (in qcdsys.py, the top and other-ewk are de-coupled to vary them independently)
     if True:
         sig,tau,ewk,qcd = nom()
-        SuSample.xsecerr = 1
+        SuSample.xsecerr = [1,1]
         po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),dname='POS_sig%d_tau%d_ewk%d_xsecup'%(sig,tau,ewk)); itot+=1
         po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_sig%d_tau%d_ewk%d_xsecup'%(sig,tau,ewk));  itot+=1
-        SuSample.xsecerr = -1
+        SuSample.xsecerr = [-1,-1]
         po.SaveROOT(fname,spR.clone(q=0,histo=var,var=var),dname='POS_sig%d_tau%d_ewk%d_xsecdown'%(sig,tau,ewk)); itot+=1
         po.SaveROOT(fname,spR.clone(q=1,histo=var,var=var),dname='NEG_sig%d_tau%d_ewk%d_xsecdown'%(sig,tau,ewk));  itot+=1
 
@@ -1046,6 +1048,7 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
     """
     global qcdfit_cache
     MC_SIMPLE = True # if False, obtain the average of several sig=1 and sig=4 variations
+    assert type(SuSample.xsecerr)==type([])
     # cache results
     import antondb
     key = '%s_%s_%s_%s'%(iq,etamode,ieta,ipt)
@@ -1165,7 +1168,7 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
         next('#tau backgrounds')
         nom()
 
-    # MC modeling:
+    # MC modeling (other generators)
     if MC_SIMPLE:
         po.choose_sig(4)
         add(qcdfit('unfoldPowhegJimmy',spL.clone()))
@@ -1218,6 +1221,24 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
 
     # MCModeling (reweight MC to data) - no need to re-estimate QCD
     if False:
+        pass
+
+    # Re-fits under variation of ewk (and top) normalization
+    if True:
+        # ewk (no top)
+        SuSample.xsecerr = [1,0]
+        add(qcdfit('Nominal_ewk_ewkup',spL.clone()))
+        SuSample.xsecerr = [-1,0]
+        add(qcdfit('Nominal_ewk_ewkdown',spL.clone()))
+        next('Ewk xsec')
+        # now top
+        SuSample.xsecerr = [0,1]
+        add(qcdfit('Nominal_ewk_topup',spL.clone()))
+        SuSample.xsecerr = [0,-1]
+        add(qcdfit('Nominal_ewk_topdown',spL.clone()))
+        next('Top xsec')
+        # restore defaults
+        SuSample.xsecerr = [0,0]
         pass
 
     # W polarization reweighting target (new: as of 05/21/2013)
@@ -1452,7 +1473,7 @@ if mode in ('qcdfit','qcdfit_sys'):
             elif opts.ieta=='LOOP' and opts.ipt=='ALL20' and zz in (2,3): height = 'abs3.5'
             elif opts.ieta=='LOOP' and opts.ipt=='ALL25' and zz in (4,): height = 'abs12.5'
             print 'SAVING:',zz,xaxis_info+ys[zz],height
-            c[zz].plotAny(hs[zz],M=M[zz],height=height,drawopt='LP',xaxis_info=xaxis_info+ys[zz],pave=pave)
+            c[zz].plotAny(hs[zz],M=M[zz],height=height,drawopt='CP',xaxis_info=xaxis_info+ys[zz],pave=pave)
             c[zz].SaveSelf()
     # save latex tables for 1D case
     if opts.ieta=='ALL' and opts.ipt in ('ALL20','ALL25') and opts.etamode==2:

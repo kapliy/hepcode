@@ -111,14 +111,14 @@ def make_qcd(name):
             elif mname in ('Nominal_qcd_up','Nominal_qcd_down'): # only used in max_latex.py to print bg tables
                 # Hardcoded list of QCD systematics not propagated through EWUnfold (so we need to add them in quadrature here)
                 # That includes: fit range; fit var; choice of anti-isolation
-                _ERRORS = ['fit_var','fit_periods','met_range','IsoWind20m','IsoWind40']
+                _ERRORS = ['fit_var'  ,  'fit_periods','met_range','IsoWind20m','IsoWind40']
                 devs = common.qcdfit_sys_deviations_subset(MSYS,MGROUPS,_ERRORS)
                 dev2 = math.sqrt( sum([ xx*xx for xx in devs ]) )
                 err  = 1.0*dev2 if mname=='Nominal_qcd_up' else -1.0*dev2
                 v  = MSYS_FLAT['Nominal'][11] + err
                 #ve = MSYS_FLAT['Nominal'][12]
-            elif mname in ('Nominal_qcd_statup','Nominal_qcd_statdown'): # DEPRECATED
-                _ERRORS = ['fit_error',]
+            elif mname in ('Nominal_qcd_statup','Nominal_qcd_statdown'): # used in max_latex to show uncorrelated part
+                _ERRORS = ['fit_var',]
                 devs = common.qcdfit_sys_deviations_subset(MSYS,MGROUPS,_ERRORS)
                 dev2 = math.sqrt( sum([ xx*xx for xx in devs ]) )
                 err  = 1.0*dev2 if mname=='Nominal_qcd_statup' else -1.0*dev2
@@ -266,7 +266,7 @@ if __name__=='__main__':
                 [ make_total(system,allsamples,fout_D[q],'Nominal_qcd_up',q==2 and iq==1) for q in (iq,2) ]
                 allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + make_qcd('Nominal_qcd_down') + sigL
                 [ make_total(system,allsamples,fout_D[q],'Nominal_qcd_down',q==2 and iq==1) for q in (iq,2) ]
-            # generate histograms for ewkbg xsec variations
+            # generate histograms for ewkbg xsec variations (top+ewk together, old default)
             if True:
                 bdir = fin.Get( '%s_xsecup'%FQNAMES[iq] )
                 assert bdir
@@ -278,6 +278,33 @@ if __name__=='__main__':
                 sigL = [bdir.Get('wmunu_'+system),]
                 allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample!='wmunu'] + make_qcd('Nominal') + sigL
                 [ make_total(system,allsamples,fout_D[q],'Nominal_ewk_xsecdown',q==2 and iq==1) for q in (iq,2) ]
+            # ewk (excluding top) - integrates QCD effects
+            if True:
+                bdir = fin.Get( '%s_xsecup'%FQNAMES[iq] )
+                ttbarL = [adir.Get('ttbar_'+system),] # nominal
+                assert bdir
+                sigL = [bdir.Get('wmunu_'+system),]
+                allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample not in ('wmunu','ttbar')] + ttbarL + make_qcd('Nominal_ewk_ewkup') + sigL
+                [ make_total(system,allsamples,fout_D[q],'Nominal_ewk_ewkup',q==2 and iq==1) for q in (iq,2) ]
+                bdir = fin.Get( '%s_xsecdown'%FQNAMES[iq] )
+                assert bdir
+                sigL = [bdir.Get('wmunu_'+system),]
+                allsamples = [bdir.Get(sample+'_'+system) for sample in samples if sample not in ('wmunu','ttbar')] + ttbarL + make_qcd('Nominal_ewk_ewkdown') + sigL
+                [ make_total(system,allsamples,fout_D[q],'Nominal_ewk_ewkdown',q==2 and iq==1) for q in (iq,2) ]
+            # top (excluding ewk) - integrates QCD effects
+            if True:
+                bdir = fin.Get( '%s_xsecup'%FQNAMES[iq] )
+                ttbarL = [bdir.Get('ttbar_'+system),] # xsec up
+                assert bdir
+                sigL = [adir.Get('wmunu_'+system),]
+                allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample not in ('wmunu','ttbar')] + ttbarL + make_qcd('Nominal_ewk_topup') + sigL
+                [ make_total(system,allsamples,fout_D[q],'Nominal_ewk_topup',q==2 and iq==1) for q in (iq,2) ]
+                bdir = fin.Get( '%s_xsecdown'%FQNAMES[iq] )
+                ttbarL = [bdir.Get('ttbar_'+system),] # xsec down
+                assert bdir
+                sigL = [adir.Get('wmunu_'+system),]
+                allsamples = [adir.Get(sample+'_'+system) for sample in samples if sample not in ('wmunu','ttbar')] + ttbarL + make_qcd('Nominal_ewk_topdown') + sigL
+                [ make_total(system,allsamples,fout_D[q],'Nominal_ewk_topdown',q==2 and iq==1) for q in (iq,2) ]
             # generate histograms for MC-based QCD
             if True:
                 bdir = fin.Get('%s_qcdmc'%FQNAMES[iq])

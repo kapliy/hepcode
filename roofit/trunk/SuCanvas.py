@@ -719,14 +719,17 @@ class SuCanvas:
                             h.Draw('HIST CP')
                             s.data.append( h.DrawClone('A SAME CP')  )
                         else:
-                            h.Draw(drawopt)
+                            if M.drawopts[i]==' E4':
+                                h.SetMarkerSize(0)
+                                h.SetFillColor(h.GetMarkerColor())
+                            h.Draw(drawopt+M.drawopts[i])
                         hdraw = h
                     else:
                         if drawopt=='HIST CP E0':
                             h.Draw('A SAME HIST CP')
                             s.data.append( h.DrawClone('A SAME CP')  )
                         else:
-                            h.Draw('A SAME '+drawopt)
+                            h.Draw('A SAME '+drawopt+M.drawopts[i])
             if htot:
                 htot.Draw('A same E2')
         # axis labeling
@@ -1055,6 +1058,7 @@ class PlotOptions:
       s.cuts = []
       s.ratios = []
       s.errors = []
+      s.drawopts = []
       s.icolor = 0
       s.istyle = 0
     def ntot(s):
@@ -1068,7 +1072,7 @@ class PlotOptions:
       """ Add one sample.
       NOTE: previously, this had the following default: style=20 """
       return s.add(label,label,color,size,style,cut,r,err)
-    def add(s,name,label,color=None,size=0.7,style=None,cut=None,r=None,err=0):
+    def add(s,name,label,color=None,size=0.7,style=None,cut=None,r=None,err=0,drawopt=''):
       """ Add one sample.
       NOTE: previously, this had the following default: style=20 """
       s.names.append(name)
@@ -1079,6 +1083,7 @@ class PlotOptions:
       s.cuts.append(cut)
       s.ratios.append(r)
       s.errors.append(err)
+      s.drawopts.append(drawopt)
       if color==None: s.icolor+=1
       if style==None: s.istyle+=1
       s.n+=1
