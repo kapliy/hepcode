@@ -21,19 +21,20 @@ maxsleepcycles=420 # 4200 seconds = 70 minutes
 function monitor () {
     _pid=$1
     _log=$2
-    _try=$3
+    _err=$3
+    _try=$4
     echo "BEGIN MONITORING pid=${_pid} attempt=${_try}"
     z=0
     while ps -p ${_pid} > /dev/null; do
 	report=`ps -p ${_pid} -o cputime=,rss=,vsz=`
 	cat ${_log} | egrep -q "${pattern}" && {
-	    echo "FAILED PROCESS: ${_pid} attempt=${_try} - detected dcache error"
+	    echo "FAILED PROCESS: ${_pid} attempt=${_try} - detected stdout error"
 	    ps -p ${_pid} > /dev/null && kill -SIGKILL ${_pid}
 	    sleep 0.5
 	    return 1
 	}
 	cat ${_err} | egrep -q "${pattern}" && {
-	    echo "FAILED PROCESS: ${_pid} attempt=${_try} - detected dcache error"
+	    echo "FAILED PROCESS: ${_pid} attempt=${_try} - detected stderr error"
 	    ps -p ${_pid} > /dev/null && kill -SIGKILL ${_pid}
 	    sleep 0.5
 	    return 1
@@ -50,6 +51,19 @@ function monitor () {
 	((z++))
 	sleep $slp
     done
+    # one last check
+    cat ${_log} | egrep -q "${pattern}" && {
+	echo "FAILED PROCESS: ${_pid} attempt=${_try} - detected dcache error"
+	ps -p ${_pid} > /dev/null && kill -SIGKILL ${_pid}
+	sleep 0.5
+	return 1
+    }
+    cat ${_err} | egrep -q "${pattern}" && {
+	echo "FAILED PROCESS: ${_pid} attempt=${_try} - detected dcache error"
+	ps -p ${_pid} > /dev/null && kill -SIGKILL ${_pid}
+	sleep 0.5
+	return 1
+    }
     echo "END MONITORING pid=${_pid} attempt=${_try}"
     return 0
 }
@@ -86,13 +100,15 @@ for i in `seq 1 ${ntry}`; do
     ${PROGRAM} 1>${log} 2>${err} &
     PID=$!
     disown  # to prevent annoying kill messages
-    monitor ${PID} ${err} ${i}
+    monitor ${PID} ${log} ${err} ${i}
     MONRES=$?
     if [ "${MONRES}" -eq "0" ]; then
 	success=1
 	break; 
     fi;
-    dump ${log} ${err} ${i}
+    if [ "${ntry}" -gt "1" ]; then
+	dump ${log} ${err} ${i}
+    fi
     sleep 0.5
 done
 

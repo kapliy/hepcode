@@ -22,6 +22,9 @@ lbl=06282013_postSMmtg              # same as below, but very buggy. not sure wh
 lbl=06292013_postSMmtg              # run z ntuples (for matrix method studies). Add 1 sigma up/down stat. uncertainties for reco and trig. noExit added. 06/29: added smart_killer. removed noExit
 lbl=07012013_postSMmtg_datarw       # updated Max's data-rw class - it now uses smoothed histograms
 lbl=07082013_postSMmtg_recofix      # fixed reco toy MC (they were broken)
+lbl=07112013_postSMmtg_datarw       # another fix to max rw (v5)
+lbl=07122013_postSMmtg_datarw       # Updated to new lumi tag and ttbar xsec. fixed data rw: max said previous version was inverted
+lbl=07122013_postSMmtg_datarw_ret   # just re-running from scratch
 
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
 
