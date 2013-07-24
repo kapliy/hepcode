@@ -1,6 +1,15 @@
-de-correlate ttbar from all other ewk uncertainties in qcdsys3d.py
-Total Luminosity: 4579.44 pb-1
+TODO note:
+Add a couple of W mT fits in the appendix. Note: Adrian uses 40-100 GeV fit range!
+DONE Move Double-differential QCD uncertainty plots into the main body.
+DONE Update QCD uncertainty plots - use smooth curves, similar to Adrian
 
+
+DONE de-correlate ttbar from all other ewk uncertainties in qcdsys3d.py
+     - make sure these plots don't over-write Nominal!
+DONE Total Luminosity: 4579.44 pb-1
+DONE Re-run QCD estimate with ewk up/down and top up/down
+DONE Increase QCD unc in stack plotting scripts
+DONE change avg(up,down) to max(up,down) in stack plotting
 
 APPROVAL(ADRIAN):
 Suggestion to come up with an alternative method for QCD systematic
@@ -8,17 +17,15 @@ worries about background "composition uncertainty"
 * W+jets cannot be taken from MC
 Muon pt spectrum break at 50 GeV - not seen in Wenu or Zee!
 
+* TODO: per-period cross-section splitting. Maybe substitute with per-run signal yield plot?
+* TODO: Max: matrix method QCD in wmunu
+
 NOTE:
-Add RecoStatUp/RecoStatDown histograms so they can be added to the band
-Add a couple of W mT fits in the appendix. Note: Adrian uses 40-100 GeV fit range!
-Add QCD 1d vs 2d summary to appendix
-Move Double-differential QCD uncertainty plots into the main body.
+DONE Add RecoStatUp/RecoStatDown histograms so they can be added to the band
+DONE Add QCD 1d vs 2d summary to appendix
 Max: MET fit before MET cut (play with unbinned ntuples, or use anyfit)
 Max: make pt plots with W pt rw target ONLY.
-Debug anyfit R__unzip bug. I'm pretty sure anyfit is the source of problems.
-      Consider running with --noExit in production.
-
-
+DONE: Debug anyfit R__unzip bug. (using smartkiller)
 
 APPROVAL:
 DONE Trigger efficiency - problem at high pT. Compare with old trigger!
@@ -34,17 +41,17 @@ DONE Change qcd summary table to: delQCD / QCD
 DOING: Muon reco SF - compare with Max's instructions.
 DOING: MET-scale: check that up/down is not switched.
 
-Add some more words in supporting document about the curvature parametrization.
-Check the direction of Up variation is different with/without QCD (since it's different with Wenu)
+DONE Add some more words in supporting document about the curvature parametrization.
+DONE Check the direction of Up variation is different with/without QCD (since it's different with Wenu)
 
 TODO: check wmunu/wenu channel merging
-dump all muon-related scale factors
+DONE dump all muon-related scale factors (by Max)
 
-Data reweighting of the distribution we unfold
+DONE Data reweighting of the distribution we unfold
 
 TABLES:
-- QCD uncertainties in table form
-- Plot QCD chi2/ndf for different systematics
+DONE QCD uncertainties in table form
+TODO Plot QCD chi2/ndf for different systematics
 
 DONE: CHECK if muon reco corrections correct in phi - NO
 

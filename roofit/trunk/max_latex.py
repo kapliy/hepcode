@@ -44,7 +44,7 @@ f = ROOT.TFile.Open(fname,'READ')
 assert f.IsOpen()
 
 # EWK systematics list
-# MISSING: stat. uncertainty due to scale factors; PDF eigenvectors
+# MISSING: stat. uncertainty due to scale factors (done via sys. shift); PDF eigenvectors
 EWK = []
 EWK.append( ['Nominal'] )
 EWK.append( ['MuonResMSUp','MuonResMSDown'] )
@@ -52,13 +52,17 @@ EWK.append( ['MuonResIDUp','MuonResIDDown'] )
 EWK.append( ['MuonKScaleUp','MuonKScaleDown' ] )
 EWK.append( ['MuonCScaleUp','MuonCScaleDown' ] )
 EWK.append( ['MuonRecoSFUp','MuonRecoSFDown'] )
+EWK.append( ['MuonRecoSFPhi',] )
+EWK.append( ['MuonRecoStatSFUp','MuonRecoStatSFDown'] )
 EWK.append( ['MuonIsoSFUp','MuonIsoSFDown'] )
 EWK.append( ['MuonTriggerSFPhi',] )
+EWK.append( ['MuonTriggerStatSFUp','MuonTriggerStatSFDown'] )
 EWK.append( ['MuonIsoSFUp','MuonIsoSFDown'] )
 EWK.append( ['JetResolUp','JetResolDown'] )
 EWK.append( ['JetScaleUp','JetScaleDown'] )
 EWK.append( ['JetNPVUp','JetNPVDown'] )
 EWK.append( ['JetMUUp','JetMUDown'] )
+EWK.append( ['PileupScale',] )
 EWK.append( ['ResoSoftTermsUp_ptHard','ResoSoftTermsDown_ptHard'] )
 EWK.append( ['ScaleSoftTermsUp_ptHard','ScaleSoftTermsDown_ptHard'] )
 EWK.append( ['WptSherpa','WptPythia8'] )
@@ -66,6 +70,9 @@ EWK.append( ['WptSherpa','WptPythia8'] )
 EWK.append( ['Nominal_ewk_xsecdown','Nominal_ewk_xsecup'] )
 EWK.append( ['unfoldPowhegJimmy', 'unfoldMCNLO'] ) # caveat: ewk=5 (same)
 EWK.append( ['Nominal_qcd_up','Nominal_qcd_down'])
+
+# a version of EWK that only includes uncorrelated component of QCD uncertainty
+EWK_u = EWK[0:1] + [['Nominal_qcd_statup','Nominal_qcd_statdown']]
 
 SAMPLES = ['all/wtaunu' , 'all/zmumu' , 'all/ttbar_stop' , 'all/ztautau' , 'all/diboson']  #+ [total_ewk,qcd]
 SNAMES = ['$W \\rightarrow \\tau \\nu$','$Z \\rightarrow \mu\mu$ + DrellYan','$t \\bar{t}$ + single-top','$Z \\rightarrow \\tau \\tau$','Dibosons']
@@ -93,8 +100,9 @@ def getH(x):
         assert False, 'ERROR: cannot find histogram %s'%nm
     return tmp
 
-def get(xall,py=None):
+def get(xall,py=None,nm=''):
     """ retrieves one histogram and makes sure it is valid
+    xall is a list: all histograms in the list are summed (e.g., all-ewk)
     py performs a projection on an axis
     """
     x = None
@@ -104,7 +112,7 @@ def get(xall,py=None):
     for ix,curx in enumerate(x):
         if ix==0:
             tmpix = getH(curx)
-            tmp = tmpix.Clone('%s_%d'%(tmpix.GetName(),len(x)))
+            tmp = tmpix.Clone(common.rand_name()+'%s_%d'%(tmpix.GetName(),len(x))+nm)
         else:
             tmpix = getH(curx)
             tmp.Add(tmpix)
@@ -114,33 +122,33 @@ def get(xall,py=None):
         assert DIM==2,'Projection only works in 2D'
         # d2_abseta_lpt  x=abseta, y=lpt
         ipy = int(py)
-        tmp2 = tmp.ProjectionX(tmp.GetName()+'_px_%d'%py,py,py,'e')
-        return tmp2
-    return tmp
+        tmp2 = tmp.ProjectionX(tmp.GetName()+('_px_%d'%py)+nm,py,py,'e')
+        return tmp2.Clone(common.rand_name())
+    return tmp.Clone(common.rand_name())
 
-def get2(NSYS,py=None,SYS=EWK):
+def get2(NSAMPLES,py=None,SYS=EWK,nm=''):
     """ returns both statistical and systematic histograms
-    NSYS is a vector of samples to add (eg, if we want all ewk, or to combine charges)
+    NSAMPLES is a vector of samples to add (eg, if we want all ewk, or to combine charges)
     """
-    nom = get( [ isys + '_' + SYS[0][0] for isys in NSYS] ,py)
-    sys = nom.Clone(nom.GetName()+'_sys')
+    nom = get( [ isam + '_' + SYS[0][0] for isam in NSAMPLES] ,py , nm=nm)
+    hsys = nom.Clone(nom.GetName()+'_sys'+common.rand_name())
     # zero out stat. error in sys, since it will contain systematic ONLY
-    [sys.SetBinError(ii,0) for ii in xrange(0,sys.GetNbinsX()+2)]
+    [hsys.SetBinError(ii,0) for ii in xrange(0,hsys.GetNbinsX()+2)]
     for hss in SYS[1:]:
-        bdiffs = [[] for z in xrange(0,sys.GetNbinsX()+2)]
+        bdiffs = [[] for z in xrange(0,hsys.GetNbinsX()+2)]
         # loop over systematics in this group
         for hs in hss:
-            h = get( [ isys + '_' + hs for isys in NSYS] ,py)
-            for ibin in xrange(0,sys.GetNbinsX()+2):
+            h = get( [ isam + '_' + hs for isam in NSAMPLES] ,py)
+            for ibin in xrange(0,hsys.GetNbinsX()+2):
                 bdiffs[ibin].append ( abs(nom.GetBinContent(ibin)-h.GetBinContent(ibin)) )
         # loop over bins and add new error (max. deviation) in quadrature
         # in other words, we symmetrize up/down deviations here
-        for ibin in xrange(0,sys.GetNbinsX()+2):
+        for ibin in xrange(0,hsys.GetNbinsX()+2):
             newerr = max(bdiffs[ibin]) if len(bdiffs[ibin])>0 else 0
             # sys
-            olderr = sys.GetBinError(ibin)
-            sys.SetBinError(ibin,1.0*math.sqrt(olderr*olderr + 1.0*newerr*newerr))
-    return nom,sys
+            olderr = hsys.GetBinError(ibin)
+            hsys.SetBinError(ibin,1.0*math.sqrt(olderr*olderr + 1.0*newerr*newerr))
+    return nom,hsys
 
 def pho(c,m):
     """ returns the correct amount of whitespace \pho """
@@ -296,82 +304,34 @@ def printEventComposition(py=None , dorel=True):
         M.msize = 1.3
         size = SuCanvas.g_marker_size
         HOUT = []
+        # separately prepare uncorrelated part of QCD
+        hqcd_u = get2(['qcd',],py,SYS=EWK_u,nm='uncorr')
+        Hqcd_u = SuData.SuSample.make_habseta('bgsummary%s_%s_pt%s'%('qcduncorr',qs,py))
+        for ibin in xrange(1,12):
+            v  = hqcd_u[0].GetBinContent(ibin)
+            e1 = hqcd_u[0].GetBinError(ibin)
+            e2 = hqcd_u[1].GetBinError(ibin)
+            if dorel:
+                d  = hsig.GetBinContent(ibin)
+                v = v/d*100.0
+                e1 = e1/d*100.0
+                e2 = e2/d*100.0
+            Hqcd_u.SetBinContent(ibin,v)
+            Hqcd_u.SetBinError(ibin, math.sqrt(e1*e1+e2*e2) )
+        M.add('QCD (uncorr)','QCD (uncorr)',size=size*1.1,style=SSTYLES[0],color=29,drawopt=' E4')
+        # plot
         j=0
         for i in SORDER:
             nm2 = snames[i].replace('$','')
+            if nm2=='QCD': nm2='QCD (total)'
             M.add(nm2,nm2,size=size*1.1,style=SSTYLES[j],color=SCOLORS[snames[i]])
             HOUT.append( HP[i] )
             j+=1
-#         for inm,nm in enumerate(snames):
-#             nm2 = nm.replace('$','')
-#             M.add(nm2,nm2,size=size*1.1,style=SSTYLES[inm],color=SCOLORS[nm])
         c = SuCanvas('bgsummary_%s_pt%s'%(qs,pt if py==None else py))
         xaxis_info = LABELMAP['lepton_absetav'] + ['Background fraction','%']
+        HOUT = [Hqcd_u,] + HOUT
         c.plotAny(HOUT,M=M,height=2.0,xaxis_info=xaxis_info)
         c.SaveSelf(silent=True)
-
-def printEventComposition_tworows(py=None , dorel=True):
-    """ A version split across two tables """
-    samples = SAMPLES[:]
-    snames = SNAMES[:]
-    HLINES = []
-    hs = [ get2([sample,],py) for sample in samples]
-    HLINES.append( len(hs)-1 )
-    # sum of ewk backgrounds
-    hewk = get2(samples,py)
-    hs.append(hewk)
-    snames.append('Total EWK+top')
-    # qcd
-    hqcd = get2(['qcd',],py)
-    hs.append(hqcd)
-    snames.append('QCD')
-    # sum of ALL backgrounds
-    if False:
-        HLINES.append( len(hs)-1 )
-        hbg = get2(samples + ['qcd'],py)
-        hs.append(hbg)
-        snames.append('Total BG')
-    # data (for normalization)
-    hsig = get(['data',],py)
-    ntotal = hs[0][0].GetNbinsX()
-    nfirst = int(ntotal/2)
-    nsecond = ntotal - nfirst
-    for isub in (0,1):
-        nbins = nfirst if isub == 0 else nsecond
-        binloop = xrange( 1 if isub==0 else nfirst+1 , nbins+1 if isub==0 else ntotal+1)
-        print '\\begin{tabular}{%s}'%('c'*(nbins+1))
-        #/        &  0.00--0.20  &  0.20--0.40  &  0.40--0.60  &  0.60--0.80  &  1.00--1.20  \\
-        print '\hline'
-        print '\hline'
-        print 'Process / $|\eta|$    ',
-        for ibin in binloop:
-            low = '%.2f'%(hs[0][0].GetBinLowEdge(ibin))
-            high = '%.2f'%(hs[0][0].GetBinLowEdge(ibin)+hs[0][0].GetBinWidth(ibin))
-            print '&   %s-%s   '%(low,high),
-        print '\\\\'
-        print '\hline'
-        for i,h in enumerate(hs):
-            z = [ snames[i] ]
-            for ibin in binloop:
-                v  = h[0].GetBinContent(ibin)
-                e1 = h[0].GetBinError(ibin)
-                e2 = h[1].GetBinError(ibin)
-                if dorel:
-                    d  = hsig.GetBinContent(ibin)
-                    v = v/d*100.0
-                    e1 = e1/d*100.0
-                    e2 = e2/d*100.0
-                z.append( '$%.2f \pm %.2f \pm %.2f$'%(v,e1,e2) )
-            print ' & '.join(z) + '   \\\\'
-            if i in HLINES:
-                print '\hline'
-        print '\hline'
-        print '\hline'
-        print '\end{tabular}'
-        # this separates the lower table from the upper one
-        if isub==0:
-            for ibr in range(4):
-                print r'\linebreak'
 
 def printCombinedComposition(py=None , dorel=True):
     """ A combined Q+ / Q- / Q+- version """

@@ -88,7 +88,7 @@ m_xsec["Zll53"]         = 1006.0;  # Mll>53.8
 m_xsec["Zll10"]         = 5132.0;  # Mll>10 (deprecated)
 m_xsec["DrellYan60"]    = 1535.0;  # Mll=15..60
 m_xsec["DrellYan53"]    = 87.8;    # Mll=38..53.8
-m_xsec["TTbar"]         = 165.0*0.555;
+m_xsec["TTbar"]         = 177.3*0.555  # 165.0*0.555 - updated 07/16/2013
 m_xsec["bbmu15"]        = 73900.0;
 m_xsec["ccmu15"]        = 28400.0;
 m_xsec["J0"]            = 1.2032e10;
@@ -141,7 +141,8 @@ mc.append(MCR(105987,'mc_herwig_wz',m_xsec["WZ"]/1000.0,err=0.07))
 mc.append(MCR(105986,'mc_herwig_zz',m_xsec["ZZ"]/1000.0,err=0.07))
 
 # ttbar
-mc.append(MCR(105200,'mc_mcnlo_ttbar',m_xsec["TTbar"]/1000.0,err=[0.1,0.07])) # -10% / +7% # OR: 6% per Adrian
+mc.append(MCR(105200,'mc_mcnlo_ttbar',m_xsec["TTbar"]/1000.0,err=0.062)) # 6.2% updated (-10% / +7% per Max)
+#mc.append(MCR(105200,'mc_mcnlo_ttbar',m_xsec["TTbar"]/1000.0,err=[0.1,0.07])) # 6.2% updated (-10% / +7% per Max)
 
 # single top mc@nlo
 mc.append(MCR(108346,'mc_mcnlo_wt',14.59/1000.0,err=[0.1,0.12]))

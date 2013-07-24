@@ -785,8 +785,8 @@ class SuPlot:
             next('PDF')
         # QCD normalization
         if True:
-            add3('qcdup',1.1,'Nominal',xadd=qcdadd)
-            add3('qcddown',0.9,'Nominal',xadd=qcdadd)
+            add3('qcdup',1.15,'Nominal',xadd=qcdadd)  #was: +/- 10%
+            add3('qcddown',0.85,'Nominal',xadd=qcdadd)
             next('QCD_FRAC')
         # Signal MC systematic (previously: unfolding systematic)
         if True and 'mc' in nom.unfold:
@@ -849,11 +849,12 @@ class SuPlot:
         next('MCP_CSCALE')
         assert len(s.sys)==len(s.groups)
         print 'Created systematic variations: N =',len(s.sys)
-    def update_errors(s,sysonly=False,force=False,rebin=1,scale=1,renorm=False,avg=True):
+    def update_errors(s,sysonly=False,force=False,rebin=1,scale=1,renorm=False,avg=False):
         """ folds systematic variations into total TH1 error.
         If renorm is true, scale holds the data normalization
         Possible upgrade: independent two-sided variations (non-symmetrized)
         if avg=True, it takes the mean up/down variation, as opposed to max
+        July 17, 2013: changed avg to False to ensure errors are plotted in the same way as in EWUnfolding
         """
         # list of systematics that should NOT be averaged no matter what
         # instead, we take maximum up/down deviation for these:
@@ -1020,7 +1021,7 @@ class SuSample:
     rootpath = None
     lumi = None
     lumifake = False
-    xsecerr = 0
+    xsecerr = [0,0]
     debug = False
     def __init__(s,name,po=None,flags=None,table=None):
         """ constructor """
@@ -1137,8 +1138,9 @@ class SuSample:
         from MC import mc
         mrun = mc.match_sample(s.name)
         assert mrun
-        err = mrun.errdown if SuSample.xsecerr<0 else mrun.errup
-        xsec = mrun.xsec*mrun.filteff*(1.0 + SuSample.xsecerr*err)
+        assert type(SuSample.xsecerr) == type([])
+        err = mrun.errdown if SuSample.xsecerr[0]<0 else mrun.errup
+        xsec = mrun.xsec*mrun.filteff*(1.0 + SuSample.xsecerr[0]*err)
         nevents = s.nevt[s.path][evcnt]
         sample = mrun.sample
         flumi = nevents*1.0 / xsec
@@ -1152,8 +1154,11 @@ class SuSample:
         from MC import mc
         mrun = mc.match_sample(s.name)
         if mrun:
-            err = mrun.errdown if SuSample.xsecerr<0 else mrun.errup
-            xsec = mrun.xsec*mrun.filteff*(1.0 + SuSample.xsecerr*err)
+            # allow de-coupling of ewk xsec uncertainty between ttbar and the rest
+            assert type(SuSample.xsecerr) == type([])
+            xsecerr = SuSample.xsecerr[1] if re.search('ttbar',s.name) else SuSample.xsecerr[0]
+            err = mrun.errdown if xsecerr<0 else mrun.errup
+            xsec = mrun.xsec*mrun.filteff*(1.0 + xsecerr*err)
             # Choose the right evcnt - depending on which scale factors were used (effw/trigw)
             nevents = s.nevt[s.path][evcnt]
             sample = mrun.sample
@@ -1852,11 +1857,13 @@ class SuStack:
         # key encodes stack composition + path to metfit histogram with histo name + range of fit
         key = None
         fitname = None
+        assert type(SuSample.xsecerr) == type([])
+        xsecnm = '' if SuSample.xsecerr == [0,0] else '_xsec%d%d'%(SuSample.xsecerr[0],SuSample.xsecerr[1])
         if d2.use_ntuple():
-            key = SuSys.QMAP[d2.charge][1]+'_'+s.get_flagsum()+'_'+d2.qcd['descr']+'_'+d2.qcd['var']+d2.pre[2]+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max'])
-            fitname = SuSys.QMAP[d2.charge][1]+'_'+d2.qcd['descr']+fitsfx+'_'+s.get_flagsum()+'_'+d2.qcd['var']+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max'])
+            key = SuSys.QMAP[d2.charge][1]+'_'+s.get_flagsum()+'_'+d2.qcd['descr']+'_'+d2.qcd['var']+d2.pre[2]+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max']) + xsecnm
+            fitname = SuSys.QMAP[d2.charge][1]+'_'+d2.qcd['descr']+fitsfx+'_'+s.get_flagsum()+'_'+d2.qcd['var']+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max']) + xsecnm
         else:
-            key = s.get_flagsum()+'_'+d2.h_path_fname()+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max'])
+            key = s.get_flagsum()+'_'+d2.h_path_fname()+'_'+str(d2.qcd['min'])+'to'+str(d2.qcd['max']) + xsecnm
             if d2.bgsig != None:
                 key = 'S%d_'%(d2.bgsig)+key
             fitname = key
