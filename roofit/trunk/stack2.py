@@ -275,6 +275,10 @@ if True:
     pw.adn(name='qcd_driven_sub',label='QCD (template)',samples=['data_period%s'%s for s in _DATA_PERIODS]+['mc_powheg_pythia_wminmunu','mc_powheg_pythia_wplusmunu'  ,  'mc_mcnlo_ttbar','mc_mcnlo_schan_munu','mc_mcnlo_tchan_munu','mc_mcnlo_wt'  ,  'mc_powheg_pythia_zmumu','mc_powheg_pythia_dyan'] +  ['mc_alpgen_herwig_ztautau_np%d'%v for v in range(6)] + ['mc_alpgen_herwig_wtaunu_np%d'%v for v in range(6)]  +  ['mc_herwig_ww','mc_herwig_wz','mc_herwig_zz'],color=ROOT.kAzure-9,flags=['bg','mc','qcd','driven','driven_sub'],sample_weights_bgsub=True)
     #DIBOSON:
     pw.add(name='WW/WZ/ZZ',label='Dibosons',samples=['mc_herwig_ww','mc_herwig_wz','mc_herwig_zz'],color=ROOT.kOrange-4,flags=['bg','mc','ewk','diboson'])
+    if False: # 08/28/2013: TODO - breaking up dibosons
+        pw.add(name='WW',label='WW',samples=['mc_herwig_ww'],color=ROOT.kOrange-4,flags=['bg','mc','ewk','diboson'])
+        pw.add(name='WZ',label='WZ',samples=['mc_herwig_wz'],color=ROOT.kOrange-4,flags=['bg','mc','ewk','diboson'])
+        pw.add(name='ZZ',label='ZZ',samples=['mc_herwig_zz'],color=ROOT.kOrange-4,flags=['bg','mc','ewk','diboson'])
     #TOP:
     pw.add(name='t#bar{t}+single-top',label='t#bar{t} + single top',samples=['mc_mcnlo_ttbar','mc_mcnlo_schan_munu','mc_mcnlo_tchan_munu','mc_mcnlo_wt'], color=ROOT.kGreen+1,flags=['bg','mc','ewk'])
     #WTAUNU:

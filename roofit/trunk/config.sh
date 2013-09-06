@@ -142,6 +142,10 @@ DB=DB_07122013_postSMmtg_datarw.v46   # Updated to new lumi tag and ttbar xsec. 
 
 input=/share/t3data3/antonk/ana/ana_v29I_07122013_postSMmtg_datarw_ret_stacoCB_all/pt20
 DB=DB_07122013_postSMmtg_datarw.v47   # re-run without retries. Implementing QCD fits with ewk and top up/down variations
+#v48 - same as v47, but doing baysian unfolding as nominal for 1D and 2D
+
+input=/share/t3data3/antonk/ana/ana_v29I_08282013_isoMC_cwdebug_stacoCB_all/pt20
+DB=DB_08282013_isoMC.v50   # iso SFs separate for powhegHerig and mcNLO (per Max, reduces theory systematics). AFTER uct3 xrood deletions!
 
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`
