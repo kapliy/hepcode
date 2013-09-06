@@ -676,7 +676,7 @@ public:
 		      std::vector<TLorentzVector>& muons,
 		      const unsigned long& run_number ,
 		      double& eff, double& err ,
-		      int choice, int replica=-1 );
+		      int choice, int mctype, int replica=-1 );
   static void
   GetIsolationSF_v17_old( const CONF::ConfType& conf, const detector::MCP_TYPE& mu_type , 
 			  std::vector<TLorentzVector>& muons,

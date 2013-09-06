@@ -26,6 +26,8 @@ lbl=07112013_postSMmtg_datarw       # another fix to max rw (v5)
 lbl=07122013_postSMmtg_datarw       # Updated to new lumi tag and ttbar xsec. fixed data rw: max said previous version was inverted
 lbl=07122013_postSMmtg_datarw_ret   # just re-running from scratch
 
+lbl=08282013_isoMC_cwdebug          # isolation scale factors are re-run on per-MC basis. Added CW decomposition
+
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
 
 muname[0]="stacoCB"
