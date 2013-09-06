@@ -883,21 +883,23 @@ AnaMuon::GetTriggerSF_v17_custom2_qindep( const CONF::ConfType& conf, const dete
 
 
 // ISOLATION SCALE FACTORS
+// 08/28/2013: separate SF or MCNLO (mctype==1) and PowhegHerwig (mctype==4)
 void
 AnaMuon::GetIsolationSF_v17( const CONF::ConfType& conf, const detector::MCP_TYPE& mu_type , 
 			     std::vector<TLorentzVector>& muons,
 			     const unsigned long& run_number ,
 			     double& eff, double& err , 
-			     int choice, int replica) {
+			     int choice, int mctype, int replica) {
 #ifdef HAVE_COMMONANALYSIS
   assert(conf==CONF::LATEST && "Unsupported --conf for GetTriggerSF_v17 scaling");
-  static std::string datapath("data/eff_cbiso40rel01_mu_probe_pt_TP.root");
   static SFProvider *tcnom = 0;
   static SFProvider *tcup = 0;
   static SFProvider *tcdown = 0;
   const int seed = 6000; // 1721
   if(!tcnom) {
-    tcnom = new SFProvider("data/IsolationSF_vsPt.root","SF","EffMC","EffData",SFProvider::Pt,1.0);
+    assert(mctype==5 || mctype==4 || mctype==1);
+    std::string namenom = mctype==5 ? "data/IsolationSF_vsPt.root" : (mctype==1 ? "data/Iso_MCAtNLO_SF_vsPt.root" : "data/Iso_PowhegJimmy_SF_vsPt.root");
+    tcnom = new SFProvider(namenom,"SF","EffMC","EffData",SFProvider::Pt,1.0);
     tcnom->generateReplicas(NREPLICASF,seed);
     tcup = new SFProvider("data/IsolationSF_vsPtup.root","SF","","",SFProvider::Pt,1.0);
     tcdown = new SFProvider("data/IsolationSF_vsPtdown.root","SF","","",SFProvider::Pt,1.0);

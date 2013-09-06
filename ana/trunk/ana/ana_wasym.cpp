@@ -146,7 +146,7 @@ const double jet_drmin( const boost::shared_ptr<const AnaJet>& jet , JETCOL& jet
 void mu_eff_scale( MUCOL& mucoll , double *eff_weights,
 		   double& eff_weight , double& eff_stat_error , double& eff_sys_error , int choice=0);
 void mu_trig_scale( MUCOL& mucoll , double& trig_weight , double& trig_stat_error , int choice , int replica=-1 );
-void mu_isol_scale( MUCOL& mucoll , double& trig_weight , double& trig_stat_error , int choice , int replica=-1 );
+void mu_isol_scale( MUCOL& mucoll , double& trig_weight , double& trig_stat_error , int choice , int mctype, int replica=-1 );
 
 void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
 	      MUCOL& mu_type_col, MUCOL& mu_ntuple_col, MUCOL& mu_qual_col,
@@ -169,6 +169,15 @@ bool getBosonBornLeptons(const std::vector< boost::shared_ptr<const AnaTruthPart
     dg::down(#v "cut",#v " cutflow");					\
     dg::filleffw( "u" #id "_passes_" #cut1 , cut1 , truth_weight[0]);	\
     if(is_mc) dg::filleffw( "v" #id "_passes_" #cut1 , cut1 , event_weight[0]); \
+    if(is_mc) dg::filleffw( "w" #id "_passes_" #cut1 , cut1 , dg::global_weight() ); \
+    dg::up();								\
+  }									\
+  do {} while(false)
+
+
+// cutflow wrt truth-fiducial (for C_W cross-check decomposition)
+#define CUTFLOWT(v,id,cut0,cut1) if(cut0) {				\
+    dg::down(#v "cutCW",#v " cw cutflow");					\
     if(is_mc) dg::filleffw( "w" #id "_passes_" #cut1 , cut1 , dg::global_weight() ); \
     dg::up();								\
   }									\
@@ -220,6 +229,7 @@ double avgmu = 0;
 double actmu = 0;
 float truth_met_pt = -1.0;
 // various globals
+int ISO_MCTYPE = 5;
 std::vector<double> int_lumi;
 //std::vector<double> int_lumi_DtoM;
 //std::vector<double> int_lumi_DtoK;
@@ -549,7 +559,9 @@ int main( int argc , char* argv[] )
   is_wmunu = boost::algorithm::icontains(sample_name,"wmu") || boost::algorithm::icontains(sample_name,"wminmunu") || boost::algorithm::icontains(sample_name,"wplusmunu") || boost::algorithm::icontains(sample_name,"max_wplus") || boost::algorithm::icontains(sample_name,"max_wminus");
   is_wmunu_powheg_pythia = boost::algorithm::icontains(sample_name,"powheg_pythia_wminmunu") || boost::algorithm::icontains(sample_name,"powheg_pythia_wplusmunu") || boost::algorithm::icontains(sample_name,"max_wplus") || boost::algorithm::icontains(sample_name,"max_wminus");
   is_wmunu_powheg_herwig = boost::algorithm::icontains(sample_name,"powheg_herwig_wminmunu") || boost::algorithm::icontains(sample_name,"powheg_herwig_wplusmunu");
+  if(is_wmunu_powheg_herwig) ISO_MCTYPE=4;
   is_wmunu_mcnlo = boost::algorithm::icontains(sample_name,"mcnlo_wminmunu") || boost::algorithm::icontains(sample_name,"mcnlo_wplusmunu");
+  if(is_wmunu_mcnlo) ISO_MCTYPE=1;
   is_wminmunu = boost::algorithm::icontains(sample_name,"wminmunu");
   is_wplusmunu = boost::algorithm::icontains(sample_name,"wplusmunu");
   if(is_wmunu) {
@@ -2190,7 +2202,7 @@ int main( int argc , char* argv[] )
 	if(!SFRECO) continue;
 	if(SFRECO) mu_eff_scale( mu_smeared_iso_col , EFFVEC , _eff, _a , _b );
 	if(SFTRIG) mu_trig_scale( mu_smeared_iso_col , _eff , _a , 20);
-	if(SFISOL) mu_isol_scale( mu_smeared_iso_col , _eff , _a , 0);
+	if(SFISOL) mu_isol_scale( mu_smeared_iso_col , _eff , _a , 0, ISO_MCTYPE);
 	std::cout << "SFDBG " << 0 << " : " << _eff << " +/- " << _a << " +/- " << _b << std::endl;
 	std::string pl = TString::Format("pt=%.1f eta=%.2f",mu_smeared_iso_col[0]->pt(),mu_smeared_iso_col[0]->eta()).Data();
 	TCanvas cc("cc","cc",1024,400);
@@ -2205,7 +2217,7 @@ int main( int argc , char* argv[] )
 	    h1.Fill(_eff);
 	  }
 	  if (SFISOL) {
-	    mu_isol_scale( mu_smeared_iso_col , _eff , _a , 0, replica);
+	    mu_isol_scale( mu_smeared_iso_col , _eff , _a , 0, ISO_MCTYPE, replica);
 	    h1.Fill(_eff);
 	  }
 // 	  if(replica<10) {
@@ -2516,9 +2528,9 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
       mu_trig_scale( mu_iso_col , mcp    , trig_dummy   , 10);
       mu_trig_scale( mu_iso_col , mcpall , trig_dummy , 12);
     }
-    mu_isol_scale( mu_iso_col , sisoup , siso_err , 2);
-    mu_isol_scale( mu_iso_col , sisodown , siso_err , 1);
-    mu_isol_scale( mu_iso_col , siso , siso_err , 0);
+    mu_isol_scale( mu_iso_col , sisoup , siso_err , 2, ISO_MCTYPE);
+    mu_isol_scale( mu_iso_col , sisodown , siso_err , 1, ISO_MCTYPE);
+    mu_isol_scale( mu_iso_col , siso , siso_err , 0, ISO_MCTYPE);
   }
   dg::event_info().set_eff_weight(eff,eff_errstat,eff_errsys);
   dg::event_info().set_effphi_weight(effphi);
@@ -2565,6 +2577,10 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
   }
 
   // W cutflow
+  bool w_reco_pt = false;
+  bool w_reco_eta = false;
+  bool w_reco_iso = false;
+  bool w_reco_sel = false;
   bool w_reco_fid = false;
   dg::set_global_weight( event_weight[0] );
   const bool w_type = (mu_type_col.size()>=1);
@@ -2576,13 +2592,16 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
       const bool w_pt = (mu_pt_col.size()>=1);
       CUTFLOW(w,08,true,w_pt);
       if(w_pt) {
+	w_reco_pt = mu_pt_col.size()==1;
 	const bool w_eta = (mu_eta_col.size()>=1);
 	CUTFLOW(w,09,true,w_eta);
 	if(w_eta) {
+	  w_reco_eta = w_reco_pt && (mu_eta_col.size()==1);
 	  const bool w_iso = (mu_iso_col.size()>=1);
 	  CUTFLOW(w,10,true,w_iso);
 	  if(w_iso) {
 	    // muon selections finished; apply event selections
+	    w_reco_iso = w_reco_eta && (mu_iso_col.size()==1);
 	    const bool w_nmuons = (mu_iso_col.size()<2); // NOTE: used to be "mu_eta_col"
 	    CUTFLOW(w,11,true,w_nmuons);
 	    if(w_nmuons) {
@@ -2613,6 +2632,7 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
 							     && bind(&AnaWCrossSectionCandidate::asym_eta_trig,_1) );
 		      // CUTFLOW(w,16,true,w_eta_trig);
 		      if(true) {
+			w_reco_sel = w_reco_iso; // almost the same as reco_fid, but forcing exactly one muon at pre-iso stage
 			w_reco_fid = true;
 			const bool w_trig = std::count_if( w_all_col.begin(),w_all_col.end(),
 							   bind(&AnaWCrossSectionCandidate::asym_wmt,_1)
@@ -2642,10 +2662,18 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
   }
   // total reconstruction efficiency with respect to fiducial truth volume.
   // Note: event-wide cuts (e.g., trigger) are not taken into account here! For that, you need to use unfolding ntuples
+  // UNUSED
   if(do_unf && is_unfold) {
     CUTFLOW(w,19,it->second.Truth_Is_Fiducial,w_reco_fid);
   }
- 
+  // similar, but trying to repeat Max CW decomposition wrt truth-fiducial
+  if(do_unf && is_unfold) {
+    CUTFLOWT(w,01,it->second.Truth_Is_Fiducial,w_reco_pt); // all cuts up-to pt
+    CUTFLOWT(w,02,it->second.Truth_Is_Fiducial,w_reco_eta);
+    CUTFLOWT(w,03,it->second.Truth_Is_Fiducial,w_reco_iso);
+    CUTFLOWT(w,04,it->second.Truth_Is_Fiducial,w_reco_sel);
+  }
+
   // Z cutflow [ not needed ]
   if(RUNZ && false) {
     dg::set_global_weight( event_weight[0] );
@@ -2793,7 +2821,7 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
 	    for(int replica=0; replica<it2->second.Reco_Weight_Replicas.size(); replica++) {
 	      _eff = EFFVEC[replica];
 	      mu_trig_scale( mu_iso_col , _trig , _a , 20 , replica);
-	      mu_isol_scale( mu_iso_col , _siso , _a , 0, replica);
+	      mu_isol_scale( mu_iso_col , _siso , _a , 0, ISO_MCTYPE, replica);
 	      if(SFALL) it2->second.Reco_Weight_Replicas[replica] =        event_weight[0] *_eff *_trig *_siso ;
 	      else if(SFRECO) it2->second.Reco_Weight_Replicas[replica] =  event_weight[0] *_eff * trig * siso ;
 	      else if(SFTRIG) it2->second.Reco_Weight_Replicas[replica] =  event_weight[0] * eff *_trig * siso ;
@@ -3245,14 +3273,14 @@ void mu_trig_scale( MUCOL& mucoll , double& trig_weight , double& trig_stat_erro
   }
 }
 
-void mu_isol_scale( MUCOL& mucoll , double& trig_weight , double& trig_stat_error , int choice, int replica) {
+void mu_isol_scale( MUCOL& mucoll , double& trig_weight , double& trig_stat_error , int choice, int mctype, int replica) {
   std::vector<TLorentzVector> vmuons;
   trig_weight = 1.0;
   trig_stat_error = 0.0;
   for( std::vector< shared_ptr<const AnaMuon> >::const_iterator imu = mucoll.begin() ; imu != mucoll.end() ; ++imu ) {
     vmuons.push_back( (*imu)->four_vector() );
   }
-  AnaMuon::GetIsolationSF_v17( AnaConfiguration::conf() , mu_type , vmuons , rnum , trig_weight , trig_stat_error , choice, replica );
+  AnaMuon::GetIsolationSF_v17( AnaConfiguration::conf() , mu_type , vmuons , rnum , trig_weight , trig_stat_error , choice, mctype, replica );
 }
 
 bool getBosonBornLeptons(const std::vector< boost::shared_ptr<const AnaTruthParticle> >& col, long lepPdgCode,
