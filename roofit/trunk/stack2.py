@@ -178,6 +178,9 @@ parser.add_option('-v', "--verbose", default=False,
 parser.add_option("-q", "--charge",dest="charge",
                   type="int", default=0,
                   help="Which charge to plot: 0=POS, 1=NEG, 2=ALL, 3=BOTH, -1=NONE")
+parser.add_option("--splitmc", default=False,
+                  action="store_true",dest="splitmc",
+                  help="If set, MC is broken into subsample - e.g., ww,wz,zz and single-top")
 parser.add_option("--bgqcd",dest="bgqcd",
                   type="int", default=4,
                   help="QCD: 0=Pythia bb/cc mu15X, 1=Pythia bbmu15X, 2=Pythia J0..J5, 3=data-driven, 4=data-driven with bgsub")
@@ -274,13 +277,19 @@ if True:
     pw.adn(name='qcd_driven',label='QCD (template)',samples=['data_period%s'%s for s in _DATA_PERIODS],color=ROOT.kAzure-9,flags=['bg','mc','qcd','driven'])
     pw.adn(name='qcd_driven_sub',label='QCD (template)',samples=['data_period%s'%s for s in _DATA_PERIODS]+['mc_powheg_pythia_wminmunu','mc_powheg_pythia_wplusmunu'  ,  'mc_mcnlo_ttbar','mc_mcnlo_schan_munu','mc_mcnlo_tchan_munu','mc_mcnlo_wt'  ,  'mc_powheg_pythia_zmumu','mc_powheg_pythia_dyan'] +  ['mc_alpgen_herwig_ztautau_np%d'%v for v in range(6)] + ['mc_alpgen_herwig_wtaunu_np%d'%v for v in range(6)]  +  ['mc_herwig_ww','mc_herwig_wz','mc_herwig_zz'],color=ROOT.kAzure-9,flags=['bg','mc','qcd','driven','driven_sub'],sample_weights_bgsub=True)
     #DIBOSON:
-    pw.add(name='WW/WZ/ZZ',label='Dibosons',samples=['mc_herwig_ww','mc_herwig_wz','mc_herwig_zz'],color=ROOT.kOrange-4,flags=['bg','mc','ewk','diboson'])
-    if False: # 08/28/2013: TODO - breaking up dibosons
+    if opts.splitmc: # 08/28/2013: breaking up dibosons
         pw.add(name='WW',label='WW',samples=['mc_herwig_ww'],color=ROOT.kOrange-4,flags=['bg','mc','ewk','diboson'])
         pw.add(name='WZ',label='WZ',samples=['mc_herwig_wz'],color=ROOT.kOrange-4,flags=['bg','mc','ewk','diboson'])
         pw.add(name='ZZ',label='ZZ',samples=['mc_herwig_zz'],color=ROOT.kOrange-4,flags=['bg','mc','ewk','diboson'])
+    else:
+        pw.add(name='WW/WZ/ZZ',label='Dibosons',samples=['mc_herwig_ww','mc_herwig_wz','mc_herwig_zz'],color=ROOT.kOrange-4,flags=['bg','mc','ewk','diboson'])
     #TOP:
-    pw.add(name='t#bar{t}+single-top',label='t#bar{t} + single top',samples=['mc_mcnlo_ttbar','mc_mcnlo_schan_munu','mc_mcnlo_tchan_munu','mc_mcnlo_wt'], color=ROOT.kGreen+1,flags=['bg','mc','ewk'])
+    if opts.splitmc: # 08/28/2013: breaking up dibosons
+        pw.add(name='t#bar{t}',label='t#bar{t}',samples=['mc_mcnlo_ttbar'], color=ROOT.kGreen+1,flags=['bg','mc','ewk'])
+        pw.add(name='single-top',label='single top',samples=['mc_mcnlo_schan_munu','mc_mcnlo_tchan_munu','mc_mcnlo_wt'], color=ROOT.kGreen+1,flags=['bg','mc','ewk'])
+        pass
+    else:
+        pw.add(name='t#bar{t}+single-top',label='t#bar{t} + single top',samples=['mc_mcnlo_ttbar','mc_mcnlo_schan_munu','mc_mcnlo_tchan_munu','mc_mcnlo_wt'], color=ROOT.kGreen+1,flags=['bg','mc','ewk'])
     #WTAUNU:
     pw.adn(name='wtaunu_alpgen_herwig',label='W #rightarrow #tau#nu',samples=['mc_alpgen_herwig_wtaunu_np%d'%v for v in range(6)],color=ROOT.kYellow-9,flags=['bg','mc','ewk','wtaunu'])
     ##pw.adn(name='wtaunu_pythia',label='W #rightarrow #tau#nu',samples='mc_pythia_wtaunu',color=ROOT.kYellow-9,flags=['bg','mc','ewk','wtaunu'])
@@ -1797,6 +1806,22 @@ if mode=='manual':
     c = SuCanvas('FASTSIM_'+QMAP[q][1]+'_'+opts.hsource)
     c._ratioName = 'Fast/Full'
     c.plotAny(hs,M=M)
+    OMAP.append(c)
+
+# compares distributions for the different NLO MC's
+if mode=='nlomc':
+    SuStackElm.new_scales = False
+    spR.enable_nominal()
+    hs = []
+    M = PlotOptions()
+    for isig in (5,4,1):
+        po.choose_sig(isig)
+        hs.append( po.sig('s%d'%isig,spR.clone(),norm=True) )
+        M.add('M%d'%isig,MAP_BGSIG[isig],r=True,size=0.4)
+    c = SuCanvas('MCCOMP_'+QMAP[q][1]+'_'+opts.hsource)
+    c._ratioName = 'Variation/Nominal'
+    xaxis_info = match_labelmap(opts.hsource) + ['Normalized Entries',None]
+    c.plotAny(hs,M=M,rebin=opts.rebin,xaxis_info=xaxis_info)
     OMAP.append(c)
 
 def metshape_qcd_vs_ewk(iq=0):
