@@ -146,6 +146,7 @@ DB=DB_07122013_postSMmtg_datarw.v47   # re-run without retries. Implementing QCD
 
 input=/share/t3data3/antonk/ana/ana_v29I_08282013_isoMC_cwdebug_stacoCB_all/pt20
 DB=DB_08282013_isoMC.v50   # iso SFs separate for powhegHerig and mcNLO (per Max, reduces theory systematics). AFTER uct3 xrood deletions!
+DB=DB_08282013_isoMC.v51   # same, but playing with a breakdown of MC's into sub-components (WW,WZ,ZZ,single-top,ttbar)
 
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`

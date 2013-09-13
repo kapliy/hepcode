@@ -1,3 +1,9 @@
+Max:
+- Make pt_W plot for all three MCs and build ratios - to check pT reweighting
+- Get the numerical effect on total cross-section of changing MG trigger
+- try 2d pt-eta iso SF, and 20% iso SF
+
+
 TODO note:
 Add a couple of W mT fits in the appendix. Note: Adrian uses 40-100 GeV fit range!
 DONE Move Double-differential QCD uncertainty plots into the main body.
