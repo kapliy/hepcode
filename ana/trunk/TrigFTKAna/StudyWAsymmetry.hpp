@@ -154,9 +154,24 @@ protected:
 	}
       }
     }
+    // THESIS PLOTS: for Nominal/baseline selection: plot reweightings
+    if(true && _run_debug_studies && met && is_baseline()) {
+      // <mu>
+      dg::fillh( "TH_avgmu" , 30 , 0 , 30 , _average_mu , "average_mu" );
+      dg::fillhw( "TH_avgmu_unw" , 30,0,30, _average_mu , 1.0 );
+      // nvtx
+      dg::fillh( "TH_nvtx" , 30,0,30, w->nvtxs_all() );
+      dg::fillhw( "TH_nvtx_unw" , 30,0,30, w->nvtxs_all() ,1.0 );
+      // z0
+      dg::fillh( "TH_vxz0" , 250 , -250 , 250 , _vxz0, "reco vertex z0" );
+      dg::fillhw( "TH_vxz0_unw" , 250,-250,250, _vxz0 , 1.0 );
+      // w pt (not strictly needed, available in the note)
+      dg::fillh(  "TH_wpt" , 200 , 0 , 200 , w->pt() , "W Transverse Momentum (GeV/c)" );
+      dg::fillhw( "TH_wpt" , 200 , 0 , 200 , w->pt() , 1.0, "W Transverse Momentum (GeV/c)" );
+    }
     // for Nominal/baseline selection: plot delta-phi between MET SoftTerms and all-but-SoftTerms
     // PS - SoftTerms means softjets + cellout + cellout_eflow. we also do separately for softjets ONLY.
-    if(true && _run_debug_studies && met && is_baseline()) {
+    if(false && _run_debug_studies && met && is_baseline()) {
       TLorentzVector met_final,met_softjets,met_cellout,met_celloute;
       met_final.SetPtEtaPhiM( met->pt() , 0. , met->phi() , 0. );
       met_softjets.SetPtEtaPhiM( met->softjets() , 0. , met->softjets_phi() , 0. );
@@ -414,6 +429,7 @@ protected:
   unsigned long _run_number;
   bool _is_mc;
   float _average_mu;
+  float _vxz0;
 
 public:
   bool is_baseline() const { return current_category()=="baseline"; }
@@ -452,12 +468,14 @@ public:
     , _run_number(0)
     , _is_mc(false)
     , _average_mu(0)
+    , _vxz0(0)
     , DataGraphics::DgStudy<type>(name,description)
   {}
   virtual ~StudyWAsymmetry() {}
   void for_run( unsigned long rnum ) { _run_number = rnum; }
   void for_mc( bool ismc ) { _is_mc = ismc; }
   void for_average_mu(float avgmu) { _average_mu = avgmu; }
+  void for_vxz0(float vxz0) { _vxz0 = vxz0; }
 };
 #undef L
 
