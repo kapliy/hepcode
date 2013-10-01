@@ -26,7 +26,13 @@ lbl=07112013_postSMmtg_datarw       # another fix to max rw (v5)
 lbl=07122013_postSMmtg_datarw       # Updated to new lumi tag and ttbar xsec. fixed data rw: max said previous version was inverted
 lbl=07122013_postSMmtg_datarw_ret   # just re-running from scratch
 
-lbl=08282013_isoMC_cwdebug          # isolation scale factors are re-run on per-MC basis. Added CW decomposition
+lbl=08282013_isoMC_cwdebug            # isolation scale factors are re-run on per-MC basis. Added CW decomposition
+lbl=09102013_isoMC_cwdebug            # Added more complete CW decomposition, including a couple of particularly-bad bins in eta/pt
+lbl=09132013_isoMC_cwdebug_iso20      # iso SF use 20% variations (test for max)
+lbl=09132013_isoMC_cwdebug_iso2d      # iso SF use 2d eta-pt; no sys. variations (test for max)
+lbl=09132013_isoMC_cwdebug_iso2d_ret  # iso SF use 2d eta-pt; no sys. variations (test for max)
+
+lbl=09202013_isoMC_reweights          # revert to normal per-MC isolation. Added some reweighting plots for thesis (final selection). Same as 08282013_isoMC_cwdebug!
 
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
 

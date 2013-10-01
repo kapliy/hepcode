@@ -176,9 +176,10 @@ bool getBosonBornLeptons(const std::vector< boost::shared_ptr<const AnaTruthPart
 
 
 // cutflow wrt truth-fiducial (for C_W cross-check decomposition)
-#define CUTFLOWT(v,id,cut0,cut1) if(cut0) {				\
-    dg::down(#v "cutCW",#v " cw cutflow");					\
-    if(is_mc) dg::filleffw( "w" #id "_passes_" #cut1 , cut1 , dg::global_weight() ); \
+// this also goes into a couple of sub-regions of eta-pt space (based on truth values)
+#define CUTFLOWT(v,id,cut0,cut1) if(cut0 && is_mc) {			\
+    dg::down(#v "cutCW",#v " cw cutflow");				\
+    dg::filleffw( "w" #id "_passes_" #cut1 , cut1 , dg::global_weight() ); \
     dg::up();								\
   }									\
   do {} while(false)
@@ -868,6 +869,7 @@ int main( int argc , char* argv[] )
   VXCUT vtx_base_cut("vtx_base");
   vtx_base_cut.add_uu( "good", bind(&AnaVertex::type,_1) == ATLAS::PriVtx || bind(&AnaVertex::type,_1) == ATLAS::PileUp,
 		       bind( &dg::filleff , _1 , _2 ) );
+  vtx_base_cut.add_u( "ntracks", bind(&AnaVertex::ntracks,_1)>=3 );
   // analysis vertices
   VXCOL vtx_col;
   VXCUT vtx_cut("vtx");
@@ -973,6 +975,7 @@ int main( int argc , char* argv[] )
 			bind( &dg::fillh , _1 , 200 , -2 , 2 , bind( &AnaMuon::pt_diff_ratio , _2 )));
   }
   mu_qual_cut.add_uu( "idhits" , bind(&AnaMuon::passes_hits_mcp,_1,conf)==true, bind(&dg::fillh,_1,50,0,50,bind(&AnaMuon::nhits_silicon,_2)) );
+  //mu_qual_cut.add_u( "z0" , bind(dgSTL::absD,bind( &AnaMuon::exPV_z0 , _1 )) < 10. ); //TODO
   MUCUT mu_pt_cut("mu_pt");
   mu_pt_cut.add_uu( "pt" , bind(&AnaMuon::pt,_1) > MU_PT_CUT , bind(&dg::fillh,_1,200,0,200,bind(&AnaMuon::pt,_2)) );
   MUCUT mu_eta_cut("mu_eta");
@@ -1846,7 +1849,8 @@ int main( int argc , char* argv[] )
       UNF_MISS();
       continue;
     }
-    dg::fillh( "vxz0" , 100 , -200 , 200 , vtx_col[0]->z() , "truth vertex z0" );
+    st_w.for_vxz0(vtx_col[0]->z());
+    dg::fillh( "vxz0" , 100 , -200 , 200 , vtx_col[0]->z() , "reco vertex z0" );
     dg::fillhw( "vxz0_unw" , 100,-200,200, vtx_col[0]->z() , 1.0 );
 
     // TRIGGER
@@ -2580,6 +2584,10 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
   bool w_reco_pt = false;
   bool w_reco_eta = false;
   bool w_reco_iso = false;
+  bool w_reco_nmuons = false;
+  bool w_reco_metclean = false;
+  bool w_reco_larhole = false;
+  bool w_reco_met = false;
   bool w_reco_sel = false;
   bool w_reco_fid = false;
   dg::set_global_weight( event_weight[0] );
@@ -2592,19 +2600,20 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
       const bool w_pt = (mu_pt_col.size()>=1);
       CUTFLOW(w,08,true,w_pt);
       if(w_pt) {
-	w_reco_pt = mu_pt_col.size()==1;
+	w_reco_pt = true;
 	const bool w_eta = (mu_eta_col.size()>=1);
 	CUTFLOW(w,09,true,w_eta);
 	if(w_eta) {
-	  w_reco_eta = w_reco_pt && (mu_eta_col.size()==1);
+	  w_reco_eta = true;
 	  const bool w_iso = (mu_iso_col.size()>=1);
 	  CUTFLOW(w,10,true,w_iso);
 	  if(w_iso) {
 	    // muon selections finished; apply event selections
-	    w_reco_iso = w_reco_eta && (mu_iso_col.size()==1);
+	    w_reco_iso = true;
 	    const bool w_nmuons = (mu_iso_col.size()<2); // NOTE: used to be "mu_eta_col"
 	    CUTFLOW(w,11,true,w_nmuons);
 	    if(w_nmuons) {
+	      w_reco_nmuons = true;
 	      if(false && label=="Nominal") {
 		std::cout.precision(12);
 		std::cout << "ANTON" << " " << evnum << " " << event_weight[0] << " " << event_weight[0]*eff*trig*siso 
@@ -2614,14 +2623,17 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
 	      const bool w_metclean = e_met_cleaning;
 	      CUTFLOW(w,12,true,w_metclean);
 	      if(w_metclean) {
+		w_reco_metclean = true;
 		const bool w_larhole = e_lar_hole;
 		CUTFLOW(w,13,true,w_larhole);
 		if(w_larhole) {
+		  w_reco_larhole = true;
 		  // make w's (before MET and w_mt cuts)
 		  MAKE_W(iso);
 		  const bool w_met = std::count_if( w_all_col.begin(),w_all_col.end(),bind(&AnaWCrossSectionCandidate::asym_met,_1)==true);
 		  CUTFLOW(w,14,true,w_met);
 		  if(w_met) {
+		    w_reco_met = true;
 		    const bool w_mt = std::count_if( w_all_col.begin(),w_all_col.end(),
 						     bind(&AnaWCrossSectionCandidate::asym_wmt,_1) && bind(&AnaWCrossSectionCandidate::asym_met,_1) == true);
 		    CUTFLOW(w,15,true,w_mt);
@@ -2632,7 +2644,7 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
 							     && bind(&AnaWCrossSectionCandidate::asym_eta_trig,_1) );
 		      // CUTFLOW(w,16,true,w_eta_trig);
 		      if(true) {
-			w_reco_sel = w_reco_iso; // almost the same as reco_fid, but forcing exactly one muon at pre-iso stage
+			w_reco_sel = true;
 			w_reco_fid = true;
 			const bool w_trig = std::count_if( w_all_col.begin(),w_all_col.end(),
 							   bind(&AnaWCrossSectionCandidate::asym_wmt,_1)
@@ -2668,10 +2680,40 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
   }
   // similar, but trying to repeat Max CW decomposition wrt truth-fiducial
   if(do_unf && is_unfold) {
-    CUTFLOWT(w,01,it->second.Truth_Is_Fiducial,w_reco_pt); // all cuts up-to pt
-    CUTFLOWT(w,02,it->second.Truth_Is_Fiducial,w_reco_eta);
-    CUTFLOWT(w,03,it->second.Truth_Is_Fiducial,w_reco_iso);
-    CUTFLOWT(w,04,it->second.Truth_Is_Fiducial,w_reco_sel);
+    // denominator = all fiducial
+    bool fid = it->second.Truth_Is_Fiducial;
+    CUTFLOWT(all,01,fid,w_reco_pt); // all cuts up-to pt
+    CUTFLOWT(all,02,fid,w_reco_eta);
+    CUTFLOWT(all,03,fid,w_reco_iso);
+    CUTFLOWT(all,04,fid,w_reco_nmuons);
+    CUTFLOWT(all,05,fid,w_reco_metclean);
+    CUTFLOWT(all,06,fid,w_reco_larhole);
+    CUTFLOWT(all,07,fid,w_reco_met);
+    CUTFLOWT(all,08,fid,w_reco_sel);
+    // denominator = pt=(45,50) && |eta|=(1.95,2.18)
+    fid = it->second.Truth_Is_Fiducial
+      && it->second.Truth_PtLep>=45.0 && it->second.Truth_PtLep<=50.0
+      && std::abs(it->second.Truth_EtaLep)>=1.95 && std::abs(it->second.Truth_EtaLep)<=2.18;
+    CUTFLOWT(pbn,01,fid,w_reco_pt); // all cuts up-to pt
+    CUTFLOWT(pbn,02,fid,w_reco_eta);
+    CUTFLOWT(pbn,03,fid,w_reco_iso);
+    CUTFLOWT(pbn,04,fid,w_reco_nmuons);
+    CUTFLOWT(pbn,05,fid,w_reco_metclean);
+    CUTFLOWT(pbn,06,fid,w_reco_larhole);
+    CUTFLOWT(pbn,07,fid,w_reco_met);
+    CUTFLOWT(pbn,08,fid,w_reco_sel);
+    // denominator = pt=(45,50) && |eta|=(0.84,1.05)
+    fid = it->second.Truth_Is_Fiducial
+      && it->second.Truth_PtLep>=45.0 && it->second.Truth_PtLep<=50.0
+      && std::abs(it->second.Truth_EtaLep)>=0.84 && std::abs(it->second.Truth_EtaLep)<=1.05;
+    CUTFLOWT(nbn,01,fid,w_reco_pt); // all cuts up-to pt
+    CUTFLOWT(nbn,02,fid,w_reco_eta);
+    CUTFLOWT(nbn,03,fid,w_reco_iso);
+    CUTFLOWT(nbn,04,fid,w_reco_nmuons);
+    CUTFLOWT(nbn,05,fid,w_reco_metclean);
+    CUTFLOWT(nbn,06,fid,w_reco_larhole);
+    CUTFLOWT(nbn,07,fid,w_reco_met);
+    CUTFLOWT(nbn,08,fid,w_reco_sel);
   }
 
   // Z cutflow [ not needed ]
