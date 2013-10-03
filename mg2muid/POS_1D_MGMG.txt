@@ -1,0 +1,17 @@
+\begin{tabular}{lc}
+\hline
+$0.00 < |\eta| <0.21$          & 572.025 $\pm$ 0.809 (stat) $\pm$ 4.667 (syst) $\pm$ 10.296 (lum) [pb]  \\
+$0.21 < |\eta| <0.42$          & 575.383 $\pm$ 0.722 (stat) $\pm$ 4.161 (syst) $\pm$ 10.357 (lum) [pb]  \\
+$0.42 < |\eta| <0.63$          & 574.377 $\pm$ 0.696 (stat) $\pm$ 4.200 (syst) $\pm$ 10.339 (lum) [pb]  \\
+$0.63 < |\eta| <0.84$          & 579.524 $\pm$ 0.757 (stat) $\pm$ 4.708 (syst) $\pm$ 10.431 (lum) [pb]  \\
+$0.84 < |\eta| <1.05$          & 579.336 $\pm$ 0.782 (stat) $\pm$ 5.170 (syst) $\pm$ 10.428 (lum) [pb]  \\
+$1.05 < |\eta| <1.37$          & 591.024 $\pm$ 0.566 (stat) $\pm$ 5.010 (syst) $\pm$ 10.638 (lum) [pb]  \\
+$1.37 < |\eta| <1.52$          & 588.001 $\pm$ 0.777 (stat) $\pm$ 5.564 (syst) $\pm$ 10.584 (lum) [pb]  \\
+$1.52 < |\eta| <1.74$          & 588.690 $\pm$ 0.650 (stat) $\pm$ 5.343 (syst) $\pm$ 10.596 (lum) [pb]  \\
+$1.74 < |\eta| <1.95$          & 592.984 $\pm$ 0.663 (stat) $\pm$ 5.572 (syst) $\pm$ 10.674 (lum) [pb]  \\
+$1.95 < |\eta| <2.18$          & 572.421 $\pm$ 0.605 (stat) $\pm$ 5.908 (syst) $\pm$ 10.304 (lum) [pb]  \\
+$2.18 < |\eta| <2.40$          & 560.038 $\pm$ 0.630 (stat) $\pm$ 5.938 (syst) $\pm$ 10.081 (lum) [pb]  \\
+ %%%% TOT XSEC (bin width corr) = 2782.333
+ %%%% TOT XSEC (no bin width corr) = 6373.801
+\hline
+\end{tabular}

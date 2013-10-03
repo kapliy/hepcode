@@ -1,0 +1,7 @@
+\begin{tabular}{lc}
+\hline
+                               & 1866.344 $\pm$ 0.824 (stat) $\pm$ 18.600 (syst) $\pm$ 33.594 (lum) [pb]  \\
+ %%%% TOT XSEC (bin width corr) = 1866.344
+ %%%% TOT XSEC (no bin width corr) = 1866.344
+\hline
+\end{tabular}
