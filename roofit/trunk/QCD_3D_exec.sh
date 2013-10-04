@@ -1,5 +1,12 @@
 #!/bin/bash
 
+if [ "$#" -ge "1" ]; then
+    id=$1
+else
+    id="NONE"
+fi
+echo "Processing job id = $id"
+
 if [ -z "${SITEROOT}" ]; then
     echo "Sourcing athena"
     export HOME=$PWD
@@ -13,13 +20,6 @@ echo "PWD = $PWD"
 echo "HOSTNAME = $HOSTNAME"
 
 source config.sh
-
-if [ "$#" -ge "1" ]; then
-    id=$1
-else
-    id="NONE"
-fi
-echo "Processing job id = $id"
 
 nomonly=" --extra ${DB} --exit"
 irun=0

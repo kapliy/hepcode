@@ -148,6 +148,25 @@ input=/share/t3data3/antonk/ana/ana_v29I_08282013_isoMC_cwdebug_stacoCB_all/pt20
 DB=DB_08282013_isoMC.v50   # iso SFs separate for powhegHerig and mcNLO (per Max, reduces theory systematics). AFTER uct3 xrood deletions!
 DB=DB_08282013_isoMC.v51   # same, but playing with a breakdown of MC's into sub-components (WW,WZ,ZZ,single-top,ttbar)
 
+input=/share/t3data3/antonk/ana/ana_v29I_09132013_isoMC_cwdebug_iso20_stacoCB_all/pt20
+DB=DB_08282013_isoMC.v52   # same, but using 20% fluctuations in iso SF (for Max)
+
+input=/share/t3data3/antonk/ana/ana_v29I_09132013_isoMC_cwdebug_iso2d_ret_stacoCB_all/pt20
+DB=DB_08282013_isoMC.v53   # same, but using 2d iso SF and no variations (for Max)
+
+input=/share/t3data3/antonk/ana/ana_v29I_09202013_isoMC_reweights_stacoCB_all/pt20
+DB=DB_09202013_reweights.v54   # revert to v50/v51, but add some extra histograms
+
+# v55: adding z0 cut. DO NOT USE
+#input=/share/t3data3/antonk/ana/ana_v29I_09302013_addz0_stacoCB_all/pt20
+#DB=DB_09302013_addz0.v55       # added mu z0 cut for cosmics
+
+input=/share/t3data3/antonk/ana/ana_v29I_09202013_isoMC_reweights_stacoCB_all/pt20
+DB=DB_09202013_reweights.v56   # same as v54 (and v50/v51): per-MC pt-only iso SF. Fixing qcdsys3d.py problem with broken-down components and top.
+
+input=
+DB=                            # same as v56, but upgraded ScaleFactorProvider & new iso ROOT files
+
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`
 iq=0

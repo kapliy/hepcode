@@ -256,6 +256,8 @@ class SuSys:
         i=2 - data-driven QCD template
         """
         hpath = s.h_path_folder(i,flags)+ '/' + s.histo
+        if s.h_path_folder(i,flags) == '':
+            hpath = s.histo
         return hpath
     def h_path_fname(s,i=1,flags=None):
         # determine "i" from MC sample flags
