@@ -1,10 +1,6 @@
 #!/bin/bash
 
-#input=/share/t3data3/antonk/ana/ana_v29I_11072012_unfold_stacoCB_all/
-#input=/share/t3data3/antonk/ana/ana_v29I_11172012_edboard_stacoCB_all
-input=/share/t3data3/antonk/ana/ana_v29I_11172012_edboard_nophi_stacoCB_all
-
-input=/share/t3data3/antonk/ana/ana_v29I_11282012_edboard_nophi_stacoCB_all/
+source config.sh
 
 # Validate z vertex reweighting, <mu> reweighting, and nvtx reweighting
 

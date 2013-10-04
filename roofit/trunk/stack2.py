@@ -1889,7 +1889,7 @@ if mode in ('one_plot','one_plot_nt'):
 if mode == 'plot_z0':
     # plots normalized vertex z0 distributions for several Monte-Carlos
     # also can plot nvtx and avgmu
-    do_top = opts.var=='vxz0'
+    do_top = (opts.var=='vxz0')
     spR.enable_nominal()
     SuCanvas.g_lin_ratio_y_title_offset = 2.0
     SuCanvas.g_lin_main_y_title_offset = 2.0
@@ -1898,10 +1898,10 @@ if mode == 'plot_z0':
     h.append( po.data('h',spR.clone(),norm=True) )
     h.append(   po.mc('h',spR.clone(),name='sig_powheg_pythia', norm=True) )
     h.append(   po.mc('h',spR.clone(),name='zmumu_powheg_pythia', norm=True) )
-    h.append(   po.mc('h',spR.clone(),name='wtaunu_powheg_pythia', norm=True) )
+    h.append(   po.mc('h',spR.clone(),name='wtaunu_alpgen_herwig', norm=True) )
     if do_top:
         h.append(   po.mc('h',spR.clone(),name='t#bar{t}+single-top', norm=True) )
-    h.append(   po.mc('h',spR.clone(),name='ztautau_powheg_pythia', norm=True) )
+    h.append(   po.mc('h',spR.clone(),name='ztautau_alpgen_herwig', norm=True) )
     h.append(   po.mc('h',spR.clone(),name='WW/WZ/ZZ', norm=True) )
     M = PlotOptions()
     M.msize = 1.1

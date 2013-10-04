@@ -5,10 +5,7 @@ source config.sh
 
 name=${INDB}
 spl=""
-if [ "$#" -ge "1" ]; then
-    name="${name}.split"
-    spl=" --splitmc"
-fi
+
 echo "Processing: $name"
 
 # unfolding in |eta|
@@ -22,6 +19,24 @@ echo "Processing: $name"
 
 # experimental: signed eta to check A-vs-C side differences
 ./stack2.py -m prepare_qcd_1d --input ${input} -b -o TEST -t TEST ${spl} --bgqcd ${bgqcd} --extra "${name}.eta.1D.pt25.root" --ipt 25 --etamode 1 &> LOG.PREP.6 &
+
+
+# background-splitted version:
+name="${INDB}.split"
+spl=" --splitmc"
+
+# unfolding in |eta|
+./stack2.py -m prepare_qcd_2d --input ${input} -b -o TEST -t TEST ${spl} --bgqcd ${bgqcd} --extra "${name}.abseta.2D.pt20.root" --ipt 20 --etamode 2 &> LOG.PREQ.1 &
+
+./stack2.py -m prepare_qcd_1d --input ${input} -b -o TEST -t TEST ${spl} --bgqcd ${bgqcd} --extra "${name}.abseta.1D.pt20.root" --ipt 20 --etamode 2 &> LOG.PREQ.2 &
+./stack2.py -m prepare_qcd_1d --input ${input} -b -o TEST -t TEST ${spl} --bgqcd ${bgqcd} --extra "${name}.abseta.1D.pt25.root" --ipt 25 --etamode 2 &> LOG.PREQ.3 &
+
+./stack2.py -m prepare_qcd_0d --input ${input} -b -o TEST -t TEST ${spl} --bgqcd ${bgqcd} --extra "${name}.abseta.0D.pt20.root" --ipt 20 --etamode 2 &> LOG.PREQ.4 &
+./stack2.py -m prepare_qcd_0d --input ${input} -b -o TEST -t TEST ${spl} --bgqcd ${bgqcd} --extra "${name}.abseta.0D.pt25.root" --ipt 25 --etamode 2 &> LOG.PREQ.5 &
+
+# experimental: signed eta to check A-vs-C side differences
+./stack2.py -m prepare_qcd_1d --input ${input} -b -o TEST -t TEST ${spl} --bgqcd ${bgqcd} --extra "${name}.eta.1D.pt25.root" --ipt 25 --etamode 1 &> LOG.PREQ.6 &
+
 
 # DEPRECATED: unfolding in eta, as opposed to |eta|
 if [ "0" == "1" ]; then
