@@ -33,6 +33,9 @@ lbl=09132013_isoMC_cwdebug_iso2d      # iso SF use 2d eta-pt; no sys. variations
 lbl=09132013_isoMC_cwdebug_iso2d_ret  # iso SF use 2d eta-pt; no sys. variations (test for max)
 
 lbl=09202013_isoMC_reweights          # revert to normal per-MC isolation. Added some reweighting plots for thesis (final selection). Same as 08282013_isoMC_cwdebug!
+lbl=09302013_addz0                    # added muon z0 to PV cut of 10 mm. v55
+
+lbl=10042013_maxisoMC                 # got rid of z0 (v54/v56). Upgraded ScaleFactorProvider, pointed to new Max's iso files
 
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
 

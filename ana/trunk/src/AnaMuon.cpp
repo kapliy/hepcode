@@ -188,7 +188,7 @@ AnaMuon::GetTriggerSF_v17_custom2( const CONF::ConfType& conf, const detector::M
 
   // init on first event
   if(!m_sfProvTrig_DG5_pos_barrel) {
-    const std::string file="data/mu18_eta_pt_SF_hists.root";
+    const std::string file="CommonAnalysis/RootCore/data/ScaleFactorProvider/mutrigsf/mu18_eta_pt_SF_hists.root";
     //const std::string file="data/muon_trigger_SF_hists.root"; // AK 04/03/2013: this was MG
     // positive muons
     m_sfProvTrig_DG5_pos_barrel  = new SFProvider(file, "charge_pos_data_matched_barrel", "charge_pos_data_probe_barrel",
@@ -388,7 +388,7 @@ AnaMuon::GetTriggerSF_v17_custom4( const CONF::ConfType& conf, const detector::M
   
   // init on first event
   if(!m_sfProvTrig_DG5_pos_barrel) {
-    const std::string file="data/mu18_eta_phi_SF_hists.root";
+    const std::string file="CommonAnalysis/RootCore/data/ScaleFactorProvider/mutrigsf/mu18_eta_phi_SF_hists.root";
     //const std::string file="data/muon_trigger_SF_phi_averaging_syst_v4.root"; // AK 04/03/2013: this was MG
     // positive muons
     m_sfProvTrig_DG5_pos_barrel  = new SFProvider(file, "charge_pos_data_matched_barrel", "charge_pos_data_probe_barrel",
@@ -900,9 +900,9 @@ AnaMuon::GetIsolationSF_v17( const CONF::ConfType& conf, const detector::MCP_TYP
     assert(mctype==5 || mctype==4 || mctype==1);
     SFProvider::Metric metric = SFProvider::Pt; //SFProvider::EtaPt; // 09/19/2013: testing 2d SF
     const bool is2d = (metric == SFProvider::EtaPt);
-    std::string namenom = mctype==5 ? "data/IsolationSF_vsPt.root" : (mctype==1 ? "data/Iso_MCAtNLO_SF_vsPt.root" : "data/Iso_PowhegJimmy_SF_vsPt.root");
+    std::string namenom = mctype==5 ? "CommonAnalysis/RootCore/data/ScaleFactorProvider/muisosf/Iso_PowhegPythia_SF_vsPt.root" : (mctype==1 ? "CommonAnalysis/RootCore/data/ScaleFactorProvider/muisosf/Iso_MCAtNLO_SF_vsPt.root" : "CommonAnalysis/RootCore/data/ScaleFactorProvider/muisosf/Iso_PowhegJimmy_SF_vsPt.root");
     if(is2d) {
-      namenom = mctype==5 ? "data/Iso_PowhegPythia_SF_vsEtaPt.root" : (mctype==1 ? "data/Iso_MCAtNLO_SF_vsEtaPt.root" : "data/Iso_PowhegJimmy_SF_vsEtaPt.root");
+      namenom = mctype==5 ? "CommonAnalysis/RootCore/data/ScaleFactorProvider/muisosf/Iso_PowhegPythia_SF_vsEtaPt.root" : (mctype==1 ? "CommonAnalysis/RootCore/data/ScaleFactorProvider/muisosf/Iso_MCAtNLO_SF_vsEtaPt.root" : "CommonAnalysis/RootCore/data/ScaleFactorProvider/muisosf/Iso_PowhegJimmy_SF_vsEtaPt.root");
     }
     tcnom = new SFProvider(namenom,"SF","EffMC","EffData",metric,1.0);
     tcnom->generateReplicas(NREPLICASF,seed);
