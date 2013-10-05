@@ -1,6 +1,7 @@
 #!/bin/bash
 
 #RootCore: atlasoff/PhysicsAnalysis/D3PDTools/RootCore/trunk
+# atlasinst/Institutes/CERN/ElectroweakBosons/trunk/RootCore/ScaleFactorProvider
 
 # selects a snapshot of tags. Use "packages_tags.txt" to use the latest available tags.
 packages=packages.txt
