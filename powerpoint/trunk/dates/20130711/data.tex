@@ -1,0 +1,470 @@
+
+%% %%
+%% %% INTRO
+%% %%
+
+\slide{ Updates }
+{
+\begin{itemize}
+\item Last week (\red{v10 version on AFS})
+\begin{itemize}
+ \item Follow up on mu18 vs mu18\_MG trigger and lepton $p_T$ (Joao)
+ \item Updated muon reconstruction scale factors
+ \item Smoothing of theory uncertainties: adding uncorrelated component
+\end{itemize}
+\item Jump to \hyperlink{jul18}{\beamergotobutton{updates from this week}} (\red{v11 version on AFS})
+\begin{itemize}
+\item MC-to-data reweighting checks (all bugs fixed)
+\item New luminosity tag (OflLumi-7TeV-004): $4644.00 \rightarrow 4579.44 \pm 1.8\%$
+\begin{itemize}
+\item Total luminosity reduced by 1.4\%
+\end{itemize}
+\item New top cross-section: $165.0 \rightarrow 177.4 \pm 6.2\%$ pb
+\begin{itemize}
+\item Increased by 7.5\% (within old uncertainty)
+\end{itemize}
+\item De-coupled top and non-top electroweak cross-section systematics
+\begin{itemize}
+\item Now also re-estimating QCD under ewkUp,ewkDown,topUp,topDown variations
+\end{itemize}
+\end{itemize}
+\end{itemize}
+}
+
+
+
+%%===========================================
+%%  Slide -1
+%%===========================================
+
+\slide{Follow up: muon trigger vs $p_T$}
+{
+\begin{itemize}
+\item Due to mismodeled $\eta$ gaps, we switched to MuID trigger
+\item Concerns were raised that MuID behaves differently versus $p_T$
+\begin{itemize}
+\item Effect confirmed but found to be very small (within statistical uncertainties)
+\end{itemize}
+\end{itemize}
+
+\centering
+\includegraphics[width=0.33\textwidth]{/home/antonk/SupportingDocument/talk/Wmn/figures/lpt_MG_NEG}
+\includegraphics[width=0.33\textwidth]{/home/antonk/SupportingDocument/talk/Wmn/figures/lpt_MUID_NEG}
+\includegraphics[width=0.33\textwidth]{/home/antonk/SupportingDocument/talk/Wmn/figures/lpt_double_ratio_NEG}
+
+\vspace{0.5cm}
+\mybox{0.4}{16}{\scriptsize Data/MC with MG trigger}
+\mybox{7.0}{16}{\scriptsize Data/MC with MuID trigger}
+\mybox{15.3}{16}{\scriptsize Double ratio}
+
+}
+
+%%===========================================
+%%  Slide -1
+%%===========================================
+
+
+\begin{frame}
+\frametitle{Follow up: improvements on reco SFs}
+
+\begin{itemize}
+\only<1>{
+\item Current Reco SFs with ($\eta, q$) binning
+\item Difference between ID-probe and CaloTagged-probe SFs considered bin-by-bin as symmetric uncertainty
+\item Additional uncertainties:
+\iteb
+\item $p_T$-dependence 3-6\,GeV: 2\%, 6-10\,GeV: 1\%, 10-15\,GeV: 0.5\%, $>$15\.GeV: 0.1\%
+\item 0.00042\% $\cdot$ E(GeV), for the extrapolation into the TeV range
+\itee
+}
+\only<2>{
+\item {\bf New} Reco SFs with ($\eta,\phi,q$) binning
+\item ID-probe and CaloTagged-probe SFs provided separately and difference in final result taken as 
+systematic uncertainty (with reduced stat fluctuations)
+\item Additional uncertainties:
+\iteb
+\item $p_T$-dependence 3-6\,GeV: 2\%, 6-10\,GeV: 1\%, 10-15\,GeV: 0.5\%, $>$15\.GeV: 0.1\%
+\item 0.00042\% $\cdot$ E(GeV), for the extrapolation into the TeV range
+\itee
+}
+\end{itemize}
+
+\centering
+\includegraphics[width=0.45\textwidth]<1>{/home/antonk/SupportingDocument/talk/Wmn/figures/recoSF_oldsys_NEG}
+\includegraphics[width=0.45\textwidth]<1>{/home/antonk/SupportingDocument/talk/Wmn/figures/recoSF_oldsys_POS}
+
+\includegraphics[width=0.45\textwidth]<2>{/home/antonk/SupportingDocument/talk/Wmn/figures/recoSF_splitsys_NEG}
+\includegraphics[width=0.45\textwidth]<2>{/home/antonk/SupportingDocument/talk/Wmn/figures/recoSF_splitsys_POS}
+
+\only<1-2>{
+\mybox{7}{9}{\scriptsize \Wminusmn}
+\mybox{16.3}{9}{\scriptsize \Wplusmn}
+}
+
+\end{frame}
+
+
+
+%%===========================================
+%%  Slide -1
+%%===========================================
+
+\slide{Smoothing of theory uncertainties}
+{
+\begin{itemize}
+\item Smoothing applied to theory uncertainties (PowhegPythia vs others)
+\item Theory uncertainty becomes fully correlated across bins
+\begin{itemize}
+\item This is important for the combination!
+\end{itemize}
+\item Proposal: confidence interval envelope around the fitted curve
+\begin{itemize}
+\item Treat the size of the envelope as an uncorrelated source
+\end{itemize}
+\item For poly0 fit, it can be taken as 1-sigma error on fitted offset
+\item For poly2, we need to keep track of correlations between pars
+\begin{itemize}
+\item Thanks to Max for implementing TVirtualFitter::GetConfidenceIntervals
+\item Next page - a quick comparison of two techniques on poly0 fits
+\end{itemize}
+\end{itemize}
+
+}
+
+
+\slide{poly0: fit error vs GetConfidenceIntervals}
+{
+
+Typical case: comparing poly0 fit error on the offset parameter with GetConfidenceIntervals result for different confidence intervals.
+
+\begin{table}
+  \begin{center}
+\footnotesize
+      \begin{tabular}{lrrrr}
+      \hline
+      \hline
+      Confidence interval & 1-sigma fit error & GetConfidenceIntervals \\
+
+0.60    &   0.00143003 & 0.00125479 \\
+0.61    &   0.00143003 & 0.00128265 \\
+0.62    &   0.00143003 & 0.00131102 \\
+0.63    &   0.00143003 & 0.00133993 \\
+0.64    &   0.00143003 & 0.00136941 \\
+0.65    &   0.00143003 & 0.00139948 \\
+\color{red}{0.66}    &   \color{red}{0.00143003} & \color{red}{0.00143019} \\
+0.67    &   0.00143003 & 0.00146158 \\
+0.68    &   0.00143003 & 0.00149369 \\
+0.69    &   0.00143003 & 0.00152656 \\
+0.7     &   0.00143003 & 0.00156025 \\
+0.71    &   0.00143003 & 0.00159482 \\
+0.72    &   0.00143003 & 0.00163033 \\
+0.73    &   0.00143003 & 0.00166685 \\
+0.74    &   0.00143003 & 0.00170446 \\
+
+      \hline
+      \hline
+  \end{tabular}
+\label{tab:Wmunu:confidenceIntCheck}
+\end{center}
+\end{table}
+
+GetConfidenceIntervals uncertainty is reasonably close to a simple fit error (at 68\% c.i.). Sometimes the discrepancy is larger - GetConfidenceIntervals must be doing something more sophisticated.
+
+}
+
+\slide{Smoothing bands: examples}
+{
+\only<1>{Parton shower: unfolding}
+\only<2>{Matrix element: unfolding}
+\only<3>{Parton shower: background re-estimate}
+\only<4>{Matrix element: background re-estimate}
+
+\centering
+\includegraphics[width=0.65\textwidth]<1>{dates/20130711/figures/output.v44/smoothed_systematics/1D_pt25_POS_PSsyst_onlyunf}
+\includegraphics[width=0.65\textwidth]<2>{dates/20130711/figures/output.v44/smoothed_systematics/1D_pt25_POS_MEsyst_onlyunf}
+\includegraphics[width=0.65\textwidth]<3>{dates/20130711/figures/output.v44/smoothed_systematics/1D_pt25_POS_PSsyst_onlybg}
+\includegraphics[width=0.65\textwidth]<4>{dates/20130711/figures/output.v44/smoothed_systematics/1D_pt25_POS_MEsyst_onlybg}
+
+}
+
+\slide{Smoothing uncertainty: $p_T>25$ case}
+{
+\begin{table}
+  \begin{center}
+\tiny
+\begin{tabular}{l|p{0.6cm}p{0.6cm}p{0.6cm}p{0.6cm}p{0.6cm}p{0.6cm}p{0.6cm}p{0.6cm}p{0.6cm}p{0.6cm}p{0.6cm}}
+\hline
+   & 0.00, & 0.21, & 0.42, & 0.63, & 0.84, & 1.05, & 1.37, & 1.52, & 1.74, & 1.95, & 2.18,  \\ 
+   & 0.21 & 0.42 & 0.63 & 0.84 & 1.05 & 1.37 & 1.52 & 1.74 & 1.95 & 2.18 & 2.40  \\ 
+\hline
+Trigger efficiency                       & 0.225 & 0.178 & 0.199 & 0.059 & 0.032 & 0.102 & 0.039 & 0.036 & 0.007 & 0.069 & 0.007 \\
+Recon. efficiency (pT dep.)              & 0.133 & 0.134 & 0.135 & 0.139 & 0.148 & 0.150 & 0.155 & 0.162 & 0.173 & 0.187 & 0.204 \\
+Recon. efficiency (id-calo)              & 0.048 & 0.095 & 0.005 & 0.145 & 0.133 & 0.104 & 0.192 & 0.052 & 0.116 & 0.272 & 0.272 \\
+Isol. efficiency                         & 0.025 & 0.025 & 0.026 & 0.026 & 0.026 & 0.026 & 0.026 & 0.026 & 0.026 & 0.026 & 0.025 \\
+Trigger eff. (uncorr)                    & 0.245 & 0.204 & 0.203 & 0.275 & 0.283 & 0.154 & 0.172 & 0.149 & 0.163 & 0.166 & 0.182 \\
+Recon. eff. (uncorr)                     & 0.169 & 0.058 & 0.054 & 0.055 & 0.090 & 0.102 & 0.057 & 0.045 & 0.059 & 0.074 & 0.075 \\
+Isol. eff. (uncorr)                      & 0.016 & 0.016 & 0.017 & 0.017 & 0.017 & 0.017 & 0.017 & 0.017 & 0.017 & 0.017 & 0.016 \\
+Muon resolution (ID)                     & 0.004 & 0.001 & 0.008 & 0.003 & 0.007 & 0.007 & 0.010 & 0.003 & 0.003 & 0.010 & 0.007 \\
+Muon resolution (MS)                     & 0.004 & 0.002 & 0.007 & 0.004 & 0.003 & 0.006 & 0.006 & 0.011 & 0.009 & 0.030 & 0.025 \\
+Muon scale                               & 0.116 & 0.114 & 0.127 & 0.129 & 0.139 & 0.162 & 0.159 & 0.166 & 0.150 & 0.139 & 0.142 \\
+Muon curvature                           & 0.133 & 0.140 & 0.125 & 0.115 & 0.120 & 0.104 & 0.094 & 0.101 & 0.086 & 0.079 & 0.088 \\
+$E_{T}^{miss}$ soft scale                  & 0.173 & 0.187 & 0.195 & 0.207 & 0.197 & 0.219 & 0.190 & 0.199 & 0.158 & 0.193 & 0.184 \\
+$E_{T}^{miss}$ soft resolution             & 0.112 & 0.143 & 0.117 & 0.089 & 0.078 & 0.080 & 0.052 & 0.062 & 0.089 & 0.116 & 0.149 \\
+Jet scale                                & 0.122 & 0.087 & 0.100 & 0.088 & 0.090 & 0.100 & 0.072 & 0.090 & 0.088 & 0.100 & 0.077 \\
+Jet resolution                           & 0.105 & 0.141 & 0.111 & 0.105 & 0.128 & 0.103 & 0.132 & 0.112 & 0.114 & 0.135 & 0.111 \\
+Theory: Matrix element                   & 0.306 & 0.359 & 0.409 & 0.457 & 0.502 & 0.554 & 0.598 & 0.629 & 0.663 & 0.695 & 0.725 \\
+Theory: PS and hadr.                     & 0.001 & 0.038 & 0.074 & 0.108 & 0.141 & 0.181 & 0.214 & 0.239 & 0.266 & 0.293 & 0.318 \\
+\red{Theory unfolding (uncorr)}                & 0.284 & 0.202 & 0.152 & 0.132 & 0.132 & 0.133 & 0.125 & 0.113 & 0.107 & 0.133 & 0.203 \\
+Theory: PDF                              & 0.024 & 0.022 & 0.019 & 0.021 & 0.026 & 0.021 & 0.022 & 0.022 & 0.022 & 0.018 & 0.018 \\
+$p^{W}_{T}$ reweighting                    & 0.206 & 0.193 & 0.204 & 0.199 & 0.211 & 0.211 & 0.210 & 0.214 & 0.211 & 0.194 & 0.203 \\
+Pile-up uncertainty                      & 0.025 & 0.006 & 0.064 & 0.020 & 0.037 & 0.022 & 0.005 & 0.048 & 0.053 & 0.093 & 0.121 \\
+\red{Theory background (uncorr)}               & 0.116 & 0.081 & 0.064 & 0.063 & 0.068 & 0.071 & 0.068 & 0.064 & 0.064 & 0.081 & 0.118 \\
+EWK+top background                       & 0.252 & 0.254 & 0.264 & 0.280 & 0.291 & 0.308 & 0.334 & 0.345 & 0.361 & 0.378 & 0.395 \\
+QCD background                           & 0.200 & 0.339 & 0.117 & 0.170 & 0.222 & 0.189 & 0.197 & 0.231 & 0.423 & 0.420 & 0.375 \\
+Stat. Background                         & 0.120 & 0.107 & 0.100 & 0.108 & 0.116 & 0.079 & 0.109 & 0.090 & 0.093 & 0.091 & 0.086 \\
+Stat. Uncertainty (MC)                   & 0.122 & 0.091 & 0.080 & 0.104 & 0.108 & 0.072 & 0.074 & 0.064 & 0.066 & 0.070 & 0.061 \\
+\hline
+Stat. Uncertainty                        & 0.141 & 0.125 & 0.121 & 0.131 & 0.135 & 0.096 & 0.132 & 0.110 & 0.112 & 0.104 & 0.112 \\
+\hline
+Tot. Syst. Uncertainty                   & 0.790 & 0.797 & 0.745 & 0.797 & 0.856 & 0.861 & 0.910 & 0.928 & 1.026 & 1.107 & 1.142 \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+}
+
+\slide{Comment on smoothing}
+{
+\begin{itemize}
+\item Uncorrelated component of Theory uncertainty is not negligible
+\begin{itemize}
+\item Comparable to the other uncorrelated sources (e.g., stat. uncertainty)
+\end{itemize}
+\item I will put a new set of wmunu inputs on lxplus
+\end{itemize}
+}
+
+\begin{frame}[label=jul18]
+\frametitle{MC-to-data reweighting}
+\begin{itemize}
+\item We were asked to do a cross-check: reweighting MC to data
+\begin{itemize}
+\item SF = (data-bg)/sig vs $p_T$ (fine bins) at detector-level
+\item Separate SFs in each $\eta$ slice
+\item Applied at truth level
+\item Closure test: take rw-signal at reco level, unfold with nominal response matrix, and compare with rw-signal at truth level
+\end{itemize}
+\item In the first attempt, I estimated QCD inclusively (similar to $p_T$ stacks)
+\begin{itemize}
+\item The difference from that and (QCD-in-bins) is larger than the effect we are trying to correct
+\end{itemize}
+\item Re-made SFs, where fine-binned $p_T$ histograms were made in each $\eta$ x $p_T$ bin, and then added across $p_T$ slices.
+\begin{itemize}
+\item Final SFs show up to 10\% effects - the objective is to see if these effects significantly bias the result.
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\slide{Examples of MC-to-data weights vs $p_T$}
+{
+
+\centering
+\includegraphics[width=0.65\textwidth]<1>{/home/antonk/SupportingDocument/figures/datarw/WPmn_DataWeights_slice_1}
+\includegraphics[width=0.65\textwidth]<2>{/home/antonk/SupportingDocument/figures/datarw/WPmn_DataWeights_slice_4}
+\includegraphics[width=0.65\textwidth]<3>{/home/antonk/SupportingDocument/figures/datarw/WPmn_DataWeights_slice_8}
+\includegraphics[width=0.65\textwidth]<4>{/home/antonk/SupportingDocument/figures/datarw/WPmn_DataWeights_slice_11}
+
+}
+
+\slide{ Reweighting: verifying at reco-level }
+{
+
+\colb[T]
+\column{.5\textwidth}
+\centering
+\only<1>{ $0.00<|\eta|<0.21$ }
+\only<2>{ $0.42<|\eta|<0.63$ }
+\only<3>{ $0.84<|\eta|<1.05$ }
+\only<4>{ $1.37<|\eta|<1.52$ }
+\only<5>{ $1.75<|\eta|<1.95$ }
+\includegraphics[width=1.0\textwidth]<1>{dates/20130711/figures/results.v47/Wmn_CLOSREC_2D_PT20_NEG_RecoSpectrum_2d_Slice_1_proj}
+\includegraphics[width=1.0\textwidth]<2>{dates/20130711/figures/results.v47/Wmn_CLOSREC_2D_PT20_NEG_RecoSpectrum_2d_Slice_3_proj}
+\includegraphics[width=1.0\textwidth]<3>{dates/20130711/figures/results.v47/Wmn_CLOSREC_2D_PT20_NEG_RecoSpectrum_2d_Slice_5_proj}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130711/figures/results.v47/Wmn_CLOSREC_2D_PT20_NEG_RecoSpectrum_2d_Slice_7_proj}
+\includegraphics[width=1.0\textwidth]<5>{dates/20130711/figures/results.v47/Wmn_CLOSREC_2D_PT20_NEG_RecoSpectrum_2d_Slice_9_proj}
+\column{.5\textwidth}
+
+\centering
+\only<1>{ $0.21<|\eta|<0.42$ }
+\only<2>{ $0.63<|\eta|<0.84$ }
+\only<3>{ $1.05<|\eta|<1.37$ }
+\only<4>{ $1.52<|\eta|<1.74$ }
+\only<5>{ $1.95<|\eta|<2.18$ }
+\includegraphics[width=1.0\textwidth]<1>{dates/20130711/figures/results.v47/Wmn_CLOSREC_2D_PT20_NEG_RecoSpectrum_2d_Slice_2_proj}
+\includegraphics[width=1.0\textwidth]<2>{dates/20130711/figures/results.v47/Wmn_CLOSREC_2D_PT20_NEG_RecoSpectrum_2d_Slice_4_proj}
+\includegraphics[width=1.0\textwidth]<3>{dates/20130711/figures/results.v47/Wmn_CLOSREC_2D_PT20_NEG_RecoSpectrum_2d_Slice_6_proj}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130711/figures/results.v47/Wmn_CLOSREC_2D_PT20_NEG_RecoSpectrum_2d_Slice_8_proj}
+\includegraphics[width=1.0\textwidth]<5>{dates/20130711/figures/results.v47/Wmn_CLOSREC_2D_PT20_NEG_RecoSpectrum_2d_Slice_10_proj}
+\column{.5\textwidth}
+
+\cole
+}
+
+
+\slide{Reweighting: closure test}
+{
+\begin{itemize}
+\item Closure test results are shown as a function of lepton $\eta$
+\item Unfolding was done as a function of $p_T$ in slices of $\eta$
+\begin{itemize}
+\item Final histograms are re-projected back on the $\eta$ axis
+\end{itemize}
+\end{itemize}
+}
+
+\slide{Reweighting: closure test}
+{
+
+\only<1>{ $25<p_{T}<30$ GeV } 
+\only<2>{ $30<p_{T}<35$ GeV } 
+\only<3>{ $35<p_{T}<40$ GeV } 
+\only<4>{ $40<p_{T}<45$ GeV } 
+\only<5>{ $45<p_{T}<50$ GeV } 
+\only<6>{ $p_{T}>50$ GeV } 
+
+\centering
+\includegraphics[width=0.65\textwidth]<1>{dates/20130711/figures/results.v47/Wmn_CLOSUNF_2D_PT20_NEG_Closure_2d_Slice_2}
+\includegraphics[width=0.65\textwidth]<2>{dates/20130711/figures/results.v47/Wmn_CLOSUNF_2D_PT20_NEG_Closure_2d_Slice_3}
+\includegraphics[width=0.65\textwidth]<3>{dates/20130711/figures/results.v47/Wmn_CLOSUNF_2D_PT20_NEG_Closure_2d_Slice_4}
+\includegraphics[width=0.65\textwidth]<4>{dates/20130711/figures/results.v47/Wmn_CLOSUNF_2D_PT20_NEG_Closure_2d_Slice_5}
+\includegraphics[width=0.65\textwidth]<5>{dates/20130711/figures/results.v47/Wmn_CLOSUNF_2D_PT20_NEG_Closure_2d_Slice_6}
+\includegraphics[width=0.65\textwidth]<6>{dates/20130711/figures/results.v47/Wmn_CLOSUNF_2D_PT20_NEG_Closure_2d_Slice_7}
+
+}
+
+\slide{ Reweighting summary }
+{
+\begin{itemize}
+\item Confirmed that reweighted distributions look better at reco level
+\item Closure achieved within statistical uncertainties
+\begin{itemize}
+\item Closure test probes sensitivity of unfolding to data/MC mismodeling
+\item Conclusion: our unfolding is \red{insensitive} to lepton $p_T$ mismodeling effects
+\end{itemize}
+\end{itemize}
+}
+
+\slide{ Data/MC with new top cross-section }
+{
+\colb[T]
+\column{.5\textwidth}
+\centering
+\only<1>{ $\mu^{+}$ MET (old top xsec) }
+\only<2>{ $\mu^{+}$ MET (new top xsec) }
+\only<3>{ $\mu^{+}$ $p_T$ (old top xsec) }
+\only<4>{ $\mu^{+}$ $p_T$ (new top xsec) }
+\only<5>{ $\mu^{+}$ $\eta$ (old top xsec) }
+\only<6>{ $\mu^{+}$ $\eta$ (new top xsec) }
+\only<7>{ $\mu^{+}$ sys. for $p_T>50$ GeV (old top xsec) }
+\only<8>{ $\mu^{+}$ sys. for $p_T>50$ GeV (new top xsec) }
+\includegraphics[width=1.0\textwidth]<1>{dates/20130711/figures/STACKS.v45/CONTROL25/P_stack_d3_abseta_lpt_met_x_0__1_y_2__1_POS}
+\includegraphics[width=1.0\textwidth]<2>{dates/20130711/figures/STACKS.v47/CONTROL25/P_stack_d3_abseta_lpt_met_x_0__1_y_2__1_POS}
+\includegraphics[width=1.0\textwidth]<3>{dates/20130711/figures/STACKS.v45/CONTROL25/P_stack_lpt_POS}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130711/figures/STACKS.v47/CONTROL25/P_stack_lpt_POS}
+\includegraphics[width=1.0\textwidth]<5>{dates/20130711/figures/STACKS.v45/CONTROL25/P_stack_d3_eta_lpt_met_y_2__1_z_0__1_POS}
+\includegraphics[width=1.0\textwidth]<6>{dates/20130711/figures/STACKS.v47/CONTROL25/P_stack_d3_eta_lpt_met_y_2__1_z_0__1_POS}
+\includegraphics[width=1.0\textwidth]<7>{dates/20130711/figures/results.v45/Wmn_SYSTEM_2D_PT20_POS_Unc_2d_Slice_7}
+\includegraphics[width=1.0\textwidth]<8>{dates/20130711/figures/results.v47/Wmn_SYSTEM_2D_PT20_POS_Unc_2d_Slice_7}
+\column{.5\textwidth}
+
+\centering
+\only<1>{ $\mu^{-}$ MET (old top xsec) }
+\only<2>{ $\mu^{-}$ MET (new top xsec) }
+\only<3>{ $\mu^{-}$ $p_T$ (old top xsec) }
+\only<4>{ $\mu^{-}$ $p_T$ (new top xsec) }
+\only<5>{ $\mu^{-}$ $\eta$ (old top xsec) }
+\only<6>{ $\mu^{-}$ $\eta$ (new top xsec) }
+\only<7>{ $\mu^{-}$ sys. for $p_T>50$ GeV (old top xsec) }
+\only<8>{ $\mu^{-}$ sys. for $p_T>50$ GeV (new top xsec) }
+\includegraphics[width=1.0\textwidth]<1>{dates/20130711/figures/STACKS.v45/CONTROL25/P_stack_d3_abseta_lpt_met_x_0__1_y_2__1_NEG}
+\includegraphics[width=1.0\textwidth]<2>{dates/20130711/figures/STACKS.v47/CONTROL25/P_stack_d3_abseta_lpt_met_x_0__1_y_2__1_NEG}
+\includegraphics[width=1.0\textwidth]<3>{dates/20130711/figures/STACKS.v45/CONTROL25/P_stack_lpt_NEG}
+\includegraphics[width=1.0\textwidth]<4>{dates/20130711/figures/STACKS.v47/CONTROL25/P_stack_lpt_NEG}
+\includegraphics[width=1.0\textwidth]<5>{dates/20130711/figures/STACKS.v45/CONTROL25/P_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
+\includegraphics[width=1.0\textwidth]<6>{dates/20130711/figures/STACKS.v47/CONTROL25/P_stack_d3_eta_lpt_met_y_2__1_z_0__1_NEG}
+\includegraphics[width=1.0\textwidth]<7>{dates/20130711/figures/results.v45/Wmn_SYSTEM_2D_PT20_NEG_Unc_2d_Slice_7}
+\includegraphics[width=1.0\textwidth]<8>{dates/20130711/figures/results.v47/Wmn_SYSTEM_2D_PT20_NEG_Unc_2d_Slice_7}
+\column{.5\textwidth}
+
+\cole
+
+}
+
+\slide{ New top cross-section: summary }
+{
+\begin{itemize}
+\item MET agreement got worse in the tail
+\item $\eta$ and lepton $p_T$ don't change much
+\item Effect on the analysis is small since we fit in the core
+\end{itemize}
+}
+
+
+\slide{ Background composition: uncorrelated QCD }
+{
+\colb[T]
+\column{.5\textwidth}
+\centering
+\only<1>{ $\mu^{+}$ $p_{T}>25$ }
+\only<2>{ $\mu^{+}$ $25<p_{T}<30$ }
+\only<3>{ $\mu^{+}$ $p_{T}>50$ }
+\includegraphics[width=1.0\textwidth]<1>{/home/antonk/SupportingDocument/Wmunu/figures/bgcomp/bgsummary_POS_pt25}
+\includegraphics[width=1.0\textwidth]<2>{/home/antonk/SupportingDocument/Wmunu/figures/bgcomp/bgsummary_POS_pt2}
+\includegraphics[width=1.0\textwidth]<3>{/home/antonk/SupportingDocument/Wmunu/figures/bgcomp/bgsummary_POS_pt7}
+\column{.5\textwidth}
+
+\centering
+\only<1>{ $\mu^{-}$ $p_{T}>25$ }
+\only<2>{ $\mu^{-}$ $25<p_{T}<30$ }
+\only<3>{ $\mu^{-}$ $p_{T}>50$ }
+\includegraphics[width=1.0\textwidth]<1>{/home/antonk/SupportingDocument/Wmunu/figures/bgcomp/bgsummary_NEG_pt25}
+\includegraphics[width=1.0\textwidth]<2>{/home/antonk/SupportingDocument/Wmunu/figures/bgcomp/bgsummary_NEG_pt2}
+\includegraphics[width=1.0\textwidth]<3>{/home/antonk/SupportingDocument/Wmunu/figures/bgcomp/bgsummary_NEG_pt7}
+\column{.5\textwidth}
+
+\cole
+
+}
+
+
+%%%%%%% Back-up slides %%%%%%%%%%
+\appendix
+\newcounter{finalframe}
+\setcounter{finalframe}{\value{framenumber}}
+
+\slide{}
+{
+\centering
+\Huge Back-up slides
+}
+
+\slide{ Names of new systematics in Plot.C }
+{
+\begin{itemize}
+\item ``Theory smoothing (uncorr)''
+\begin{itemize}
+\item ONLYUNFTheoryPS\_Uncorr\_smoothed
+\item ONLYUNFTheoryME\_Uncorr\_smoothed
+\item ONLYBGTheoryPowhegJimmy\_Uncorr\_smoothed
+\item ONLYBGTheoryMCNLO\_Uncorr\_smoothed
+\end{itemize}
+\item ``EWK background''
+\begin{itemize}
+\item BkgEWKnotop
+\end{itemize}
+\item ``Top background''
+\begin{itemize}
+\item BkgTOP
+\end{itemize}
+\end{itemize}
+}

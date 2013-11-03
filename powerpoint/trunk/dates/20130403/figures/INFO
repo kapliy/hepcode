@@ -1,0 +1,2 @@
+old = mu18_MG || mu18_MG_medium
+new = mu18 || mu18_medium, using the first version of trigger scale factors from Carl.
