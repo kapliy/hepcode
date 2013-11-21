@@ -23,6 +23,7 @@ def qcdfit_sys_deviations_subset(MSYS,MGROUPS,allowed,idx=11):
         for INAME,ISYS in IGRP.iteritems():
             if INAME not in allowed: continue
             idx_nom = ISYS[-1] # normaly this is zero, except for PS/ME error
+            if idx_nom>0: idx_nom -= 1   # brute hack: accommodate PRUNE_MSYS
             NOM = MSYS[idx_nom].values()[0]
             devs.append( abs(   ISYS[idx]-NOM[idx]   ) )
         res.append(  max(devs) if len(devs)>0 else 0.0 )

@@ -6,11 +6,22 @@ source config.sh
 
 source _binning.sh
 fin=${input}
-
 bgqcd=0
 
-# compare QCD0 vs QCD4 vs QCD4-BINS (we want to use QCD0 simplification!)
+# 10/14/2013 - rerunning AC plots
 if [ 1 -eq 1 ]; then
+    for q in 0 1 ; do
+	fin=/share/t3data3/antonk/ana/ana_v29I_01292013_paper_stacoCB_all/pt20
+	./stack2.py -q ${q} -o ACSIDE_MGMG --hsource d3_eta_lpt_met:y:2:-1:z:0:-1 --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} --lvar d3_abseta_lpt_met:x:0:-1:y:2:-1 --lbin 100,0,60 --lrebin 2 -t W_NOM_Q0 -m acside --bgqcd 0 --qcdscale 1.0 --lnofits &
+	fin=/share/t3data3/antonk/ana/ana_v29I_05142013_newmet_stacoCB_all/pt20
+	./stack2.py -q ${q} -o ACSIDE_MUID --hsource d3_eta_lpt_met:y:2:-1:z:0:-1 --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} --lvar d3_abseta_lpt_met:x:0:-1:y:2:-1 --lbin 100,0,60 --lrebin 2 -t W_NOM_Q0 -m acside --bgqcd 0 --qcdscale 1.0 --lnofits &
+    done
+    wait
+fi
+
+
+# compare QCD0 vs QCD4 vs QCD4-BINS (we want to use QCD0 simplification!)
+if [ 0 -eq 1 ]; then
     for q in 0 1 ; do
 	./stack2.py -q ${q} -o ACSIDE --hsource d3_eta_lpt_met:y:2:-1:z:0:-1 --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} --lvar d3_abseta_lpt_met:x:0:-1:y:2:-1 --lbin 100,0,60 --lrebin 2 -t W_NOM_Q0 -m acside --bgqcd 0 --qcdscale 1.0 --lnofits &
 	#./stack2.py -q ${q} -o ACSIDE --hsource d3_eta_lpt_met:y:2:-1:z:0:-1 --bin 10,-2.5,2.5 --refline 0.85,1.175 -b --input ${fin} --lvar d3_abseta_lpt_met:x:0:-1:y:2:-1 --lbin 100,0,60 --lrebin 2 -t W_NOM_Q4 -m acside --bgqcd 4 --lnofits &
@@ -564,6 +575,7 @@ if [ 0 -eq 1 ]; then
     echo "avgmu 0_6"
     wait
 fi
+
 # 03/20/2013 studies: mu18 trigger
 if [ 0 -eq 1 ]; then
 

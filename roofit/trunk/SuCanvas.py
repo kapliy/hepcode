@@ -712,6 +712,10 @@ class SuCanvas:
                 if htot:
                     htot.SetFillColor(M.colors[i])
                     htot.SetFillStyle(3004)
+                    if True:  # FIXME 10/14/2013: making shaded curves with the right marker
+                        htot.SetMarkerColor(M.colors[i])
+                        htot.SetMarkerStyle(M.styles[i])
+                        htot.SetMarkerSize(M.sizes[i])
                 else:
                     #h.SetLineColor( PlotOptions.autocolor(i) )
                     if i==0:

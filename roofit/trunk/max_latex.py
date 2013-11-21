@@ -85,7 +85,7 @@ SCOLORS[ SNAMES[2] ] = ROOT.kGreen + 1
 SCOLORS[ SNAMES[3] ] = ROOT.kViolet
 SCOLORS[ SNAMES[4] ] = ROOT.kOrange - 4
 SCOLORS['Total EWK+top'] = ROOT.kBlue
-SCOLORS['QCD'] = ROOT.kAzure - 9
+SCOLORS['QCD'] = ROOT.kBlack # ROOT.kAzure - 9
 SSTYLES = [20,21,22,23,33,34,22,29]
 assert len(SSTYLES) >= len(SCOLORS)
 SORDER = [6,5,4,3,2,1,0] #plot order
@@ -318,12 +318,12 @@ def printEventComposition(py=None , dorel=True):
                 e2 = e2/d*100.0
             Hqcd_u.SetBinContent(ibin,v)
             Hqcd_u.SetBinError(ibin, math.sqrt(e1*e1+e2*e2) )
-        M.add('QCD (uncorr)','QCD (uncorr)',size=size*1.1,style=SSTYLES[0],color=29,drawopt=' E4')
+        M.add('QCD (uncorr. error)','QCD (uncorr. error)',size=size*1.1,style=SSTYLES[0],color=29,drawopt=' E4')
         # plot
         j=0
         for i in SORDER:
             nm2 = snames[i].replace('$','')
-            if nm2=='QCD': nm2='QCD (total)'
+            if nm2=='QCD': nm2='QCD (total error)'
             M.add(nm2,nm2,size=size*1.1,style=SSTYLES[j],color=SCOLORS[snames[i]])
             HOUT.append( HP[i] )
             j+=1

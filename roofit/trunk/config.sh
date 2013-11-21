@@ -164,8 +164,11 @@ DB=DB_09202013_reweights.v54   # revert to v50/v51, but add some extra histogram
 input=/share/t3data3/antonk/ana/ana_v29I_09202013_isoMC_reweights_stacoCB_all/pt20
 DB=DB_09202013_reweights.v56   # same as v54 (and v50/v51): per-MC pt-only iso SF. Fixing qcdsys3d.py problem with broken-down components and top.
 
-input=
-DB=                            # same as v56, but upgraded ScaleFactorProvider & new iso ROOT files
+input=/share/t3data3/antonk/ana/ana_v29I_10042013_maxisoMC_stacoCB_all/pt20
+DB=DB_10042013_maxisoMC.v57    # same as v56, but upgraded ScaleFactorProvider & new iso ROOT files
+
+# input=/share/t3data3/antonk/ana/ana_v29I_10042013_maxisoMC2d_stacoCB_all/pt20
+# DB=DB_10042013_maxisoMC2d.v58   # same as v57, but using 2d iso SFs
 
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`
