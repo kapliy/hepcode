@@ -1162,7 +1162,7 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
         LtoM = qcdfit('LtoM',spL.clone(sysdir='NominalLtoM',sysdir_qcd='IsoWind20LtoM') )
         DtoM = add_qcdfit(DtoK,LtoM,'fit_periods')
         add(DtoM)
-        next('DtoK+LtoM fits')
+        next('Fits in data subranges')
         if False:
             print format_qcdfit(NOMINAL)
             print format_qcdfit(DtoM)
@@ -1243,13 +1243,13 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
         add(qcdfit('Nominal_ewk_ewkup',spL.clone()))
         SuSample.xsecerr = [-1,0]
         add(qcdfit('Nominal_ewk_ewkdown',spL.clone()))
-        next('Ewk xsec')
+        next('EWK cross-section')
         # now top
         SuSample.xsecerr = [0,1]
         add(qcdfit('Nominal_ewk_topup',spL.clone()))
         SuSample.xsecerr = [0,-1]
         add(qcdfit('Nominal_ewk_topdown',spL.clone()))
-        next('Top xsec')
+        next('Top cross-section')
         # restore defaults
         SuSample.xsecerr = [0,0]
         pass
@@ -1298,7 +1298,7 @@ def qcdfit_slice(spL2,iq,etamode,ieta,ipt,nomonly=False,read_cache=False):
     if True:
         for x in ['MuonResMSUp','MuonResMSDown','MuonResIDUp','MuonResIDDown']:
             add(qcdfit(x,spL.clone(sysdir_mc=x)))
-        next('Muon momentum reso')
+        next('Muon momentum resol.')
 
     # muon efficiencies
     if True:
@@ -1492,6 +1492,7 @@ if mode in ('qcdfit','qcdfit_sys'):
     if opts.ieta=='ALL' and opts.ipt in ('ALL20','ALL25') and opts.etamode==2:
         latex_file = SuCanvas.savedir + '/tableQCD_%s_%s.tex'%(QMAP[iq][1],'pt20' if opts.ipt=='ALL20' else 'pt25')
         latex_qcd_table(M[0],hs[1],hs[2],latex_file)
+        #10/19: checked that hs[3] (instead of hs[2]) gives ~same result (using nsig in denominator)
     if opts.exit: dexit()
 
 if mode=='qcdfit_adrian':
@@ -1806,6 +1807,20 @@ if mode=='manual':
     c = SuCanvas('FASTSIM_'+QMAP[q][1]+'_'+opts.hsource)
     c._ratioName = 'Fast/Full'
     c.plotAny(hs,M=M)
+    OMAP.append(c)
+
+if mode=='isoplot':  # mel's request to plot isolation for signal and bg
+    SuStackElm.new_scales = False
+    po.choose_qcd(1)
+    HS = []
+    HS.append( po.qcd('qcd',spRN.clone(),norm=True) )
+    HS.append( po.sig('signal',spRN.clone(),norm=True) )
+    M = PlotOptions()
+    M.add('s2','QCD b#bar{b}',color=ROOT.kBlack,style=20,size=0.8)
+    M.add('s1','W #rightarrow \mu\nu',color=ROOT.kRed,style=21,size=0.6)
+    c = SuCanvas('ISOPLOT_'+QMAP[q][1]+'_'+opts.hsource)
+    xaxis_info = match_labelmap(opts.hsource) + ['Normalized Entries',None]
+    c.plotAny(HS,M=M,rebin=opts.rebin,xaxis_info=xaxis_info,height=1.1)
     OMAP.append(c)
 
 # compares distributions for the different NLO MC's

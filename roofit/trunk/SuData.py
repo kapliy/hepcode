@@ -715,7 +715,7 @@ class SuPlot:
                 add2('MuonRecoStatSFDown','MuonRecoStatSFDown','MuonRecoStatSFDown',xadd=qcdadd)
                 next('MCP_STAT')
         # Pileup rescaling of mu=0.97 (or 1.03 when applied to data)
-        if True:
+        if JULY_1 and True:
             add2('PileupScale','PileupUp','PileupUp',xadd=qcdadd)
             next('PILEUP_SCALE')
         # trigger systematic
@@ -774,7 +774,7 @@ class SuPlot:
             add2('WpolPowhegHerwigtoPowhegPythia','WpolPowhegPythia','WpolPowhegPythia',xadd=qcdadd,bgsig=4)
             next('WPOL')
         # MC modeling (MC reweighted to MC)
-        if True:
+        if JULY_1 and True:
             add2('MCModeling','MCModeling','MCModeling',xadd=qcdadd)
             next('MCMODEL')
         # PDF reweighting
