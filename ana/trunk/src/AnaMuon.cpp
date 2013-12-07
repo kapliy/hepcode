@@ -898,17 +898,20 @@ AnaMuon::GetIsolationSF_v17( const CONF::ConfType& conf, const detector::MCP_TYP
   const int seed = 6000; // 1721
   if(!tcnom) {
     assert(mctype==5 || mctype==4 || mctype==1);
-    SFProvider::Metric metric = SFProvider::Pt; //SFProvider::EtaPt; // 09/19/2013: testing 2d SF
+    // 09/19/2013, 10/05/2013: testing 2d SF
+    // 11/28/2013: back to 1d - finalized systematics
+    SFProvider::Metric metric = SFProvider::Pt; //SFProvider::EtaPt;
     const bool is2d = (metric == SFProvider::EtaPt);
-    std::string namenom = mctype==5 ? "CommonAnalysis/RootCore/data/ScaleFactorProvider/muisosf/Iso_PowhegPythia_SF_vsPt.root" : (mctype==1 ? "CommonAnalysis/RootCore/data/ScaleFactorProvider/muisosf/Iso_MCAtNLO_SF_vsPt.root" : "CommonAnalysis/RootCore/data/ScaleFactorProvider/muisosf/Iso_PowhegJimmy_SF_vsPt.root");
+    std::string namenom = mctype==5 ? "data/Iso_SF_vsPt.root" : (mctype==1 ? "CommonAnalysis/RootCore/data/ScaleFactorProvider/muisosf/Iso_MCAtNLO_SF_vsPt.root" : "CommonAnalysis/RootCore/data/ScaleFactorProvider/muisosf/Iso_PowhegJimmy_SF_vsPt.root");
+    // FIXME: below is quite outdated
     if(is2d) {
       namenom = mctype==5 ? "CommonAnalysis/RootCore/data/ScaleFactorProvider/muisosf/Iso_PowhegPythia_SF_vsEtaPt.root" : (mctype==1 ? "CommonAnalysis/RootCore/data/ScaleFactorProvider/muisosf/Iso_MCAtNLO_SF_vsEtaPt.root" : "CommonAnalysis/RootCore/data/ScaleFactorProvider/muisosf/Iso_PowhegJimmy_SF_vsEtaPt.root");
     }
     tcnom = new SFProvider(namenom,"SF","EffMC","EffData",metric,1.0);
     tcnom->generateReplicas(NREPLICASF,seed);
     //09/19/2013: tcnom only available for 2d reweighting
-    tcup = is2d ? tcnom : new SFProvider("data/IsolationSF_vsPtup.root","SF","","",metric,1.0);
-    tcdown = is2d ? tcnom : new SFProvider("data/IsolationSF_vsPtdown.root","SF","","",metric,1.0);
+    tcup = is2d ? tcnom : new SFProvider("data/Iso_SF_vsPt_FullSyst_up.root","SF","","",metric,1.0);
+    tcdown = is2d ? tcnom : new SFProvider("data/Iso_SF_vsPt_FullSyst_down.root","SF","","",metric,1.0);
   }
   if(choice>0) assert(replica<0 && "AnaMuon::GetIsolationSF_v17 replicas only available for choice==0");
   SFProvider *tc = choice==0 ? tcnom : (choice==1 ? tcdown : tcup);

@@ -51,6 +51,7 @@ NtD3PDphysPeter::begin_file( const std::string& raw_filename )
 
   const string filename = ana_streams::root_dcap_filename(raw_filename);
 
+  std::cout << "DEBUG: opening | " << filename << " |" << std::endl;
   _file.reset( ana_streams::open_root_file( filename ) );
   
   if( !_file ) { 
@@ -67,13 +68,13 @@ NtD3PDphysPeter::begin_file( const std::string& raw_filename )
   _madeclass_version = V29i;
   AnaConfiguration::release(17);
   if(false) { ;
-  } else if ( boost::icontains( filename , "1_29i" ) || boost::icontains( filename , "v1_g29i") 
-	      || boost::icontains( filename , "v1_e29i") || boost::icontains( filename , "v1_f29i")
-	      || boost::icontains( filename , "v1_i29i") || boost::icontains( filename , "v1_m29i") ) {
+  } else if ( boost::icontains( raw_filename , "1_29i" ) || boost::icontains( raw_filename , "v1_g29i") 
+	      || boost::icontains( raw_filename , "v1_e29i") || boost::icontains( raw_filename , "v1_f29i")
+	      || boost::icontains( raw_filename , "v1_i29i") || boost::icontains( raw_filename , "v1_m29i") ) {
     _madeclass_version = V29i;
     AnaConfiguration::release(17);
     std::cout << "Found v 1_29i ntuple, reading using v 1_29i code" << std::endl;
-  } else if ( boost::icontains( filename , "1_29g" ) ) {
+  } else if ( boost::icontains( raw_filename , "1_29g" ) ) {
     _madeclass_version = V29g;
     AnaConfiguration::release(17);
     std::cout << "Found v 1_29g ntuple, reading using v 1_29g code" << std::endl;
@@ -96,11 +97,11 @@ NtD3PDphysPeter::begin_file( const std::string& raw_filename )
     return false;
   }
   if( _n_events == 0 ) {
-    cout << " empty Peter ntuple: " << filename << endl;
+    cout << " empty Peter ntuple: " << raw_filename << endl;
     return false;
   }
 
-  _open_filename = filename;
+  _open_filename = raw_filename;
   return true;
 }
 
