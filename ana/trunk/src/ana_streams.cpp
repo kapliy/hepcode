@@ -448,14 +448,30 @@ ana_streams::root_dcap_filename( const std::string& filename )
   if( boost::istarts_with( filename , "root://" ) ) { return filename; }
   if( boost::contains( filename , "/pnfs/uchicago.edu" ) && boost::icontains( filename , ".root" ) ) {
     string xrootname( filename );
-    {  // new version, via instructions on: http://twiki.mwt2.org/bin/view/UCTier3/UsingXrootDTier3
+    if(true) { // Nov 2013 version: rucio (hardcoded to work for kapliy username only)
+      ///pnfs/uchicago.edu/atlaslocalgroupdisk/user/kapliy/UCNTUP/user.kapliy.UCNTUP.mc11_7TeV.105987.WZ_Herwig.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29i.120811062104/user.kapliy.010471.flatntuple._00001.root
+      // prefix
+      static const std::string gate1 = "root://xrddc.mwt2.org:1096//atlas/rucio/user/kapliy:";
+      const std::string gate = gate1;
+      // filename
+      boost::filesystem::path ipath( filename );
+      std::string basename = ipath.filename().string();
+      static const std::string patt = "/user/";
+      size_t pos = filename.find(patt);
+      if(true && pos!=std::string::npos) { // if this is a user dataset, try to establish Federated access
+	return gate+basename;
+      } else {                     // else revert to regular xrootd gate
+	boost::replace_regex( xrootname , boost::regex(".*/pnfs/uchicago.edu") , string("root://xrddc.mwt2.org:1096/pnfs/uchicago.edu") );
+      }
+    }
+    else {  // new version, via instructions on: http://twiki.mwt2.org/bin/view/UCTier3/UsingXrootDTier3
       static const std::string gate1 = "root://xrddc.mwt2.org:1096//atlas/dq2";
       static const std::string gate2 = "root://xrd-central.usatlasfacility.org//atlas/dq2";
       static const std::string gate3 = "root://uct2-grid5.uchicago.edu//atlas/dq2";
-      const std::string gate = gate3;
+      const std::string gate = gate1;
       static const std::string patt = "/user/";
       size_t pos = filename.find(patt);
-      if(false && pos!=std::string::npos) { // if this is a user dataset, try to establish Federated access
+      if(true && pos!=std::string::npos) { // if this is a user dataset, try to establish Federated access
 	const std::string TBASE = filename.substr(pos);
 	return gate+TBASE;
       } else {                     // else revert to regular xrootd gate
@@ -514,9 +530,9 @@ ana_streams::open_root_file( const std::string& filename )
     if( debug ) { 
       cout << "open_root_file: " << filename << " iteration " << iterations << endl; 
     }
-    // choose sleep delay 50-1000 milliseconds
+    // choose sleep delay 0.5-10 seconds
     int slp = std::rand();
-    slp = slp < 50000 ? 50000 : (slp>1000000 ? 1000000 : slp);
+    slp = slp < 500000 ? 500000 : (slp>10000000 ? 10000000 : slp);
     // attempt TFile::Open
     result = TFile::Open( filename.c_str() );
     if(!result) {

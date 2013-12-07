@@ -18,24 +18,10 @@ fi
 
 ntuple=29I
 
-lbl=06282013_postSMmtg              # same as below, but very buggy. not sure why. job taking 25 GB of RAM, jobs hanging on hadd, segfaulting on hadd
-lbl=06292013_postSMmtg              # run z ntuples (for matrix method studies). Add 1 sigma up/down stat. uncertainties for reco and trig. noExit added. 06/29: added smart_killer. removed noExit
-lbl=07012013_postSMmtg_datarw       # updated Max's data-rw class - it now uses smoothed histograms
-lbl=07082013_postSMmtg_recofix      # fixed reco toy MC (they were broken)
-lbl=07112013_postSMmtg_datarw       # another fix to max rw (v5)
-lbl=07122013_postSMmtg_datarw       # Updated to new lumi tag and ttbar xsec. fixed data rw: max said previous version was inverted
-lbl=07122013_postSMmtg_datarw_ret   # just re-running from scratch
-
-lbl=08282013_isoMC_cwdebug            # isolation scale factors are re-run on per-MC basis. Added CW decomposition
-lbl=09102013_isoMC_cwdebug            # Added more complete CW decomposition, including a couple of particularly-bad bins in eta/pt
-lbl=09132013_isoMC_cwdebug_iso20      # iso SF use 20% variations (test for max)
-lbl=09132013_isoMC_cwdebug_iso2d      # iso SF use 2d eta-pt; no sys. variations (test for max)
-lbl=09132013_isoMC_cwdebug_iso2d_ret  # iso SF use 2d eta-pt; no sys. variations (test for max)
-
-lbl=09202013_isoMC_reweights          # revert to normal per-MC isolation. Added some reweighting plots for thesis (final selection). Same as 08282013_isoMC_cwdebug!
-lbl=09302013_addz0                    # added muon z0 to PV cut of 10 mm. v55
-
 lbl=10042013_maxisoMC                 # got rid of z0 (v54/v56). Upgraded ScaleFactorProvider, pointed to new Max's iso files
+lbl=10042013_maxisoMC2d               # v57. save as v56, but using 2d isoMC
+
+lbl=11282013_dinosisoMC               # updating to the latest iso SF from Dinos (finalized Up/Down systematics)
 
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
 

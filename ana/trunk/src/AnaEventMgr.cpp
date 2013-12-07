@@ -208,6 +208,7 @@ AnaEventMgr::retrieve_filenames()
       if( tokens.size()>=1 ) {
         if( tokens.size()>=2 ) { source_name = tokens.back(); }
         std::string fname( ana_streams::root_dcap_filename(tokens.front()) );
+        fname = std::string( tokens.front() ); // Nov 2013: delay filename mangling
         // check for null filename
         if( string(boost::algorithm::trim_copy(fname))!="" ) {
 	  if(false) {
@@ -412,7 +413,7 @@ AnaEventMgr::next_file()
         NtD3PDphys::Type type;
         string filename;
         if( NtD3PDphys::type_and_filename_from_metaname( *i , type , filename ) ) {
-	  std::cerr << "INFO: opening " << filename << std::endl;
+	  std::cerr << "INFO: opening | " << filename << " |" << std::endl;
 	  if( _ignore_filenames_cache.check(filename) ) { 
 	    ok_d3pd[filename_pair.first].push_back( false );
           } else if( type==NtD3PDphys::PETER ) { 

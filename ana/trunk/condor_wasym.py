@@ -86,7 +86,9 @@ date
 df -h .
 export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
 source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh --quiet
-source $AtlasSetup/scripts/asetup.sh 17.6.0.1,64,here
+#source $AtlasSetup/scripts/asetup.sh 17.6.0.1,64,here
+# 11/28/2013: trying to add slc5 to get it to work on slc6 machines
+source $AtlasSetup/scripts/asetup.sh 17.6.0.1,64,here,slc5
 if [ -z $ROOTSYS ]; then echo 'ERROR: ROOTSYS undefined. Exiting...'; echo exit 50; exit 50; fi
 if [ -z $SITEROOT ]; then echo 'ERROR: SITEROOT undefined. Exiting...'; echo exit 60; exit 60; fi
 export XrdSecGSISRVNAMES=uct2-s5.uchicago.edu\|uct2-s6.uchicago.edu\|uct2-s20.uchicago.edu
