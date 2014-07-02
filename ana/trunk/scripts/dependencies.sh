@@ -45,6 +45,7 @@ fi;
 # Make sure boost c++ is present and export compiler flags
 echo "Trying to find boost libraries shipped with athena:"
 export BOOSTDIR=`cd $SITEROOT/sw/lcg/external/Boost/*/*/ && pwd`
+export BOOST_ROOT=${BOOSTDIR}
 
 BOOST_INCDIR=`cd ${BOOSTDIR}/include/boost-*/ && pwd`
 export BOOST_CXXFLAGS="-I${BOOST_INCDIR}"

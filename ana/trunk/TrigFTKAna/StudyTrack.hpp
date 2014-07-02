@@ -137,7 +137,7 @@ public:
   static void study_covariance( type const& track ) {
     // track covariance matrix; error correlations
     using namespace DataGraphics;
-    dg::down( "covariance" , "track covariance studies" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+    dg::down( "covariance" , "track covariance studies" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
     // covariance estimates quoted by track (may be calculated in the analysis)
     dg::fillh( "cov_cc" , 100 , 0 , 1E-10 , track->covariance_cc() ,
                "Covariance (#Kappa #Kappa) (1/Gev^{2})" );

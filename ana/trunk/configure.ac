@@ -65,7 +65,7 @@ ROOT_PATH
 
 dnl check for boost libraries
 AC_MSG_NOTICE(TrigFTKAna requires the Boost libraries. Checking for them...)
-AX_BOOST_BASE([1.42.0])
+AX_BOOST_BASE([1.53.0])
 AX_BOOST_REGEX
 AX_BOOST_PROGRAM_OPTIONS
 AX_BOOST_IOSTREAMS

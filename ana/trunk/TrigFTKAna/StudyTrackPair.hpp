@@ -63,7 +63,7 @@ protected:
     const AnaTrack::ftype res_pt = res_p0*res_la;
     const AnaTrack::ftype res_zt = res_z0*res_la;
     {
-      dg::down( "estimates" , "covariance estimates quoted by track (may be calculated in the analysis)" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "estimates" , "covariance estimates quoted by track (may be calculated in the analysis)" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       dg::fillh( "cov_cc" , 100 , 0. , hm_range_cov_cc<AnaTrack::ftype>() , comparison_track->covariance_cc() , "Covariance (#Kappa #Kappa) (1/GeV^{2})" );
       dg::fillh( "cov_cd" , 100 , -hm_range_cov_cd<AnaTrack::ftype>() , hm_range_cov_cd<AnaTrack::ftype>() , comparison_track->covariance_cd() , "Covariance (#Kappa d_{0}) (cm/GeV)" );
       dg::fillh( "cov_cp" , 100 , -hm_range_cov_cp<AnaTrack::ftype>() , hm_range_cov_cp<AnaTrack::ftype>() , comparison_track->covariance_cp() , "Covariance (#Kappa #phi_{0}) (rad/GeV)" );
@@ -81,7 +81,7 @@ protected:
       dg::fillh( "cov_tt" , 100 , 0. , hm_range_cov_tt<AnaTrack::ftype>() , comparison_track->covariance_tt() , "Covariance (cot(#theta) cot(#theta))" );
     }
     {
-      dg::down( "residuals" , "parameter residuals for the track relative to the reference" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "residuals" , "parameter residuals for the track relative to the reference" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       dg::fillh( "res_cd" , 100 , -hm_range_cov_cd<AnaTrack::ftype>() , hm_range_cov_cd<AnaTrack::ftype>() , res_cd , "residual (#Kappa d_{0}) (cm/GeV)" );
       dg::fillh( "res_cp" , 100 , -hm_range_cov_cp<AnaTrack::ftype>() , hm_range_cov_cp<AnaTrack::ftype>() , res_cp , "residual (#Kappa #phi_{0}) (rad/GeV)" );
       dg::fillh( "res_cz" , 100 , -hm_range_cov_cz<AnaTrack::ftype>() , hm_range_cov_cz<AnaTrack::ftype>() , res_cz , "residual (#Kappa z_{0}) (cm/GeV)" );
@@ -95,7 +95,7 @@ protected:
     }
     // dependence of covariance on residuals
     {
-      dg::down( "covariance_vs_residuals" , "dependence of covariance estimates on the residuals" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "covariance_vs_residuals" , "dependence of covariance estimates on the residuals" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       dg::fillh( "cov_cd_vs_cu" , 
                  100 , -std::sqrt(hm_range_cov_cc<AnaTrack::ftype>()) , std::sqrt(hm_range_cov_cc<AnaTrack::ftype>()) , 
                  100 , -hm_range_cov_cd<AnaTrack::ftype>() , hm_range_cov_cd<AnaTrack::ftype>() , 
@@ -198,7 +198,7 @@ protected:
                  res_la , comparison_track->covariance_zt() , "res la" , "cov zt" );
     }
     {
-      dg::down( "residual_correlations" , "correlations between residuals" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "residual_correlations" , "correlations between residuals" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       dg::fillh( "res_cu_vs_res_d0" ,
                  100 , -std::sqrt(hm_range_cov_cc<AnaTrack::ftype>()) , std::sqrt(hm_range_cov_cc<AnaTrack::ftype>()) , 
                  100 , -std::sqrt(hm_range_cov_dd<AnaTrack::ftype>()) , std::sqrt(hm_range_cov_dd<AnaTrack::ftype>()) , 

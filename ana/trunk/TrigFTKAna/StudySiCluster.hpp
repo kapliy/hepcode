@@ -109,7 +109,7 @@ protected:
       }
       // check side convention for each SCT layer, barrel_ec, layer, module
       if( match->is_sct() && best_distance<1 ) {
-        dg::down( "side_matching" , "checks of side matching for each sensor" );  BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+        dg::down( "side_matching" , "checks of side matching for each sensor" );  BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
         const bool correct_layer = cluster->ftk_logical_layer()==match->ftk_logical_layer();
         const int group_idA = (static_cast<int>((cluster->ftk_logical_layer()-1)/2))*2 + 1;
         const int group_idB = group_idA + 1;

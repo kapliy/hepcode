@@ -104,7 +104,7 @@ StudyFakeLeptonsInZEvents::study( StudyFakeLeptonsInZEvents::type const& zboson 
     AnaParticle::ftype dr_4v = detector::min_abs( dr_4v_leading , dr_4v_subleading );
     //
     {
-      dg::down( "all" , "all (no matching)" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "all" , "all (no matching)" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       dg::fillh( "deta_4v_leading" , 100 , -5 , 5 , deta_4v_leading );
       dg::fillh( "deta_4v_subleading" , 100 , -5 , 5 , deta_4v_subleading );
       dg::fillh( "deta_4v" , 100 , -1 , 1 , deta_4v );
@@ -116,7 +116,7 @@ StudyFakeLeptonsInZEvents::study( StudyFakeLeptonsInZEvents::type const& zboson 
       dg::fillh( "dr_4v" , 100 , -1 , 1 , dr_4v );
     }
     if( same_pointer ) { 
-      dg::down( "same_pointer" , "lepton has the same pointer" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "same_pointer" , "lepton has the same pointer" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       dg::fillh( "deta_4v_leading" , 100 , -5 , 5 , deta_4v_leading );
       dg::fillh( "deta_4v_subleading" , 100 , -5 , 5 , deta_4v_subleading );
       dg::fillh( "deta_4v" , 100 , -1 , 1 , deta_4v );
@@ -127,7 +127,7 @@ StudyFakeLeptonsInZEvents::study( StudyFakeLeptonsInZEvents::type const& zboson 
       dg::fillh( "dr_4v_subleading" , 100 , -5 , 5 , dr_4v_subleading );
       dg::fillh( "dr_4v" , 100 , -1 , 1 , dr_4v );
     } else {
-      dg::down( "not_same_pointer" , "lepton does not have the same pointer as a z leg" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "not_same_pointer" , "lepton does not have the same pointer as a z leg" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       dg::fillh( "deta_4v_leading" , 100 , -5 , 5 , deta_4v_leading );
       dg::fillh( "deta_4v_subleading" , 100 , -5 , 5 , deta_4v_subleading );
       dg::fillh( "deta_4v" , 100 , -1 , 1 , deta_4v );
@@ -139,7 +139,7 @@ StudyFakeLeptonsInZEvents::study( StudyFakeLeptonsInZEvents::type const& zboson 
       dg::fillh( "dr_4v" , 100 , -1 , 1 , dr_4v );
     }
     if( same_track_param ) { 
-      dg::down( "same_track_param" , "lepton has the same track_param" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "same_track_param" , "lepton has the same track_param" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       dg::fillh( "deta_4v_leading" , 100 , -5 , 5 , deta_4v_leading );
       dg::fillh( "deta_4v_subleading" , 100 , -5 , 5 , deta_4v_subleading );
       dg::fillh( "deta_4v" , 100 , -1 , 1 , deta_4v );
@@ -150,7 +150,7 @@ StudyFakeLeptonsInZEvents::study( StudyFakeLeptonsInZEvents::type const& zboson 
       dg::fillh( "dr_4v_subleading" , 100 , -5 , 5 , dr_4v_subleading );
       dg::fillh( "dr_4v" , 100 , -1 , 1 , dr_4v );
     } else {
-      dg::down( "not_same_track_param" , "lepton does not have the same track_param as a z leg" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "not_same_track_param" , "lepton does not have the same track_param as a z leg" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       dg::fillh( "deta_4v_leading" , 100 , -5 , 5 , deta_4v_leading );
       dg::fillh( "deta_4v_subleading" , 100 , -5 , 5 , deta_4v_subleading );
       dg::fillh( "deta_4v" , 100 , -1 , 1 , deta_4v );

@@ -26,7 +26,7 @@
 #include "TrigFTKAna/AnaSiChannel.hpp"
 #include "TrigFTKAna/AnaBeamline.hpp"
 #include "TrigFTKAna/AnaVertex.hpp"
-#include "TrigFTKAna/AnaTruthTable.hpp"
+//#include "TrigFTKAna/AnaTruthTable.hpp"
 #include "TrigFTKAna/AnaEventNtuple.hpp"
 #include "TrigFTKAna/ana_streams_helper.hpp"
 #include "TrigFTKAna/ana_streams.hpp"

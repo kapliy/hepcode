@@ -33,7 +33,7 @@ coredir=/share/t3data3/$USER/ana
 
 export X509_USER_PROXY=/home/$USER/.globus/tmp.proxy
 echo "Setting up X509 proxy"
-(source /share/wlcg-client/setup.sh && voms-proxy-init -pwstdin -voms atlas -valid 999:0 -out ${X509_USER_PROXY} < /home/$USER/setup/info 2>&1)
+(source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalEmiSetup.sh --emiVersion ${emiVersionVal} && voms-proxy-init -pwstdin -voms atlas -valid 999:0 -out ${X509_USER_PROXY} < /home/$USER/setup/info 2>&1)
 echo "Ready to submit jobs"
 
 function compute_nevts() {

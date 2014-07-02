@@ -756,7 +756,7 @@ AnaVertexFit::compute_sv_variables( collIterT begin , collIterT end ,
                                     AnaVertexFit* result )
 {
   
-  dg::down( "compute_sv" , "plots SV1 variable computation" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+  dg::down( "compute_sv" , "plots SV1 variable computation" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
   dg::fillh( "n_tracks" , 100 , 0, 100 , std::distance(begin,end) );
 
   // compute SV1 tagging variables from a collection of tracks.

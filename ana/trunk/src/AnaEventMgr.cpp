@@ -720,7 +720,7 @@ AnaEventMgr::get_event( const unsigned long& ievent , const bool tried_next_file
 
   if( false ) {
     // histogram performance.
-    DataGraphics::dg::down( "performance" , "analysis performance statistics" ); BOOST_SCOPE_EXIT() { DataGraphics::dg::up(); } BOOST_SCOPE_EXIT_END;
+    DataGraphics::dg::down( "performance" , "analysis performance statistics" ); BOOST_SCOPE_EXIT(void) { DataGraphics::dg::up(); } BOOST_SCOPE_EXIT_END;
 #ifndef DGMEMORY_OFF
     DataGraphics::dg::fillh( "total_mem" , 1000 , 0 , 100 , DgMemoryManager::num_bytes_allocated()/(1024.*1024) , "RAM (MB)" );
     DataGraphics::dg::fillh( "total_alloc" , 1000 , 0 , 100 , DgMemoryManager::num_allocations()/1E6 , "MILLION ALLOCATIONS" );

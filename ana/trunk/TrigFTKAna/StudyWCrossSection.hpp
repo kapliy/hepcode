@@ -38,21 +38,21 @@ protected:
     study_do(wevent);
     if(_do_charge_separation) {
       if(wevent->scharge()>0) {
-	dg::down( "POS" , "W+ candidates" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+	dg::down( "POS" , "W+ candidates" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
 	study_do(wevent);
       }
       if(wevent->scharge()<0) {
-	dg::down( "NEG" , "W- candidates" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+	dg::down( "NEG" , "W- candidates" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
 	study_do(wevent);
       }
     }
     if( _do_eta_separation ) {
       if( fabs(wevent->lepton_eta()) >= 1.9 ) {
-	dg::down( "ENDCAP" , "leptons with |eta| >= 1.9" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+	dg::down( "ENDCAP" , "leptons with |eta| >= 1.9" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
 	study_do(wevent);
       }
       if( fabs(wevent->lepton_eta()) < 1.9 ) {
-	dg::down( "BARREL" , "leptons with |eta| < 1.9" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+	dg::down( "BARREL" , "leptons with |eta| < 1.9" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
 	study_do(wevent);
       }
     }
@@ -317,7 +317,7 @@ protected:
       dg::fillh( "met_rel" , 200 , 0 , 200 , metrel , "W Missing ET Projection(GeV)" );
     }
     if( false ) { 
-      dg::down( "jet_loweta" , "ith-lowest eta jet(s)" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "jet_loweta" , "ith-lowest eta jet(s)" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       // study ith-lowest eta jet(s)
       vector< boost::shared_ptr<const AnaJet> > jets_by_eta( wevent->begin_jets() , wevent->end_jets() );
       std::sort( jets_by_eta.begin() , jets_by_eta.end() , 

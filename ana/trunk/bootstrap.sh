@@ -124,7 +124,8 @@ if [ "$#" -ge "1" ]; then
 	cd ../
     fi
     # LHAPDF
-    LHAPDF="lhapdf-5.8.8"
+    LHAPDF="lhapdf-5.8.8"  # OLD
+    LHAPDF="LHAPDF-6.1.3"  # June 2014
     if [ -d ${LHAPDF} ]; then
 	cd ${LHAPDF}
 	if [ "$1" == "2" ]; then
@@ -175,8 +176,9 @@ if [ "$#" -ge "1" ]; then
 	cd ../
     fi
     # libXML (only for special releases)
+    # DISABLED june 2014
     LIBXML=libxml2-2.8.0
-    if [ "$1" == "2" -a "${AtlasVersion}" == "17.6.0.1" -a -f "${LIBXML}.tar.bz2" ]; then
+    if [ "1" == "0" -a "$1" == "2" -a "${AtlasVersion}" == "17.6.0.1" -a -f "${LIBXML}.tar.bz2" ]; then
 	echo "(Re)compiling libXML2..."
 	rm -rf LIBXML
 	tar xfj ${LIBXML}.tar.bz2

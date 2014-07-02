@@ -737,7 +737,7 @@ SignedD0JetTagger::_tag( const boost::shared_ptr<const AnaJet>& jet , const std:
   //   const double hiquat = xmin + (xmax-xmin)*0.75;
   //   BOOST_FOREACH( ClassCat cat , classes ) {
   //     if( !cat.first ) { continue; }
-  //     dg::down( cat.second , "classification error studies" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+  //     dg::down( cat.second , "classification error studies" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
   //     double max_x = -9999;
   //     double min_x = 9999;
   //     unsigned int nlowquat = 0u;

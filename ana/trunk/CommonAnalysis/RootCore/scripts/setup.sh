@@ -4,7 +4,7 @@ then
     test $? -ne 0 && echo no valid root version found, please set up root && return 1
 fi
 
-test "x$ROOTSYS" != "x/cvmfs/atlas.cern.ch/repo/sw/software/x86_64-slc5-gcc43-opt/17.6.0/sw/lcg/app/releases/ROOT/5.34.00/x86_64-slc5-gcc43-opt/root" && echo ROOTSYS=$ROOTSYS not /cvmfs/atlas.cern.ch/repo/sw/software/x86_64-slc5-gcc43-opt/17.6.0/sw/lcg/app/releases/ROOT/5.34.00/x86_64-slc5-gcc43-opt/root && echo please set up correct root version or follow the instructions at && echo \ \ https://twiki.cern.ch/twiki/bin/viewauth/Atlas/RootCore#If_Something_Goes_Wrong && return 1
+test "x$ROOTSYS" != "x/cvmfs/atlas.cern.ch/repo/sw/software/x86_64-slc6-gcc47-opt/19.0.2/sw/lcg/app/releases/ROOT/5.34.13/x86_64-slc6-gcc47-opt/root" && echo ROOTSYS=$ROOTSYS not /cvmfs/atlas.cern.ch/repo/sw/software/x86_64-slc6-gcc47-opt/19.0.2/sw/lcg/app/releases/ROOT/5.34.13/x86_64-slc6-gcc47-opt/root && echo please set up correct root version or follow the instructions at && echo \ \ https://twiki.cern.ch/twiki/bin/viewauth/Atlas/RootCore#If_Something_Goes_Wrong && return 1
 
 export ROOTCOREDIR=/home/antonk/TrigFTKAna/CommonAnalysis/RootCore
 test "x$ROOTCOREBIN" = "x" && export ROOTCOREBIN=/home/antonk/TrigFTKAna/CommonAnalysis/RootCore

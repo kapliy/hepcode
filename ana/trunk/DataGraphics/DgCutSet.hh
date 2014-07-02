@@ -528,7 +528,7 @@ DataGraphics
     template<typename iteratorT,typename predicateT>
     void for_each_if( iteratorT beg , iteratorT end , predicateT predicate ) {
       bool firstpass = true;
-      dg::down( _name , "results of applying a set of cuts" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( _name , "results of applying a set of cuts" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       for( ; beg!=end; ++beg ) {
         assert( *beg );
         typename iteratorT::value_type v( *beg );
@@ -539,7 +539,7 @@ DataGraphics
         // dg::down lookup penalty. this is probably non-optimal for
         // large sets of cuts because of cache misses.
         if( true ) { 
-          dg::down( "uncut" , "before any cuts applied" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          dg::down( "uncut" , "before any cuts applied" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           BOOST_FOREACH( boost::shared_ptr<DgCutDefinitionType> dgcut , _cuts ) {
             assert( dgcut );
             dgcut->fill( dgcut->cutname() , v );
@@ -547,7 +547,7 @@ DataGraphics
           _do_extra_studies( v );
         } // end do uncut histograms
         if( true ) { 
-          dg::down( "nm1" , "n-1 cut histograms" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          dg::down( "nm1" , "n-1 cut histograms" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           unsigned int ncut=0u;
           for( typename CutColl::const_iterator i=_cuts.begin(), f=_cuts.end(); i!=f; ++i,++ncut ) {
             boost::shared_ptr<DgCutDefinitionType> dgcut( *i );
@@ -559,15 +559,15 @@ DataGraphics
             dgcut->fill( dgcut->cutname() , v );
             dg::filleff( dgcut->cutname()+"_eff" , cutresult.passes(ncut) );
             if( !_extra_studies.empty() ) {
-              dg::down( dgcut->cutname() , "studies after n-1 cut" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+              dg::down( dgcut->cutname() , "studies after n-1 cut" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
               _do_extra_studies( v );
             }
           } // end fill n-1 histograms for each cut variable
         } // end do n-1 histograms and n-1 efficiencies
         if( _do_sequential_cutflow ) {
-          dg::down( "cutflow" , "cutflow" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          dg::down( "cutflow" , "cutflow" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           if( _do_sequential_cutflow_histograms ) { 
-            dg::down( "s0_uncut" , "all variables after prior stage cuts" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+            dg::down( "s0_uncut" , "all variables after prior stage cuts" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
             for( typename CutColl::const_iterator i=_cuts.begin(), f=_cuts.end(); i!=f; ++i ) {
               boost::shared_ptr<DgCutDefinitionType> dgcut( *i );
               dgcut->fill( dgcut->cutname() , v );
@@ -606,7 +606,7 @@ DataGraphics
 	    }
             cut_accumulator = cut_accumulator && cutok;
             if( _do_sequential_cutflow_histograms && cut_accumulator ) { 
-              dg::down( (boost::format( "s%|d|_%|s|" ) % norder % dgcut->cutname()).str() , "all variables after prior stage cuts" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+              dg::down( (boost::format( "s%|d|_%|s|" ) % norder % dgcut->cutname()).str() , "all variables after prior stage cuts" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
               for( typename CutColl::const_iterator j=_cuts.begin(), jf=_cuts.end(); j!=jf; ++j ) {
                 boost::shared_ptr<DgCutDefinitionType> tmpdgcut( *j );
                 tmpdgcut->fill( tmpdgcut->cutname() , v );
@@ -616,7 +616,7 @@ DataGraphics
           } // end fill n-1 histograms for each cut variable
         } // do cutflow efficiencies and histograms
         if( true ) { 
-          dg::down( "cut" , "after all cuts applied" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          dg::down( "cut" , "after all cuts applied" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           dg::filleff( "eff_all" , cutresult.all_pass() );
           if( cutresult.all_pass() ) { 
             if( _process_attachment ) { _attachment.insert( v ); }

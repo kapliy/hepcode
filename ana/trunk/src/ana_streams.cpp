@@ -452,7 +452,8 @@ ana_streams::root_dcap_filename( const std::string& filename )
       ///pnfs/uchicago.edu/atlaslocalgroupdisk/user/kapliy/UCNTUP/user.kapliy.UCNTUP.mc11_7TeV.105987.WZ_Herwig.merge.AOD.e825_s1310_s1300_r3043_r2993.j.mc11c.v1_29i.120811062104/user.kapliy.010471.flatntuple._00001.root
       // prefix
       static const std::string gate1 = "root://xrddc.mwt2.org:1096//atlas/rucio/user/kapliy:";
-      const std::string gate = gate1;
+      static const std::string gate2 = "root://fax.mwt2.org:1094//atlas/rucio/user/kapliy:";
+      const std::string gate = gate2; // switched to gate 2 July 1, 2014
       // filename
       boost::filesystem::path ipath( filename );
       std::string basename = ipath.filename().string();

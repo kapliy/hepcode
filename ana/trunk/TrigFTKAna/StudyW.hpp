@@ -48,7 +48,7 @@ protected:
     assert( met );
     StudyComposite::study( cop );
     if( true ) { 
-      dg::down( "met" , "met" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "met" , "met" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       dg::fillh( "met" , 100 , 0 , 200 , met->pt() , "Missing ET (GeV)" );
       dg::fillh( "met_phi", 64 , 0 , M_PI , fabs( met->phi() ) , "MET #phi (rad)" );
       dg::fillh( "met_eta", 60 , -3 , 3 , met->eta() , "MET #eta" );
@@ -59,7 +59,7 @@ protected:
       dg::fillh( "met_rel" , 100 , 0 , 100 , met_rel , "Lepton Missing ET Projection (GeV)" );
    }
     if( true ) { 
-      dg::down( "lepton" , "lepton" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "lepton" , "lepton" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       StudyParticle::study( lepton );
     }
     // make plots
@@ -68,8 +68,8 @@ protected:
     dg::fillh( "w_pt" , 200 , 0 , 200 , w->pt() , "W Transverse Momentum (GeV/c)" );
     dg::fillh( "lepton_phi_vs_eta" , 100 , -3.0 , 3.0 , 100, -M_PI, M_PI, lepton->eta() , lepton->phi(), "W Lepton #eta", "W Lepton #phi");
     // make lepton-specific plots
-    if( electron ) { dg::down( "electron" , "w electron" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END; StudyElectron::study( electron ); }
-    if( muon ) { dg::down( "muon" , "w muon" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;  StudyMuon::study( muon ); }
+    if( electron ) { dg::down( "electron" , "w electron" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END; StudyElectron::study( electron ); }
+    if( muon ) { dg::down( "muon" , "w muon" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;  StudyMuon::study( muon ); }
   } // end study W
 protected:
 public:

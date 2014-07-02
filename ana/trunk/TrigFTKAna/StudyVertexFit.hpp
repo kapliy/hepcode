@@ -273,7 +273,7 @@ protected:
     
     // study constrained fit of all two-track pairs
     if( true ) {
-      dg::down( "twotrack" , "two track vertices" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "twotrack" , "two track vertices" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       std::vector< boost::shared_ptr<const AnaTrack> > tracks(2);
       unsigned int npairs = 0u;
       unsigned int n_btagvrtsec_pairs = 0u;
@@ -304,7 +304,7 @@ protected:
             dg::filleff( "ok_two_track" , ok_two_track );
             if( ok_two_track ) { ++n_btagvrtsec_pairs; }
             if( ok_two_track ) {
-              dg::down( "signif" , "passes BTagVrtSec significance criteria" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+              dg::down( "signif" , "passes BTagVrtSec significance criteria" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
               study_fit_result( twovf , _jet );
               if( trkA->charge()*trkB->charge()>0 ) { dg::fillh( "m_pipi" , 100 , 0 , 0.8 , twovf.vertex_momentum().M() , "Invariant Mass of Net Neutral Track Pairs" ); }
             }
@@ -329,14 +329,14 @@ protected:
       // properties of fit closest to true b vertex or (if not b jet) coordinate origin
       if( best_delta_perp_vf.is_fitted() && best_delta_perp<1. ) {
         dg::fillh( "best_delta_perp" , 100 , 0 , 1. , best_delta_perp , "DISPLACEMENT FROM TRUTH OF BEST TWO TRACK VERTEX" );
-        dg::down( "best_delta_perp_fit" , "best two track vertex" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+        dg::down( "best_delta_perp_fit" , "best two track vertex" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
         study_fit_result( best_delta_perp_vf , _jet );
       }
     }
 
     // study constrained fit of all three-track pairs
     if( true ) {
-      dg::down( "threetrack" , "three track vertices" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "threetrack" , "three track vertices" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       std::vector< boost::shared_ptr<const AnaTrack> > tracks(3);
       unsigned int ntriplets = 0u;
       double best_delta_perp = 9999.;
@@ -374,7 +374,7 @@ protected:
       // properties of fit closest to true b vertex or (if not b jet) coordinate origin
       if( best_delta_perp_vf.is_fitted() && best_delta_perp<1. ) {
         dg::fillh( "best_delta_perp" , 100 , 0 , 1. , best_delta_perp , "DISPLACEMENT FROM TRUTH OF BEST THREE TRACK VERTEX" );
-        dg::down( "best_delta_perp_fit" , "best two track vertex" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+        dg::down( "best_delta_perp_fit" , "best two track vertex" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
         study_fit_result( best_delta_perp_vf , _jet );
       }
     }
@@ -395,7 +395,7 @@ protected:
     dg::filleff( "final_eff" , ok_vf );
     if( ok_vf ) {
       assert( vf.is_fitted() );
-      dg::down( "final" , "compute_sv_result" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "final" , "compute_sv_result" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       study_fit_result( vf , _jet ); 
       dg::fillh( "good_vertex_mass_vs_pt_ratio" , 10 , 0 , 1 , 20 , 0 , 10 , vertex_pt_ratio , vertex_mass , "VERTEX PT / TRACK SUM PT" , "VERTEX MASS (GeV)" );
       dg::fillh( "good_vertex_mass_vs_n_two" , 25 , 0 , 25 , 20 , 0 , 10 , n_two_track_vertices , vertex_mass , "N TWO TRACK PAIRS" , "VERTEX MASS (GeV)" );

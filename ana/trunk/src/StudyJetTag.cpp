@@ -100,7 +100,7 @@ StudyJetTag::_study_tracks( StudyJetTag::type const& tag )
   study_track.add_category( "displaced_tracks_600um" , bind( std::ptr_fun<AnaTrack::ftype,AnaTrack::ftype>(std::abs) , bind(&AnaTrack::d0,_1)) > 0.600 );
   study_track.for_each( tag.tracks().begin() , tag.tracks().end() );
 
-  dg::down( "jet_tracks" , "plots of tracks associated with the jet" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+  dg::down( "jet_tracks" , "plots of tracks associated with the jet" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
 
   // loop over tracks and identify z vertex as z0 of highest pT track.
   double zvert_pt = 0.;
@@ -192,7 +192,7 @@ StudyJetTag::_study_tracks( StudyJetTag::type const& tag )
   } // end for each track
 
   if( true ) {
-      dg::down( "trackcounting" , "plots for track counting algorithm" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "trackcounting" , "plots for track counting algorithm" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       // study track counting, e.g. http://indico.cern.ch/getFile.py/access?contribId=61&sessionId=3&resId=0&materialId=slides&confId=31799
       //  retrieve list of signed d0 significance
       vector<AnaTrack::ftype> ips;
@@ -228,7 +228,7 @@ StudyJetTag::_study_resolutions( StudyJetTag::type const& tag )
 {
   if( tag.jet()->dr_light_parton() > 0.5 ) { return; }
 
-  dg::down( "resolution_measurement" , "pt-dependent resolution measurement" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+  dg::down( "resolution_measurement" , "pt-dependent resolution measurement" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
 
   BOOST_FOREACH( const boost::shared_ptr<const AnaTrack>& track , tag.tracks() ) {
     const double d0 = track->d0();
@@ -361,7 +361,7 @@ StudyJetTag::_study_resolutions( StudyJetTag::type const& tag )
 void
 StudyJetTag::_study_tag( StudyJetTag::type const& tag )
 {
-  dg::down( "jets" , "per jet tagger results" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+  dg::down( "jets" , "per jet tagger results" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
 
   dg::fillh( "r" , 100 , -10 , 10 , tag.jet_result() , "jet result" );
   dg::fillh( "lnr" , 60 , -10 , 20 , detector::safe_ln(tag.jet_result()) , "ln jet result" );
@@ -383,9 +383,9 @@ StudyJetTag::_study_tag( StudyJetTag::type const& tag )
   const bool ok_vf = vf.compute_sv_variables( tag.tracks().begin() , tag.tracks().end() , vertex_mass , vertex_pt_ratio , n_two_track_vertices , &vf );
   dg::filleff( "vertex_eff" , ok_vf );
   if( ok_vf ) {
-    dg::down( "vertex_fit" , "vertex fit" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+    dg::down( "vertex_fit" , "vertex fit" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
     assert( vf.is_fitted() );
-    dg::down( "final" , "compute_sv_result" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+    dg::down( "final" , "compute_sv_result" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
     StudyVertexFit< vector< boost::shared_ptr<const AnaTrack> > >::study_fit_result( vf , tag.jet() ); 
     dg::fillh( "good_vertex_mass_vs_pt_ratio" , 10 , 0 , 1 , 20 , 0 , 10 , vertex_pt_ratio , vertex_mass , "VERTEX PT / TRACK SUM PT" , "VERTEX MASS (GeV)" );
     dg::fillh( "good_vertex_mass_vs_n_two" , 25 , 0 , 25 , 20 , 0 , 10 , n_two_track_vertices , vertex_mass , "N TWO TRACK PAIRS" , "VERTEX MASS (GeV)" );
@@ -479,20 +479,20 @@ StudyJetTag::_study_tag( StudyJetTag::type const& tag )
   }
 
   if( detector::likx( tag.jet_result() ) > 0.7 ) {  
-    dg::down( "tagged_vertex_fit" , "vertex fit" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+    dg::down( "tagged_vertex_fit" , "vertex fit" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
     dg::filleff( "vertex_eff" , vf.is_fitted() );
     if( vf.is_fitted() ) {
-      dg::down( "final" , "compute_sv_result" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "final" , "compute_sv_result" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       StudyVertexFit< vector< boost::shared_ptr<const AnaTrack> > >::study_fit_result( vf , tag.jet() ); 
       dg::fillh( "good_vertex_mass_vs_pt_ratio" , 10 , 0 , 1 , 20 , 0 , 10 , vertex_pt_ratio , vertex_mass , "VERTEX PT / TRACK SUM PT" , "VERTEX MASS (GeV)" );
       dg::fillh( "good_vertex_mass_vs_n_two" , 25 , 0 , 25 , 20 , 0 , 10 , n_two_track_vertices , vertex_mass , "N TWO TRACK PAIRS" , "VERTEX MASS (GeV)" );
       dg::fillh( "good_vertex_pt_ratio_vs_n_two" , 25 , 0 , 25 , 10 , 0 , 1 , n_two_track_vertices , vertex_pt_ratio , "N TWO TRACK PAIRS" , "VERTEX PT / TRACK SUM PT" );    
     }
   } else {
-    dg::down( "nottagged_vertex_fit" , "vertex fit" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+    dg::down( "nottagged_vertex_fit" , "vertex fit" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
     dg::filleff( "vertex_eff" , vf.is_fitted() );
     if( vf.is_fitted() ) {
-      dg::down( "final" , "compute_sv_result" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "final" , "compute_sv_result" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       StudyVertexFit< vector< boost::shared_ptr<const AnaTrack> > >::study_fit_result( vf , tag.jet() ); 
       dg::fillh( "good_vertex_mass_vs_pt_ratio" , 10 , 0 , 1 , 20 , 0 , 10 , vertex_pt_ratio , vertex_mass , "VERTEX PT / TRACK SUM PT" , "VERTEX MASS (GeV)" );
       dg::fillh( "good_vertex_mass_vs_n_two" , 25 , 0 , 25 , 20 , 0 , 10 , n_two_track_vertices , vertex_mass , "N TWO TRACK PAIRS" , "VERTEX MASS (GeV)" );

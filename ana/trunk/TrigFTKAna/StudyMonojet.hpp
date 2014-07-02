@@ -38,12 +38,12 @@ protected:
     study_do(mjevent);
 
     if( mjevent->leading_jet_is_quark() ) {
-      dg::down( "QUARKJET" , "" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "QUARKJET" , "" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       study_do(mjevent);
     }
 
     if( mjevent->leading_jet_is_gluon() ) {
-      dg::down( "GLUONJET" , "" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "GLUONJET" , "" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       study_do(mjevent);
     }
 
