@@ -34,11 +34,10 @@ Queue
 
 SH_PRE="""#!/bin/bash
 
-# setup based on: http://twiki.mwt2.org/bin/view/UCTier3/CondorUCT3
-
 date
 df -h .
 free -m
+
 echo 'START <<<<<<<<<<<<<<<<<<<<<<<'
 ROOTDIR=$PWD
 LOCDIR=results/ana_wasym
@@ -84,15 +83,21 @@ fi
 echo 'SOURCE <<<<<<<<<<<<<<<<<<<<<<<'
 date
 df -h .
+athver=19.0.2.1
+export uct3_64=1
 export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
 source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh --quiet
-#source $AtlasSetup/scripts/asetup.sh 17.6.0.1,64,here
-# 11/28/2013: trying to add slc5 to get it to work on slc6 machines
-source $AtlasSetup/scripts/asetup.sh 17.6.0.1,64,here,slc5
+workdir=$HOME/work/${mbits}/$athver
+mkdir -p $workdir
+pushd $workdir
+asetup ${athver},64,here #,slc5
 if [ -z $ROOTSYS ]; then echo 'ERROR: ROOTSYS undefined. Exiting...'; echo exit 50; exit 50; fi
 if [ -z $SITEROOT ]; then echo 'ERROR: SITEROOT undefined. Exiting...'; echo exit 60; exit 60; fi
 export XrdSecGSISRVNAMES=uct2-s5.uchicago.edu\|uct2-s6.uchicago.edu\|uct2-s20.uchicago.edu
 export XrdSecGSISRVNAMES='uct2-*.uchicago.edu'
+popd
+
+cd $ROOTDIR
 
 # Set up TrigFTKAna
 echo 'SETUP <<<<<<<<<<<<<<<<<<<<<<<'
