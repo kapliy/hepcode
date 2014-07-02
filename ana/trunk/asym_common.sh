@@ -20,8 +20,9 @@ ntuple=29I
 
 lbl=10042013_maxisoMC                 # got rid of z0 (v54/v56). Upgraded ScaleFactorProvider, pointed to new Max's iso files
 lbl=10042013_maxisoMC2d               # v57. save as v56, but using 2d isoMC
-
 lbl=11282013_dinosisoMC               # updating to the latest iso SF from Dinos (finalized Up/Down systematics)
+
+lbl=07012014_slc6                     # should be same as dinos. SLC6 & new reweighting lib
 
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
 
@@ -33,7 +34,7 @@ coredir=/share/t3data3/$USER/ana
 
 export X509_USER_PROXY=/home/$USER/.globus/tmp.proxy
 echo "Setting up X509 proxy"
-(source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalEmiSetup.sh --emiVersion ${emiVersionVal} && voms-proxy-init -pwstdin -voms atlas -valid 999:0 -out ${X509_USER_PROXY} < /home/$USER/setup/info 2>&1)
+(source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh --quiet && source ${ATLAS_LOCAL_ROOT_BASE}/packageSetups/atlasLocalFAXSetup.sh --faxtoolsVersion dynamic && voms-proxy-init -pwstdin -voms atlas -valid 999:0 -out ${X509_USER_PROXY} < /home/$USER/setup/info 2>&1 && echo CERTIFICATE_ISSUED)
 echo "Ready to submit jobs"
 
 function compute_nevts() {
