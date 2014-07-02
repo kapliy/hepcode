@@ -28,7 +28,7 @@ protected:
     using namespace boost;
     using namespace DataGraphics;
     using namespace detector;
-    dg::down( "pairs" , "two track" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+    dg::down( "pairs" , "two track" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
     assert( coll.size()>=2 );
     const boost::shared_ptr<const AnaTrack>& trkA( coll[0] );
     const boost::shared_ptr<const AnaTrack>& trkB( coll[1] );

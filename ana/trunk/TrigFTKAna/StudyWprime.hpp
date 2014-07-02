@@ -39,11 +39,11 @@ protected:
       const bool save_ntuple = _do_save_ntuple;
       _do_save_ntuple = false;
       if(wevent->scharge()>0) {
-	dg::down( "POS" , "W+ candidates" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+	dg::down( "POS" , "W+ candidates" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
 	study_do(wevent);
       }
       if(wevent->scharge()<0) {
-	dg::down( "NEG" , "W- candidates" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+	dg::down( "NEG" , "W- candidates" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
 	study_do(wevent);
       }
       _do_save_ntuple = save_ntuple;
@@ -356,7 +356,7 @@ protected:
     if( true ) { 
       // Get delta-R between lepton and nearest jet
       float min_dR = std::numeric_limits<float>::max();
-      dg::down( "jet_pts" , "ith-highest pt jet(s)" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "jet_pts" , "ith-highest pt jet(s)" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       // study ith-highest pt jet(s)
       unsigned int ithjet = 0u;
       for( vector< boost::shared_ptr<const AnaJet> >::iterator ijet=jets_by_pt.begin(), fjet=jets_by_pt.end(); ijet!=fjet; ++ijet, ++ithjet ) {
@@ -394,7 +394,7 @@ protected:
       dg::fillh( "met_rel" , 200 , 0 , 200 , metrel , "W Missing ET Projection(GeV)" );
     }
     if( false ) { 
-      dg::down( "jet_loweta" , "ith-lowest eta jet(s)" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "jet_loweta" , "ith-lowest eta jet(s)" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       // study ith-lowest eta jet(s)
       vector< boost::shared_ptr<const AnaJet> > jets_by_eta( wevent->begin_jets() , wevent->end_jets() );
       std::sort( jets_by_eta.begin() , jets_by_eta.end() , 

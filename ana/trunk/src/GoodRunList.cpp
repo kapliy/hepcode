@@ -109,7 +109,7 @@ GoodRunList::add( const std::string& list_name , const std::string& xml_filename
 
   xmlDocPtr doc = xmlParseFile( xml_filename.c_str() );
   // scope exit does not play well with xmlFreeDoc. maybe xmlFreeDoc is a macro?
-  // BOOST_SCOPE_EXIT() { 
+  // BOOST_SCOPE_EXIT(void) { 
   //   if( doc ) { xmlFreeDoc(doc); } 
   // } BOOST_SCOPE_EXIT_END;
   if( !doc ) {

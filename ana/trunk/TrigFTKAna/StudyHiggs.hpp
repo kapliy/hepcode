@@ -67,18 +67,18 @@ protected:
     // make plots
     StudyComposite::study( cop );
     if( true ) { 
-      dg::down( "met" , "met" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "met" , "met" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       dg::fillh( "met" , 100 , 0 , 200 , met->pt() , "Missing ET (GeV)" );
       dg::fillh( "met_phi", 64 , 0 , M_PI , fabs( met->phi() ) , "MET #phi (rad)" );
       dg::fillh( "met_eta", 60 , -3 , 3 , met->eta() , "MET #eta" );
       StudyParticle::study( met );
     }
     if( true ) { 
-      dg::down( "leading_pt_lepton" , "leading pt lepton" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "leading_pt_lepton" , "leading pt lepton" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       StudyParticle::study( leading_pt_lepton );
     }
     if( true ) { 
-      dg::down( "subleading_pt_lepton" , "subleading pt lepton" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "subleading_pt_lepton" , "subleading pt lepton" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       StudyParticle::study( subleading_pt_lepton );
     }
     dg::fillh( "dphi_between_leptons" , 100 , -M_PI , M_PI , leading_pt_lepton->dist_phi( subleading_pt_lepton ) );
@@ -133,19 +133,19 @@ protected:
 
     // lepton type studies
     if( leading_pt_lepton->type() == AnaParticle::ELECTRON ) {
-      dg::down( "leading_ele" , "leading lepton is electron" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "leading_ele" , "leading lepton is electron" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       StudyElectron::study( boost::dynamic_pointer_cast<const AnaElectron>(leading_pt_lepton) );
     }
     if( leading_pt_lepton->type() == AnaParticle::MUON ) {
-      dg::down( "leading_muon" , "leading lepton is muon" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "leading_muon" , "leading lepton is muon" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       StudyMuon::study( boost::dynamic_pointer_cast<const AnaMuon>(leading_pt_lepton) );
     }
     if( subleading_pt_lepton->type() == AnaParticle::ELECTRON ) {
-      dg::down( "subleading_ele" , "subleading lepton is electron" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "subleading_ele" , "subleading lepton is electron" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       StudyElectron::study( boost::dynamic_pointer_cast<const AnaElectron>(subleading_pt_lepton) );
     }
     if( subleading_pt_lepton->type() == AnaParticle::MUON ) {
-      dg::down( "subleading_muon" , "subleading lepton is muon" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "subleading_muon" , "subleading lepton is muon" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       StudyMuon::study( boost::dynamic_pointer_cast<const AnaMuon>(subleading_pt_lepton) );
     }
     if( leading_pt_lepton->type() == AnaParticle::ELECTRON && subleading_pt_lepton->type() == AnaParticle::ELECTRON ) {

@@ -7,6 +7,7 @@ ROOTDIR=$PWD
 function compact() {
     rm -f libxml2-2.8.0.tar.bz2
     rm -rf lhapdf-5.8.8/{src,PDFsets.index,pyext,m4,libtool,include,examples,aclocal.m4,ccwrap,config}
+    rm -rf LHAPDF-6.1.3/{src,PDFsets.index,pyext,m4,libtool,include,examples,aclocal.m4,ccwrap,config}
     rm -rf autom4te.cache
     rm -f CommonAnalysis/RootCore.par
     rm -rf result*

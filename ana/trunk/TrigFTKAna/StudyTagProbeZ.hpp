@@ -56,7 +56,7 @@ protected:
     // else if( z->mass() <= 101. ) { subcatname = "zwindow"; }
     // else { subcatname = "high"; }
     subcatname = "all";
-    dg::down( subcatname , "invariant mass region" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+    dg::down( subcatname , "invariant mass region" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
     //
     // make invariant mass plot etc.
     const boost::shared_ptr<const AnaComposite> cop( boost::dynamic_pointer_cast<const AnaComposite>(z) ); assert( cop );
@@ -99,7 +99,7 @@ protected:
     if( _probe_study ) {
       _probe_study->for_only( probe_leg );
       if( probe_leg->type() == AnaParticle::ELECTRON ) {
-        dg::down( "electron" , "probe electron" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+        dg::down( "electron" , "probe electron" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
         boost::shared_ptr<const AnaElectron> probe_ele( dynamic_pointer_cast<const AnaElectron>( probe_leg ) );
         assert( probe_ele );
         StudyElectron::study( probe_ele  );
@@ -107,7 +107,7 @@ protected:
         
         if( probe_ele->eta()>=0. && probe_ele->eta()<1.5 &&
             probe_ele->phi()>=-0.9 && probe_ele->phi()<-0.6 ) {
-          dg::down( "perEFfeb" , "probe electron in dead FEB" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          dg::down( "perEFfeb" , "probe electron in dead FEB" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           StudyElectron::study( probe_ele );
         }
         // plot invariant mass when passing/failing OTX cut.
@@ -133,10 +133,10 @@ protected:
           } // end make os/ss plots
         } // plot pass/fail otx invariant mass
       } else if( probe_leg->type() == AnaParticle::MUON ) {
-        dg::down( "muon" , "probe muon" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+        dg::down( "muon" , "probe muon" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
         StudyMuon::study( dynamic_pointer_cast<const AnaMuon>( probe_leg ) );
       } else {
-        dg::down( "particle" , "probe" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+        dg::down( "particle" , "probe" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
         StudyParticle::study( dynamic_pointer_cast<const AnaParticle>( probe_leg ) );
       }
     }

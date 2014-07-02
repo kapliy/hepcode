@@ -38,17 +38,17 @@ protected:
     shared_ptr< const AnaComposite > cop( boost::dynamic_pointer_cast<const AnaComposite>(hww) ); assert( cop );
     StudyComposite::study( cop );
     {
-      dg::down( "wlnu" , "w->l+MET studies" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "wlnu" , "w->l+MET studies" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       shared_ptr< const AnaComposite > cop_wlnu( dynamic_pointer_cast<const AnaComposite>(hww->wln()) );
       StudyComposite::study( cop_wlnu );
     }
     {
-      dg::down( "wjj" , "w->jj studies" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "wjj" , "w->jj studies" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       shared_ptr< const AnaComposite > cop_wjj( dynamic_pointer_cast<const AnaComposite>(hww->wjj()) );
       StudyComposite::study( cop_wjj );
     }
     if( hww->event_njets() >=4 ) { 
-      dg::down( "tagjj" , "tag jj studies" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "tagjj" , "tag jj studies" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       shared_ptr< const AnaComposite > cop_tagjj( dynamic_pointer_cast<const AnaComposite>(hww->tagjjcand()) );
       StudyComposite::study( cop_tagjj );
     }
@@ -107,7 +107,7 @@ protected:
     if( true ) { 
       // Get delta-R between lepton and nearest jet
       float min_dR = std::numeric_limits<float>::max();
-      dg::down( "jet_pts" , "ith-highest pt jet(s)" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "jet_pts" , "ith-highest pt jet(s)" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       // study ith-highest pt jet(s)
       unsigned int ithjet = 0u;
       for( vector< boost::shared_ptr<const AnaJet> >::iterator ijet=jets_by_pt.begin(), fjet=jets_by_pt.end(); ijet!=fjet; ++ijet, ++ithjet ) {
@@ -155,7 +155,7 @@ protected:
     }
 
     if( false ) { 
-      dg::down( "jet_loweta" , "ith-lowest eta jet(s)" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "jet_loweta" , "ith-lowest eta jet(s)" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       // study ith-lowest eta jet(s)
       vector< boost::shared_ptr<const AnaJet> > jets_by_eta( hww->begin_event_jets() , hww->end_event_jets() );
       std::sort( jets_by_eta.begin() , jets_by_eta.end() , 

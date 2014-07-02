@@ -40,21 +40,21 @@ protected:
 
     if(_do_charge_separation) {
       if(vlqevent->scharge()>0) {
-	dg::down( "POS" , "W+ candidates" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+	dg::down( "POS" , "W+ candidates" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
 	study_do(vlqevent);
       }
       if(vlqevent->scharge()<0) {
-	dg::down( "NEG" , "W- candidates" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+	dg::down( "NEG" , "W- candidates" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
 	study_do(vlqevent);
       }
     }
 
     if( _do_eta_separation && vlqevent->nelectrons()>0 ) {
       if( fabs(vlqevent->lepton_eta()) >= 1.9 ) {
-	dg::down( "ENDCAP" , "leptons with |eta| >= 1.9" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+	dg::down( "ENDCAP" , "leptons with |eta| >= 1.9" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
 	study_do(vlqevent);
       } else {
-	dg::down( "BARREL" , "leptons with |eta| < 1.9" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+	dg::down( "BARREL" , "leptons with |eta| < 1.9" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
 	study_do(vlqevent);
       }
     }

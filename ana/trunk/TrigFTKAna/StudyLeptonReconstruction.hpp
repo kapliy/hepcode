@@ -32,7 +32,7 @@ protected:
     // plot electron reconstruction efficiency, properties.
     using namespace DataGraphics;
     using boost::shared_ptr;
-    dg::down( "ele" , "electron reconstruction study" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+    dg::down( "ele" , "electron reconstruction study" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
     // look for delta-phi-eta match in electron reconstruction output.
     typename std::vector<type>::const_iterator iele = std::min_element( _reconstructed_electrons.begin() , 
                                                                         _reconstructed_electrons.end() , 
@@ -121,7 +121,7 @@ protected:
     }
     // plot efficiency inside electron acceptance
     if( p->pt() > 10. && std::abs(p->eta()) < 2.7 ) {
-      dg::down( "fid" , "fiducial truth electrons: |eta|<2.7, pT>10 GeV" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "fid" , "fiducial truth electrons: |eta|<2.7, pT>10 GeV" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       dg::filleff( "eff_vs_eta" , 100 , -4 , 4 , p->eta() , ele_delta_r<0.05 , "#eta" );
       dg::filleff( "eff_vs_eta_0crack" , 100 , -0.25, 0.25 , p->eta() , ele_delta_r<0.05 , "#eta" );
       dg::filleff( "eff_vs_eta_14crack" , 100 , 1.4 , 1.6 , std::abs(p->eta()) , ele_delta_r<0.05 , "#eta" );
@@ -141,7 +141,7 @@ protected:
     // plot muon reconstruction efficiency, properties.
     using namespace DataGraphics;
     using boost::shared_ptr;
-    dg::down( "mu" , "muon reconstruction study" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+    dg::down( "mu" , "muon reconstruction study" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
     // look for delta-phi-eta match in muon reconstruction output.
     typename std::vector<type>::const_iterator imu = std::min_element( _reconstructed_muons.begin() , 
                                                                        _reconstructed_muons.end() , 
@@ -195,7 +195,7 @@ protected:
     }
     // plot efficiency inside muon acceptance
     if( p->pt() > 10. && std::abs(p->eta()) < 2.7 ) {
-      dg::down( "fid" , "fiducial truth muons: |eta|<2.7, pT>10 GeV" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "fid" , "fiducial truth muons: |eta|<2.7, pT>10 GeV" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       dg::filleff( "eff_vs_eta" , 100 , -4 , 4 , p->eta() , mu_delta_r<0.05 , "#eta" );
       dg::filleff( "eff_vs_eta_0crack" , 100 , -0.25, 0.25 , p->eta() , mu_delta_r<0.05 , "#eta" );
       dg::filleff( "eff_vs_eta_15crack" , 100 , 1. , 1.5 , std::abs(p->eta()) , mu_delta_r<0.05 , "#eta" );

@@ -107,11 +107,11 @@ StudyTrackComparison::_cluster_study( const shared_ptr<const AnaTrack>& comparis
   // what is its width? what are the resolutions of the tracks which do have the cluster?
   if( true ) {
     dg::down( "clustering_efficiencies" , "clustering efficiencies" );
-    BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+    BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
     for( unsigned int ftkll=0; ftkll!=11; ++ftkll ) { 
       dg::down( (format("ftk_layer_%d") % ftkll).str() ,
                 "cluster comparison plots for layer" ); 
-      BOOST_SCOPE_EXIT() { dg::up(); ; } BOOST_SCOPE_EXIT_END;
+      BOOST_SCOPE_EXIT(void) { dg::up(); ; } BOOST_SCOPE_EXIT_END;
       
       vector< shared_ptr<const AnaSiCluster> > comparison_clusters;
       vector< shared_ptr<const AnaSiCluster> > reference_clusters;
@@ -152,7 +152,7 @@ StudyTrackComparison::_cluster_study( const shared_ptr<const AnaTrack>& comparis
           }
           if( truth_track ) { 
             dg::down( "ref_res_vs_truth_no_comp_for_ref" , "resolutions" ); 
-            BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;            
+            BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;            
             _residual_study( truth_track , reference_track );
           }
         }
@@ -171,7 +171,7 @@ StudyTrackComparison::_cluster_study( const shared_ptr<const AnaTrack>& comparis
           }
           if( truth_track ) { 
             dg::down( "ref_res_vs_truth_no_comp_for_all" , "resolutions" ); 
-            BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;            
+            BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;            
             _residual_study( truth_track , reference_track );
           }
         }
@@ -190,7 +190,7 @@ StudyTrackComparison::_cluster_study( const shared_ptr<const AnaTrack>& comparis
           }
           if( truth_track ) { 
             dg::down( "comp_res_vs_truth_no_ref" , "resolutions" ); 
-            BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;            
+            BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;            
             _residual_study( truth_track , comparison_track );
           }
         }
@@ -230,7 +230,7 @@ StudyTrackComparison::_cluster_study( const shared_ptr<const AnaTrack>& comparis
 
   // count fraction of tracks with at least one n-channel cluster.
   if( true && !reference_track->si_clusters().empty() ) {
-    dg::down( "nchannel_clusters" , "cluster comparison plots" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+    dg::down( "nchannel_clusters" , "cluster comparison plots" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
     unsigned int nw[6] = { 0 , 0 , 0 , 0 , 0 , 0 };
     BOOST_FOREACH( const shared_ptr<const AnaSiCluster>& clu , reference_track->si_clusters() ) {
       // fall through here on purpose so that case n-1,n-2,n-3 etc are also incremented.
@@ -260,26 +260,26 @@ StudyTrackComparison::_cluster_study( const shared_ptr<const AnaTrack>& comparis
     dg::filleff( "has_multiple_3_channel_clusters" , nw[2]>1 );
     dg::filleff( "has_multiple_2_channel_clusters" , nw[1]>1 );
     if( nw[1] == nhits ) { 
-      dg::down( "res_when_all_1_channel_cluster" , "resolution comparison plots" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "res_when_all_1_channel_cluster" , "resolution comparison plots" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       _residual_study( truth_track , reference_track );
     }
     if( nw[1] > 0 ) { 
-      dg::down( "res_when_a_2_channel_cluster" , "resolution comparison plots" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "res_when_a_2_channel_cluster" , "resolution comparison plots" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       _residual_study( truth_track , reference_track );
     }
     if( nw[3] > 0 ) { 
-      dg::down( "res_when_a_4_channel_cluster" , "resolution comparison plots" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "res_when_a_4_channel_cluster" , "resolution comparison plots" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       _residual_study( truth_track , reference_track );
     }
     if( nw[2] > 1 ) { 
-      dg::down( "res_when_many_3_channel_cluster" , "resolution comparison plots" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "res_when_many_3_channel_cluster" , "resolution comparison plots" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       _residual_study( truth_track , reference_track );
     }
   }
 
   // compare track si clusters with all offline clusters in the same logic layer from wrapper.
   if( true && !comparison_track->si_clusters().empty() ) {
-    dg::down( "cluster_comparison_with_all_offline" , "cluster comparison plots" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+    dg::down( "cluster_comparison_with_all_offline" , "cluster comparison plots" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
     const shared_ptr<const AnaEvent>& ev = AnaEventMgr::current_event(); assert( ev );
     if( !(ev->si_clusters().empty()) ) { 
       unsigned int nbad_pixel = 0u;
@@ -297,7 +297,7 @@ StudyTrackComparison::_cluster_study( const shared_ptr<const AnaTrack>& comparis
         const shared_ptr<const AnaSiCluster>& comp_cluster( *icompclu );
         dg::down( comp_cluster->is_pixel() ? "pixel_clusters" : "sct_clusters" , 
                   "cluster comparison plots" ); 
-        BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+        BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
         // look for matching event clusters on same logical layer
         vector< shared_ptr<const AnaSiCluster> > offline_clusters;
         std::remove_copy_if( ev->si_clusters().begin() , ev->si_clusters().end() , 
@@ -437,7 +437,7 @@ StudyTrackComparison::_cluster_study( const shared_ptr<const AnaTrack>& comparis
           dg::down( "bad_and_good_clusters" , "cluster comparison plots" ); 
           dg::down( best_dx_clu->is_pixel() ? "pixels" : "sct" , "cluster comparison plots" ); 
           dg::down( std::abs(best_dx) < 0.25 ? "dx_lt0.25" : "dx_gte0.25" , "bad or good clusters" );
-          BOOST_SCOPE_EXIT() { dg::up(); dg::up(); dg::up(); } BOOST_SCOPE_EXIT_END;
+          BOOST_SCOPE_EXIT(void) { dg::up(); dg::up(); dg::up(); } BOOST_SCOPE_EXIT_END;
           dg::fillh( "n_offline_clusters" , 10 , 0 , 10 , offline_clusters.size() );
           dg::fillh( "best_dx" , 160 , -20 , 20 , best_dx );
           if( comp_cluster->is_pixel() ) { dg::fillh( "best_dz" , 160 , -20 , 20 , best_dz ); }
@@ -468,7 +468,7 @@ StudyTrackComparison::_cluster_study( const shared_ptr<const AnaTrack>& comparis
           dg::down( "bad_and_good_clusters" , "cluster comparison plots" ); 
           dg::down( best_dz_clu->is_pixel() ? "pixels" : "sct" , "cluster comparison plots" ); 
           dg::down( std::abs(best_dz) < 0.25 ? "dz_lt0.25" : "dz_gte0.25" , "bad or good clusters" );
-          BOOST_SCOPE_EXIT() { dg::up(); dg::up(); dg::up(); } BOOST_SCOPE_EXIT_END;
+          BOOST_SCOPE_EXIT(void) { dg::up(); dg::up(); dg::up(); } BOOST_SCOPE_EXIT_END;
           dg::fillh( "n_offline_clusters" , 10 , 0 , 10 , offline_clusters.size() );
           dg::fillh( "best_dz" , 160 , -20 , 20 , best_dz );
           if( comp_cluster->is_pixel() ) { dg::fillh( "best_dz" , 160 , -20 , 20 , best_dz ); }
@@ -490,113 +490,113 @@ StudyTrackComparison::_cluster_study( const shared_ptr<const AnaTrack>& comparis
         // resolutions (params - turth, offline) for high/low pt
         // tracks when a pixel is bad in x, z or either
         dg::down( "resolutions_with_bad_clusters" , "cluster comparison plots" ); 
-        BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+        BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
         dg::fillh( "nbad_pixels_dx" , 10 , 0 , 10 , nbad_pixel_dx );
         dg::fillh( "nbad_pixels_dz" , 10 , 0 , 10 , nbad_pixel_dz );
         dg::fillh( "nbad_scts_dx" , 10 , 0 , 10 , nbad_sct_dx );
         dg::fillh( "nmultichannel_pixels" , 5 , 0 , 5 , nmultichannel_pixels );
         dg::fillh( "nmultichannel_strips" , 5 , 0 , 5 , nmultichannel_strips );
         if( nmultichannel_pixels==0 && nmultichannel_strips==0 ) {
-          dg::down( "all_single_channel" , "track resolution plots" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
-          dg::down( reference_track->pt() > 10. ? "ref_pt_gt10" : "ref_pt_lte10" , "track resolution plots" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          dg::down( "all_single_channel" , "track resolution plots" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
+          dg::down( reference_track->pt() > 10. ? "ref_pt_gt10" : "ref_pt_lte10" , "track resolution plots" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           if( true ) {
-            dg::down( "vs_reference" , "resolutions" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+            dg::down( "vs_reference" , "resolutions" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
             _residual_study( reference_track , comparison_track );
           }
           if( truth_track ) {
-            dg::down( "vs_truth" , "resolutions" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+            dg::down( "vs_truth" , "resolutions" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
             _residual_study( truth_track , comparison_track );
           }
         }
         if( nmultichannel_pixels>0 ) {
-          dg::down( "multichannel_pixels" , "track resolution plots" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
-          dg::down( reference_track->pt() > 10. ? "ref_pt_gt10" : "ref_pt_lte10" , "track resolution plots" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          dg::down( "multichannel_pixels" , "track resolution plots" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
+          dg::down( reference_track->pt() > 10. ? "ref_pt_gt10" : "ref_pt_lte10" , "track resolution plots" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           if( true ) {
-            dg::down( "vs_reference" , "resolutions" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+            dg::down( "vs_reference" , "resolutions" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
             _residual_study( reference_track , comparison_track );
           }
           if( truth_track ) {
-            dg::down( "vs_truth" , "resolutions" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+            dg::down( "vs_truth" , "resolutions" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
             _residual_study( truth_track , comparison_track );
           }
         }
         if( nmultichannel_strips>0 ) {
-          dg::down( "multichannel_strips" , "track resolution plots" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
-          dg::down( reference_track->pt() > 10. ? "ref_pt_gt10" : "ref_pt_lte10" , "track resolution plots" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          dg::down( "multichannel_strips" , "track resolution plots" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
+          dg::down( reference_track->pt() > 10. ? "ref_pt_gt10" : "ref_pt_lte10" , "track resolution plots" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           if( true ) {
-            dg::down( "vs_reference" , "resolutions" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+            dg::down( "vs_reference" , "resolutions" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
             _residual_study( reference_track , comparison_track );
           }
           if( truth_track ) {
-            dg::down( "vs_truth" , "resolutions" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+            dg::down( "vs_truth" , "resolutions" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
             _residual_study( truth_track , comparison_track );
           }
         }
         if( nbad_pixel_dx==0 && nbad_pixel_dz==0 && nbad_sct_dx==0 ) {
           dg::down( "all_good" , "track resolution plots" ); 
-          BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           dg::down( reference_track->pt() > 10. ? "ref_pt_gt10" : "ref_pt_lte10" ,
                     "track resolution plots" ); 
-          BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           if( true ) {
             dg::down( "vs_reference" , "resolutions" ); 
-            BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+            BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
             _residual_study( reference_track , comparison_track );
           }
           if( truth_track ) {
             dg::down( "vs_truth" , "resolutions" ); 
-            BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+            BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
             _residual_study( truth_track , comparison_track );
           }
         }
         if( nbad_pixel_dx>0 ) {
           dg::down( "bad_pixel_dx" , "track resolution plots" ); 
-          BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           dg::down( reference_track->pt() > 10. ? "ref_pt_gt10" : "ref_pt_lte10" ,
                     "track resolution plots" ); 
-          BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           if( true ) {
             dg::down( "vs_reference" , "resolutions" ); 
-            BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+            BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
             _residual_study( reference_track , comparison_track );
           }
           if( truth_track ) {
             dg::down( "vs_truth" , "resolutions" ); 
-            BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+            BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
             _residual_study( truth_track , comparison_track );
           }
         }
         if( nbad_pixel_dz>0 ) {
           dg::down( "bad_pixel_dz" , "track resolution plots" ); 
-          BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           dg::down( reference_track->pt() > 10. ? "ref_pt_gt10" : "ref_pt_lte10" ,
                     "track resolution plots" ); 
-          BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           if( true ) {
             dg::down( "vs_reference" , "resolutions" ); 
-            BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+            BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
             _residual_study( reference_track , comparison_track );
           }
           if( truth_track ) {
             dg::down( "vs_truth" , "resolutions" ); 
-            BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+            BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
             _residual_study( truth_track , comparison_track );
           }
         }
         if( nbad_sct_dx>0 ) {
           dg::down( "bad_sct_dx" , "track resolution plots" ); 
-          BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           dg::down( reference_track->pt() > 10. ? "ref_pt_gt10" : "ref_pt_lte10" ,
                     "track resolution plots" ); 
-          BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           if( true ) {
             dg::down( "vs_reference" , "resolutions" ); 
-            BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+            BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
             _residual_study( reference_track , comparison_track );
           }
           if( truth_track ) {
             dg::down( "vs_truth" , "resolutions" ); 
-            BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+            BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
             _residual_study( truth_track , comparison_track );
           }
         }        
@@ -608,31 +608,31 @@ StudyTrackComparison::_cluster_study( const shared_ptr<const AnaTrack>& comparis
       if( true ) { 
         if( nbad_pixel > 0 ) { 
           dg::down( "bad_pixel" , "one or more bad pixels residuals" ); 
-          BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           _residual_study( reference_track , comparison_track );
         }
         if( nbad_sct > 0 ) { 
           dg::down( "bad_sct" , "one or more bad sct residuals" ); 
-          BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           _residual_study( reference_track , comparison_track );
         }
         if( nbad_sct_extreme > 0 ) { 
           dg::down( "bad_sct_extreme" , "one or more extremely bad sct residuals" ); 
-          BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           _residual_study( reference_track , comparison_track );
         }
         if( (nbad_pixel+nbad_sct) > 2 ) { 
           dg::down( "bad_many" , "one or more bad silicon residuals" ); 
-          BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           _residual_study( reference_track , comparison_track );
         }
         if( (nbad_pixel+nbad_sct) > 0 ) { 
           dg::down( "bad_any" , "one or more bad silicon residuals" ); 
-          BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           _residual_study( reference_track , comparison_track );
         } else {
           dg::down( "good_all" , "no bad silicon residuals" ); 
-          BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+          BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
           _residual_study( reference_track , comparison_track );
         }
         if( nbad_pixel>0 || nbad_sct>0 ) {
@@ -691,7 +691,7 @@ StudyTrackComparison::_cluster_study( const shared_ptr<const AnaTrack>& comparis
       stcluw.for_only( worst_ref_cluster );
       // do track comparison for subset
       if( true ) { 
-        dg::down( worst_ref_cluster->ftk_logical_layer()<3 ? "worst_cluster_pixel" : "worst_cluster_sct" , "cluster efficiency plots" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+        dg::down( worst_ref_cluster->ftk_logical_layer()<3 ? "worst_cluster_pixel" : "worst_cluster_sct" , "cluster efficiency plots" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
         TrackIdentification tid( reference_track , comparison_track );
         StudyTrackComparison sttc( "worst_cluster_track_residuals" , "track residual dependence on worst cluster residuals amongst all layers" );
         sttc.do_residuals( true );
@@ -728,7 +728,7 @@ StudyTrackComparison::_cluster_study( const shared_ptr<const AnaTrack>& comparis
   } // end study track parameters vs size and position of worst cluster mistake
   // study cluster attachment efficiency relative to offline
   if( true && !comparison_track->si_clusters().empty() && !reference_track->si_clusters().empty() ) {
-    dg::down( "cluster_eff" , "cluster efficiency plots" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+    dg::down( "cluster_eff" , "cluster efficiency plots" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
     for( std::vector< shared_ptr<const AnaSiCluster> >::const_iterator irefclu=reference_track->si_clusters().begin(), 
            frefclu=reference_track->si_clusters().end(); irefclu!=frefclu; ++irefclu ) {
       const shared_ptr<const AnaSiCluster>& ref_cluster( *irefclu );

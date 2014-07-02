@@ -193,7 +193,7 @@ protected:
       // Get delta-R between lepton and nearest jet
       float min_dR1 = std::numeric_limits<float>::max();
       float min_dR2 = std::numeric_limits<float>::max();
-      dg::down( "jet_pts" , "ith-highest pt jet(s)" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "jet_pts" , "ith-highest pt jet(s)" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       // study ith-highest pt jet(s)
       unsigned int ithjet = 0u;
       for( vector< boost::shared_ptr<const AnaJet> >::iterator ijet=jets_by_pt.begin(), fjet=jets_by_pt.end(); ijet!=fjet; ++ijet, ++ithjet ) {
@@ -309,7 +309,7 @@ protected:
     }
     if( _do_tag_and_probe_studies ) {
       if( muon1 && muon2 ) {
-	dg::down( "tag_and_probe" , "tag and probe method for muons" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+	dg::down( "tag_and_probe" , "tag and probe method for muons" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
         if( (muon1->pt_cone_ratio(AnaMuon::CONE40) < 0.08) || ( muon2->pt_cone_ratio(AnaMuon::CONE40) < 0.08) ) {
           if(met) dg::fillh( "met" , 100 , 0 , 500 , met->pt() , "missing E_{T} (GeV)" );
 	  dg::fillh( "njets" , 10, 0, 10, zevent->njets()>0, "number of jets" );

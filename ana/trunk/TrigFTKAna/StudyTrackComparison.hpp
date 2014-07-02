@@ -48,7 +48,7 @@ protected:
     using namespace boost;
     using namespace DataGraphics;
     using namespace detector;
-    dg::down( "residuals" , "parameter residuals for the track relative to the reference" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+    dg::down( "residuals" , "parameter residuals for the track relative to the reference" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
     const AnaTrack::ftype res_cu = ( comparison_track->curvature() - reference_track->curvature() );
     const AnaTrack::ftype res_d0 = ( (comparison_track->d0() - reference_track->d0())/10. );
     const AnaTrack::ftype res_p0 = ( (comparison_track->phi0() - reference_track->phi0()) );
@@ -115,7 +115,7 @@ protected:
     const AnaTrack::ftype res_pt = res_p0*res_la;
     const AnaTrack::ftype res_zt = res_z0*res_la;
     if( _do_estimates ) {
-      dg::down( "estimates" , "covariance estimates quoted by track (may be calculated in the analysis)" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "estimates" , "covariance estimates quoted by track (may be calculated in the analysis)" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       dg::fillh( "cov_cc" , 100 , 0. , hm_range_cov_cc<AnaTrack::ftype>() , comparison_track->covariance_cc() , "Covariance (#Kappa #Kappa) (1/GeV^{2})" );
       dg::fillh( "cov_cd" , 100 , -hm_range_cov_cd<AnaTrack::ftype>() , hm_range_cov_cd<AnaTrack::ftype>() , comparison_track->covariance_cd() , "Covariance (#Kappa d_{0}) (cm/GeV)" );
       dg::fillh( "cov_cp" , 100 , -hm_range_cov_cp<AnaTrack::ftype>() , hm_range_cov_cp<AnaTrack::ftype>() , comparison_track->covariance_cp() , "Covariance (#Kappa #phi_{0}) (rad/GeV)" );
@@ -136,7 +136,7 @@ protected:
       _residual_study( reference_track , comparison_track );
     }
     if( _do_pulls ) { // pulls (residuals/covariance)
-      dg::down( "pulls" , "residuals / covariance estimates quoted by track (may be calculated in the analysis)" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "pulls" , "residuals / covariance estimates quoted by track (may be calculated in the analysis)" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
 
       dg::fillh( "pulls_c" , 100 , -10 , 10 , detector::safe_divide(res_cu,detector::safe_sqrt(comparison_track->covariance_cc())) , "pull (#Kappa)" );
       dg::fillh( "pulls_d" , 100 , -10 , 10 , detector::safe_divide(res_d0,detector::safe_sqrt(comparison_track->covariance_dd())) , "pull (d_{0})" );
@@ -161,7 +161,7 @@ protected:
     }
     // dependence of covariance on residuals
     if( _do_covariance_vs_residuals ) {
-      dg::down( "covariance_vs_residuals" , "dependence of covariance estimates on the residuals" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "covariance_vs_residuals" , "dependence of covariance estimates on the residuals" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       dg::fillh( "cov_cd_vs_cu" , 
                  100 , -std::sqrt(hm_range_cov_cc<AnaTrack::ftype>()) , std::sqrt(hm_range_cov_cc<AnaTrack::ftype>()) , 
                  100 , -hm_range_cov_cd<AnaTrack::ftype>() , hm_range_cov_cd<AnaTrack::ftype>() , 
@@ -264,7 +264,7 @@ protected:
                  res_la , comparison_track->covariance_zt() , "res la" , "cov zt" );
     }
     if( _do_residual_correlations ) {
-      dg::down( "residual_correlations" , "correlations between residuals" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "residual_correlations" , "correlations between residuals" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       dg::fillh( "res_cu_vs_res_d0" ,
                  100 , -std::sqrt(hm_range_cov_cc<AnaTrack::ftype>()) , std::sqrt(hm_range_cov_cc<AnaTrack::ftype>()) , 
                  100 , -std::sqrt(hm_range_cov_dd<AnaTrack::ftype>()) , std::sqrt(hm_range_cov_dd<AnaTrack::ftype>()) , 
@@ -307,7 +307,7 @@ protected:
                  res_z0 , res_la , "res z0" , "res la" );
     }
     if( _do_cluster_study ) {
-      dg::down( "cluster_comparisons" , "comparison of track clusters to reference track clusters " ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "cluster_comparisons" , "comparison of track clusters to reference track clusters " ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       _cluster_study( comparison_track , reference_track );
     }
   }

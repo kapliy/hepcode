@@ -12,11 +12,11 @@
 #define ROOTCORE_PACKAGE_JetResolution
 #define ROOTCORE_PACKAGE_ApplyJetResolutionSmearing
 #define ROOTCORE_PACKAGE_BootstrapGenerator
-#define ROOTCORE_PACKAGE_egammaAnalysisUtils
 #define ROOTCORE_PACKAGE_GoodRunsLists
 #define ROOTCORE_PACKAGE_JetUncertainties
 #define ROOTCORE_PACKAGE_LineShapeTool
 #define ROOTCORE_PACKAGE_MuonMomentumCorrections
+#define ROOTCORE_PACKAGE_egammaAnalysisUtils
 #define ROOTCORE_PACKAGE_MissingETUtility
 #define ROOTCORE_PACKAGE_MuonEfficiencyCorrections
 #define ROOTCORE_PACKAGE_MuonIsolationCorrection

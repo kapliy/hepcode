@@ -1384,7 +1384,7 @@ int main( int argc , char* argv[] )
     // TRUTH (CONSISTENT WITH TruthStore.cxx) + W/Z TRUTH REWEIGHTING
     bool skip_event = false;
     if ( is_mc && (is_wmunu || is_wtaunu || is_zmumu || is_ztautau)) {
-      dg::down( "truth" , "Some truth-based quantities" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+      dg::down( "truth" , "Some truth-based quantities" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
       const long lpdg = (is_wmunu || is_zmumu) ? 13 : 15; // muon or electrons?
       boost::shared_ptr<const AnaTruthParticle> l1;
       boost::shared_ptr<const AnaTruthParticle> l2;
@@ -1682,7 +1682,8 @@ int main( int argc , char* argv[] )
     // PDF reweighting [ has to go last ]
     if(is_mc && PDF_REWEIGHTING && is_pdfrw && !NOMONLY) {
       if( !rwpdf ) {
-	const std::string LHAPATH = "/share/ftkdata/software/pdfsets";
+	//const std::string LHAPATH = "/share/ftkdata/software/pdfsets";
+	const std::string LHAPATH = "/cvmfs/sft.cern.ch/lcg/external/lhapdfsets/current";
 	rwpdf = new PDFReweightTool();
 	if(PDF_REWEIGHTING>1) {
 	  rwpdf->SetLHAPATH(LHAPATH);  // need for NNPDF and some other latest-version PDFs
@@ -2451,7 +2452,7 @@ void study_wz(std::string label, bool do_ntuples, bool do_eff, int do_unf,
 	      METCOL& met_col,
 	      StudyWAsymmetry& st_w,
 	      StudyZAsymmetry& st_z) {
-  dg::down( label , "W study" ); BOOST_SCOPE_EXIT() { dg::up(); } BOOST_SCOPE_EXIT_END;
+  dg::down( label , "W study" ); BOOST_SCOPE_EXIT(void) { dg::up(); } BOOST_SCOPE_EXIT_END;
   const bool is_nominal = (label=="Nominal");
   
   // perform jet overlap removal and jet/met cleaning.
