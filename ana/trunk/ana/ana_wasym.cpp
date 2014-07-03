@@ -79,6 +79,7 @@ const bool HIST_LS_WEIGHT = true;      // W/Z lineshape weight
 #include <DataGraphics/DgBin.hh>
 #include <TTree.h>
 #include <TCanvas.h>
+#include <TSystem.h>
 
 // special classes
 #include "PileupReweighting/TPileupReweighting.h"
@@ -740,8 +741,8 @@ int main( int argc , char* argv[] )
 
   // Output file and TTree's
   TFile *funfold = 0;
+  std::string unf_outpath = DataGraphics::Tools::expand_filename_to_valid( AnaConfiguration::full_output_path() + ".unfold.root" );
   if(true) {
-    std::string unf_outpath = DataGraphics::Tools::expand_filename_to_valid( AnaConfiguration::full_output_path() + ".unfold.root" );
     std::cout << "Unfolding output: " << unf_outpath << std::endl;
     funfold = new TFile(unf_outpath.c_str(),"RECREATE");
     funfold->cd();
@@ -2430,6 +2431,14 @@ int main( int argc , char* argv[] )
     funfold->Write();
 //     funfold->Close();
 //     delete funfold;
+  }
+  // close and unlink dummy unfold file
+  else {
+    if(funfold) funfold->Close();
+    FileStat_t bufdum;
+    if (gSystem->GetPathInfo(unf_outpath.c_str(), bufdum) == 0) {
+      gSystem->Unlink(unf_outpath.c_str());
+    }
   }
   
   std::cout << "==================== FINISHED MAIN ====================" << std::endl;

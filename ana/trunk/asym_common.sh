@@ -22,7 +22,8 @@ lbl=10042013_maxisoMC                 # got rid of z0 (v54/v56). Upgraded ScaleF
 lbl=10042013_maxisoMC2d               # v57. save as v56, but using 2d isoMC
 lbl=11282013_dinosisoMC               # updating to the latest iso SF from Dinos (finalized Up/Down systematics)
 
-lbl=07012014_slc6                     # should be same as dinos. SLC6 & new reweighting lib
+lbl=07012014_slc6                     # should be same as dinos. SLC6 & new reweighting lib - TEST RUN
+lbl=07022014_slc6                     # should be same as dinos. SLC6 & new reweighting lib - fixed list of nodes
 
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
 
@@ -185,6 +186,13 @@ function submit_wmumu_all() {
 
 function submit_wmumu_nlo() {
     samples=`cd samples && ls -1 wasymmetry${ntuple}_mc_*wminmu*.dat wasymmetry${ntuple}_mc_*wplusmu*.dat 2>/dev/null`
+    for s in ${samples}; do
+	submit_sample ${s}
+    done
+}
+
+function submit_wmumu_alpgen() {
+    samples=`cd samples && ls -1 wasymmetry${ntuple}_mc_*alpgen_herwig_wmunu_np*.dat 2>/dev/null`
     for s in ${samples}; do
 	submit_sample ${s}
     done
