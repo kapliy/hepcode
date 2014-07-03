@@ -20,7 +20,7 @@ log = {log}
 
 Arguments = None
 
-Requirements   =  ( (Memory >= {memory}) && (HAS_CVMFS =?= TRUE) )
+Requirements   =  ( (Memory >= {memory}) && (HAS_CVMFS =?= TRUE) && (OpSysAndVer =?= \"SL6\"))
 
 transfer_input_files = /tmp/{user}/TAR/TrigFTKAna.tar.bz2,/home/{user}/.globus/tmp.proxy
 #transfer_output_files = {outputs}
