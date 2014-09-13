@@ -24,6 +24,7 @@ lbl=11282013_dinosisoMC               # updating to the latest iso SF from Dinos
 
 lbl=07012014_slc6                     # should be same as dinos. SLC6 & new reweighting lib - TEST RUN
 lbl=07022014_slc6                     # should be same as dinos. SLC6 & new reweighting lib - fixed list of nodes
+lbl=09092014_slc6_3dmc                # new 2d RW factors from Max
 
 common_opts="--release ${release} --save-ntuples 7 --apply-pileup --pileup-scale 1.0 --data-range DtoM"
 
