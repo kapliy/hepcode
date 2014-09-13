@@ -851,7 +851,8 @@ class SuPlot:
         next('MCP_CSCALE')
         assert len(s.sys)==len(s.groups)
         print 'Created systematic variations: N =',len(s.sys)
-    def update_errors(s,sysonly=False,force=False,rebin=1,scale=1,renorm=False,avg=False):
+    def update_errors(s,sysonly=False,force=False,rebin=1,scale=1,renorm=False,avg=False,
+                      extra_plot_tag=None, xaxis_info=None):
         """ folds systematic variations into total TH1 error.
         If renorm is true, scale holds the data normalization
         Possible upgrade: independent two-sided variations (non-symmetrized)
@@ -875,6 +876,16 @@ class SuPlot:
             s.htot.Scale(scale)
         s.hsys = s.htot.Clone()
         [s.hsys.SetBinError(ii,0) for ii in xrange(0,s.hsys.GetNbinsX()+2)]
+        # a special function to plot individual contributions to the systematics
+        # as a percentage of the total
+        def make_h(hname):
+            """ empty histogram """
+            htmp = s.htot.Clone(s.htot.GetName()+'_'+hname)
+            htmp.Reset()
+            return htmp
+        hind_hs = []
+        hind_ns = []
+        # start the loop over systematics
         i = len(s.sys[0])
         iss = 1
         for hss in s.sys[1:]:
@@ -892,20 +903,72 @@ class SuPlot:
                     bdiffs[ibin].append ( abs(s.hsys.GetBinContent(ibin)-h.GetBinContent(ibin)) )
                 i+=1
             davg = (avg==True) and not (s.groups[iss] in NAVG)
+            sysname = s.groups[iss]
+            htmp = make_h(sysname)
             for ibin in xrange(0,s.hsys.GetNbinsX()+2):
                 newerr = (  (bdiffs[ibin][0]+bdiffs[ibin][1])/2.0 if len(bdiffs[ibin])==2 and davg==True else max(bdiffs[ibin])  )   if len(bdiffs[ibin])>0 else 0
                 if False and ibin==4: #DEBUG
                     print i,'%.1f'%s.sys[0][0].stack.GetStack().Last().GetBinError(ibin),['%.1f'%zz for zz in bdiffs[ibin]],'%.1f'%newerr,'%.1f'%s.htot.GetBinError(ibin),'%.1f'%s.hsys.GetBinError(ibin)
+                # htmp - just the current systematic
+                htmp.SetBinContent(ibin, abs(newerr))
                 # hsys
                 olderr = s.hsys.GetBinError(ibin)
                 s.hsys.SetBinError(ibin,1.0*math.sqrt(olderr*olderr + 1.0*newerr*newerr))
                 # htot
                 olderr = s.htot.GetBinError(ibin)
                 s.htot.SetBinError(ibin,1.0*math.sqrt(olderr*olderr + 1.0*newerr*newerr))
+            hind_hs.append(htmp)
+            hind_ns.append(sysname)
             iss += 1
+        hsys_errors = s.hsys.Clone(s.hsys.GetName()+'_'+'nosumw2'); hsys_errors.Reset();
+        [hsys_errors.SetBinContent(ibin, s.hsys.GetBinError(ibin)) for ibin in xrange(0,s.hsys.GetNbinsX()+2)]
         if rebin!=1:
             s.hsys.Rebin(rebin)
             s.htot.Rebin(rebin)
+            hsys_errors.Rebin(rebin)
+            [hh.Rebin(rebin) for hh in hind_hs]
+        # scale special per-error histogram to the total defined error
+        [hh.Divide(hsys_errors) for hh in hind_hs]
+        for ii,hh in enumerate(hind_hs):
+            hind_hs[ii].SetTitle(hind_ns[ii])
+        # make a special plot - SuCanvas
+        if sysonly and extra_plot_tag is not None:
+            from SuCanvas import SuCanvas, PlotOptions
+            SuCanvas.g_marker_size = 1.8
+            SuCanvas.g_legend_x1_ndc = 0.20
+            SuCanvas.g_text_size = 21
+            SuCanvas.g_text_size_legend = 14
+            SuCanvas.g_text_size_pave = 21
+            SuCanvas.g_legend_height_per_entry = 0.023
+            SuCanvas.g_legend_height_per_entry = 0.035
+            SuCanvas.cgStyle = SuCanvas.ControlPlotStyle()
+            nplot = 5
+            c = SuCanvas('%s_contribution_of_errors' % extra_plot_tag)
+            M = PlotOptions('%d largest contributors to the systematic band:' % nplot)
+            hind_hs = sorted(hind_hs,key=lambda x: x.GetMaximum(),reverse=True)
+            hind_hs = hind_hs[:nplot]
+            for ii,hh in enumerate(hind_hs):
+                M.add(hh.GetName(), hh.GetTitle())
+            # plot without errors
+            xinfo = xaxis_info[0:2]
+            xinfo.append('Top %d contributors to systematic band (%% of total)'%nplot)
+            xinfo.append(None)
+            print 'XINFO:',xinfo
+            c.plotAny(hind_hs,M=M,height=1.6, drawopt='HIST LP', xaxis_info=xinfo)
+            c.SaveSelf()
+        # make a special plot - manual
+        if sysonly and False:
+            c = ROOT.TCanvas('cc','cc',800,600)
+            c.cd()
+            hind_hs = sorted(hind_hs,key=lambda x: x.GetMaximum(),reverse=True)
+            drawn = False
+            for ii,hh in enumerate(hind_hs):
+                if not drawn:
+                    hind_hs[ii].Draw()
+                    drawn = True
+                else:
+                    hind_hs[ii].Draw('A SAME')
+            c.SaveAs('plot.png')
         return s.hsys if sysonly else s.htot
     def summary_bin_txt(s,b):
         """ Prints relative deviation of various systematics in a given bin """

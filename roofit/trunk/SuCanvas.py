@@ -811,12 +811,14 @@ class SuCanvas:
                   leg_x1=None,leg_y2=None,
                   lumi_x=None,lumi_y=None,
                   mlogy=False,rlogy=False,
-                  hdatasub = None):
+                  hdatasub=None,
+                  extra_plot_tag=None):
         """ Wrapper to make a complete plot of stack and data overlayed - SuData version
         if norm==True, the stack is rescaled to Nominal data counts
         if norm_sys_from_nominal=True, systematics are normalized to nominal (rather than to data)
         mode=0 - nominal only
         mode=1 - nominal + systematic bands
+        extra_plot_tag - when set, allows to save some useful additional plots
         """
         s.buildRatio(mlogy=mlogy,rlogy=rlogy);
         s.cd_plotPad();
@@ -872,14 +874,16 @@ class SuCanvas:
         if mode==1 and hstack.has_systematics():
             if norm_sys_from_nominal:     # systematics normalized to nominal scale factor
                 print 'Normalizing systematics to Nominal'
+                assert False, 'TMP disabled march 09 2014 - making sure we renormalize each systematic'
                 s.hsys = HMC[1] = hstack.update_errors(sysonly=True,rebin=rebin,scale=stackScale)
                 s.htot = HMC[2] = hstack.update_errors(rebin=rebin,scale=stackScale)
             else:       # systematics normalized to data every time (i.e., only consider shape differences)
                 if norm:
                     print 'Normalizing each systematic to data independently'
                     dint = data.Integral()
-                    s.hsys = HMC[1] = hstack.update_errors(sysonly=True,rebin=rebin,scale=dint,renorm=True)
-                    s.htot = HMC[2] = hstack.update_errors(rebin=rebin,scale=dint,renorm=True)
+                    s.hsys = HMC[1] = hstack.update_errors(sysonly=True,rebin=rebin,scale=dint,renorm=True,force=True,
+                                                           extra_plot_tag=extra_plot_tag, xaxis_info=xaxis_info)
+                    s.htot = HMC[2] = hstack.update_errors(rebin=rebin,scale=dint,renorm=True,force=True)
                 else:
                     assert False,'Why are you trying to run this?'
                     s.hsys = HMC[1] = hstack.update_errors(sysonly=True,rebin=rebin,scale=1)
