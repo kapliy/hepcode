@@ -604,7 +604,7 @@ def plot_stack(spR2,var=None,bin=None,q=2,m=0,new_scales=None,norm=False,pave=Fa
     if True and xaxis_info:
         pass
     leg_x1,leg_y2,height = SuCanvas.best_legend_and_height(hdata.nominal_h())
-    c.plotStack(hstack,hdata,mode=m,leg=leg,height=height,leg_x1=leg_x1,leg_y2=leg_y2,pave=pave,rebin=opts.rebin,norm=norm,xaxis_info=xaxis_info,mlogy=opts.mlogy,rlogy=opts.rlogy)
+    c.plotStack(hstack,hdata,mode=m,leg=leg,height=height,leg_x1=leg_x1,leg_y2=leg_y2,pave=pave,rebin=opts.rebin,norm=norm,xaxis_info=xaxis_info,mlogy=opts.mlogy,rlogy=opts.rlogy, extra_plot_tag=None) #c.savename)
     # small hack to dump lepton pt plots for Jan
     if len(opts.hsource.split(':'))==7 and opts.hsource.split(':')[0] == 'd3_abseta_lpt_lpt' and opts.tag[:4]=='PJan':
         bn = int( opts.hsource.split(':')[3] )
