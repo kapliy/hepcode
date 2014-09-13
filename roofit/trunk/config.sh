@@ -173,6 +173,17 @@ DB=DB_10042013_maxisoMC.v57    # same as v56, but upgraded ScaleFactorProvider &
 input=/share/t3data3/antonk/ana/ana_v29I_11282013_dinosisoMC_stacoCB_all/pt20
 DB=DB_11282013_dinosisoMC.v60     # nominal, using latest iso SF from Dinos. Nominal and errors from Dinos, MC@NLO and PowhegHerwig from Max. pt-only.
 
+#############
+# Fall 2014: recovering the code
+#############
+input=/share/t3data3/antonk/ana/ana_v29I_07022014_slc6_stacoCB_all/pt20
+DB=DB_07022014_dinosisoMC.v70   # repeating v60 after migrating to SLC6
+
+input=/share/t3data3/antonk/ana/ana_v29I_09092014_slc6_3dmc_stacoCB_all/pt20
+DB=DB_09092014_dinosisoMC.v71   # per Max's email, running with 2D iso SF. Note that only nominal fits changed.
+
+
+
 INDB=`echo $DB | sed -e 's#DB#IN#g'`
 OUTDB=`echo $DB | sed -e 's#DB#OUT#g'`
 iq=0

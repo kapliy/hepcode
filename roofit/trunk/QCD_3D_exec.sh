@@ -10,9 +10,27 @@ echo "Processing job id = $id"
 if [ -z "${SITEROOT}" ]; then
     echo "Sourcing athena"
     export HOME=$PWD
-    export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
-    source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh --quiet
-    source $AtlasSetup/scripts/asetup.sh 17.6.0.1,64,here
+    # NEW CODE: 2014 version
+athver=19.0.2.1
+export uct3_64=1
+export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
+source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh --quiet
+echo "Setting up 64-bit release ${athver} from: ${ATLAS_LOCAL_ROOT_BASE}"
+athbase=`echo $athver | awk 'BEGIN{FS="."}; NF==3{print $0}; NF==4{printf("%d.%d.%d\n",$1,$2,$3)}'`
+workdir=$HOME/work/${mbits}/$athver
+mkdir -p $workdir
+pushd $workdir
+source $AtlasSetup/scripts/asetup.sh ${athver},64,here #,slc5
+export XrdSecGSISRVNAMES=uct2-s5.uchicago.edu\|uct2-s6.uchicago.edu\|uct2-s20.uchicago.edu
+export XrdSecGSISRVNAMES='uct2-*.uchicago.edu'
+popd
+export LD_LIBRARY_PATH=/home/antonk/EWUnfoldingH/Code/RooUnfold:${LD_LIBRARY_PATH}
+export XrdSecGSISRVNAMES=uct2-s5.uchicago.edu\|uct2-s6.uchicago.edu\|uct2-s20.uchicago.edu
+
+
+    #export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
+    #source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh --quiet
+    #source $AtlasSetup/scripts/asetup.sh 17.6.0.1,64,here
 fi
 if [ -z $ROOTSYS ]; then echo 'ERROR: ROOTSYS undefined. Exiting...'; exit 50; fi
 if [ -z $SITEROOT ]; then echo 'ERROR: SITEROOT undefined. Exiting...'; exit 51; fi

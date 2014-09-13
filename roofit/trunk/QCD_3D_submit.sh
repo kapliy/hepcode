@@ -27,7 +27,10 @@ should_transfer_files = YES
 when_to_transfer_output = ON_EXIT
 
 #Requirements   =  ( (Memory >= 900) && (HAS_CVMFS =?= TRUE) )
-Requirements   =  ( (Memory >= 900) && (HAS_CVMFS =?= TRUE) && (HAS_TIER3_DATA =?= TRUE) )
+#Requirements   =  ( (Memory >= 900) && (HAS_CVMFS =?= TRUE) && (HAS_TIER3_DATA =?= TRUE) )
+
+# This is how we can exclude faulty nodes:
+Requirements   =  ( (Memory >= 900) && (HAS_CVMFS =?= TRUE) && (HAS_TIER3_DATA =?= TRUE) && (Machine != \"uct3-c023.uc.mwt2.org\") && (Machine != \"uct3-c024.uc.mwt2.org\") && (Machine != \"uct3-c022.uc.mwt2.org\"))
 
 priority = 10
 
@@ -40,5 +43,7 @@ cd /home/antonk/roofit/logs/
 if [ "$HOSTNAME" == "uct3-s1.uchicago.edu" ]; then
     condor_submit /home/antonk/roofit/logs/QCD.submit
 else
-    ssh uct3-s1 'cd /home/antonk/roofit/logs/ && condor_submit /home/antonk/roofit/logs/QCD.submit'
+    condor_submit /home/antonk/roofit/logs/QCD.submit
+    # we no longer need to ssh to uct3-s1!
+    #ssh uct3-s1 'cd /home/antonk/roofit/logs/ && condor_submit /home/antonk/roofit/logs/QCD.submit'
 fi

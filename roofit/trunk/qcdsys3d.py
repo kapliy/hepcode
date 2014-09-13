@@ -60,10 +60,10 @@ _VERBOSE = {}
 
 # from config.sh
 bgqcd = 4
-z = os.popen('source config.sh && echo $DB','r')
+z = os.popen('source ./config.sh && echo $DB','r')
 db_name = z.readline().strip()
 z.close()
-z = os.popen('source config.sh && echo $INDB','r')
+z = os.popen('source ./config.sh && echo $INDB','r')
 fin_base = z.readline().strip()+SPLITSTR
 z.close()
 fin_name = '%s.%s.%dD.pt%d.root'%(fin_base,eword,DIM,PT)
