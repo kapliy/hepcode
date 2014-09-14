@@ -900,16 +900,18 @@ AnaMuon::GetIsolationSF_v17( const CONF::ConfType& conf, const detector::MCP_TYP
     assert(mctype==5 || mctype==4 || mctype==1);
     // 09/19/2013, 10/05/2013: testing 2d SF
     // 11/28/2013: back to 1d - finalized systematics
-    //SFProvider::Metric metric = SFProvider::Pt; //SFProvider::EtaPt;
+    SFProvider::Metric metric = SFProvider::Pt; //SFProvider::EtaPt;
+
     // 09/09/2014: trying Max's new 2d SF [default = above]
-    SFProvider::Metric metric = SFProvider::EtaPt; // FIXME
-    const bool is2d = (metric == SFProvider::EtaPt);
+    //SFProvider::Metric metric = SFProvider::EtaPt; // FIXME
+    
+const bool is2d = (metric == SFProvider::EtaPt);
     std::string namenom = mctype==5 ? "data/Iso_SF_vsPt.root" : (mctype==1 ? "CommonAnalysis/RootCore/data/ScaleFactorProvider/muisosf/Iso_MCAtNLO_SF_vsPt.root" : "CommonAnalysis/RootCore/data/ScaleFactorProvider/muisosf/Iso_PowhegJimmy_SF_vsPt.root");
-    // FIXME: below is quite outdated
+    // NOTE: below is quite outdated
     if(is2d) {
       namenom = mctype==5 ? "CommonAnalysis/RootCore/data/ScaleFactorProvider/muisosf/Iso_PowhegPythia_SF_vsEtaPt.root" : (mctype==1 ? "CommonAnalysis/RootCore/data/ScaleFactorProvider/muisosf/Iso_MCAtNLO_SF_vsEtaPt.root" : "CommonAnalysis/RootCore/data/ScaleFactorProvider/muisosf/Iso_PowhegJimmy_SF_vsEtaPt.root");
-      // 09/09/2014: new path
-      namenom = "data/IsoSFMap_EtaPt.root";
+      // FIXME: 09/09/2014: new path - Max's Sep 2014 2f SFs
+      // namenom = "data/IsoSFMap_EtaPt.root";
     }
     tcnom = new SFProvider(namenom,"SF","EffMC","EffData",metric,1.0);
     tcnom->generateReplicas(NREPLICASF,seed);
