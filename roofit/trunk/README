@@ -1,0 +1,24 @@
+TrigFTKAna:
+Edit asym_common.sh, specify output folder.
+Run tarball.sh to tar up the code that will be taken to compute nodes
+Run asym_run.sh -> wait ~30 hours for condor jobs to finish.
+Go to /share/t3data3/antonk/ana/<NEW_FOLDER>
+Run "checklogs" within both pt20 and pt25 subfolders. Make sure there are not errors, except perhaps alpgen wmunu (missing MC).
+Go to /atlas/uct3/data/user/antonk/ana/<NEW_FOLDER>
+Run "replicate" inside both pt20 and pt25 subfolders
+
+rootfit:
+Edit config.sh, update (at the bottom) the path to NEW_FOLDER and supply a new antondb (.db) file version.
+Run QCD_3D_submit.sh, wait for condor jobs to finish (<1 hour)   -> creates antondb files containing fit results
+Merge 246 *.db files into a master db file:
+    ./antondb_merge.py DB_07022014_dinosisoMC.v70.db 'logs/*.db'
+Run prepare_qcd.sh  -> makes IN_*.root files via stack2.py
+Run ./qcdsys3d.sh   -> makes OUT_*.root files via qcdsys3d.py (combined IN_*.root files with antondb files containing fit results)
+
+EWUnfoldingH:
+Go to ~/EWUnfoldingH/Code/Input/ and update config.sh (similar, but not the same format as roofit/config.sh)
+Make a copy of unfolding AND OUT*.root files by running update.sh
+Go to /home/antonk/EWUnfoldingH/Code and run ./run.sh to run all unfolding scripts
+Run systematics smoothing scripts (WmunuSmoothing.py) without and with 'bayes' argument.
+Back up output to output.vXY. Back up Results to Results.vXY
+Run Plot.C plots: ./wmunu.sh XY
